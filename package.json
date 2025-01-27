@@ -1,0 +1,19 @@
+{
+  "name": "com.loganland.logansnavigationextension",
+  "version": "1.0.0",
+  "displayName": "Logans Navigation Extension",
+  "description": "Facilitates creation of an alternative, editable, navmesh object as well as other navigation utilities.",
+  "documentationUrl": "https://example.com/",
+  "changelogUrl": "https://example.com/changelog.html",
+  "licensesUrl": "https://example.com/licensing.html",
+  "keywords": [
+    "AI",
+    "Navigation",
+    "Character Movement"
+  ],
+  "author": {
+    "name": "Logan Jarrett",
+    "email": "unity@example.com",
+    "url": "https://www.unity3d.com"
+  }
+}
