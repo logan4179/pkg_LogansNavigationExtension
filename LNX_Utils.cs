@@ -100,6 +100,22 @@ namespace LogansNavigationExtension
 			return false;
 		}
 
+		public static bool ListContainsEdgeByPosition(List<LNX_Edge> edgs, Vector3 posA, Vector3 posB)
+		{
+			for (int i = 0; i < edgs.Count; i++)
+			{
+				if (
+					(edgs[i].StartPosition == posA && edgs[i].EndPosition == posB) ||
+					(edgs[i].EndPosition == posA && edgs[i].StartPosition == posB)
+				)
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
 		public static Vector3 CreateCornerPathPoint( LNX_PathPoint startPt, LNX_PathPoint endPt )
 		{
 			Vector3 resultPt = Vector3.zero;
@@ -529,11 +545,11 @@ namespace LogansNavigationExtension
 					for ( int j = 0; j < 3; j++ )
 					{
 						if ( 
-							(perspectiveTri.Edges[i].StartPosition == relatedTri.Edges[j].StartPosition || perspectiveTri.Edges[i].StartPosition == relatedTri.Edges[j].EndPosition) &&
-							(perspectiveTri.Edges[i].EndPosition == relatedTri.Edges[j].StartPosition || perspectiveTri.Edges[i].EndPosition == relatedTri.Edges[j].EndPosition)
+							(perspectiveTri.EdgeIndices[i].StartPosition == relatedTri.EdgeIndices[j].StartPosition || perspectiveTri.EdgeIndices[i].StartPosition == relatedTri.EdgeIndices[j].EndPosition) &&
+							(perspectiveTri.EdgeIndices[i].EndPosition == relatedTri.EdgeIndices[j].StartPosition || perspectiveTri.EdgeIndices[i].EndPosition == relatedTri.EdgeIndices[j].EndPosition)
 						)
 						{
-							perspectiveTri.Edges[i].SharedEdge = new LNX_ComponentCoordinate( relatedTri.Index_parallelWithParentArray, j );
+							perspectiveTri.EdgeIndices[i].SharedEdge = new LNX_ComponentCoordinate( relatedTri.Index_parallelWithParentArray, j );
 							HasSharedEdge = true;
 						}
 					}

@@ -11,6 +11,8 @@ namespace LogansNavigationExtension
 		public static LNX_NavMesh Instance;
 
         public LNX_Triangle[] Triangles;
+		public LNX_Vertex[] Vertices;
+		public LNX_Edge[] Edges;
 
 		/// <summary>Stores the largest/smallest X, Y, and Z value of the navmesh. Elements 0 and 1 are lowest and 
 		/// hightest X, elements 2 and 3 are lowest and highest Y, and elements 4 and 5 are lowest and highest z.</summary>
@@ -113,7 +115,7 @@ namespace LogansNavigationExtension
 			}
 			else
 			{
-				return Triangles[coord.TriIndex].Edges[coord.ComponentIndex];
+				return Triangles[coord.TriIndex].EdgeIndices[coord.ComponentIndex];
 			}
 		}
 
@@ -125,7 +127,7 @@ namespace LogansNavigationExtension
 			}
 			else
 			{
-				return Triangles[triIndex].Edges[componentIndex];
+				return Triangles[triIndex].EdgeIndices[componentIndex];
 			}
 		}
 		#endregion
@@ -143,12 +145,45 @@ namespace LogansNavigationExtension
 			cachedLayerMask = LayerMask.GetMask( LayerMaskName );
 
 			NavMeshTriangulation tringltn = NavMesh.CalculateTriangulation();
+			Debug.Log($"areas: '{tringltn.areas}', verts: '{tringltn.vertices.Length}'");
+			Vertices = new LNX_Vertex[tringltn.vertices.Length];
+			for( int i = 0; i < Vertices.Length; i++ )
+			{
+				Vertices[i] = new LNX_Vertex( tringltn.vertices[i], i, tringltn );
+			}
 
 			Triangles = new LNX_Triangle[tringltn.areas.Length];
-
-			for (int i = 0; i < Triangles.Length; i++)
+			for (int i = 0; i < Triangles.Length; i++ )
 			{
-				Triangles[i] = new LNX_Triangle(i, tringltn, cachedLayerMask);
+				Triangles[i] = new LNX_Triangle( i, tringltn, cachedLayerMask );
+			}
+
+			//Edges = new LNX_Edge[tringltn.vertices.Length]; //this is not the right count.
+			List<LNX_Edge> tmpEdges = new List<LNX_Edge>();
+			int edgeCount = 0;
+			for ( int i = 0; i < Triangles.Length; i++ )
+			{
+				// go through all 3 verts of the triangle, and use them to see if an edge has been created between them yet...
+				for ( int j = 0; tmpEdges.Count > 0; j++ ) 
+				{
+					if( !LNX_Utils.ListContainsEdgeByPosition(tmpEdges, tringltn.vertices[Triangles[i].Verts[0]], tringltn.vertices[Triangles[i].Verts[1]]) )
+					{
+						tmpEdges.Add( new LNX_Edge(edgeCount, Vertices[Triangles[i].Verts[0]], Vertices[Triangles[i].Verts[1]], tringltn) );
+						edgeCount++;
+					}
+
+					if ( !LNX_Utils.ListContainsEdgeByPosition(tmpEdges, tringltn.vertices[Triangles[i].Verts[0]], tringltn.vertices[Triangles[i].Verts[2]]) )
+					{
+						tmpEdges.Add( new LNX_Edge(edgeCount, Vertices[Triangles[i].Verts[0]], Vertices[Triangles[i].Verts[2]], tringltn) );
+						edgeCount++;
+					}
+
+					if ( !LNX_Utils.ListContainsEdgeByPosition(tmpEdges, tringltn.vertices[Triangles[i].Verts[1]], tringltn.vertices[Triangles[i].Verts[2]]) )
+					{
+						tmpEdges.Add( new LNX_Edge( edgeCount, Vertices[Triangles[i].Verts[1]], Vertices[Triangles[i].Verts[2]], tringltn) );
+						edgeCount++;
+					}
+				}
 			}
 
 			EstablishRelationalData();
@@ -165,6 +200,22 @@ namespace LogansNavigationExtension
 			}
 
 			EstablishRelationalData();
+		}
+
+		public bool ContainsEdge( List<LNX_Edge> edgs, Vector3 posA, Vector3 posB )
+		{
+			for( int i = 0; i < edgs.Count; i++ )
+			{
+				if( 
+					(edgs[i].StartPosition == posA && edgs[i].EndPosition == posB) ||
+					(edgs[i].EndPosition == posA && edgs[i].StartPosition == posB)
+				)
+				{
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		public void EstablishRelationalData( bool triIsDirty = false )
@@ -341,7 +392,7 @@ namespace LogansNavigationExtension
                 {
 					DBG_GetClosestTri += $"found am NOT in shape project...\n";
 
-					currentPt = tri.ClosestPointOnPerimeter( pos );
+					currentPt = tri.ClosestPointOnPerimeter( pos, Edges );
 				}
 
 				if ( Vector3.Distance(pos, currentPt) < runningClosestDist )

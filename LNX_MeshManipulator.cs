@@ -425,8 +425,8 @@ namespace LogansNavigationExtension
 				for ( int i = 0; i < Edges_currentlySelected.Count; i++ )
 				{
 					DebugSelectedReport += $"edge: {i} ({Edges_currentlySelected[i].MyCoordinate})...\n";
-					Verts_currentlySelected.Add( _LNX_NavMesh.GetVertexAtCoordinate(Edges_currentlySelected[i].StartVertCoordinate) );
-					Verts_currentlySelected.Add( _LNX_NavMesh.GetVertexAtCoordinate(Edges_currentlySelected[i].EndVertCoordinate) );
+					Verts_currentlySelected.Add( _LNX_NavMesh.GetVertexAtCoordinate(Edges_currentlySelected[i].Index_StartingVert) );
+					Verts_currentlySelected.Add( _LNX_NavMesh.GetVertexAtCoordinate(Edges_currentlySelected[i].Index_EndingVert) );
 					DebugSelectedReport += "end\n";
 				}
 				#endregion

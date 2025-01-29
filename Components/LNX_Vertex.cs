@@ -9,68 +9,131 @@ namespace LogansNavigationExtension
 	{
 		public Vector3 Position;
 
-		[SerializeField] public LNX_ComponentCoordinate MyCoordinate;
+		public int MyIndex = -1;
 
-		[HideInInspector] public float Angle;
-
-		/// <summary>Vector pointing from this vertex to the center of it's triangle </summary>
-		[HideInInspector] public Vector3 v_toCenter;
-
-		[HideInInspector] public float DistanceToCenter;
-
-		[HideInInspector] public Vector3 v_normal;
+		/// <summary>Collection of indices pointing to triangles that this vertex helps make up. </summary>
+		public int[] CompositeTriangleIndices;
+		public float[] Dist_vertToCompositeTriangleCenters;
+		public float[] Angles_AtCompositeTrianglePoint;
+		public int[] ValentEdgeIndices;
 
 		// TRUTH...........
-		/// <summary>How many verts share the exact position of this one. Can be used to quickly tell if this 
-		/// vert is mid-navmesh, or on a spot where the navmesh terminates.</summary>
-		//public int Valency;
-
-		public LNX_VertexRelationship_exp[] SiblingRelationships;
 		[HideInInspector] public LNX_VertexRelationship_exp[] Relationships;
-
-		public List<LNX_ComponentCoordinate> SharedVertexCoordinates;
 
 		public string DBG_constructor;
 
-        public LNX_Vertex( LNX_Triangle tri, Vector3 vrtPos, int indx, NavMeshTriangulation nmTriangulation )
+        public LNX_Vertex( Vector3 vrtPos, int indx, NavMeshTriangulation nmTriangulation )
         {
+			MyIndex = indx;
 			Position = vrtPos;
-			//Position = nmTriangulation.vertices[ nmTriangulation.indices[tri.Index_parallelWithParentArray * 3] + indx ];
 
-			v_toCenter = Vector3.Normalize( tri.V_center - vrtPos );
-			v_normal = tri.v_normal;
-			DistanceToCenter = Vector3.Distance(tri.V_center, vrtPos);
+			CalculateRelationships( indx, nmTriangulation );
+			DBG_constructor = $"My index: '{MyIndex}', Pos: '{Position}'";
+		}
 
-			MyCoordinate = new LNX_ComponentCoordinate( tri.Index_parallelWithParentArray, indx );
-
+		public void CalculateRelationships( int indx, NavMeshTriangulation nmTriangulation )
+		{
 			Relationships = new LNX_VertexRelationship_exp[0];
-			SiblingRelationships = new LNX_VertexRelationship_exp[2];
-			SharedVertexCoordinates = new List<LNX_ComponentCoordinate>();
 
-			Angle = -1f;
+			List<int> triIndices = new List<int>();
+			List<float> distsVrtToCmpstTriCtrs = new List<float>();
+			List<float> angsAtCmpstTriPt = new List<float>();
+			for ( int i = 0; i < nmTriangulation.areas.Length; i++ )
+			{
+				bool foundVrtPosIndx = false;
+				if ( nmTriangulation.vertices[i * 3] == Position )
+				{
+					foundVrtPosIndx = true;
+					angsAtCmpstTriPt.Add(
+						Vector3.Angle(nmTriangulation.vertices[(i * 3) + 1], nmTriangulation.vertices[(i * 3) + 2])
+					);
 
-			DBG_constructor = $"at tri[{MyCoordinate.TriIndex}], [{MyCoordinate.ComponentIndex}] " +
-				$"Pos: '{Position}' " +
-				$"nml: '{v_normal}', dstToCtr: '{DistanceToCenter}'\n" +
+				}
+				else if ( nmTriangulation.vertices[(i * 3) + 1] == Position )
+				{
+					foundVrtPosIndx = true;
+					angsAtCmpstTriPt.Add(
+						Vector3.Angle(nmTriangulation.vertices[(i * 3)], nmTriangulation.vertices[(i * 3) + 2])
+					);
+				}
+				else if (nmTriangulation.vertices[(i * 3) + 2] == Position )
+				{
+					foundVrtPosIndx = true;
+					angsAtCmpstTriPt.Add(
+						Vector3.Angle(nmTriangulation.vertices[(i * 3) + 1], nmTriangulation.vertices[(i * 3)])
+					);
+				}
+
+				if( foundVrtPosIndx )
+				{
+					triIndices.Add( i );
+
+					Vector3 vCtr = (nmTriangulation.vertices[i * 3] + nmTriangulation.vertices[(i * 3) + 1] + nmTriangulation.vertices[(i * 3) + 2]) / 3f;
+					distsVrtToCmpstTriCtrs.Add( Vector3.Distance(Position, vCtr) );
+				}
+			}
+
+			CompositeTriangleIndices = triIndices.ToArray();
+			Dist_vertToCompositeTriangleCenters = distsVrtToCmpstTriCtrs.ToArray();
+			Angles_AtCompositeTrianglePoint = angsAtCmpstTriPt.ToArray();
+
+			DBG_constructor += $"\tcomposite tri amount: '{CompositeTriangleIndices.Length}'\n" +
 				$"";
 		}
 
-		public void SetSiblingRelationships( LNX_Vertex vA, LNX_Vertex vB )
+		/// <summary>
+		/// Use this overload for when the mesh has been changed only with positioning as opposed to cutting.
+		/// </summary>
+		/// <param name="indx"></param>
+		/// <param name="nmTriangulation"></param>
+		public void CalculateRelationships_shallow(int indx, LNX_Triangle[] tris )
 		{
-			SiblingRelationships = new LNX_VertexRelationship_exp[2];
-			SiblingRelationships[0] = new LNX_VertexRelationship_exp( this, vA );
-			SiblingRelationships[1] = new LNX_VertexRelationship_exp( this, vB );
+			Relationships = new LNX_VertexRelationship_exp[0];
 
-			Vector3 v_toA = Vector3.Normalize( vA.Position - Position );
-			Vector3 v_toB = Vector3.Normalize( vB.Position - Position );
-			Angle = Vector3.Angle( v_toA, v_toB );
+			List<int> cmpTriIndices = new List<int>();
+			List<float> distsVrtToCmpstTriCtrs = new List<float>();
+			List<float> angsAtCmptstTriPt = new List<float>();
+			/*for (int i = 0; i < nmTriangulation.areas.Length; i++)
+			{
+				bool foundVrtPosIndx = false;
+				if (nmTriangulation.vertices[i * 3] == Position)
+				{
+					foundVrtPosIndx = true;
+					angsAtCmpstTriPt.Add(
+						Vector3.Angle(nmTriangulation.vertices[(i * 3) + 1], nmTriangulation.vertices[(i * 3) + 2])
+					);
 
-			float semiA = Vector3.Angle(v_toCenter, v_toA);
-			float semiB = Vector3.Angle(v_toCenter, v_toB);
+				}
+				else if (nmTriangulation.vertices[(i * 3) + 1] == Position)
+				{
+					foundVrtPosIndx = true;
+					angsAtCmpstTriPt.Add(
+						Vector3.Angle(nmTriangulation.vertices[(i * 3)], nmTriangulation.vertices[(i * 3) + 2])
+					);
+				}
+				else if (nmTriangulation.vertices[(i * 3) + 2] == Position)
+				{
+					foundVrtPosIndx = true;
+					angsAtCmpstTriPt.Add(
+						Vector3.Angle(nmTriangulation.vertices[(i * 3) + 1], nmTriangulation.vertices[(i * 3)])
+					);
+				}
 
-			DBG_constructor += $"\tAngle: '{Angle}'. A: " +
-				$"'{SiblingRelationships[0].Angle_centerToDestinationVertex}', " +
-				$"B: '{SiblingRelationships[1].Angle_centerToDestinationVertex}'";
+				if (foundVrtPosIndx)
+				{
+					triIndices.Add(i);
+
+					Vector3 vCtr = (nmTriangulation.vertices[i * 3] + nmTriangulation.vertices[(i * 3) + 1] + nmTriangulation.vertices[(i * 3) + 2]) / 3f;
+					distsVrtToCmpstTriCtrs.Add(Vector3.Distance(Position, vCtr));
+				}
+			}*/
+
+			CompositeTriangleIndices = cmpTriIndices.ToArray();
+			Dist_vertToCompositeTriangleCenters = distsVrtToCmpstTriCtrs.ToArray();
+			Angles_AtCompositeTrianglePoint = angsAtCmptstTriPt.ToArray();
+
+			DBG_constructor += $"\tcomposite tri amount: '{CompositeTriangleIndices.Length}'\n" +
+				$"";
 		}
 
 		/// <summary>
@@ -94,20 +157,6 @@ namespace LogansNavigationExtension
 			}
 
 			return true;
-
-			/* //note: this was the old way of doing this. I've replaced it with what's above. I haven't thoroughly tested to make sure it hasn't broken something so I'm leaving this here for now...
-			float lrgstAng = Mathf.Max(
-				Vector3.Angle(SiblingRelationships[0].v_to, vToPos),
-				Vector3.Angle(SiblingRelationships[1].v_to, vToPos)
-			);
-
-			if( lrgstAng < Angle )
-			{
-				return true;
-			}
-
-			return false;
-			*/
 		}
 
 		/// <summary>
@@ -129,10 +178,10 @@ namespace LogansNavigationExtension
 
 			for ( int i = 0; i < tris.Length; i++ )
 			{
-				if( i == MyCoordinate.TriIndex )
+				/*if( i == MyCoordinate.TriIndex )
 				{
 
-				}
+				}*/
 			}
 		}
 	}

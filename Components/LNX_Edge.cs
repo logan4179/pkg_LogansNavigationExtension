@@ -1,46 +1,61 @@
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace LogansNavigationExtension
 {
 	[System.Serializable]
 	public class LNX_Edge
 	{
+		public int MyIndex = -1;
+
 		public float EdgeLength;
 
-		public Vector3 StartPosition;
-		public LNX_ComponentCoordinate StartVertCoordinate;
+		public Vector3 StartPosition; //todo: see how hard it would be to do without this and use the start vert index to reference the vert...
 		public Vector3 MidPosition;
-		public Vector3 EndPosition;
-		public LNX_ComponentCoordinate EndVertCoordinate;
+		public Vector3 EndPosition; //todo: see how hard it would be to do without this and use the end vert index to reference the vert...
 
 		public Vector3 v_startToEnd;
 		public Vector3 v_endToStart;
 
-		public Vector3 v_toCenter;
-		public Vector3 v_cross;
-
-		public LNX_ComponentCoordinate MyCoordinate;
-
-		public LNX_ComponentCoordinate SharedEdge;
-
 		// TRUTH...........
 		/// <summary>If true, it means that this edge has no shared edge with another triangle, 
 		/// and therefore forms part of the boundary of walkable space.</summary>
-		//public bool AmTerminal;
-
-		public LNX_Edge( LNX_Vertex strtVrt, LNX_Vertex endVrt, Vector3 triCtrPos, Vector3 triNrml, LNX_ComponentCoordinate myCoordinate )
+		public bool Flag_AmTerminal
 		{
-			CalculateInfo( strtVrt, endVrt, triCtrPos, triNrml );
-
-			MyCoordinate = myCoordinate;
-
-			StartVertCoordinate = strtVrt.MyCoordinate;
-			EndVertCoordinate = endVrt.MyCoordinate;
-
-			SharedEdge = LNX_ComponentCoordinate.None;
+			get
+			{
+				return Index_CompositeTriB == -1;
+			}
 		}
 
-		public void CalculateInfo( LNX_Vertex strtVrt, LNX_Vertex endVrt, Vector3 triCtrPos, Vector3 triNrml )
+		// RELATIONAL...........
+		public int Index_StartingVert = -1;
+		public int Index_EndingVert = -1;
+		/// <summary>Index of the first/primary triangle that is partially formed by this edge. This will always be a number >= 0</summary>
+		public int Index_CompositeTriA = -1;
+		/// <summary>
+		/// Index of the second triangle that is partially formed by this edge, if any. If this edge only forms one triangle, then 
+		/// this value will stay at -1, indicating that this edge forms a boundary in walkable space.
+		/// </summary>
+		public int Index_CompositeTriB = -1;
+		public Vector3 v_cross_CompositeTriA, v_cross_CompositeTriB;
+		public Vector3 v_toCenter_CompositeTriA, v_toCenter_CompositeTriB;
+
+		public LNX_Edge( 
+			int indx, LNX_Vertex strtVrt, LNX_Vertex endVrt, NavMeshTriangulation nmTriangultn
+		)
+		{
+			CalculateInfo( strtVrt, endVrt, nmTriangultn );
+
+			// RELATIONAL...........
+			MyIndex = indx;
+			Index_StartingVert = strtVrt.MyIndex;
+			Index_EndingVert = endVrt.MyIndex;
+			Index_CompositeTriA = -1;
+			Index_CompositeTriB = -1;
+		}
+
+		public void CalculateInfo( LNX_Vertex strtVrt, LNX_Vertex endVrt, NavMeshTriangulation nmTriangultn )
 		{
 			StartPosition = strtVrt.Position;
 			EndPosition = endVrt.Position;
@@ -51,13 +66,28 @@ namespace LogansNavigationExtension
 
 			EdgeLength = Vector3.Distance( StartPosition, EndPosition );
 
+			/*
 			v_toCenter = Vector3.Normalize(triCtrPos - MidPosition);
 			v_cross = Vector3.Cross(v_startToEnd, triNrml).normalized;
 
 			if (Vector3.Dot(v_cross, v_toCenter) < 0)
 			{
 				v_cross = -v_cross;
+			}*/
+
+			for ( int i = 0; i < nmTriangultn.areas.Length; i++ ) 
+			{
+				if ( nmTriangultn.vertices[i * 3] == StartPosition )
+				{
+					Index_CompositeTriA = i; //got here...
+				}
 			}
+			Index_CompositeTriB = ;
+
+			v_cross_CompositeTriA = 
+			v_cross_CompositeTriB;
+			v_toCenter_CompositeTriA
+			v_toCenter_CompositeTriB;
 		}
 
 		public Vector3 ClosestPointOnEdge(Vector3 pos)

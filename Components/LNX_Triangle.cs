@@ -34,9 +34,9 @@ namespace LogansNavigationExtension
 
 		[HideInInspector] public float ShortestEdgeLength;
 
-		public LNX_Vertex[] Verts;
+		public int[] Verts;
 
-		public LNX_Edge[] Edges;
+		public int[] EdgeIndices;
 
 		[Header("RELATIONSHIPS")]
 		public LNX_TriangleRelationship_exp[] Relationships;
@@ -51,28 +51,24 @@ namespace LogansNavigationExtension
 
 			Index_parallelWithParentArray = triIndx;
 
-			Vector3 vrtPos0 = nmTriangulation.vertices[ nmTriangulation.indices[(triIndx * 3)] ];
-			Vector3 vrtPos1 = nmTriangulation.vertices[ nmTriangulation.indices[(triIndx * 3) + 1] ];
-			Vector3 vrtPos2 = nmTriangulation.vertices[ nmTriangulation.indices[(triIndx * 3) + 2] ];
+			Verts = new int[3];
+			Verts[0] = triIndx * 3;
+			Verts[1] = (triIndx * 3) + 1;
+			Verts[2] = (triIndx * 3) + 2;
 
-			V_center = ( vrtPos0 + vrtPos1 + vrtPos2 )  / 3f;
-
-			Verts = new LNX_Vertex[3];
-			Verts[0] = new LNX_Vertex( this, vrtPos0, 0, nmTriangulation );
-			Verts[1] = new LNX_Vertex( this, vrtPos1, 1, nmTriangulation );
-			Verts[2] = new LNX_Vertex( this, vrtPos2, 2, nmTriangulation );
+			V_center = ( nmTriangulation.vertices[0] + nmTriangulation.vertices[1] + nmTriangulation.vertices[2]) / 3f;
 
 			TryGetNormal( lrMask );
 
-			Edges = new LNX_Edge[3];
-			Edges[0] = new LNX_Edge( Verts[1], Verts[2], V_center, v_normal, 
+			EdgeIndices = new LNX_Edge[3];
+			EdgeIndices[0] = new LNX_Edge( Verts[1], Verts[2], V_center, v_normal, 
 				new LNX_ComponentCoordinate(Index_parallelWithParentArray, 0) );
-			Edges[1] = new LNX_Edge( Verts[0], Verts[2], V_center, v_normal,
+			EdgeIndices[1] = new LNX_Edge( Verts[0], Verts[2], V_center, v_normal,
 				new LNX_ComponentCoordinate(Index_parallelWithParentArray, 1) );
-			Edges[2] = new LNX_Edge( Verts[1], Verts[0], V_center, v_normal,
+			EdgeIndices[2] = new LNX_Edge( Verts[1], Verts[0], V_center, v_normal,
 				new LNX_ComponentCoordinate(Index_parallelWithParentArray, 2) );
 
-			Perimeter = Edges[0].EdgeLength + Edges[1].EdgeLength + Edges[2].EdgeLength;
+			Perimeter = EdgeIndices[0].EdgeLength + EdgeIndices[1].EdgeLength + EdgeIndices[2].EdgeLength;
 
 			Verts[0].SetSiblingRelationships( Verts[1], Verts[2] );
 			Verts[1].SetSiblingRelationships( Verts[0], Verts[2] );
@@ -81,18 +77,18 @@ namespace LogansNavigationExtension
 			//Use "Heron's Formula" to get the area..
 			float semiPerimeter = Perimeter * 0.5f;
 			Area = Mathf.Sqrt( semiPerimeter * 
-				(semiPerimeter - Edges[0].EdgeLength) * 
-				(semiPerimeter - Edges[1].EdgeLength) * 
-				(semiPerimeter - Edges[2].EdgeLength) 
+				(semiPerimeter - EdgeIndices[0].EdgeLength) * 
+				(semiPerimeter - EdgeIndices[1].EdgeLength) * 
+				(semiPerimeter - EdgeIndices[2].EdgeLength) 
 			);
 
-			LongestEdgeLength = Mathf.Max( Edges[0].EdgeLength, Edges[1].EdgeLength, Edges[2].EdgeLength );
-			ShortestEdgeLength = Mathf.Min( Edges[0].EdgeLength, Edges[1].EdgeLength, Edges[2].EdgeLength );
+			LongestEdgeLength = Mathf.Max( EdgeIndices[0].EdgeLength, EdgeIndices[1].EdgeLength, EdgeIndices[2].EdgeLength );
+			ShortestEdgeLength = Mathf.Min( EdgeIndices[0].EdgeLength, EdgeIndices[1].EdgeLength, EdgeIndices[2].EdgeLength );
 
 			name = $"ind: '{Index_parallelWithParentArray}', ctr: '{V_center}'";
 
 			DBG_class += $"nrml: '{v_normal}'\n" +
-				$"edge lengths: '{Edges[0].EdgeLength}', '{Edges[1].EdgeLength}', '{Edges[2].EdgeLength}'\n" +
+				$"edge lengths: '{EdgeIndices[0].EdgeLength}', '{EdgeIndices[1].EdgeLength}', '{EdgeIndices[2].EdgeLength}'\n" +
 				$"Prmtr: '{Perimeter}', Area: '{Area}'\n";
 		}
 
@@ -105,27 +101,27 @@ namespace LogansNavigationExtension
 
 			V_center = (Verts[0].Position + Verts[1].Position + Verts[2].Position) / 3f;
 
-			Edges[0].CalculateInfo( Verts[1], Verts[2], V_center, v_normal );
-			Edges[1].CalculateInfo( Verts[0], Verts[2], V_center, v_normal );
-			Edges[2].CalculateInfo( Verts[1], Verts[0], V_center, v_normal );
+			EdgeIndices[0].CalculateInfo( Verts[1], Verts[2], V_center, v_normal );
+			EdgeIndices[1].CalculateInfo( Verts[0], Verts[2], V_center, v_normal );
+			EdgeIndices[2].CalculateInfo( Verts[1], Verts[0], V_center, v_normal );
 
-			Perimeter = Edges[0].EdgeLength + Edges[1].EdgeLength + Edges[2].EdgeLength;
+			Perimeter = EdgeIndices[0].EdgeLength + EdgeIndices[1].EdgeLength + EdgeIndices[2].EdgeLength;
 
 			//Use "Heron's Formula" to get the area..
 			float semiPerimeter = Perimeter * 0.5f;
 			Area = Mathf.Sqrt(semiPerimeter *
-				(semiPerimeter - Edges[0].EdgeLength) *
-				(semiPerimeter - Edges[1].EdgeLength) *
-				(semiPerimeter - Edges[2].EdgeLength)
+				(semiPerimeter - EdgeIndices[0].EdgeLength) *
+				(semiPerimeter - EdgeIndices[1].EdgeLength) *
+				(semiPerimeter - EdgeIndices[2].EdgeLength)
 			);
 
-			LongestEdgeLength = Mathf.Max(Edges[0].EdgeLength, Edges[1].EdgeLength, Edges[2].EdgeLength);
-			ShortestEdgeLength = Mathf.Min(Edges[0].EdgeLength, Edges[1].EdgeLength, Edges[2].EdgeLength);
+			LongestEdgeLength = Mathf.Max(EdgeIndices[0].EdgeLength, EdgeIndices[1].EdgeLength, EdgeIndices[2].EdgeLength);
+			ShortestEdgeLength = Mathf.Min(EdgeIndices[0].EdgeLength, EdgeIndices[1].EdgeLength, EdgeIndices[2].EdgeLength);
 
 			name = $"ind: '{Index_parallelWithParentArray}', ctr: '{V_center}'";
 
 			DBG_class += $"nrml: '{v_normal}'\n" +
-				$"edge lengths: '{Edges[0].EdgeLength}', '{Edges[1].EdgeLength}', '{Edges[2].EdgeLength}'\n" +
+				$"edge lengths: '{EdgeIndices[0].EdgeLength}', '{EdgeIndices[1].EdgeLength}', '{EdgeIndices[2].EdgeLength}'\n" +
 				$"Prmtr: '{Perimeter}', Area: '{Area}'\n";
 		}
 
@@ -194,6 +190,11 @@ namespace LogansNavigationExtension
 			{
 				AdjacentTriIndices = foundAdjacentTriIndices.ToArray();
 			}
+		}
+
+		public bool HasVertices( Vector3 vA, Vector3 vB )
+		{
+			Verts
 		}
 
 		public List<LNX_Vertex> GetSharedVertices( int vertIndex, LNX_Triangle[] tris )
@@ -299,22 +300,21 @@ namespace LogansNavigationExtension
 			return true;
 		}
 
-		public float DistanceToNearestVert( Vector3 pos )
+		public float DistanceToNearestVert( Vector3 pos, LNX_Vertex[] verts )
 		{
 			return Mathf.Min(
 				Vector3.Distance(pos, V_center),
-				Vector3.Distance(pos, Verts[0].Position),
-				Vector3.Distance(pos, Verts[1].Position),
-				Vector3.Distance(pos, Verts[2].Position)
+				Vector3.Distance(pos, verts[Verts[0]].Position),
+				Vector3.Distance(pos, verts[Verts[1]].Position),
+				Vector3.Distance(pos, verts[Verts[2]].Position)
 			);
 		}
 
-		public Vector3 ClosestPointOnPerimeter( Vector3 pos )
+		public Vector3 ClosestPointOnPerimeter( Vector3 pos, LNX_Edge[] edges )
 		{
-			//Debug.Log($"Edges.length: '{Edges.Length}'");
-			Vector3 vA = Edges[0].ClosestPointOnEdge( pos );
-			Vector3 vB = Edges[1].ClosestPointOnEdge( pos );
-			Vector3 vC = Edges[2].ClosestPointOnEdge( pos );
+			Vector3 vA = edges[EdgeIndices[0]].ClosestPointOnEdge(pos);
+			Vector3 vB = edges[EdgeIndices[1]].ClosestPointOnEdge(pos);
+			Vector3 vC = edges[EdgeIndices[2]].ClosestPointOnEdge(pos);
 
 			float distToA = Vector3.Distance( pos, vA );
 			float distToB = Vector3.Distance( pos, vB );
@@ -341,34 +341,34 @@ namespace LogansNavigationExtension
 
 			#region Find opposing edge...........................
 			//note: the dot product of edge 0 isn't necessary as we can assume it's this one for sure if the other two don't work...
-			float dotProd_edge1 = Vector3.Dot( -Edges[1].v_cross, v_dir );
-			float dotProd_edge2 = Vector3.Dot( -Edges[2].v_cross, v_dir );
+			float dotProd_edge1 = Vector3.Dot( -EdgeIndices[1].v_cross, v_dir );
+			float dotProd_edge2 = Vector3.Dot( -EdgeIndices[2].v_cross, v_dir );
 
 			int opposingEdge = 0;
 
-			if( dotProd_edge1 > 0 && Edges[1].IsProjectedPointOnEdge(innerPos, outerPos - innerPos) )
+			if( dotProd_edge1 > 0 && EdgeIndices[1].IsProjectedPointOnEdge(innerPos, outerPos - innerPos) )
 			{
 				dbgPerim += $"if-chose 1\n";
 				opposingEdge = 1;
 			}
-			else if ( dotProd_edge2 > 0 && Edges[2].IsProjectedPointOnEdge(innerPos, outerPos - innerPos) )
+			else if ( dotProd_edge2 > 0 && EdgeIndices[2].IsProjectedPointOnEdge(innerPos, outerPos - innerPos) )
 			{
 				dbgPerim += $"if-chose 2\n";
 
 				opposingEdge = 2;
 			}
 
-			dbgPerim += $"d1: '{dotProd_edge1}' ({Edges[1].IsProjectedPointOnEdge(innerPos, outerPos - innerPos)}), " +
-				$"d2: '{dotProd_edge2}' ({Edges[2].IsProjectedPointOnEdge(innerPos, outerPos - innerPos)}), \n" +
+			dbgPerim += $"d1: '{dotProd_edge1}' ({EdgeIndices[1].IsProjectedPointOnEdge(innerPos, outerPos - innerPos)}), " +
+				$"d2: '{dotProd_edge2}' ({EdgeIndices[2].IsProjectedPointOnEdge(innerPos, outerPos - innerPos)}), \n" +
 				$"chose edge: '{opposingEdge}'\n";
 			#endregion
 
-			float lengthA = Vector3.Distance( innerPos, Edges[opposingEdge].StartPosition );
-			float angA = Vector3.Angle( -v_dir, Edges[opposingEdge].v_endToStart );
+			float lengthA = Vector3.Distance( innerPos, EdgeIndices[opposingEdge].StartPosition );
+			float angA = Vector3.Angle( -v_dir, EdgeIndices[opposingEdge].v_endToStart );
 
 			float angX = Vector3.Angle( 
-				Vector3.Normalize(innerPos - Edges[opposingEdge].StartPosition),
-				Edges[opposingEdge].v_startToEnd
+				Vector3.Normalize(innerPos - EdgeIndices[opposingEdge].StartPosition),
+				EdgeIndices[opposingEdge].v_startToEnd
 			);
 
 			float lengthX = Mathf.Sin(Mathf.Deg2Rad * angX) * ( lengthA / Mathf.Sin(Mathf.Deg2Rad * angA) );

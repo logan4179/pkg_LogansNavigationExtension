@@ -181,9 +181,9 @@ namespace LogansNavigationExtension
 
 			if ( drawEdgeLabels )
 			{
-				Handles.Label(tri.Edges[0].MidPosition + (tri.Edges[0].v_cross * len_edgeLables), "e0", gstl_label);
-				Handles.Label(tri.Edges[1].MidPosition + (tri.Edges[1].v_cross * len_edgeLables), "e1", gstl_label);
-				Handles.Label(tri.Edges[2].MidPosition + (tri.Edges[2].v_cross * len_edgeLables), "e2", gstl_label);
+				Handles.Label(tri.EdgeIndices[0].MidPosition + (tri.EdgeIndices[0].v_cross * len_edgeLables), "e0", gstl_label);
+				Handles.Label(tri.EdgeIndices[1].MidPosition + (tri.EdgeIndices[1].v_cross * len_edgeLables), "e1", gstl_label);
+				Handles.Label(tri.EdgeIndices[2].MidPosition + (tri.EdgeIndices[2].v_cross * len_edgeLables), "e2", gstl_label);
 			}
 			#endregion
 
@@ -216,9 +216,9 @@ namespace LogansNavigationExtension
 				Gizmos.DrawLine(tri.Verts[1].Position, tri.V_center);
 				Gizmos.DrawLine(tri.Verts[2].Position, tri.V_center);
 
-				Gizmos.DrawLine( tri.Edges[0].MidPosition, tri.Edges[0].MidPosition + (tri.Edges[0].v_cross * len_edgeLables) );
-				Gizmos.DrawLine( tri.Edges[1].MidPosition, tri.Edges[1].MidPosition + (tri.Edges[1].v_cross * len_edgeLables) );
-				Gizmos.DrawLine( tri.Edges[2].MidPosition, tri.Edges[2].MidPosition + (tri.Edges[2].v_cross * len_edgeLables) );
+				Gizmos.DrawLine( tri.EdgeIndices[0].MidPosition, tri.EdgeIndices[0].MidPosition + (tri.EdgeIndices[0].v_cross * len_edgeLables) );
+				Gizmos.DrawLine( tri.EdgeIndices[1].MidPosition, tri.EdgeIndices[1].MidPosition + (tri.EdgeIndices[1].v_cross * len_edgeLables) );
+				Gizmos.DrawLine( tri.EdgeIndices[2].MidPosition, tri.EdgeIndices[2].MidPosition + (tri.EdgeIndices[2].v_cross * len_edgeLables) );
 			}
 
 			if ( amDrawingBounds && _mgr.Bounds != null && _mgr.Bounds.Length == 6 )
