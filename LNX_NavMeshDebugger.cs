@@ -69,7 +69,7 @@ namespace LogansNavigationExtension
 		[Header("DEBUG NORMALS")]
 		[SerializeField] private bool drawNormalLines = false;
 		public Color Color_normalLines = Color.white;
-		[Range(0.2f, 1f)] public float Length_normalLines = 0.5f;
+		[Range(0.05f, 1f)] public float Length_normalLines = 0.5f;
 
 		[Header("DEBUG BOUNDS")]
 		[SerializeField] private bool amDrawingBounds = false;
@@ -77,27 +77,11 @@ namespace LogansNavigationExtension
 
 		[Header("NAVMESH TRIANGULATION")]
 		public bool OnlyNMGizmos = false;
-		public int[] areas;
-		public int[] indices;
-		public Vector3[] vertices;
+
 		public Vector3 V_vertPlacePos;
 
 		//[Header("VERT MANIPULATION")]
 
-
-
-		[ContextMenu("z - FetchNavmeshTriangulation()")]
-		public void FetchNavmeshTriangulation()
-		{
-			Debug.Log($"{nameof(FetchNavmeshTriangulation)}()...");
-
-			NavMeshTriangulation tringltn = NavMesh.CalculateTriangulation();
-
-			areas = tringltn.areas;
-			indices = tringltn.indices;
-			vertices = tringltn.vertices;
-
-		}
 
 		private void OnDrawGizmos()
 		{
@@ -106,26 +90,15 @@ namespace LogansNavigationExtension
 				return;
 			}
 
-			if ( OnlyNMGizmos )
+			if ( _mgr.Triangles != null && _mgr.Triangles.Length > 0 )
 			{
-				for ( int i = 0; i < vertices.Length; i++ )
+				for ( int i = 0; i < _mgr.Triangles.Length; i++ )
 				{
-					Gizmos.DrawSphere( vertices[i], 0.1f );
+					DrawTriGizmos( _mgr.Triangles[i], (Index_TriFocus > -1 && Index_TriFocus == i) ? true : false );
+					//DrawTriGizmos( Triangles[i], false ); //for when you don't want this class to do any focusing...
+
 				}
 			}
-			else
-			{
-				if ( _mgr.Triangles != null && _mgr.Triangles.Length > 0 )
-				{
-					for ( int i = 0; i < _mgr.Triangles.Length; i++ )
-					{
-						DrawTriGizmos( _mgr.Triangles[i], (Index_TriFocus > -1 && Index_TriFocus == i) ? true : false );
-						//DrawTriGizmos( Triangles[i], false ); //for when you don't want this class to do any focusing...
-
-					}
-				}
-			}
-
 		}
 
 		public void DrawTriGizmos(LNX_Triangle tri, bool amFocused)
@@ -143,7 +116,7 @@ namespace LogansNavigationExtension
 
 			GUIStyle gstl_label = GUIStyle.none;
 			gstl_label.normal.textColor = amKosher ? Color.white : Color.red;
-			float len_edgeLables = Length_normalLines * 0.4f;
+			float len_edgeLables = Length_normalLines * 0.25f;
 
 			#region EDGES -------------------------------------------------------
 			if ( !amKosher )
@@ -225,7 +198,10 @@ namespace LogansNavigationExtension
 			{
 				Gizmos.color = Color_boundsLines;
 
-				Gizmos.DrawWireCube( _mgr.BoundsCenter, _mgr.BoundsSize );
+				Gizmos.DrawWireCube( _mgr.V_BoundsCenter, _mgr.V_BoundsSize );
+				Gizmos.DrawCube(_mgr.V_Bounds[0], Vector3.one * 5f);
+				Gizmos.DrawCube(_mgr.V_Bounds[4], Vector3.one);
+
 			}
 
 			if ( AmAllowingFocus && amFocused && AmAllowingVertFocus )

@@ -55,6 +55,12 @@ namespace LogansNavigationExtension
 				$"";
 		}
 
+		/// <summary>
+		/// Creates SiblingRelationship objects for other 2 sibling vertices. Calculates and 
+		/// caches convenience variables for relating this vertex to it's sibling vertices.
+		/// </summary>
+		/// <param name="vA"></param>
+		/// <param name="vB"></param>
 		public void SetSiblingRelationships( LNX_Vertex vA, LNX_Vertex vB )
 		{
 			SiblingRelationships = new LNX_VertexRelationship_exp[2];

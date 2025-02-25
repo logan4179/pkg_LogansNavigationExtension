@@ -27,6 +27,12 @@ namespace LogansNavigationExtension
 		}
 		#endregion
 
+		[SerializeField] bool flag_translateHandleChangedLastFrame;
+		[SerializeField] bool flag_moveHandleDirty;
+		bool flag_mouseDownThisFrame;
+		bool flag_mouseUpThisFrame;
+
+
 		//protected virtual void OnSceneGUI() //this was how Unity suggested I start one of these custom editors, but a google result said the reason I was getting an error was because 
 		// it was marked virtual. The error was "... should not be used inside OnSceneGUI or OnPreviewGUI. Use the single target property instead...."
 
@@ -65,7 +71,7 @@ namespace LogansNavigationExtension
 			_targetScript.ChangeSelectMode( _targetScript.SelectMode );
 		}
 
-		void MyCallback(PointerDownEvent evt) 
+		void MyPointerDownCallback(PointerDownEvent evt) 
 		{
 			Debug.Log("pde");
 		}
@@ -74,7 +80,6 @@ namespace LogansNavigationExtension
 			Debug.Log("mde");
 		}
 
-		[SerializeField] bool translateHandleChangedLastFrame;
 		public void OnSceneGUI()
 		{
 			if( _targetScript._LNX_NavMesh == null )
@@ -89,23 +94,57 @@ namespace LogansNavigationExtension
 
 			}
 
-			#region Handle Select Mode Toggling Shortcuts (Alt + number) --------------------------
+			#region HOTKEYS --------------------------
+			if( Event.current.isMouse )
+			{
+				flag_mouseDownThisFrame = false;
+				flag_mouseUpThisFrame = false;
+
+				if( Event.current.type == EventType.MouseDown )
+				{
+					flag_mouseDownThisFrame = true;
+				}
+				else if( Event.current.type == EventType.MouseUp )
+				{
+					flag_mouseUpThisFrame = true;
+					if( flag_moveHandleDirty )
+					{
+						Debug.Log( "refreshing..." );
+						flag_moveHandleDirty = false;
+						_targetScript._LNX_NavMesh.RefeshMesh();
+					}
+				}
+			}
+
 			if ( Event.current.isKey && Event.current.type == EventType.KeyUp )
 			{
 				if ( Event.current.alt )
 				{
-					if ( Event.current.keyCode == KeyCode.Alpha1 )
+					if ( Event.current.keyCode == KeyCode.Alpha1 ) // Vertex mode
 					{
 						_targetScript.ChangeSelectMode( LNX_SelectMode.Vertices );
 						
 					}
-					else if ( Event.current.keyCode == KeyCode.Alpha2 )
+					else if ( Event.current.keyCode == KeyCode.Alpha2 ) // Edge Mode
 					{
 						_targetScript.ChangeSelectMode( LNX_SelectMode.Edges );
 					}
-					else if ( Event.current.keyCode == KeyCode.Alpha3 )
+					else if ( Event.current.keyCode == KeyCode.Alpha3 ) // Face Mode
 					{
 						_targetScript.ChangeSelectMode( LNX_SelectMode.Faces );
+					}
+					else if( Event.current.keyCode == KeyCode.L ) // Lock selection
+					{
+						_targetScript.FlipLocked();
+						Debug.Log($"fliplocked to '{_targetScript.Flag_AmLocked}'");
+					}
+					else if( Event.current.keyCode == KeyCode.W )
+					{
+						_targetScript.OperationMode = LNX_OperationMode.Moving;
+					}
+					else if ( Event.current.keyCode == KeyCode.X )
+					{
+						_targetScript.TryCut();
 					}
 				}
 				else
@@ -120,7 +159,7 @@ namespace LogansNavigationExtension
 
 			if ( _targetScript.SelectMode != LNX_SelectMode.None )
 			{
-				_targetScript.AmPointingATBounds = false;
+				_targetScript.AmPointingATBounds = false; //todo: in the future, I need to make something that can detect if I'm pointing at the bounds first before detecting if pointing at component for efficiency...
 
 				HandleUtility.AddDefaultControl( GUIUtility.GetControlID(FocusType.Passive) ); //This is necessary to put in onscenegui in order to prevent focus from being taken away when clicking in the scene if I want clicking controls...
 
@@ -141,26 +180,31 @@ namespace LogansNavigationExtension
 				{
 					EditorGUI.BeginChangeCheck();
 					Vector3 newTargetPosition = Handles.PositionHandle( _targetScript.manipulatorPos, Quaternion.identity );
+			
 					//Debug.Log($"{_targetScript.manipulatorPos}");
-					
-					//Debug.Log( _targetScript.manipulatorPos );
-					if ( EditorGUI.EndChangeCheck() ) //inside this block, a change is definitely detected...
+
+					if ( EditorGUI.EndChangeCheck() ) //happens when manipulator is dragged
 					{
-						//_targetScript.manipulatorPos = newTargetPosition;
 
 						_targetScript.MoveSelectedVerts( newTargetPosition );
 						Undo.RecordObject( _targetScript, "Change component Positions" );
 
-						translateHandleChangedLastFrame = true;
+						flag_moveHandleDirty = true;
+
+						flag_translateHandleChangedLastFrame = true;
 					}
-					else
+					else //happens when the mouse moves, but not when manipulator is dragged
 					{
-						if ( translateHandleChangedLastFrame )
+
+						if ( flag_translateHandleChangedLastFrame )
 						{
-							_targetScript._LNX_NavMesh.RefreshTris();
+							//Debug.Log("haasdfsaf");
+							//_targetScript._LNX_NavMesh.RefeshMesh();
+
+							//if( )
 						}
 
-						translateHandleChangedLastFrame = false;
+						flag_translateHandleChangedLastFrame = false;
 					}
 				}
 			}

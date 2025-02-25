@@ -26,6 +26,8 @@ namespace LogansNavigationExtension
 		/// <summary>Use this list for when only the triangles selected matter, as opposed to the edges or vertices contained </summary>
 		public List<int> indices_selectedTris;
 
+		public List<int> indices_lockedTris;
+
 		public LNX_Triangle LastSelectedTri
 		{
 			get
@@ -56,6 +58,13 @@ namespace LogansNavigationExtension
 			}
 		}
 
+		public bool HaveTrisSelected
+		{
+			get
+			{
+				return indices_selectedTris != null && indices_selectedTris.Count > 0;
+			}
+		}
 		#endregion
 
 		#region VERTICES ---------------------------
@@ -65,32 +74,6 @@ namespace LogansNavigationExtension
 		/// List of vertices that are currently selected. Note: does NOT have vertices sharing the same position. Only unique positions.
 		/// </summary>
 		public List<LNX_Vertex> Verts_currentlySelected;
-		/*
-		public LNX_Vertex_exp LastSelectedVert
-		{
-			get
-			{
-				if( Vert_LastSelected == LNX_ComponentCoordinate.None )
-				{
-					return null;
-				}
-
-				return _LNX_NavMesh.GetVertexAtCoordinate( Vert_LastSelected );
-			}
-		}
-
-		public LNX_Vertex_exp PointingAtVert
-		{
-			get
-			{
-				if ( Vert_CurrentlyPointingAt == LNX_ComponentCoordinate.None )
-				{
-					return null;
-				}
-
-				return _LNX_NavMesh.GetVertexAtCoordinate( Vert_CurrentlyPointingAt );
-			}
-		}*/
 
 		public bool HaveVertsSelected
 		{
@@ -118,11 +101,25 @@ namespace LogansNavigationExtension
 		[Range(0f, 8f)] public float Size_SelectedComponent = 0.2f;
 		[Range(0f, 8f)] public float Size_FocusedComponent = 0.2f;
 		[Range(0f, 8f)] public float Size_HoveredComponent = 0.2f;
+		[SerializeField] private Color color_lockedTri = Color.white;
+		[Range(0f, 8f)] public float Thickness_LockedTriEdge = 0.2f;
+
 
 		//[Header("FLAGS")]
 		/// <summary>Tells whether the mouse is currently considered to be pointing at a selectable component. Gets set 
 		/// in the trypoint method</summary>
 		public bool Flag_AComponentIsCurrentlyHighlighted = false;
+
+		/// <summary>
+		/// Tells whether am in 'Locked' state, where you can only select verts or edges that are part of 
+		/// already locked triangle selection.
+		/// </summary>
+		bool amLocked = false;
+		/// <summary>
+		/// Tells whether am in 'Locked' state, where you can only select verts or edges that are part of 
+		/// already locked triangle selection.
+		/// </summary>
+		public bool Flag_AmLocked => amLocked;
 
 		//[Header("OTHER")]
 		public Vector3 manipulatorPos = Vector3.zero;
@@ -133,6 +130,10 @@ namespace LogansNavigationExtension
 			ClearSelection();
 
 			OperationMode = LNX_OperationMode.Pointing;
+
+			amLocked = false;
+
+			indices_lockedTris = new List<int>();
 		}
 
 		public void ClearSelection()
@@ -144,8 +145,6 @@ namespace LogansNavigationExtension
 			ClearEdges();
 
 			Flag_AComponentIsCurrentlyHighlighted = false;
-
-			updateDebugSelected();
 		}
 
 		void ClearTris()
@@ -197,9 +196,40 @@ namespace LogansNavigationExtension
 			SelectMode = mode;
 		}
 
-		[SerializeField, TextArea(0,10)] private string DebugFocus;
+		[TextArea(1,5)] public string DBG_locked;
+		[TextArea(1, 15)] public string DbgClass;
+
+		public void FlipLocked()
+		{
+			bool newLockState = !amLocked;
+
+			if ( newLockState == true )
+			{
+				indices_lockedTris = indices_selectedTris;
+				indices_selectedTris = new List<int>();
+				ClearVerts();
+				ClearEdges();
+
+			}
+			else
+			{
+				indices_lockedTris = new List<int>();
+			}
+
+			amLocked = newLockState;
+		}
+
+		public void TryPointAtBounds()
+		{
+			//todo: in the future, I need to make something that can detect if I'm pointing at
+			//the bounds first before detecting if pointing at component for efficiency...
+		}
+
+		[SerializeField, TextArea(0,10)] private string DebugPointAt;
 		public void TryPointAtComponentViaDirection( Vector3 vPerspective, Vector3 vDirection )
 		{
+			DebugPointAt = $"";
+
 			Flag_AComponentIsCurrentlyHighlighted = false;
 
 			if ( SelectMode == LNX_SelectMode.Faces )
@@ -215,8 +245,11 @@ namespace LogansNavigationExtension
 
 					if ( alignment > runningBestAlignment )
 					{
+						DebugPointAt += $"tri: [{i}]. alignment: '{alignment}'\n";
+
 						runningBestAlignment = alignment;
 						Index_TriPointingAt = i;
+						DebugPointAt += $"{nameof(Index_TriPointingAt)}: '{Index_TriPointingAt}'\n";
 					}
 				}
 
@@ -230,10 +263,14 @@ namespace LogansNavigationExtension
 				float runningBestAlignment = 0.998f;
 				int runningBestTriIndex = -1;
 				int runningBestVertIndex = -1;
-				DebugFocus = string.Empty;
 
 				for ( int i = 0; i < _LNX_NavMesh.Triangles.Length; i++ )
 				{
+					if ( amLocked && !indices_lockedTris.Contains(i) )
+					{
+						continue;
+					}
+
 					for ( int j = 0; j < 3; j++ )
 					{
 						Vector3 vTo = Vector3.Normalize( _LNX_NavMesh.GetVertexAtCoordinate(i,j).Position - vPerspective );
@@ -241,7 +278,7 @@ namespace LogansNavigationExtension
 
 						if ( alignment > runningBestAlignment )
 						{
-							DebugFocus += $"vert: [{i}][{j}]. alignment: '{alignment}'\n";
+							DebugPointAt += $"vert: [{i}][{j}]. alignment: '{alignment}'\n";
 							runningBestAlignment = alignment;
 							runningBestTriIndex = i;
 							runningBestVertIndex = j;
@@ -265,11 +302,15 @@ namespace LogansNavigationExtension
 			else if ( SelectMode == LNX_SelectMode.Edges )
 			{
 				LNX_ComponentCoordinate runningBestCoordinate = LNX_ComponentCoordinate.None;
-				DebugFocus = string.Empty;
 				float runningBestAlignment = 0.9f;
 
 				for ( int i = 0; i < _LNX_NavMesh.Triangles.Length; i++ )
 				{
+					if (amLocked && !indices_lockedTris.Contains(i))
+					{
+						continue;
+					}
+
 					for ( int j = 0; j < 3; j++ )
 					{
 						Vector3 vTo = Vector3.Normalize( _LNX_NavMesh.GetEdgeAtCoordinate(i, j).MidPosition - vPerspective );
@@ -277,7 +318,7 @@ namespace LogansNavigationExtension
 
 						if ( alignment > runningBestAlignment )
 						{
-							DebugFocus += $"vert: [{i}][{j}]. alignment: '{alignment}'\n";
+							DebugPointAt += $"vert: [{i}][{j}]. alignment: '{alignment}'\n";
 							runningBestAlignment = alignment;
 
 							runningBestCoordinate = new LNX_ComponentCoordinate( i, j );
@@ -298,12 +339,10 @@ namespace LogansNavigationExtension
 		}
 
 		[SerializeField, TextArea(0, 10)] private string DebugSelectedReport;
-		[SerializeField, TextArea(0, 10)] private string DebugSelected;
 
 		public void TryGrab( bool amHoldingAddInputModifier = false )
 		{
 			DebugSelectedReport = $"Mode: '{SelectMode}', mod: '{amHoldingAddInputModifier}'\n";
-			DebugSelected = "";
 
 			if ( !Flag_AComponentIsCurrentlyHighlighted )
 			{
@@ -375,8 +414,9 @@ namespace LogansNavigationExtension
 			else if( SelectMode == LNX_SelectMode.Edges )
 			{
 				DebugSelectedReport += $"pointing at: '{Edge_CurrentlyPointingAt.ToString()}' \n";
-				Edge_LastSelected = Edge_CurrentlyPointingAt;
-				LNX_Edge sharedEdge = _LNX_NavMesh.GetEdgeAtCoordinate( Edge_CurrentlyPointingAt.SharedEdge );
+				Edge_LastSelected = Edge_CurrentlyPointingAt; //note: something's funny with edge selection, particularly when selecting a terminal/border edge...
+				
+				LNX_Edge sharedEdge = amLocked ? null : _LNX_NavMesh.GetEdgeAtCoordinate( Edge_CurrentlyPointingAt.SharedEdge );
 
 				if ( !amHoldingAddInputModifier )
 				{
@@ -441,6 +481,12 @@ namespace LogansNavigationExtension
 				for ( int j = 0; j < Verts_currentlySelected[i].SharedVertexCoordinates.Count; j++ )
 				{
 					DebugSelectedReport += $"trying {Verts_currentlySelected[i].SharedVertexCoordinates[j].ToString()}... ";
+
+					if( amLocked && !indices_lockedTris.Contains(Verts_currentlySelected[i].SharedVertexCoordinates[j].TriIndex) )
+					{
+						continue;
+					}
+
 					if ( !Verts_currentlySelected.Contains(_LNX_NavMesh.GetVertexAtCoordinate(Verts_currentlySelected[i].SharedVertexCoordinates[j])) )
 					{
 						DebugSelectedReport += $"added\n";
@@ -453,18 +499,9 @@ namespace LogansNavigationExtension
 				}
 			}
 			#endregion
-
-			updateDebugSelected();
-
-			//Debug.Log(DebugSelected);
 		}
 
-		private void updateDebugSelected()
-		{
-			DebugSelected = $"'{indices_selectedTris.Count}' tris, '{Verts_currentlySelected.Count}' verts, and '{Edges_currentlySelected.Count}' edges currently selected\n" +
-				$"";
-		}
-
+		#region MESH MANIPULATION -----------------------------------------------------
 		public void MoveSelectedVerts(Vector3 pos)
 		{
 			string dbgMoveSelected = $"{nameof(MoveSelectedVerts)}('{pos}') on '{Verts_currentlySelected.Count}' verts...\n";
@@ -476,7 +513,7 @@ namespace LogansNavigationExtension
 				foreach ( LNX_Vertex vrt in Verts_currentlySelected )
 				{
 					_LNX_NavMesh.Triangles[vrt.MyCoordinate.TriIndex].MoveVert_protected(
-						vrt.MyCoordinate.ComponentIndex, vDiff, SelectMode == LNX_SelectMode.Vertices ? false : false
+						_LNX_NavMesh, vrt.MyCoordinate.ComponentIndex, vDiff, SelectMode == LNX_SelectMode.Vertices ? false : false
 					);
 				}
 			}
@@ -484,6 +521,42 @@ namespace LogansNavigationExtension
 			manipulatorPos = pos;
 			//Debug.Log( dbgMoveSelected );
 		}
+
+		[ContextMenu("z call TryCut")]
+		public void TryCut()
+		{
+			if ( Edges_currentlySelected.Count != 2 )
+			{
+				Debug.Log("can't");
+				return;
+			}
+
+			LNX_Triangle tri0 = Edges_currentlySelected[0].MyTri(_LNX_NavMesh);
+			LNX_Triangle tri1 = Edges_currentlySelected[1].MyTri(_LNX_NavMesh);
+
+			if ( 
+				!tri0.AmAdjacentToTri(tri1) ||
+				!Edges_currentlySelected[0].AmTerminal || !Edges_currentlySelected[1].AmTerminal ||
+				Edges_currentlySelected[0].AmTouching(Edges_currentlySelected[1])
+			)
+			{
+				Debug.Log("can't");
+				return;
+			}
+
+			Debug.Log("doing...");
+			//first, find the edge that should be moved...
+			LNX_Edge moveEdge = null;
+			foreach( LNX_Edge edge in tri0.Edges )
+			{
+				if( edge != Edges_currentlySelected[0] && !Edges_currentlySelected[0].AmTouching(edge) )
+				{
+					moveEdge = tri0.Edges[0]; todo:does this work?
+				}
+			}
+
+		}
+		#endregion
 
 		private bool selectedVertsContainTriIndex( int triIndex )
 		{
@@ -505,8 +578,6 @@ namespace LogansNavigationExtension
 		public Vector3 RayDirection;
 		public float RayTryMag = 1f;
 
-		[TextArea(1,15)] public string dbgPointing;
-
 
 		private void OnDrawGizmos()
 		{
@@ -524,41 +595,48 @@ namespace LogansNavigationExtension
 			#region TRIANGLES ------------------------------------------------
 			if ( _LNX_NavMesh != null && _LNX_NavMesh.Triangles != null )
 			{
+				Handles.color = color_edgeLines;
+
 				for ( int i = 0; i < _LNX_NavMesh.Triangles.Length; i++ )
 				{
-					if( indices_selectedTris.Contains(i) )
+					DrawTriGizmos(_LNX_NavMesh.Triangles[i], thickness_edges );
+				}
+
+				if( amLocked )
+				{
+					Handles.color = color_lockedTri;
+
+					for ( int i = 0; i < indices_lockedTris.Count; i++ )
 					{
-						if ( i == Index_TriLastSelected )
+						DrawTriGizmos( _LNX_NavMesh.Triangles[indices_lockedTris[i]], Thickness_LockedTriEdge );
+					}
+				}
+				else
+				{
+					if ( indices_selectedTris != null && indices_selectedTris.Count > 0 )
+					{
+						Handles.color = Color.white;
+
+						for ( int i = 0; i < indices_selectedTris.Count; i++ )
 						{
-							Handles.color = Color.yellow;
-
-							DrawTriGizmos( LastSelectedTri, Size_FocusedComponent );
-						}
-						else
-						{
-
-							Handles.color = Color.white;
-
-							DrawTriGizmos( _LNX_NavMesh.Triangles[i], Size_SelectedComponent );
+							DrawTriGizmos( _LNX_NavMesh.Triangles[indices_selectedTris[i]], Size_SelectedComponent );
 						}
 					}
-					else
+					/*
+					if( Index_TriLastSelected > -1 )
 					{
-						if ( drawNavMeshLines )
-						{
-							Handles.color = color_edgeLines;
-							DrawTriGizmos( _LNX_NavMesh.Triangles[i], thickness_edges );							
-						}
+						Handles.color = new Color(1f, 0.2f, 0f);
+						DrawTriGizmos( LastSelectedTri, Size_FocusedComponent );
+					}
+					*/
+					if ( PointingAtTri != null )
+					{
+						Handles.color = Color.yellow;
+						DrawTriGizmos( PointingAtTri, Size_HoveredComponent );
 					}
 				}
 			}
 
-			if ( PointingAtTri != null && Index_TriPointingAt != Index_TriLastSelected )
-			{
-				Handles.color = Color.yellow;
-
-				DrawTriGizmos( PointingAtTri, Size_HoveredComponent );
-			}
 			#endregion
 
 			#region VERTICES --------------------------------------------
@@ -604,6 +682,16 @@ namespace LogansNavigationExtension
 
 				if ( Edges_currentlySelected != null && Edges_currentlySelected.Count > 0 )
 				{
+					if( amLocked && indices_lockedTris != null && indices_lockedTris.Count > 0 )
+					{
+						Debug.Log("h");
+						for ( int i = 0; i < indices_lockedTris.Count; i++ )
+						{
+							Gizmos.color = color_lockedTri;
+							DrawTriGizmos( _LNX_NavMesh.Triangles[indices_lockedTris[i]], Thickness_LockedTriEdge );
+						}
+					}
+
 					foreach ( LNX_Edge edg in Edges_currentlySelected )
 					{
 
@@ -625,6 +713,35 @@ namespace LogansNavigationExtension
 				}
 			}
 			#endregion
+
+			generateDbgString();
+		}
+
+		private void generateDbgString()
+		{
+			DbgClass = $"Selected --------------------\n";
+			DbgClass += $"'{indices_selectedTris.Count}' tris\n" +
+				$"'{Verts_currentlySelected.Count}' verts\n" +
+				$"'{Edges_currentlySelected.Count}' edges\n" +
+				$"";
+
+			DbgClass += $"\nLock State-----------------\n" +
+				$"{nameof(amLocked)}: '{amLocked}'\n";
+
+			if( indices_lockedTris == null )
+			{
+				DbgClass += $"{nameof(indices_lockedTris)} collection is null...\n";
+			}
+			else
+			{
+				DbgClass += $"{nameof(indices_lockedTris)} count: '{indices_lockedTris.Count}'\n";
+			}
+
+			DbgClass += $"\nPointing --------------------\n";
+			DbgClass += $"{nameof(Flag_AComponentIsCurrentlyHighlighted)}: '{Flag_AComponentIsCurrentlyHighlighted}'\n" +
+				$"";
+
+
 		}
 
 		public void DrawTriGizmos( LNX_Triangle tri, float thickness )

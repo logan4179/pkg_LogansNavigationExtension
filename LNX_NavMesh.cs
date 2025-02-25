@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Windows;
 
 namespace LogansNavigationExtension
 {
@@ -21,11 +22,20 @@ namespace LogansNavigationExtension
 		/// will be the lowest/most-negative value point, and element 4 will be the most positive value point</summary>
 		public Vector3[] V_Bounds;
 
-		public Vector3 BoundsCenter;
-		public Vector3 BoundsSize;
+		public Vector3 V_BoundsCenter;
+		public Vector3 V_BoundsSize;
+		/// <summary>
+		/// Longest distance from the bounds center to any corner on the bounding box. This is used as an efficiency value 
+		/// in order to short-circuit (return early) from certain methods that don't need to run further logic based on the 
+		/// value of this threshold..
+		/// </summary>
+		public float BoundsContainmentDistanceThreshold = -1;
 
         public string LayerMaskName;
         private int cachedLayerMask;
+		public int CachedLayerMask => cachedLayerMask;
+
+		//[Header("flags")]
 
 		private void Awake()
 		{
@@ -130,44 +140,62 @@ namespace LogansNavigationExtension
 		}
 		#endregion
 
+
+		public int[] testAreas;
+		public Vector3[] testVertices;
+		public int[] testIndices;
 		[ContextMenu("z - FetchTriangulation()")]
 		public void FetchTriangulation()
 		{
-			//Debug.Log($"{nameof(FetchTriangulation)}()...");
+			NavMeshTriangulation tringltn = NavMesh.CalculateTriangulation();
 
+			Debug.Log($"Calculated triangulation with '{tringltn.areas.Length}' areas, '{tringltn.vertices.Length}', " +
+				$"'{tringltn.indices.Length}' indices.");
+
+			FetchTriangulation( tringltn );
+		}
+
+
+		public void FetchTriangulation( NavMeshTriangulation tringltn )
+		{
 			if ( string.IsNullOrEmpty(LayerMaskName) )
 			{
-				Debug.LogError( "LogansNavmeshExtender ERROR! You need to set which layer mask to cast against.");
+				Debug.LogError("LogansNavmeshExtender ERROR! You need to set which layer mask to cast against.");
 				return;
 			}
 			cachedLayerMask = LayerMask.GetMask( LayerMaskName );
 
-			NavMeshTriangulation tringltn = NavMesh.CalculateTriangulation();
-
 			Triangles = new LNX_Triangle[tringltn.areas.Length];
 
-			for (int i = 0; i < Triangles.Length; i++)
+			for ( int i = 0; i < Triangles.Length; i++ )
 			{
-				Triangles[i] = new LNX_Triangle(i, tringltn, cachedLayerMask);
+				Triangles[i] = new LNX_Triangle( i, tringltn, cachedLayerMask );
 			}
 
-			EstablishRelationalData();
+			for ( int i = 0; i < Triangles.Length; i++ )
+			{
+				Triangles[i].CreateRelationships( Triangles );
+			}
 
-			Debug.Log( $"Fetched '{Triangles.Count()}' triangles." );
+			testAreas = tringltn.areas;
+			testVertices = tringltn.vertices;
+			testIndices = tringltn.indices;
+
+			CalculateBounds();
 		}
 
-		[ContextMenu("z call RefreshTris()")]
-		public void RefreshTris()
+		[ContextMenu("z call RefeshMesh()")]
+		public void RefeshMesh()
 		{
 			for (int i = 0; i < Triangles.Length; i++)
 			{
-				Triangles[i].CalculateTriInfo();
+				Triangles[i].RefreshTriangle( this, false );
 			}
 
-			EstablishRelationalData();
+			CalculateBounds();
 		}
 
-		public void EstablishRelationalData( bool triIsDirty = false )
+		public void CalculateBounds()
 		{
 			Bounds = new float[6] 
 			{ 
@@ -178,13 +206,6 @@ namespace LogansNavigationExtension
 
 			for ( int i = 0; i < Triangles.Length; i++ )
 			{
-				if ( triIsDirty )
-				{
-					Triangles[i].CalculateTriInfo();
-				}
-
-				Triangles[i].CreateRelationships( Triangles );
-
 				for ( int j = 0; j < 3; j++ )
 				{
 					if ( Triangles[i].Verts[j].Position.x < Bounds[0] )
@@ -228,16 +249,22 @@ namespace LogansNavigationExtension
 				new Vector3(Bounds[0], Bounds[3], Bounds[5]),
 			};
 
-			BoundsCenter = (
+			V_BoundsCenter = (
 				V_Bounds[0] + V_Bounds[1] + V_Bounds[2] + V_Bounds[3] + 
 				V_Bounds[4] + V_Bounds[5] + V_Bounds[6] + V_Bounds[7]
 				
 			) / 8;
 
-			BoundsSize = new Vector3(
+			V_BoundsSize = new Vector3(
 				Mathf.Abs(Bounds[0] - Bounds[1]),
 				Mathf.Abs(Bounds[2] - Bounds[3]),
 				Mathf.Abs(Bounds[4] - Bounds[5])
+			);
+
+			BoundsContainmentDistanceThreshold = Mathf.Max
+			(
+				Vector3.Distance(V_BoundsCenter, V_Bounds[0]),
+				Vector3.Distance(V_BoundsCenter, V_Bounds[4])
 			);
 		}
 
@@ -248,7 +275,7 @@ namespace LogansNavigationExtension
 
 			if( SamplePosition(startPos_passed, out lnxHit, maxDistance) )
 			{
-				startPos_passed = lnxHit.Position;
+				startPos_passed = lnxHit.HitPosition;
 				dbgCalculatePath += $"SamplePosition() hit startpos\n";
 			}
 			else
@@ -259,7 +286,7 @@ namespace LogansNavigationExtension
 
 			if ( SamplePosition(endPos_passed, out lnxHit, maxDistance) )
 			{
-				endPos_passed = lnxHit.Position;
+				endPos_passed = lnxHit.HitPosition;
 				dbgCalculatePath += $"SamplePosition() hit endpos\n";
 			}
 			else
@@ -314,13 +341,28 @@ namespace LogansNavigationExtension
 			return rtrnIndx;
 		}
 
-        /*[SerializeField]*/ private string DBG_GetClosestTri;
+        [SerializeField] private string DBG_GetClosestTri;
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="pos"></param>
+		/// <param name="hit"></param>
+		/// <param name="maxDistance"></param>
+		/// <returns></returns>
         public bool SamplePosition( Vector3 pos, out LNX_ProjectionHit hit, float maxDistance )
         {
             DBG_GetClosestTri = $"Searching through '{Triangles.Length}' tris...\n";
+
+			if( Vector3.Distance(V_BoundsCenter, pos) > (maxDistance + BoundsContainmentDistanceThreshold) )
+			{
+				DBG_GetClosestTri += $"distance threshold short circuit";
+				hit = LNX_ProjectionHit.None;
+				return false;
+			}
+
             float runningClosestDist = float.MaxValue;
             Vector3 currentPt = Vector3.zero;
-			hit.Position = Vector3.zero;
+			hit.HitPosition = Vector3.zero;
 			hit.Index_intersectedTri = -1;
 
             for ( int i = 0; i < Triangles.Length; i++ )
@@ -346,13 +388,13 @@ namespace LogansNavigationExtension
 
 				if ( Vector3.Distance(pos, currentPt) < runningClosestDist )
 				{
-					hit.Position = currentPt;
-					runningClosestDist = Vector3.Distance( pos, hit.Position );
+					hit.HitPosition = currentPt;
+					runningClosestDist = Vector3.Distance( pos, hit.HitPosition );
 					hit.Index_intersectedTri = i;
 				}
             }
 
-            DBG_GetClosestTri += $"finished. returning: '{hit.Index_intersectedTri}' with pt: '{hit.Position}'\n";
+            DBG_GetClosestTri += $"finished. returning: '{hit.Index_intersectedTri}' with pt: '{hit.HitPosition}'\n";
 
             if( runningClosestDist <= maxDistance )
 			{

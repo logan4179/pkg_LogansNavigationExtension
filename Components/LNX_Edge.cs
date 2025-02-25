@@ -23,6 +23,8 @@ namespace LogansNavigationExtension
 
 		public LNX_ComponentCoordinate SharedEdge;
 
+		public bool AmTerminal => SharedEdge == LNX_ComponentCoordinate.None;
+
 		// TRUTH...........
 		/// <summary>If true, it means that this edge has no shared edge with another triangle, 
 		/// and therefore forms part of the boundary of walkable space.</summary>
@@ -95,6 +97,26 @@ namespace LogansNavigationExtension
 			}
 
 			return true;
+		}
+
+		public LNX_Triangle MyTri(LNX_NavMesh nm)
+		{
+			return nm.Triangles[MyCoordinate.TriIndex];
+		}
+
+		public bool AmTouching( LNX_Edge edge )
+		{
+			if( edge.StartPosition == StartPosition || edge.EndPosition == StartPosition )
+			{
+				return true;
+			}
+
+			if( edge.EndPosition == EndPosition || edge.EndPosition == StartPosition )
+			{
+				return true;
+			}
+
+			return false;
 		}
 	}
 }

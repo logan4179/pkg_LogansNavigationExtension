@@ -439,8 +439,24 @@ namespace LogansNavigationExtension
 	public struct LNX_ProjectionHit
 	{
 		public int Index_intersectedTri;
-		public Vector3 Position;
-    }
+		public Vector3 HitPosition;
+
+        private static LNX_ProjectionHit none = new LNX_ProjectionHit( -1, Vector3.zero );
+
+        public LNX_ProjectionHit( int indx, Vector3 pos )
+        {
+            Index_intersectedTri = indx;
+			HitPosition = pos;
+        }
+
+		public static LNX_ProjectionHit None
+		{
+			get
+			{
+				return none;
+			}
+		}
+	}
 
 	[System.Serializable]
 	public struct LNX_VertexRelationship_exp

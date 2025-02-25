@@ -1,0 +1,14 @@
+sampleFromStart
+10.007, 0.737, 5.42,
+10.186, 0.417, 5.42
+end
+
+expectedHitPositions
+9.72, 0.6663884, 5.46119,
+10.186, 0.0006940365, 5.42
+end
+
+expectedTriCtrPositions
+9.400001, 0.630694, 5.4,
+10.46, 0.0006940365, 6.08
+end

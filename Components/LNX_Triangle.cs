@@ -45,24 +45,27 @@ namespace LogansNavigationExtension
 		/// </summary>
 		public int[] AdjacentTriIndices;
 
+		//[Header("FLAGS")]
+		bool dirtyFlag_repositionedVert = false;
+
 		public LNX_Triangle( int triIndx, NavMeshTriangulation nmTriangulation, int lrMask )
 		{
 			DBG_class = string.Empty;
 
 			Index_parallelWithParentArray = triIndx;
 
+			//Debug.Log($"LNX_Triangle('{triIndx}'), triangulation verts null: '{nmTriangulation.vertices == null}'");
+			//Debug.Log($"{nmTriangulation.indices[0]}");
+			//Debug.Log($"{nmTriangulation.indices[(triIndx * 3)]}");
+
 			Vector3 vrtPos0 = nmTriangulation.vertices[ nmTriangulation.indices[(triIndx * 3)] ];
 			Vector3 vrtPos1 = nmTriangulation.vertices[ nmTriangulation.indices[(triIndx * 3) + 1] ];
 			Vector3 vrtPos2 = nmTriangulation.vertices[ nmTriangulation.indices[(triIndx * 3) + 2] ];
-
-			V_center = ( vrtPos0 + vrtPos1 + vrtPos2 )  / 3f;
 
 			Verts = new LNX_Vertex[3];
 			Verts[0] = new LNX_Vertex( this, vrtPos0, 0, nmTriangulation );
 			Verts[1] = new LNX_Vertex( this, vrtPos1, 1, nmTriangulation );
 			Verts[2] = new LNX_Vertex( this, vrtPos2, 2, nmTriangulation );
-
-			TryGetNormal( lrMask );
 
 			Edges = new LNX_Edge[3];
 			Edges[0] = new LNX_Edge( Verts[1], Verts[2], V_center, v_normal, 
@@ -72,34 +75,13 @@ namespace LogansNavigationExtension
 			Edges[2] = new LNX_Edge( Verts[1], Verts[0], V_center, v_normal,
 				new LNX_ComponentCoordinate(Index_parallelWithParentArray, 2) );
 
-			Perimeter = Edges[0].EdgeLength + Edges[1].EdgeLength + Edges[2].EdgeLength;
-
-			Verts[0].SetSiblingRelationships( Verts[1], Verts[2] );
-			Verts[1].SetSiblingRelationships( Verts[0], Verts[2] );
-			Verts[2].SetSiblingRelationships( Verts[0], Verts[1] );
-
-			//Use "Heron's Formula" to get the area..
-			float semiPerimeter = Perimeter * 0.5f;
-			Area = Mathf.Sqrt( semiPerimeter * 
-				(semiPerimeter - Edges[0].EdgeLength) * 
-				(semiPerimeter - Edges[1].EdgeLength) * 
-				(semiPerimeter - Edges[2].EdgeLength) 
-			);
-
-			LongestEdgeLength = Mathf.Max( Edges[0].EdgeLength, Edges[1].EdgeLength, Edges[2].EdgeLength );
-			ShortestEdgeLength = Mathf.Min( Edges[0].EdgeLength, Edges[1].EdgeLength, Edges[2].EdgeLength );
-
-			name = $"ind: '{Index_parallelWithParentArray}', ctr: '{V_center}'";
-
-			DBG_class += $"nrml: '{v_normal}'\n" +
-				$"edge lengths: '{Edges[0].EdgeLength}', '{Edges[1].EdgeLength}', '{Edges[2].EdgeLength}'\n" +
-				$"Prmtr: '{Perimeter}', Area: '{Area}'\n";
+			CalculateTriInfo( lrMask );
 		}
 
 		/// <summary>
 		/// Regenerates and re-caches the information a tri has about itself. Use this after you edit a tri's components.
 		/// </summary>
-		public void CalculateTriInfo()
+		public void CalculateTriInfo( int lrMask, bool logMessages = true )
 		{
 			DBG_class = string.Empty;
 
@@ -122,6 +104,8 @@ namespace LogansNavigationExtension
 			LongestEdgeLength = Mathf.Max(Edges[0].EdgeLength, Edges[1].EdgeLength, Edges[2].EdgeLength);
 			ShortestEdgeLength = Mathf.Min(Edges[0].EdgeLength, Edges[1].EdgeLength, Edges[2].EdgeLength);
 
+			TrySampleNormal( lrMask, logMessages );
+
 			name = $"ind: '{Index_parallelWithParentArray}', ctr: '{V_center}'";
 
 			DBG_class += $"nrml: '{v_normal}'\n" +
@@ -129,39 +113,14 @@ namespace LogansNavigationExtension
 				$"Prmtr: '{Perimeter}', Area: '{Area}'\n";
 		}
 
-		public void TryGetNormal( int lrMsk )
+		public void RefreshTriangle( LNX_NavMesh nm, bool logMessages = true)
 		{
-			if (v_normal == Vector3.zero)
+			if (dirtyFlag_repositionedVert)
 			{
-				RaycastHit rcHit = new RaycastHit();
+				CalculateTriInfo( nm.CachedLayerMask, logMessages );
+				CreateRelationships( nm.Triangles );
 
-				Vector3 castDir = Vector3.Cross(
-					Vector3.Normalize(Verts[0].Position - Verts[1].Position),
-					Vector3.Normalize(Verts[2].Position - Verts[1].Position)
-				);
-
-				if (
-					Physics.Linecast(V_center - (castDir.normalized * 0.15f),
-					V_center + (castDir.normalized * 0.15f),
-					out rcHit, lrMsk))
-				{
-					//Debug.Log($"rc1 success");
-
-				}
-				else if (
-					Physics.Linecast(V_center + (castDir.normalized * 0.15f),
-					V_center - (castDir.normalized * 0.15f),
-					out rcHit, lrMsk))
-				{
-					//Debug.Log($"rc2 success");
-
-				}
-
-				v_normal = rcHit.normal;
-			}
-			else
-			{
-				Debug.LogWarning($"Not able to resolve normal for tri: '{Index_parallelWithParentArray}'.");
+				dirtyFlag_repositionedVert = false;
 			}
 		}
 
@@ -196,21 +155,43 @@ namespace LogansNavigationExtension
 			}
 		}
 
-		public List<LNX_Vertex> GetSharedVertices( int vertIndex, LNX_Triangle[] tris )
+		public void TrySampleNormal( int lrMsk, bool logMessages = true)
 		{
-			List<LNX_Vertex> results = new List<LNX_Vertex>();
-
-			for ( int i = 0; i < AdjacentTriIndices.Length; i++ )
+			if (v_normal == Vector3.zero)
 			{
-				if ( Relationships[AdjacentTriIndices[i]].IndexMap_OwnedVerts_toShared[0] > -1 )
-				{
-					results.Add( tris[AdjacentTriIndices[i]].Verts[Relationships[AdjacentTriIndices[i]].IndexMap_OwnedVerts_toShared[0]] );
-				}
-			}
+				RaycastHit rcHit = new RaycastHit();
 
-			return results;
+				Vector3 castDir = Vector3.Cross(
+					Vector3.Normalize(Verts[0].Position - Verts[1].Position),
+					Vector3.Normalize(Verts[2].Position - Verts[1].Position)
+				);
+
+				if (
+					Physics.Linecast(V_center - (castDir.normalized * 0.15f),
+					V_center + (castDir.normalized * 0.15f),
+					out rcHit, lrMsk))
+				{
+					//Debug.Log($"rc1 success");
+
+				}
+				else if (
+					Physics.Linecast(V_center + (castDir.normalized * 0.15f),
+					V_center - (castDir.normalized * 0.15f),
+					out rcHit, lrMsk))
+				{
+					//Debug.Log($"rc2 success");
+
+				}
+
+				v_normal = rcHit.normal;
+			}
+			else if( logMessages )
+			{
+				Debug.LogWarning($"Not able to resolve normal for tri: '{Index_parallelWithParentArray}'.");
+			}
 		}
 
+		#region SAMPLING METHODS----------------------------------------------------------------------
 		/// <summary>
 		/// This version determines if an object is within the "diamond-like" 3 dimensional shape a triangle could theoretically make
 		/// </summary>
@@ -385,6 +366,7 @@ namespace LogansNavigationExtension
 			*/
 			return innerPos + (v_dir * lengthX);
 		}
+		#endregion
 
 		/// <summary>
 		/// Movies a vertex belonging to this triangle in a managed fashion. Sets appropriate flags and 
@@ -393,9 +375,53 @@ namespace LogansNavigationExtension
 		/// <param name="vertIndex"></param>
 		/// <param name="pos"></param>
 		/// <param name="positionIsAbsolute"></param>
-		public void MoveVert_protected( int vertIndex, Vector3 pos, bool positionIsAbsolute = false )
+		public void MoveVert_protected( LNX_NavMesh nm, int vertIndex, Vector3 pos, bool positionIsAbsolute = false )
 		{
 			Verts[vertIndex].Position = (positionIsAbsolute ? pos : Verts[vertIndex].Position + pos);
+
+			dirtyFlag_repositionedVert = true;
+
+			for ( int i = 0; i < AdjacentTriIndices.Length; i++ )
+			{
+				nm.Triangles[AdjacentTriIndices[i]].ForceMarkDirty();
+			}
+		}
+
+		public void ForceMarkDirty()
+		{
+			dirtyFlag_repositionedVert = true;
+		}
+
+		public bool AmAdjacentToTri( int indx )
+		{
+			if( AdjacentTriIndices.Length > 0 )
+			{
+				for( int i = 0; i < AdjacentTriIndices.Length; i++ )
+				{
+					if( AdjacentTriIndices[i] == indx )
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+		public bool AmAdjacentToTri( LNX_Triangle tri )
+		{
+			if ( AdjacentTriIndices.Length > 0 )
+			{
+				for ( int i = 0; i < AdjacentTriIndices.Length; i++ )
+				{
+					if (AdjacentTriIndices[i] == tri.Index_parallelWithParentArray )
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
 		}
 
 		public string DBGcenterSweeps( Vector3 pos )
