@@ -17,6 +17,7 @@ namespace LogansNavigationExtension
 
 		[Header("FOCUS")]
 		public bool AmAllowingFocus = true;
+		public bool FocusExclusively = true;
 		/*[Range(0, 23)]*/ public int Index_TriFocus = 0;
 		[Range(0, 7)] public float Thickness_focusTri = 1f;
 		public bool AmAllowingVertFocus = true;
@@ -64,7 +65,7 @@ namespace LogansNavigationExtension
 		[SerializeField] private bool drawVertSpheres = false;
 		public bool DrawVertLables = false;
 		public Color color_vertSphere = Color.white;
-		[Range(0.01f, 0.05f)] public float radius_vertSphere = 0.05f;
+		[Range(0.005f, 0.05f)] public float radius_vertSphere = 0.05f;
 
 		[Header("DEBUG NORMALS")]
 		[SerializeField] private bool drawNormalLines = false;
@@ -92,11 +93,16 @@ namespace LogansNavigationExtension
 
 			if ( _mgr.Triangles != null && _mgr.Triangles.Length > 0 )
 			{
-				for ( int i = 0; i < _mgr.Triangles.Length; i++ )
+				if ( AmAllowingFocus && FocusExclusively )
 				{
-					DrawTriGizmos( _mgr.Triangles[i], (Index_TriFocus > -1 && Index_TriFocus == i) ? true : false );
-					//DrawTriGizmos( Triangles[i], false ); //for when you don't want this class to do any focusing...
-
+					DrawTriGizmos( _mgr.Triangles[Index_TriFocus], true );
+				}
+				else
+				{
+					for (int i = 0; i < _mgr.Triangles.Length; i++)
+					{
+						DrawTriGizmos(_mgr.Triangles[i], (Index_TriFocus > -1 && Index_TriFocus == i) ? true : false);
+					}
 				}
 			}
 		}
@@ -108,25 +114,30 @@ namespace LogansNavigationExtension
 				amFocused = false;
 			}
 
-			bool amKosher = true;
-			if ( tri.v_normal == Vector3.zero )
-			{
-				amKosher = false;
-			}
+			bool amKosher = tri.v_normal != Vector3.zero;
 
 			GUIStyle gstl_label = GUIStyle.none;
 			gstl_label.normal.textColor = amKosher ? Color.white : Color.red;
-			float len_edgeLables = Length_normalLines * 0.25f;
 
-			#region EDGES -------------------------------------------------------
-			if ( !amKosher )
+			if (DrawTriLabels)
 			{
-				Gizmos.color = Color.red;
-				Handles.color = Color.red;
+				//Handles.Label( tri.V_center + (tri.v_normal * length_labels * 1.5f) + (tri.v_normal * 0.05f), tri.Index_parallelWithParentArray.ToString(), gstl_label );
+				Handles.Label(tri.V_center, tri.Index_parallelWithParentArray.ToString(), gstl_label);
 			}
 
-			Gizmos.color = amFocused ? Color.yellow : color_edgeLines;
-			Handles.color = amFocused ? Color.yellow : color_edgeLines;
+			#region EDGES -------------------------------------------------------
+			float len_edgeLables = Length_normalLines * 0.25f;
+
+			if( amFocused )
+			{
+				Gizmos.color = Color.yellow;
+				Handles.color = Color.yellow;
+			}
+			else
+			{
+				Gizmos.color = amKosher ? color_edgeLines : Color.red;
+				Handles.color = amKosher ? color_edgeLines : Color.red;
+			}
 
 			//Draw borders...
 			if ( amFocused )
@@ -146,12 +157,6 @@ namespace LogansNavigationExtension
 				Handles.DrawLine( tri.Verts[2].Position, tri.Verts[0].Position, Thickness_edges );
 			}
 
-			if( DrawTriLabels )
-			{
-				//Handles.Label( tri.V_center + (tri.v_normal * length_labels * 1.5f) + (tri.v_normal * 0.05f), tri.Index_parallelWithParentArray.ToString(), gstl_label );
-				Handles.Label( tri.V_center, tri.Index_parallelWithParentArray.ToString(), gstl_label );
-			}
-
 			if ( drawEdgeLabels )
 			{
 				Handles.Label(tri.Edges[0].MidPosition + (tri.Edges[0].v_cross * len_edgeLables), "e0", gstl_label);
@@ -160,31 +165,38 @@ namespace LogansNavigationExtension
 			}
 			#endregion
 
-			if( drawVertSpheres )
+			#region VERTS -----------------------------------------------
+			if ( drawVertSpheres )
 			{
+				if( amFocused && AmAllowingVertFocus )
+				{
+					//Gizmos.DrawSphere( tri.Verts[Index_VertFocus].Position, radius_vertSphere * 3f );
+					Handles.DrawWireDisc(tri.Verts[Index_VertFocus].Position, Vector3.up, radius_vertSphere * 4f);
+				}
 				Gizmos.color = color_vertSphere;
 
 				Gizmos.DrawSphere( tri.Verts[0].Position, radius_vertSphere );
 				Gizmos.DrawSphere( tri.Verts[1].Position, radius_vertSphere );
 				Gizmos.DrawSphere( tri.Verts[2].Position, radius_vertSphere );
-
-				if ( DrawVertLables )
-				{
-					Gizmos.color = amKosher ? Color.white : Color.red;
-
-					float calcLength = Length_normalLines * 0.5f;
-					Handles.Label( tri.Verts[0].Position + (tri.Verts[0].v_toCenter.normalized * calcLength), "v0", gstl_label );
-					Handles.Label( tri.Verts[1].Position + (tri.Verts[1].v_toCenter.normalized * calcLength), "v1", gstl_label );
-					Handles.Label( tri.Verts[2].Position + (tri.Verts[2].v_toCenter.normalized * calcLength), "v2", gstl_label );
-				}
 			}
+
+			if ( DrawVertLables )
+			{
+				Gizmos.color = amKosher ? color_vertSphere : Color.red;
+
+				float calcLength = Length_normalLines * 0.5f;
+				Handles.Label(tri.Verts[0].Position + (tri.Verts[0].v_toCenter.normalized * calcLength), "v0", gstl_label);
+				Handles.Label(tri.Verts[1].Position + (tri.Verts[1].v_toCenter.normalized * calcLength), "v1", gstl_label);
+				Handles.Label(tri.Verts[2].Position + (tri.Verts[2].v_toCenter.normalized * calcLength), "v2", gstl_label);
+			}
+			#endregion
 
 			if ( drawNormalLines )
 			{
 				Gizmos.color = Color_normalLines;
 
-				Gizmos.DrawLine(tri.V_center, tri.V_center + (tri.v_normal * Length_normalLines));
-
+				Gizmos.DrawLine( tri.V_center, tri.V_center + (tri.v_normal * Length_normalLines) );
+				
 				Gizmos.DrawLine(tri.Verts[0].Position, tri.V_center);
 				Gizmos.DrawLine(tri.Verts[1].Position, tri.V_center);
 				Gizmos.DrawLine(tri.Verts[2].Position, tri.V_center);

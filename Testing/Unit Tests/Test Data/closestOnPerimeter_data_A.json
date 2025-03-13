@@ -1,11 +1,11 @@
 {
     "_mgr": {
-        "instanceID": 34816
+        "instanceID": 31454
     },
     "_debugger": {
-        "instanceID": 34814
+        "instanceID": 31452
     },
-    "Index_problemPos": 1,
+    "Index_problemPos": 11,
     "testPositions": [
         {
             "x": 17.41699981689453,
@@ -116,9 +116,9 @@
     "testName": "ClosestOnPerimeter",
     "DBG_GetClosest": "Searching through '84' tris...\n",
     "v_result": {
-        "x": 16.860000610351564,
+        "x": 16.800199508666993,
         "y": 0.0006940364837646484,
-        "z": 1.0640000104904175
+        "z": 0.42000001668930056
     },
     "radius_drawSphere": 0.019999999552965165,
     "resultPositions": [
@@ -285,9 +285,9 @@
             "z": 0.3800000250339508
         },
         {
-            "x": 16.80000114440918,
+            "x": 16.82000160217285,
             "y": 0.0006940364837646484,
-            "z": 0.3800000250339508
+            "z": 3.440000295639038
         },
         {
             "x": 16.380001068115236,

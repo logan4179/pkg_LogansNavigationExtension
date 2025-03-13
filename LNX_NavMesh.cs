@@ -1,4 +1,5 @@
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -11,7 +12,11 @@ namespace LogansNavigationExtension
     {
 		public static LNX_NavMesh Instance;
 
-        public LNX_Triangle[] Triangles;
+		public LNX_Triangle[] Triangles;
+
+		public Mesh _Mesh;
+
+		public List<LNX_TriangleModification> triModifications;
 
 		/// <summary>Stores the largest/smallest X, Y, and Z value of the navmesh. Elements 0 and 1 are lowest and 
 		/// hightest X, elements 2 and 3 are lowest and highest Y, and elements 4 and 5 are lowest and highest z.</summary>
@@ -37,6 +42,9 @@ namespace LogansNavigationExtension
 
 		//[Header("flags")]
 
+		[Header("VISUAL/DEBUG")]
+		public Color color_mesh;
+
 		private void Awake()
 		{
 			Instance = this;
@@ -58,6 +66,11 @@ namespace LogansNavigationExtension
 			}
 
 			return triArray;
+		}
+
+		public LNX_Triangle GetTriangle( LNX_Edge edge )
+		{
+			return Triangles[edge.MyCoordinate.TriIndex];
 		}
 		#endregion
 
@@ -104,7 +117,7 @@ namespace LogansNavigationExtension
 				LNX_Vertex vert = Triangles[coord.TriIndex].Verts[coord.ComponentIndex];
 				returnList.Add( vert );
 
-				for ( int i = 0; i < vert.SharedVertexCoordinates.Count; i++ ) 
+				for ( int i = 0; i < vert.SharedVertexCoordinates.Length; i++ ) 
 				{
 					returnList.Add( Triangles[vert.SharedVertexCoordinates[i].TriIndex].Verts[vert.SharedVertexCoordinates[i].TriIndex] );
 				}
@@ -141,9 +154,9 @@ namespace LogansNavigationExtension
 		#endregion
 
 
-		public int[] testAreas;
-		public Vector3[] testVertices;
-		public int[] testIndices;
+		public int[] dbg_Areas;
+		public Vector3[] dbg_Vertices;
+		public int[] dbg_Indices;
 		[ContextMenu("z - FetchTriangulation()")]
 		public void FetchTriangulation()
 		{
@@ -154,8 +167,6 @@ namespace LogansNavigationExtension
 
 			FetchTriangulation( tringltn );
 		}
-
-
 		public void FetchTriangulation( NavMeshTriangulation tringltn )
 		{
 			if ( string.IsNullOrEmpty(LayerMaskName) )
@@ -165,21 +176,104 @@ namespace LogansNavigationExtension
 			}
 			cachedLayerMask = LayerMask.GetMask( LayerMaskName );
 
-			Triangles = new LNX_Triangle[tringltn.areas.Length];
+			_Mesh = new Mesh();
+			//Vector3[] meshVrts = new Vector3[tringltn.vertices.Length];
+			Vector3[] meshVrts = tringltn.vertices;
 
-			for ( int i = 0; i < Triangles.Length; i++ )
+			Vector3[] nrmls = new Vector3[tringltn.vertices.Length];
+
+			// if this is a re-fetch, and we have modifications to consider...
+			if ( Triangles != null && Triangles.Length > 0 && triModifications != null && triModifications.Count > 0 ) 
 			{
-				Triangles[i] = new LNX_Triangle( i, tringltn, cachedLayerMask );
+				Debug.Log($"Triangle collection exists with modifications...");
+				LNX_Triangle[] newTriCollection = new LNX_Triangle[tringltn.areas.Length];
+
+				for ( int i = 0; i < newTriCollection.Length; i++ )
+				{
+					newTriCollection[i] = new LNX_Triangle( i, tringltn, cachedLayerMask );
+
+					for ( int j = 0; j < triModifications.Count; j++ )
+					{
+						if( triModifications[j] != null && triModifications[j].OriginalTriangleState.ValueEquals(newTriCollection[i]) )
+						{
+							//Debug.Log($"Tri '{i}' using saved modification at old index '{triModifications[j].OriginalStateIndex}' in triangle construction...");
+							newTriCollection[i] = new LNX_Triangle( triModifications[j], Triangles,  i, tringltn );
+							
+							// Correct the positioning of the verts of the modified triangle....
+							meshVrts[newTriCollection[i].Verts[0].PositionInOriginalTriangulation] = newTriCollection[i].Verts[0].Position;
+							meshVrts[newTriCollection[i].Verts[1].PositionInOriginalTriangulation] = newTriCollection[i].Verts[1].Position;
+							meshVrts[newTriCollection[i].Verts[2].PositionInOriginalTriangulation] = newTriCollection[i].Verts[2].Position;
+						}
+					}
+
+					if( newTriCollection[i].v_normal != Vector3.zero )
+					{
+						//Debug.DrawRay( newTriCollection[i].V_center, newTriCollection[i].v_normal );
+
+						nrmls[newTriCollection[i].Verts[0].PositionInOriginalTriangulation] = newTriCollection[i].v_normal;
+						nrmls[newTriCollection[i].Verts[1].PositionInOriginalTriangulation] = newTriCollection[i].v_normal;
+						nrmls[newTriCollection[i].Verts[2].PositionInOriginalTriangulation] = newTriCollection[i].v_normal;
+					}
+					else
+					{
+						nrmls[newTriCollection[i].Verts[0].PositionInOriginalTriangulation] = Vector3.up;
+						nrmls[newTriCollection[i].Verts[1].PositionInOriginalTriangulation] = Vector3.up;
+						nrmls[newTriCollection[i].Verts[2].PositionInOriginalTriangulation] = Vector3.up;
+					}
+				}
+
+				for (int i = 0; i < newTriCollection.Length; i++)
+				{
+					newTriCollection[i].CreateRelationships( newTriCollection );
+				}
+
+				Triangles = newTriCollection;
+			}
+			else
+			{
+				Debug.Log($"Triangle collection will be made anew...");
+
+				Triangles = new LNX_Triangle[tringltn.areas.Length];
+				triModifications = new List<LNX_TriangleModification>();
+				meshVrts = tringltn.vertices;
+
+				for ( int i = 0; i < Triangles.Length; i++ )
+				{
+					Triangles[i] = new LNX_Triangle( i, tringltn, cachedLayerMask );
+
+					if ( Triangles[i].v_normal != Vector3.zero )
+					{
+						//Debug.DrawRay( Triangles[i].V_center, Triangles[i].v_normal, Color.cyan, 2f );
+
+						nrmls[Triangles[i].Verts[0].PositionInOriginalTriangulation] = Triangles[i].v_normal;
+						nrmls[Triangles[i].Verts[1].PositionInOriginalTriangulation] = Triangles[i].v_normal;
+						nrmls[Triangles[i].Verts[2].PositionInOriginalTriangulation] = Triangles[i].v_normal;
+					}
+					else
+					{
+						nrmls[Triangles[i].Verts[0].PositionInOriginalTriangulation] = Vector3.up;
+						nrmls[Triangles[i].Verts[1].PositionInOriginalTriangulation] = Vector3.up;
+						nrmls[Triangles[i].Verts[2].PositionInOriginalTriangulation] = Vector3.up;
+					}
+				}
+
+				for ( int i = 0; i < Triangles.Length; i++ )
+				{
+					Triangles[i].CreateRelationships( Triangles );
+				}
 			}
 
-			for ( int i = 0; i < Triangles.Length; i++ )
-			{
-				Triangles[i].CreateRelationships( Triangles );
-			}
+			#region FINISH THE MESH--------------------------------
+			Debug.Log($"Finishing the mesh representation. Assigning '{meshVrts.Length}' verts, '{tringltn.indices.Length}' tris, and '{nrmls.Length}' normals...");
+			_Mesh.vertices = meshVrts;
+			_Mesh.triangles = tringltn.indices; //apparently this MUST come after setting the vertices. If you try to set triangles before vertices, it will throw an error
 
-			testAreas = tringltn.areas;
-			testVertices = tringltn.vertices;
-			testIndices = tringltn.indices;
+			_Mesh.normals = nrmls;
+			#endregion
+
+			dbg_Areas = tringltn.areas;
+			dbg_Vertices = tringltn.vertices;
+			dbg_Indices = tringltn.indices;
 
 			CalculateBounds();
 		}
@@ -187,12 +281,67 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call RefeshMesh()")]
 		public void RefeshMesh()
 		{
-			for (int i = 0; i < Triangles.Length; i++)
+			for ( int i = 0; i < Triangles.Length; i++ )
 			{
 				Triangles[i].RefreshTriangle( this, false );
 			}
 
 			CalculateBounds();
+		}
+
+		public void MoveVert_managed( LNX_Vertex vert, Vector3 pos )
+		{
+			bool foundMod = false;
+
+			if( triModifications.Count > 0 )
+			{
+				for( int i = 0; i < triModifications.Count; i++ )
+				{
+					if ( vert.MyCoordinate.TriIndex == triModifications[i].OriginalTriangleState.Index_parallelWithParentArray )
+					{
+						foundMod = true;
+					}
+				}
+			}
+			if( !foundMod )
+			{
+				triModifications.Add( new LNX_TriangleModification(Triangles[vert.MyCoordinate.TriIndex]) );
+				Debug.Log("made new modification");
+			}
+
+			Triangles[vert.MyCoordinate.TriIndex].MoveVert_managed( this, vert.MyCoordinate.ComponentIndex, pos );
+
+			Vector3[] tmpVrts = _Mesh.vertices; //note: I can't get it to update the mesh if I only change the relevant vertex, it seems like I MUST create and assign a whole new array.
+			tmpVrts[vert.PositionInOriginalTriangulation] = vert.Position + pos;
+
+			_Mesh.vertices = tmpVrts; //apparently you have to assign to the mesh in this manner in order to make this update (apparently I can't just change one of the existing vertices elements)...
+			
+		}
+
+		public void ClearModifications()
+		{
+
+			if( triModifications == null || triModifications.Count <= 0 )
+			{
+				Debug.LogWarning($"no existing modifications on LNX_Navmesh");
+				return;
+			}
+
+			for ( int i = 0; i < Triangles.Length; i++ )
+			{
+				for( int j = 0; j < triModifications.Count; j++ )
+				{
+					if( i == triModifications[j].OriginalTriangleState.Index_parallelWithParentArray )
+					{
+						Debug.Log($"matched modification at Triangles[{i}] and mod[{j}]");
+						Triangles[i].AdoptValues( triModifications[j].OriginalTriangleState );
+					}
+				}
+			}
+
+			triModifications = new List<LNX_TriangleModification>();
+
+			//todo: now need to put modified triangles back to where they were before...
 		}
 
 		public void CalculateBounds()
@@ -307,7 +456,7 @@ namespace LogansNavigationExtension
 		/// <returns></returns>
 		public int AmWithinNavMeshProjection( Vector3 pos, out Vector3 closestPt )
         {
-			DBG_GetClosestTri = $"Searching through '{Triangles.Length}' tris...\n";
+			DbgSamplePosition = $"Searching through '{Triangles.Length}' tris...\n";
 			int rtrnIndx = -1;
 			float runningClosestDist = float.MaxValue;
 
@@ -316,12 +465,12 @@ namespace LogansNavigationExtension
 
 			for ( int i = 0; i < Triangles.Length; i++ )
 			{
-				DBG_GetClosestTri += $"i: '{i}'....................\n";
+				DbgSamplePosition += $"i: '{i}'....................\n";
 				LNX_Triangle tri = Triangles[i];
 
 				if ( tri.IsInShapeProjectAlongNormal(pos, out currentPt) )
 				{
-					DBG_GetClosestTri += $"found AM in shape project at '{currentPt}'...\n";
+					DbgSamplePosition += $"found AM in shape project at '{currentPt}'...\n";
 					//note: The reason I'm not immediately returning this tri here is because concievably
 					// you could have two navmesh polys "on top of each other", (IE: in line with
 					// each other's normals), which would result in more than one tri considering
@@ -337,11 +486,11 @@ namespace LogansNavigationExtension
 				}
 			}
 
-			DBG_GetClosestTri += $"finished. returning: '{rtrnIndx}' with pt: '{closestPt}'\n";
+			DbgSamplePosition += $"finished. returning: '{rtrnIndx}' with pt: '{closestPt}'\n";
 			return rtrnIndx;
 		}
 
-        [SerializeField] private string DBG_GetClosestTri;
+        [SerializeField, HideInInspector] private string DbgSamplePosition;
 		/// <summary>
 		/// 
 		/// </summary>
@@ -351,11 +500,11 @@ namespace LogansNavigationExtension
 		/// <returns></returns>
         public bool SamplePosition( Vector3 pos, out LNX_ProjectionHit hit, float maxDistance )
         {
-            DBG_GetClosestTri = $"Searching through '{Triangles.Length}' tris...\n";
+            DbgSamplePosition = $"Searching through '{Triangles.Length}' tris...\n";
 
 			if( Vector3.Distance(V_BoundsCenter, pos) > (maxDistance + BoundsContainmentDistanceThreshold) )
 			{
-				DBG_GetClosestTri += $"distance threshold short circuit";
+				DbgSamplePosition += $"distance threshold short circuit";
 				hit = LNX_ProjectionHit.None;
 				return false;
 			}
@@ -367,12 +516,12 @@ namespace LogansNavigationExtension
 
             for ( int i = 0; i < Triangles.Length; i++ )
             {
-                DBG_GetClosestTri += $"i: '{i}'....................\n";
+                DbgSamplePosition += $"i: '{i}'....................\n";
                 LNX_Triangle tri = Triangles[i];
 
 				if ( tri.IsInShapeProjectAlongNormal(pos, out currentPt) )
 				{
-                    DBG_GetClosestTri += $"found AM in shape project at '{currentPt}'...\n";
+                    DbgSamplePosition += $"found AM in shape project at '{currentPt}'...\n";
 					//note: The reason I'm not immediately returning this tri here is because concievably
 					// you could have two navmesh polys "on top of each other", (IE: in line with
 					// each other's normals), which would result in more than one tri considering
@@ -381,7 +530,7 @@ namespace LogansNavigationExtension
 				}
                 else
                 {
-					DBG_GetClosestTri += $"found am NOT in shape project...\n";
+					DbgSamplePosition += $"found am NOT in shape project...\n";
 
 					currentPt = tri.ClosestPointOnPerimeter( pos );
 				}
@@ -394,7 +543,7 @@ namespace LogansNavigationExtension
 				}
             }
 
-            DBG_GetClosestTri += $"finished. returning: '{hit.Index_intersectedTri}' with pt: '{hit.HitPosition}'\n";
+            DbgSamplePosition += $"finished. returning: '{hit.Index_intersectedTri}' with pt: '{hit.HitPosition}'\n";
 
             if( runningClosestDist <= maxDistance )
 			{

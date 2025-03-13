@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using static UnityEditor.PlayerSettings;
 
 namespace LogansNavigationExtension
@@ -93,9 +94,11 @@ namespace LogansNavigationExtension
 		public List<LNX_Edge> Edges_currentlySelected;
 		#endregion
 
-		//[Header("DEBUG")]
+		#region DEBUGGING ----------------------
 		[SerializeField] private bool drawNavMeshLines = true;
 		[SerializeField] private Color color_edgeLines;
+		[SerializeField] private Color color_modifiedTri;
+
 		[Range(0f, 8f)] public float thickness_edges = 0.2f;
 
 		[Range(0f, 8f)] public float Size_SelectedComponent = 0.2f;
@@ -104,6 +107,7 @@ namespace LogansNavigationExtension
 		[SerializeField] private Color color_lockedTri = Color.white;
 		[Range(0f, 8f)] public float Thickness_LockedTriEdge = 0.2f;
 
+		#endregion
 
 		//[Header("FLAGS")]
 		/// <summary>Tells whether the mouse is currently considered to be pointing at a selectable component. Gets set 
@@ -124,6 +128,7 @@ namespace LogansNavigationExtension
 		//[Header("OTHER")]
 		public Vector3 manipulatorPos = Vector3.zero;
 
+
 		#region CLEARING/INITIALIZING ------------------------
 		public void InitState()
 		{
@@ -138,7 +143,7 @@ namespace LogansNavigationExtension
 
 		public void ClearSelection()
 		{
-			//Debug.Log($"{nameof(ClearState)}()");
+			Debug.Log($"{nameof(ClearSelection)}()");
 
 			ClearTris();
 			ClearVerts();
@@ -173,7 +178,6 @@ namespace LogansNavigationExtension
 		{
 			if ( mode != SelectMode || mode == LNX_SelectMode.None ) //selection has changed to this... also, added selectmode == none check to allow a way to force initialization if necessary.
 			{
-				Debug.Log("here");
 				ClearSelection();
 			}
 
@@ -339,7 +343,6 @@ namespace LogansNavigationExtension
 		}
 
 		[SerializeField, TextArea(0, 10)] private string DebugSelectedReport;
-
 		public void TryGrab( bool amHoldingAddInputModifier = false )
 		{
 			DebugSelectedReport = $"Mode: '{SelectMode}', mod: '{amHoldingAddInputModifier}'\n";
@@ -358,18 +361,14 @@ namespace LogansNavigationExtension
 				if( !amHoldingAddInputModifier )
 				{
 					indices_selectedTris = new List<int>() { Index_TriPointingAt };
-					//DebugSelected += "a";
 				}
 				else if( indices_selectedTris.Contains(Index_TriPointingAt) ) //remove from selection...
 				{
 					indices_selectedTris.Remove( Index_TriPointingAt );
-					//DebugSelected += "b";
-
 				}
 				else if ( !indices_selectedTris.Contains(Index_TriPointingAt) ) //add to selection...
 				{
 					indices_selectedTris.Add( Index_TriPointingAt );
-					//DebugSelected += "c";
 				}
 
 				#region construct vertices list -----------------------------------------
@@ -387,26 +386,20 @@ namespace LogansNavigationExtension
 			}
 			else if( SelectMode == LNX_SelectMode.Vertices )
 			{
-				DebugSelectedReport += $"pointing at: '{Vert_CurrentlyPointingAt.ToString()}' \n";
+				DebugSelectedReport += $"pointing at: '{Vert_CurrentlyPointingAt.MyCoordinate}' \n";
 				Vert_LastSelected = Vert_CurrentlyPointingAt;
 
 				if ( !amHoldingAddInputModifier )
 				{
 					Verts_currentlySelected = new List<LNX_Vertex>() { Vert_CurrentlyPointingAt };
-					//DebugSelected += "a";
 				}
 				else if ( Verts_currentlySelected.Contains(Vert_CurrentlyPointingAt) ) //remove from selection...
 				{
 					Verts_currentlySelected.Remove( Vert_CurrentlyPointingAt );
-
-					//DebugSelected += "b";
-
 				}
 				else if ( !Verts_currentlySelected.Contains(Vert_CurrentlyPointingAt) ) //add to selection...
 				{
 					Verts_currentlySelected.Add( Vert_CurrentlyPointingAt );
-	
-					//DebugSelected += "c";
 				}
 
 				manipulatorPos = Vert_LastSelected.Position;
@@ -477,8 +470,8 @@ namespace LogansNavigationExtension
 			#region add shared vertices -----------------------------------------
 			for ( int i = 0; i < Verts_currentlySelected.Count; i++ )
 			{
-				DebugSelectedReport += $"now checking for additional verts. Shared collection is showing '{Verts_currentlySelected[i].SharedVertexCoordinates.Count}'...\n";
-				for ( int j = 0; j < Verts_currentlySelected[i].SharedVertexCoordinates.Count; j++ )
+				DebugSelectedReport += $"now checking for additional verts. Shared collection is showing '{Verts_currentlySelected[i].SharedVertexCoordinates.Length}'...\n";
+				for ( int j = 0; j < Verts_currentlySelected[i].SharedVertexCoordinates.Length; j++ )
 				{
 					DebugSelectedReport += $"trying {Verts_currentlySelected[i].SharedVertexCoordinates[j].ToString()}... ";
 
@@ -498,11 +491,20 @@ namespace LogansNavigationExtension
 					}
 				}
 			}
+
+			if( Verts_currentlySelected.Count == 1 )
+			{
+				Debug.Log($"Have '{Verts_currentlySelected.Count}' verts currently selected at '{Vert_CurrentlyPointingAt.MyCoordinate}'...");
+			}
+			else
+			{
+				Debug.Log($"Have '{Verts_currentlySelected.Count}' verts currently selected...");
+			}
 			#endregion
 		}
 
 		#region MESH MANIPULATION -----------------------------------------------------
-		public void MoveSelectedVerts(Vector3 pos)
+		public void MoveSelectedVerts( Vector3 pos )
 		{
 			string dbgMoveSelected = $"{nameof(MoveSelectedVerts)}('{pos}') on '{Verts_currentlySelected.Count}' verts...\n";
 			Vector3 vDiff = pos - manipulatorPos;
@@ -512,9 +514,11 @@ namespace LogansNavigationExtension
 			{
 				foreach ( LNX_Vertex vrt in Verts_currentlySelected )
 				{
-					_LNX_NavMesh.Triangles[vrt.MyCoordinate.TriIndex].MoveVert_protected(
-						_LNX_NavMesh, vrt.MyCoordinate.ComponentIndex, vDiff, SelectMode == LNX_SelectMode.Vertices ? false : false
-					);
+					_LNX_NavMesh.MoveVert_managed( vrt, vDiff );
+
+					/*_LNX_NavMesh.Triangles[vrt.MyCoordinate.TriIndex].MoveVert_managed(
+						_LNX_NavMesh, vrt.MyCoordinate.ComponentIndex, vDiff
+					);*/
 				}
 			}
 
@@ -522,20 +526,23 @@ namespace LogansNavigationExtension
 			//Debug.Log( dbgMoveSelected );
 		}
 
-		[ContextMenu("z call TryCut")]
-		public void TryCut()
+		[ContextMenu("z call TryInsertLoop")]
+		public void TryInsertLoop()
 		{
+			#region check if I even can insert loop with current edge selection---------------------------------------------------------
 			if ( Edges_currentlySelected.Count != 2 )
 			{
 				Debug.Log("can't");
 				return;
 			}
 
-			LNX_Triangle tri0 = Edges_currentlySelected[0].MyTri(_LNX_NavMesh);
-			LNX_Triangle tri1 = Edges_currentlySelected[1].MyTri(_LNX_NavMesh);
+			LNX_Triangle tri0 = _LNX_NavMesh.GetTriangle( Edges_currentlySelected[0] );
+			LNX_Triangle tri1 = _LNX_NavMesh.GetTriangle( Edges_currentlySelected[1] );
+
+			Debug.Log($"edge0: '{Edges_currentlySelected[0].MyCoordinate}', edge1: '{Edges_currentlySelected[1].MyCoordinate}'");
 
 			if ( 
-				!tri0.AmAdjacentToTri(tri1) ||
+				!_LNX_NavMesh.GetTriangle(Edges_currentlySelected[0]).AmAdjacentToTri(tri1) ||
 				!Edges_currentlySelected[0].AmTerminal || !Edges_currentlySelected[1].AmTerminal ||
 				Edges_currentlySelected[0].AmTouching(Edges_currentlySelected[1])
 			)
@@ -543,17 +550,58 @@ namespace LogansNavigationExtension
 				Debug.Log("can't");
 				return;
 			}
+			#endregion
+			Debug.Log("decided CAN cut. trying...");
 
-			Debug.Log("doing...");
 			//first, find the edge that should be moved...
-			LNX_Edge moveEdge = null;
-			foreach( LNX_Edge edge in tri0.Edges )
+			List<LNX_Vertex> vrtsFound = LNX_Utils.GetMoveVerts_forInsertLoop( _LNX_NavMesh, Edges_currentlySelected[0], Edges_currentlySelected[1] );
+			Debug.Log($"found '{vrtsFound.Count}' verts...");
+
+			if( vrtsFound.Count == 3 )
 			{
-				if( edge != Edges_currentlySelected[0] && !Edges_currentlySelected[0].AmTouching(edge) )
+				for ( int i = 0; i < 3; i++ ) // Reposition initial verts...
 				{
-					moveEdge = tri0.Edges[0]; todo:does this work?
+					if ( vrtsFound[i].Position == _LNX_NavMesh.GetVertexAtCoordinate(Edges_currentlySelected[0].StartVertCoordinate).Position ||
+						vrtsFound[i].Position == _LNX_NavMesh.GetVertexAtCoordinate(Edges_currentlySelected[0].EndVertCoordinate).Position
+					)
+					{
+						//vrtsFound[i].Position = Edges_currentlySelected[0].MidPosition;
+						_LNX_NavMesh.Triangles[vrtsFound[i].MyCoordinate.TriIndex].MoveVert_managed(
+							_LNX_NavMesh,
+							vrtsFound[i].MyCoordinate.ComponentIndex,
+							Edges_currentlySelected[0].MidPosition,
+							true
+						);
+					}
+					if (vrtsFound[i].Position == _LNX_NavMesh.GetVertexAtCoordinate(Edges_currentlySelected[1].StartVertCoordinate).Position ||
+						vrtsFound[i].Position == _LNX_NavMesh.GetVertexAtCoordinate(Edges_currentlySelected[1].EndVertCoordinate).Position
+					)
+					{
+						//vrtsFound[i].Position = Edges_currentlySelected[1].MidPosition;
+						_LNX_NavMesh.Triangles[vrtsFound[i].MyCoordinate.TriIndex].MoveVert_managed(
+							_LNX_NavMesh,
+							vrtsFound[i].MyCoordinate.ComponentIndex,
+							Edges_currentlySelected[1].MidPosition,
+							true
+						);
+					}
 				}
+
+				#region CREATE NEW TRIANGLES ------------------------------
+
+				#endregion
+
+				#region MAKE NEW CUT THE SELECTED VERTS --------------------
+
+				#endregion
+
+				_LNX_NavMesh.RefeshMesh();
 			}
+
+			//Debug.DrawLine(moveEdge.MidPosition, moveEdge.MidPosition + (Vector3.up * 3f), Color.yellow, 3f);
+
+			//now I need to convert to verts...
+
 
 		}
 		#endregion
@@ -574,10 +622,6 @@ namespace LogansNavigationExtension
 		public Ray ray;
 		public bool AmPointingATBounds = false;
 
-		public Vector3 RayOrigin;
-		public Vector3 RayDirection;
-		public float RayTryMag = 1f;
-
 
 		private void OnDrawGizmos()
 		{
@@ -586,25 +630,70 @@ namespace LogansNavigationExtension
 				return;
 			}
 
-			//Draw the mouse ray...
-			/*Gizmos.DrawLine(
-				SceneView.lastActiveSceneView.camera.transform.position + SceneView.lastActiveSceneView.camera.transform.forward * 1f, 
-				SceneView.lastActiveSceneView.camera.transform.position + ray.direction
-			);*/
-
 			#region TRIANGLES ------------------------------------------------
 			if ( _LNX_NavMesh != null && _LNX_NavMesh.Triangles != null )
 			{
-				Handles.color = color_edgeLines;
+				Gizmos.color = _LNX_NavMesh.color_mesh;
+				Gizmos.DrawMesh(_LNX_NavMesh._Mesh);
 
-				for ( int i = 0; i < _LNX_NavMesh.Triangles.Length; i++ )
+				if ( drawNavMeshLines )
 				{
-					DrawTriGizmos(_LNX_NavMesh.Triangles[i], thickness_edges );
+					for ( int i = 0; i < _LNX_NavMesh.Triangles.Length; i++ )
+					{
+						if( _LNX_NavMesh.Triangles[i].v_normal == Vector3.zero )
+						{
+							//Handles.color = Color.red;
+							Gizmos.color = Color.red;
+						}
+						else
+						{
+							if( _LNX_NavMesh.Triangles[i].Flag_amModified )
+							{
+								//Handles.color = color_modifiedTri;
+								Gizmos.color = color_modifiedTri;
+							}
+							else
+							{
+								//Handles.color = color_edgeLines;
+								Gizmos.color = color_edgeLines;
+							}
+						}
+						/*
+						Mesh msh = new Mesh();
+						Vector3[] vrtPositions = new Vector3[3] {
+							_LNX_NavMesh.Triangles[i].Verts[0].Position,
+							_LNX_NavMesh.Triangles[i].Verts[1].Position,
+							_LNX_NavMesh.Triangles[i].Verts[2].Position
+						};
+
+						int[] triangles = new int[3] { 0, 1, 2 };
+
+						Vector2[] uvs = new Vector2[3] {
+							Vector2.up,
+							Vector2.up,
+							Vector2.up
+						};
+
+						Vector3[] nrmls = new Vector3[3] { 
+							Vector3.up, 
+							Vector3.up,
+							Vector3.up
+						};
+
+						msh.vertices = vrtPositions;
+						msh.triangles = triangles;
+						msh.normals = nrmls;
+
+						Gizmos.DrawMesh(msh);*/
+
+						DrawTriGizmos(_LNX_NavMesh.Triangles[i], thickness_edges);
+					}
 				}
 
 				if( amLocked )
 				{
-					Handles.color = color_lockedTri;
+					//Handles.color = color_lockedTri;
+					Gizmos.color = color_lockedTri;
 
 					for ( int i = 0; i < indices_lockedTris.Count; i++ )
 					{
@@ -631,7 +720,8 @@ namespace LogansNavigationExtension
 					*/
 					if ( PointingAtTri != null )
 					{
-						Handles.color = Color.yellow;
+						//Handles.color = Color.yellow;
+						Gizmos.color = Color.yellow;
 						DrawTriGizmos( PointingAtTri, Size_HoveredComponent );
 					}
 				}
@@ -672,44 +762,39 @@ namespace LogansNavigationExtension
 			#region EDGES --------------------------------------------
 			if ( SelectMode == LNX_SelectMode.Edges )
 			{
-				Handles.color = Color.white;
-				Gizmos.color = Color.white;
-
-				if ( Edge_CurrentlyPointingAt != null )
-				{
-					Handles.DrawLine( Edge_CurrentlyPointingAt.StartPosition, Edge_CurrentlyPointingAt.EndPosition, Size_HoveredComponent * 0.020f );
-				}
-
 				if ( Edges_currentlySelected != null && Edges_currentlySelected.Count > 0 )
 				{
-					if( amLocked && indices_lockedTris != null && indices_lockedTris.Count > 0 )
-					{
-						Debug.Log("h");
-						for ( int i = 0; i < indices_lockedTris.Count; i++ )
-						{
-							Gizmos.color = color_lockedTri;
-							DrawTriGizmos( _LNX_NavMesh.Triangles[indices_lockedTris[i]], Thickness_LockedTriEdge );
-						}
-					}
-
+					Gizmos.color = Color.white;
+					Handles.color = Color.white;
 					foreach ( LNX_Edge edg in Edges_currentlySelected )
 					{
-
 						if ( edg == Edge_LastSelected )
 						{
-							//Gizmos.color = Color.yellow;
+							Gizmos.color = Color.yellow;
 							Handles.color = Color.yellow;
 
-							Handles.DrawLine( edg.StartPosition, edg.EndPosition, Size_HoveredComponent * 0.020f );
-							//Gizmos.color = Color.white;
-							Handles.color = Color.white;
+							//Handles.DrawLine( edg.StartPosition, edg.EndPosition, Size_HoveredComponent * 0.020f );
+							Gizmos.DrawLine( edg.StartPosition, edg.EndPosition );
 
+							Gizmos.color = Color.white;
+							Handles.color = Color.white;
 						}
 						else
 						{
-							Handles.DrawLine( edg.StartPosition, edg.EndPosition, Size_HoveredComponent * 0.013f );
+							//Handles.DrawLine( edg.StartPosition, edg.EndPosition, Size_HoveredComponent * 0.013f );
+							Gizmos.DrawLine( edg.StartPosition, edg.EndPosition );
 						}
 					}
+				}
+
+				if ( Edge_CurrentlyPointingAt != null )
+				{
+					Handles.color = Color.yellow;
+					Gizmos.color = Color.yellow;
+
+					//Handles.DrawLine( Edge_CurrentlyPointingAt.StartPosition, Edge_CurrentlyPointingAt.EndPosition, Size_HoveredComponent * 0.020f );
+					Gizmos.DrawLine(Edge_CurrentlyPointingAt.StartPosition, Edge_CurrentlyPointingAt.EndPosition);
+
 				}
 			}
 			#endregion
@@ -746,14 +831,14 @@ namespace LogansNavigationExtension
 
 		public void DrawTriGizmos( LNX_Triangle tri, float thickness )
 		{
+			/*
 			Handles.DrawLine( tri.Verts[0].Position, tri.Verts[1].Position, thickness );
 			Handles.DrawLine( tri.Verts[1].Position, tri.Verts[2].Position, thickness );
 			Handles.DrawLine( tri.Verts[2].Position, tri.Verts[0].Position, thickness );
-		}
-
-		public void DebugRay( Ray ray )
-		{
-			Debug.DrawLine( ray.origin, ray.origin + (ray.direction.normalized * RayTryMag), Color.magenta, 10f );
+			*/
+			Gizmos.DrawLine( tri.Verts[0].Position, tri.Verts[1].Position );
+			Gizmos.DrawLine( tri.Verts[1].Position, tri.Verts[2].Position );
+			Gizmos.DrawLine( tri.Verts[2].Position, tri.Verts[0].Position );
 		}
 	}
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
@@ -28,11 +29,24 @@ namespace LogansNavigationExtension
 		public LNX_VertexRelationship_exp[] SiblingRelationships;
 		[HideInInspector] public LNX_VertexRelationship_exp[] Relationships;
 
-		public List<LNX_ComponentCoordinate> SharedVertexCoordinates;
+		//public List<LNX_ComponentCoordinate> SharedVertexCoordinates; //dws
+		public LNX_ComponentCoordinate[] SharedVertexCoordinates;
 
-		public string DBG_constructor;
+		[TextArea(1,5)] public string DBG_constructor;
 
-        public LNX_Vertex( LNX_Triangle tri, Vector3 vrtPos, int indx, NavMeshTriangulation nmTriangulation )
+		/// <summary>
+		/// Returns the index where this vertex originated in the original NavmeshTriangulation's vertices array.
+		/// </summary>
+		public int PositionInOriginalTriangulation;
+		/*{
+			get
+			{
+				return (MyCoordinate.TriIndex * 3) + MyCoordinate.ComponentIndex;
+			}
+		}*/
+
+
+		public LNX_Vertex( LNX_Triangle tri, Vector3 vrtPos, int indx, NavMeshTriangulation nmTriangulation )
         {
 			Position = vrtPos;
 			//Position = nmTriangulation.vertices[ nmTriangulation.indices[tri.Index_parallelWithParentArray * 3] + indx ];
@@ -45,14 +59,54 @@ namespace LogansNavigationExtension
 
 			Relationships = new LNX_VertexRelationship_exp[0];
 			SiblingRelationships = new LNX_VertexRelationship_exp[2];
-			SharedVertexCoordinates = new List<LNX_ComponentCoordinate>();
+			//SharedVertexCoordinates = new List<LNX_ComponentCoordinate>(); //dws
 
 			Angle = -1f;
 
-			DBG_constructor = $"at tri[{MyCoordinate.TriIndex}], [{MyCoordinate.ComponentIndex}] " +
-				$"Pos: '{Position}' " +
+			PositionInOriginalTriangulation = nmTriangulation.indices[(MyCoordinate.TriIndex * 3) + MyCoordinate.ComponentIndex];
+
+			DBG_constructor = $"at tri[{MyCoordinate.TriIndex}], [{MyCoordinate.ComponentIndex}]\n" +
+				$"Pos: '{Position}', vToCtr: '{v_toCenter}'\n" +
 				$"nml: '{v_normal}', dstToCtr: '{DistanceToCenter}'\n" +
 				$"";
+		}
+
+		public LNX_Vertex( LNX_Vertex vert )
+		{
+			Position = vert.Position;
+
+			v_toCenter = vert.v_toCenter;
+			v_normal = vert.v_normal;
+			DistanceToCenter = vert.DistanceToCenter;
+			MyCoordinate = vert.MyCoordinate;
+
+			Relationships = vert.Relationships;
+			SiblingRelationships = vert.SiblingRelationships;
+			SharedVertexCoordinates = vert.SharedVertexCoordinates;
+
+			Angle = vert.Angle;
+
+			PositionInOriginalTriangulation = vert.PositionInOriginalTriangulation;
+
+			DBG_constructor = vert.DBG_constructor;
+		}
+
+		public void AdoptValues(LNX_Vertex vert)
+		{
+			Position = vert.Position;
+
+			v_toCenter = vert.v_toCenter;
+			v_normal = vert.v_normal;
+			DistanceToCenter = vert.DistanceToCenter;
+			MyCoordinate = vert.MyCoordinate;
+
+			Relationships = vert.Relationships;
+			SiblingRelationships = vert.SiblingRelationships;
+			SharedVertexCoordinates = vert.SharedVertexCoordinates;
+
+			Angle = vert.Angle;
+
+			DBG_constructor = vert.DBG_constructor;
 		}
 
 		/// <summary>

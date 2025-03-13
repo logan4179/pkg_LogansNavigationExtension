@@ -28,7 +28,7 @@ namespace LogansNavigationExtension
 		#endregion
 
 		[SerializeField] bool flag_translateHandleChangedLastFrame;
-		[SerializeField] bool flag_moveHandleDirty;
+		[SerializeField] bool flag_moveHandleIsDirty;
 		bool flag_mouseDownThisFrame;
 		bool flag_mouseUpThisFrame;
 
@@ -57,11 +57,33 @@ namespace LogansNavigationExtension
 
 			PropertyField pf_selectMode = ve_root.Q<PropertyField>("pf_selectMode");
 			pf_selectMode.label = "";
+
+			PropertyField pf_lnxNavmeshRef = ve_root.Q<PropertyField>("pf_LnxNavMeshRef");
+			pf_lnxNavmeshRef.label = "";
+
+			Button btn_FetchTriangulation = ve_root.Q<Button>("btn_FetchTriangulation");
+			btn_FetchTriangulation.clicked += Btn_fetchTriangulation_action;
+
+			Button btn_ClearModifications = ve_root.Q<Button>("btn_ClearModifications");
+			btn_ClearModifications.clicked += btn_clearModifications_action;
+
 			pf_selectMode.RegisterValueChangeCallback( selectModeChangedCallback );
 
 
 			// Return the finished inspector UI
 			return ve_root;
+		}
+
+		private void Btn_fetchTriangulation_action()
+		{
+			_targetScript._LNX_NavMesh.FetchTriangulation();
+		}
+
+		private void btn_clearModifications_action()
+		{
+			_targetScript._LNX_NavMesh.ClearModifications();
+			_targetScript.manipulatorPos = _targetScript.Vert_LastSelected.Position;
+			//_targetScript.ClearSelection(); //because if I don't do this, the vertices referenced in memory by the mesh manipulator will still exist and be selected...
 		}
 
 		void selectModeChangedCallback( SerializedPropertyChangeEvent evt ) //note: for some reason, this is being called when you first select this in the inspector...
@@ -107,10 +129,10 @@ namespace LogansNavigationExtension
 				else if( Event.current.type == EventType.MouseUp )
 				{
 					flag_mouseUpThisFrame = true;
-					if( flag_moveHandleDirty )
+					if( flag_moveHandleIsDirty )
 					{
 						Debug.Log( "refreshing..." );
-						flag_moveHandleDirty = false;
+						flag_moveHandleIsDirty = false;
 						_targetScript._LNX_NavMesh.RefeshMesh();
 					}
 				}
@@ -140,11 +162,11 @@ namespace LogansNavigationExtension
 					}
 					else if( Event.current.keyCode == KeyCode.W )
 					{
-						_targetScript.OperationMode = LNX_OperationMode.Moving;
+						_targetScript.OperationMode = LNX_OperationMode.Translating;
 					}
 					else if ( Event.current.keyCode == KeyCode.X )
 					{
-						_targetScript.TryCut();
+						_targetScript.TryInsertLoop();
 					}
 				}
 				else
@@ -165,8 +187,6 @@ namespace LogansNavigationExtension
 
 				Ray mouseRay = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
 				_targetScript.ray = mouseRay;
-				_targetScript.RayOrigin = _targetScript.ray.origin;
-				_targetScript.RayDirection = _targetScript.ray.direction;
 
 				//using this simple logic for now...
 				_targetScript.TryPointAtComponentViaDirection( SceneView.lastActiveSceneView.camera.transform.position, mouseRay.direction.normalized );
@@ -176,26 +196,24 @@ namespace LogansNavigationExtension
 					_targetScript.TryGrab( Event.current.shift || Event.current.control );
 				}
 
-				if( _targetScript.OperationMode == LNX_OperationMode.Moving && _targetScript.HaveVertsSelected  )
+				if( _targetScript.OperationMode == LNX_OperationMode.Translating && _targetScript.HaveVertsSelected  )
 				{
 					EditorGUI.BeginChangeCheck();
 					Vector3 newTargetPosition = Handles.PositionHandle( _targetScript.manipulatorPos, Quaternion.identity );
 			
 					//Debug.Log($"{_targetScript.manipulatorPos}");
 
-					if ( EditorGUI.EndChangeCheck() ) //happens when manipulator is dragged
+					if ( EditorGUI.EndChangeCheck() ) //happens continuously when manipulator is dragged
 					{
-
 						_targetScript.MoveSelectedVerts( newTargetPosition );
 						Undo.RecordObject( _targetScript, "Change component Positions" );
 
-						flag_moveHandleDirty = true;
+						flag_moveHandleIsDirty = true;
 
 						flag_translateHandleChangedLastFrame = true;
 					}
-					else //happens when the mouse moves, but not when manipulator is dragged
+					else //happens continuously when manipulator is not being dragged, but mouse is moving
 					{
-
 						if ( flag_translateHandleChangedLastFrame )
 						{
 							//Debug.Log("haasdfsaf");

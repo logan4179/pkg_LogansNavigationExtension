@@ -42,6 +42,48 @@ namespace LogansNavigationExtension
 			SharedEdge = LNX_ComponentCoordinate.None;
 		}
 
+		public LNX_Edge( LNX_Edge edge )
+		{
+			EdgeLength = edge.EdgeLength;
+
+			StartPosition = edge.StartPosition;
+			StartVertCoordinate = edge.StartVertCoordinate;
+			MidPosition = edge.MidPosition;
+			EndPosition = edge.EndPosition;
+			EndVertCoordinate = edge.EndVertCoordinate;
+
+			v_startToEnd = edge.v_startToEnd;
+			v_endToStart = edge.v_endToStart;
+
+			v_toCenter = edge.v_toCenter;
+			v_cross = edge.v_cross;
+
+			MyCoordinate = edge.MyCoordinate;
+
+			SharedEdge = edge.SharedEdge;
+		}
+
+		public void AdoptValues(LNX_Edge edge)
+		{
+			EdgeLength = edge.EdgeLength;
+
+			StartPosition = edge.StartPosition;
+			StartVertCoordinate = edge.StartVertCoordinate;
+			MidPosition = edge.MidPosition;
+			EndPosition = edge.EndPosition;
+			EndVertCoordinate = edge.EndVertCoordinate;
+
+			v_startToEnd = edge.v_startToEnd;
+			v_endToStart = edge.v_endToStart;
+
+			v_toCenter = edge.v_toCenter;
+			v_cross = edge.v_cross;
+
+			MyCoordinate = edge.MyCoordinate;
+
+			SharedEdge = edge.SharedEdge;
+		}
+
 		public void CalculateInfo( LNX_Vertex strtVrt, LNX_Vertex endVrt, Vector3 triCtrPos, Vector3 triNrml )
 		{
 			StartPosition = strtVrt.Position;
@@ -97,11 +139,6 @@ namespace LogansNavigationExtension
 			}
 
 			return true;
-		}
-
-		public LNX_Triangle MyTri(LNX_NavMesh nm)
-		{
-			return nm.Triangles[MyCoordinate.TriIndex];
 		}
 
 		public bool AmTouching( LNX_Edge edge )

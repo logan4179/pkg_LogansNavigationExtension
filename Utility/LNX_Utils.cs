@@ -173,6 +173,10 @@ namespace LogansNavigationExtension
 			return vCenter / corners.Length;
 		}
 
+		#region FOR COMPONENT SELECTION ("GRABBING")-------------------------
+		//could put methods in here to shorten constructing the list of vertices grabbed by various components... idk if it's worth it...
+		#endregion
+
 		#region FOR MESH MANIPULATION-------------------------
 		public static bool AmPointingAt( Vector3 vOrigin, Vector3 vProjection, Vector3 vCenter, Vector3[] corners )
 		{
@@ -329,10 +333,61 @@ namespace LogansNavigationExtension
 
 			return true;
 		}
+		
+		/// <summary>
+		/// Gets the verts that should be moved during a cut to form the 
+		/// </summary>
+		/// <param name="nm"></param>
+		/// <param name="primaryEdge"></param>
+		/// <param name="secondaryEdge"></param>
+		/// <param name="pt"></param>
+		/// <returns></returns>
+		public static List<LNX_Vertex> GetMoveVerts_forInsertLoop( LNX_NavMesh nm, LNX_Edge primaryEdge, LNX_Edge secondaryEdge )
+		{
+			List<LNX_Vertex> returnVerts = new List<LNX_Vertex>();
+
+			Vector3 avgdMidPt = (primaryEdge.MidPosition + secondaryEdge.MidPosition) * 0.5f;
+			//Debug.DrawLine(avgdMidPt, avgdMidPt + (Vector3.up * 3f), Color.red, 3f);
+
+			LNX_Triangle primaryTri = nm.GetTriangle( primaryEdge );
+			float runningfurthestdist = 0f;
+			int edgIndx = -1;
+			for ( int i = 0; i < 3; i++ ) //find the edge with the furthest away mid position
+			{
+				float dst = Vector3.Distance( primaryEdge.MidPosition, avgdMidPt );
+				if ( primaryTri.Edges[i] != primaryEdge && dst > runningfurthestdist )
+				{
+					runningfurthestdist = dst;
+					edgIndx = i;
+				}
+			}
+
+			LNX_Edge moveEdge = primaryTri.Edges[edgIndx];
+
+			//find verts...
+			returnVerts.Add( primaryTri.Verts[moveEdge.StartVertCoordinate.ComponentIndex] );
+			returnVerts.Add( primaryTri.Verts[moveEdge.EndVertCoordinate.ComponentIndex] );
+
+			if ( nm.GetVertexAtCoordinate(secondaryEdge.StartVertCoordinate).Position == moveEdge.StartPosition ||
+				nm.GetVertexAtCoordinate(secondaryEdge.StartVertCoordinate).Position == moveEdge.EndPosition
+			)
+			{
+				returnVerts.Add( nm.GetVertexAtCoordinate(secondaryEdge.StartVertCoordinate) );
+			}
+			else if (nm.GetVertexAtCoordinate(secondaryEdge.EndVertCoordinate).Position == moveEdge.StartPosition ||
+				nm.GetVertexAtCoordinate(secondaryEdge.EndVertCoordinate).Position == moveEdge.EndPosition
+			)
+			{
+				returnVerts.Add( nm.GetVertexAtCoordinate(secondaryEdge.EndVertCoordinate) );
+			}
+
+			return returnVerts;
+		}
 		#endregion
 
 	}
 
+	#region ENUMS-----------------------------------------
 	[System.Serializable]
 	public enum LNX_SelectMode
 	{ 
@@ -346,8 +401,9 @@ namespace LogansNavigationExtension
 	public enum LNX_OperationMode
 	{
 		Pointing = 0,
-		Moving = 1,
+		Translating = 1,
 	}
+	#endregion
 
 	/*
 	[System.Serializable]
@@ -436,6 +492,22 @@ namespace LogansNavigationExtension
 		}
 	}
 
+	[System.Serializable]
+	public class LNX_TriangleModification
+	{
+		public LNX_Triangle OriginalTriangleState;
+
+		/// <summary>
+		/// Returns originalTri.Index_parallelWithParentArray
+		/// </summary>
+		public int OriginalStateIndex => OriginalTriangleState.Index_parallelWithParentArray;
+
+		public LNX_TriangleModification( LNX_Triangle originalTri )
+		{
+			OriginalTriangleState = new LNX_Triangle( originalTri, originalTri.Index_parallelWithParentArray );
+		}
+	}
+
 	public struct LNX_ProjectionHit
 	{
 		public int Index_intersectedTri;
@@ -458,6 +530,7 @@ namespace LogansNavigationExtension
 		}
 	}
 
+	#region RELATIONSHIPS------------------------------------------------------------------------
 	[System.Serializable]
 	public struct LNX_VertexRelationship_exp
 	{
@@ -509,53 +582,57 @@ namespace LogansNavigationExtension
 
 		[HideInInspector] public string DbgStruct;
 
-        public LNX_TriangleRelationship_exp( LNX_Triangle perspectiveTri, LNX_Triangle relatedTri )
+        public LNX_TriangleRelationship_exp( LNX_Triangle selfTri, LNX_Triangle relatedTri )
         {
 			DbgStruct = string.Empty;
 			HasSharedEdge = false;
 			NumberofSharedVerts = 0;
 			Index_relatedTriangle = relatedTri.Index_parallelWithParentArray;
-			DbgStruct += $"Index_RltdTri: '{Index_relatedTriangle}'\n" +
-				$"relationships:\n";
-
 			IndexMap_OwnedVerts_toShared = new int[3] { -1, -1, -1 };
 
-			if ( perspectiveTri != relatedTri )
+			if( selfTri == relatedTri )
 			{
+				DbgStruct = "self";
+			}
+			else
+			{
+				DbgStruct += $"Index_RltdTri: '{Index_relatedTriangle}'\n" +
+					$"relationships:\n";
+
 				for ( int i = 0; i < 3; i++ )
 				{
 					for ( int j = 0; j < 3; j++ )
 					{
-						if ( perspectiveTri.Verts[i].Position == relatedTri.Verts[j].Position )
+						if ( selfTri.Verts[i].Position == relatedTri.Verts[j].Position )
 						{
 							IndexMap_OwnedVerts_toShared[i] = j;
-							perspectiveTri.Verts[i].SharedVertexCoordinates.Add( new LNX_ComponentCoordinate(relatedTri.Index_parallelWithParentArray, j) );
 							NumberofSharedVerts++;
 						}
 					}
 
-					DbgStruct += $"tri{perspectiveTri.Index_parallelWithParentArray}v[{i}] to tri{relatedTri.Index_parallelWithParentArray}v: '{IndexMap_OwnedVerts_toShared[i]}'\n";
+					DbgStruct += $"tri{selfTri.Index_parallelWithParentArray}v[{i}] to tri{relatedTri.Index_parallelWithParentArray}v: '{IndexMap_OwnedVerts_toShared[i]}'\n";
 				}
-			}
 
-			if ( NumberofSharedVerts > 1 )
-			{
-				for ( int i = 0; i < 3; i++ )
+				if ( NumberofSharedVerts > 1 )
 				{
-					for ( int j = 0; j < 3; j++ )
+					for ( int i = 0; i < 3; i++ )
 					{
-						if ( 
-							(perspectiveTri.Edges[i].StartPosition == relatedTri.Edges[j].StartPosition || perspectiveTri.Edges[i].StartPosition == relatedTri.Edges[j].EndPosition) &&
-							(perspectiveTri.Edges[i].EndPosition == relatedTri.Edges[j].StartPosition || perspectiveTri.Edges[i].EndPosition == relatedTri.Edges[j].EndPosition)
-						)
+						for ( int j = 0; j < 3; j++ )
 						{
-							perspectiveTri.Edges[i].SharedEdge = new LNX_ComponentCoordinate( relatedTri.Index_parallelWithParentArray, j );
-							HasSharedEdge = true;
+							if (
+								(selfTri.Edges[i].StartPosition == relatedTri.Edges[j].StartPosition || selfTri.Edges[i].StartPosition == relatedTri.Edges[j].EndPosition) &&
+								(selfTri.Edges[i].EndPosition == relatedTri.Edges[j].StartPosition || selfTri.Edges[i].EndPosition == relatedTri.Edges[j].EndPosition)
+							)
+							{
+								selfTri.Edges[i].SharedEdge = new LNX_ComponentCoordinate(relatedTri.Index_parallelWithParentArray, j);
+								HasSharedEdge = true;
+							}
 						}
-					}
 
+					}
 				}
 			}
         }
     }
+	#endregion
 }
