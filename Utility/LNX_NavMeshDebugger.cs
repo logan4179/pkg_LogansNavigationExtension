@@ -57,6 +57,7 @@ namespace LogansNavigationExtension
 		public bool DrawTriLabels = true;
 
 		[Header("DEBUG EDGES")]
+		public bool DrawEdges = true;
 		public Color color_edgeLines = Color.white;
 		public float Thickness_edges = 1f;
 		public bool drawEdgeLabels = false;
@@ -140,21 +141,16 @@ namespace LogansNavigationExtension
 			}
 
 			//Draw borders...
-			if ( amFocused )
+			if( DrawEdges )
 			{
-				Handles.DrawLine( tri.Verts[0].Position, tri.Verts[1].Position, Thickness_edges * Thickness_focusTri );
-				Handles.DrawLine( tri.Verts[1].Position, tri.Verts[2].Position, Thickness_edges * Thickness_focusTri );
-				Handles.DrawLine( tri.Verts[2].Position, tri.Verts[0].Position, Thickness_edges * Thickness_focusTri );
-			}
-			else
-			{
-				//Gizmos.DrawLine( tri.Verts[0].Position, tri.Verts[1].Position );
-				//Gizmos.DrawLine( tri.Verts[1].Position, tri.Verts[2].Position );
-				//Gizmos.DrawLine( tri.Verts[2].Position, tri.Verts[0].Position );
-
-				Handles.DrawLine( tri.Verts[0].Position, tri.Verts[1].Position, Thickness_edges );
-				Handles.DrawLine( tri.Verts[1].Position, tri.Verts[2].Position, Thickness_edges );
-				Handles.DrawLine( tri.Verts[2].Position, tri.Verts[0].Position, Thickness_edges );
+				if ( amFocused )
+				{
+					LNX_Utils.DrawTriHandles( tri, Thickness_edges * Thickness_focusTri );
+				}
+				else
+				{
+					LNX_Utils.DrawTriHandles(tri, Thickness_edges );
+				}
 			}
 
 			if ( drawEdgeLabels )

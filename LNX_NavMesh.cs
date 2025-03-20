@@ -12,33 +12,38 @@ namespace LogansNavigationExtension
     {
 		public static LNX_NavMesh Instance;
 
+		public string LayerMaskName;
+		private int cachedLayerMask;
+		public int CachedLayerMask => cachedLayerMask;
+
 		public LNX_Triangle[] Triangles;
 
-		public Mesh _Mesh;
+		[SerializeField, HideInInspector] private Mesh _mesh;
+		public Mesh _Mesh => _mesh;
 
-		public List<LNX_TriangleModification> triModifications;
+		[SerializeField] private List<LNX_TriangleModification> triModifications;
 
+		[SerializeField] private List<LNX_TriangleModification> removedTris;
+
+		[Header("BOUNDS")]
+		/*[SerializeField]*/ private string dbg_Bounds;
 		/// <summary>Stores the largest/smallest X, Y, and Z value of the navmesh. Elements 0 and 1 are lowest and 
 		/// hightest X, elements 2 and 3 are lowest and highest Y, and elements 4 and 5 are lowest and highest z.</summary>
-		public float[] Bounds;
+		[HideInInspector] public float[] Bounds;
 
 		/// <summary>Stores the largest/smallest points defining the bounds of a navmesh. Elements 0-3 form the lower horizontal square of the 
 		/// box, while 4-6 form the higher horizontal square of the bounding box. These theoretical boxes each run clockwise. Element 0 
 		/// will be the lowest/most-negative value point, and element 4 will be the most positive value point</summary>
-		public Vector3[] V_Bounds;
+		[HideInInspector] public Vector3[] V_Bounds;
 
-		public Vector3 V_BoundsCenter;
-		public Vector3 V_BoundsSize;
+		[HideInInspector] public Vector3 V_BoundsCenter;
+		[HideInInspector] public Vector3 V_BoundsSize;
 		/// <summary>
 		/// Longest distance from the bounds center to any corner on the bounding box. This is used as an efficiency value 
 		/// in order to short-circuit (return early) from certain methods that don't need to run further logic based on the 
 		/// value of this threshold..
 		/// </summary>
-		public float BoundsContainmentDistanceThreshold = -1;
-
-        public string LayerMaskName;
-        private int cachedLayerMask;
-		public int CachedLayerMask => cachedLayerMask;
+		[HideInInspector] public float BoundsContainmentDistanceThreshold = -1;
 
 		//[Header("flags")]
 
@@ -176,7 +181,7 @@ namespace LogansNavigationExtension
 			}
 			cachedLayerMask = LayerMask.GetMask( LayerMaskName );
 
-			_Mesh = new Mesh();
+			_mesh = new Mesh();
 			//Vector3[] meshVrts = new Vector3[tringltn.vertices.Length];
 			Vector3[] meshVrts = tringltn.vertices;
 
@@ -265,10 +270,10 @@ namespace LogansNavigationExtension
 
 			#region FINISH THE MESH--------------------------------
 			Debug.Log($"Finishing the mesh representation. Assigning '{meshVrts.Length}' verts, '{tringltn.indices.Length}' tris, and '{nrmls.Length}' normals...");
-			_Mesh.vertices = meshVrts;
-			_Mesh.triangles = tringltn.indices; //apparently this MUST come after setting the vertices. If you try to set triangles before vertices, it will throw an error
+			_mesh.vertices = meshVrts;
+			_mesh.triangles = tringltn.indices; //apparently this MUST come after setting the vertices. If you try to set triangles before vertices, it will throw an error
 
-			_Mesh.normals = nrmls;
+			_mesh.normals = nrmls;
 			#endregion
 
 			dbg_Areas = tringltn.areas;
@@ -311,11 +316,65 @@ namespace LogansNavigationExtension
 
 			Triangles[vert.MyCoordinate.TriIndex].MoveVert_managed( this, vert.MyCoordinate.ComponentIndex, pos );
 
-			Vector3[] tmpVrts = _Mesh.vertices; //note: I can't get it to update the mesh if I only change the relevant vertex, it seems like I MUST create and assign a whole new array.
+			Vector3[] tmpVrts = _mesh.vertices; //note: I can't get it to update the mesh if I only change the relevant vertex, it seems like I MUST create and assign a whole new array.
 			tmpVrts[vert.PositionInOriginalTriangulation] = vert.Position + pos;
 
-			_Mesh.vertices = tmpVrts; //apparently you have to assign to the mesh in this manner in order to make this update (apparently I can't just change one of the existing vertices elements)...
+			_mesh.vertices = tmpVrts; //apparently you have to assign to the mesh in this manner in order to make this update (apparently I can't just change one of the existing vertices elements)...
 			
+		}
+
+		public void DeleteTriangle( int triIndex )
+		{
+			if( removedTris == null )
+			{
+				Debug.LogWarning($"huh...this was null...");
+				removedTris = new List<LNX_TriangleModification>();
+			}
+			
+			if( Triangles.Length > triIndex )
+			{
+				removedTris.Add( new LNX_TriangleModification(Triangles[triIndex]) );
+			}
+		}
+
+		public bool ContainsMod( int triIndex )
+		{
+			if( triModifications == null || triModifications.Count <= 0 )
+			{
+				return false;
+			}
+			else
+			{
+				for ( int i = 0; i < triModifications.Count; i++ )
+				{
+					if ( triModifications[i].OriginalStateIndex == triIndex )
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+		public bool AlreadyContainsRemoval( int triIndex ) //Todo: I don't really think I need this. Was using this as a check during removetri method. DWS
+		{
+			if ( removedTris == null || removedTris.Count <= 0 )
+			{
+				return false;
+			}
+			else
+			{
+				for ( int i = 0; i < removedTris.Count; i++ )
+				{
+					if ( removedTris[i].OriginalStateIndex == triIndex )
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
 		}
 
 		public void ClearModifications()
@@ -346,6 +405,8 @@ namespace LogansNavigationExtension
 
 		public void CalculateBounds()
 		{
+			dbg_Bounds = string.Empty;
+
 			Bounds = new float[6] 
 			{ 
 				float.MaxValue, float.MinValue, 
@@ -386,6 +447,17 @@ namespace LogansNavigationExtension
 				}
 			}
 
+			if( Bounds.Length > 0 )
+			{
+				dbg_Bounds = $"{nameof(Bounds)}[{0}]: '{Bounds[0]}'\n" +
+				$"{nameof(Bounds)}[{1}]: '{Bounds[1]}'\n" +
+				$"{nameof(Bounds)}[{2}]: '{Bounds[2]}'\n" +
+				$"{nameof(Bounds)}[{3}]: '{Bounds[3]}'\n" +
+				$"{nameof(Bounds)}[{4}]: '{Bounds[4]}'\n" +
+				$"{nameof(Bounds)}[{5}]: '{Bounds[5]}'\n\n";
+			}
+
+
 			V_Bounds = new Vector3[8]
 			{
 				new Vector3(Bounds[0], Bounds[2], Bounds[4]), //most negative point
@@ -398,11 +470,25 @@ namespace LogansNavigationExtension
 				new Vector3(Bounds[0], Bounds[3], Bounds[5]),
 			};
 
+			if ( V_Bounds.Length > 0 )
+			{
+				dbg_Bounds = $"{nameof(V_Bounds)}[{0}]: '{V_Bounds[0]}'\n" +
+				$"{nameof(V_Bounds)}[{1}]: '{V_Bounds[1]}'\n" +
+				$"{nameof(V_Bounds)}[{2}]: '{V_Bounds[2]}'\n" +
+				$"{nameof(V_Bounds)}[{3}]: '{V_Bounds[3]}'\n" +
+				$"{nameof(V_Bounds)}[{4}]: '{V_Bounds[4]}'\n" +
+				$"{nameof(V_Bounds)}[{5}]: '{V_Bounds[5]}'\n" +
+				$"{nameof(V_Bounds)}[{6}]: '{V_Bounds[6]}'\n" +
+				$"{nameof(V_Bounds)}[{7}]: '{V_Bounds[7]}'\n\n";
+			}
+
 			V_BoundsCenter = (
 				V_Bounds[0] + V_Bounds[1] + V_Bounds[2] + V_Bounds[3] + 
 				V_Bounds[4] + V_Bounds[5] + V_Bounds[6] + V_Bounds[7]
 				
 			) / 8;
+
+			dbg_Bounds += $"{nameof(V_BoundsCenter)}: '{V_BoundsCenter}'\n\n";
 
 			V_BoundsSize = new Vector3(
 				Mathf.Abs(Bounds[0] - Bounds[1]),
@@ -410,14 +496,20 @@ namespace LogansNavigationExtension
 				Mathf.Abs(Bounds[4] - Bounds[5])
 			);
 
+			dbg_Bounds += $"{nameof(V_BoundsSize)}: '{V_BoundsSize}'\n\n";
+
 			BoundsContainmentDistanceThreshold = Mathf.Max
 			(
 				Vector3.Distance(V_BoundsCenter, V_Bounds[0]),
 				Vector3.Distance(V_BoundsCenter, V_Bounds[4])
 			);
+
+			dbg_Bounds += $"{nameof(BoundsContainmentDistanceThreshold)}: '{BoundsContainmentDistanceThreshold}'\n\n";
+
 		}
 
-		/*[SerializeField]*/ private string dbgCalculatePath;
+		/*[SerializeField]*/
+		private string dbgCalculatePath;
 		public bool CalculatePath( Vector3 startPos_passed, Vector3 endPos_passed, float maxDistance )
 		{
 			LNX_ProjectionHit lnxHit = new LNX_ProjectionHit();

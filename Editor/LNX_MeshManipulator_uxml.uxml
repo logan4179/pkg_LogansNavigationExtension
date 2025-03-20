@@ -13,7 +13,7 @@
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement name="ctr_Manipulation" style="flex-grow: 1; margin-right: 0; margin-left: 0; background-color: rgba(0, 0, 0, 0.09); padding-right: 0; padding-left: 0; margin-top: 0; margin-bottom: 0; height: auto; max-height: none; padding-top: 0; padding-bottom: 0; border-left-color: rgba(255, 255, 255, 0.65); border-right-color: rgba(255, 255, 255, 0.65); border-top-color: rgba(255, 255, 255, 0.65); border-bottom-color: rgba(255, 255, 255, 0.65); border-top-width: 2px; border-right-width: 2px; border-bottom-width: 2px; border-left-width: 2px;">
+        <ui:VisualElement name="ctr_Manipulation" style="flex-grow: 1; margin-right: 7px; margin-left: 7px; background-color: rgba(0, 0, 0, 0.09); padding-right: 0; padding-left: 0; margin-top: 0; margin-bottom: 0; height: auto; max-height: none; padding-top: 0; padding-bottom: 0; border-left-color: rgba(255, 255, 255, 0.34); border-right-color: rgba(255, 255, 255, 0.34); border-top-color: rgba(255, 255, 255, 0.34); border-bottom-color: rgba(255, 255, 255, 0.34); border-top-width: 2px; border-right-width: 2px; border-bottom-width: 2px; border-left-width: 2px;">
             <ui:Label tabindex="-1" text="Manipulation" parse-escape-sequences="true" display-tooltip-when-elided="true" name="Label" style="-unity-text-align: upper-center; font-size: 14px; -unity-font-style: bold; border-left-color: rgba(255, 255, 255, 0.84); border-right-color: rgba(255, 255, 255, 0.84); border-top-color: rgba(255, 255, 255, 0.84); border-bottom-color: rgba(255, 255, 255, 0.84); border-top-width: 0; border-right-width: 0; border-bottom-width: 0; border-left-width: 0; padding-top: 7px; padding-bottom: 7px; margin-left: 5px; margin-right: 5px; padding-right: 0; padding-left: 0; margin-top: 5px; margin-bottom: 5px; color: rgb(0, 0, 0); background-color: rgba(255, 255, 255, 0.13);" />
             <ui:VisualElement name="ctr_vlg" style="flex-grow: 1; margin-top: 10px; margin-right: 10px; margin-bottom: 30px; margin-left: 10px; background-color: rgba(255, 255, 255, 0); padding-top: 2px; padding-right: 2px; padding-bottom: 2px; padding-left: 2px;">
                 <ui:VisualElement name="ctr_selectMode" style="flex-grow: 1; border-left-color: rgba(255, 255, 255, 0.6); border-right-color: rgba(255, 255, 255, 0.6); border-top-color: rgba(255, 255, 255, 0.6); border-bottom-color: rgba(255, 255, 255, 0.6); border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; flex-direction: column; height: auto; border-top-left-radius: 15px; border-top-right-radius: 15px; border-bottom-right-radius: 15px; border-bottom-left-radius: 15px; margin-bottom: 25px; padding-right: 10px; padding-left: 10px; padding-top: 5px;">
@@ -21,7 +21,7 @@
                         <ui:Label tabindex="-1" text="Mode:" parse-escape-sequences="true" display-tooltip-when-elided="true" style="margin-left: 2px; margin-top: 0; margin-right: 2px; margin-bottom: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0;" />
                         <uie:PropertyField name="pf_selectMode" binding-path="SelectMode" style="min-height: 25px; flex-grow: 1;" />
                     </ui:VisualElement>
-                    <ui:Label tabindex="-1" text="Verts: Alt + 1, Edges: Alt + 2, Faces: Alt + 3, None: Alt + 4" parse-escape-sequences="true" display-tooltip-when-elided="true" style="margin-left: 0; margin-bottom: 5px; padding-left: 5px;" />
+                    <ui:Label tabindex="-1" text="Verts: Alt + 1, Edges: Alt + 2, Faces: Alt + 3, None: Alt + 4" parse-escape-sequences="true" display-tooltip-when-elided="true" style="margin-left: 0; margin-bottom: 5px; padding-left: 5px; white-space: normal;" />
                 </ui:VisualElement>
                 <uie:PropertyField name="pf_operationMode" label="Operation" binding-path="OperationMode" />
             </ui:VisualElement>
@@ -29,14 +29,13 @@
         <ui:VisualElement name="ctr_Visualizing" style="flex-grow: 1; margin-right: 7px; margin-left: 7px; background-color: rgba(0, 0, 0, 0.09); padding-right: 0; padding-left: 0; margin-top: 30px; margin-bottom: 5px; padding-top: 0; padding-bottom: 0;">
             <ui:Label tabindex="-1" text="Visual" parse-escape-sequences="true" display-tooltip-when-elided="true" name="Label" style="-unity-text-align: upper-center; font-size: 14px; -unity-font-style: bold; border-left-color: rgba(255, 255, 255, 0.22); border-right-color: rgba(255, 255, 255, 0.22); border-top-color: rgba(255, 255, 255, 0.22); border-bottom-color: rgba(255, 255, 255, 0.22); border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; padding-top: 7px; padding-bottom: 7px; margin-left: 0; margin-right: 0; padding-right: 0; padding-left: 0; margin-top: 0; margin-bottom: 0; color: rgb(0, 0, 0);" />
             <ui:VisualElement name="ctr_selections" style="flex-grow: 1;">
-                <uie:PropertyField name="pf_drawNavMeshLines" label="Draw Mesh Lines" binding-path="drawNavMeshLines" style="height: 25px;" />
-                <uie:PropertyField name="pf_color_edgeLInes" label="Edge Line Color" binding-path="color_edgeLines" style="height: 25px;" />
-                <uie:PropertyField name="pf_color_triMod" label="Modified Tri Color" binding-path="color_modifiedTri" style="height: 25px;" />
+                <uie:PropertyField name="pf_drawNavMeshLines" label="Mesh Lines" binding-path="drawNavMeshLines" style="height: 25px;" />
+                <uie:PropertyField name="pf_drawTriLabels" label="Draw Tri Labels" binding-path="drawTriLabels" style="height: 25px;" />
+                <uie:PropertyField name="pf_drawEdgeLabels" label="Edge Labels" binding-path="drawEdgeLabels" style="height: 25px;" />
                 <uie:PropertyField name="pf_thickness_edgeLines" label="Line Thickness" binding-path="thickness_edges" style="height: 25px;" />
                 <uie:PropertyField name="pf_size_hoverededComponent" label="Selected Size" binding-path="Size_HoveredComponent" style="height: 25px;" />
                 <uie:PropertyField name="pf_size_SelectedComponent" label="Selected Size" binding-path="Size_SelectedComponent" style="height: 25px;" />
                 <uie:PropertyField name="pf_Size_FocusedComponent" label="Focused Size" binding-path="Size_FocusedComponent" style="height: 25px;" />
-                <uie:PropertyField name="pf_color_lockedTri" label="Locked Tri Color" binding-path="color_lockedTri" style="height: 25px;" />
                 <uie:PropertyField name="pf_Size_LockedTriEdge" label="Locked Tri Color" binding-path="Thickness_LockedTriEdge" style="height: 25px;" />
             </ui:VisualElement>
         </ui:VisualElement>

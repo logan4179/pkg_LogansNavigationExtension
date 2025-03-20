@@ -95,11 +95,14 @@ namespace LogansNavigationExtension
 		#endregion
 
 		#region DEBUGGING ----------------------
+		[SerializeField] private bool drawTriLabels = true;
+
 		[SerializeField] private bool drawNavMeshLines = true;
 		[SerializeField] private Color color_edgeLines;
 		[SerializeField] private Color color_modifiedTri;
 
 		[Range(0f, 8f)] public float thickness_edges = 0.2f;
+		[SerializeField] private bool drawEdgeLabels = false;
 
 		[Range(0f, 8f)] public float Size_SelectedComponent = 0.2f;
 		[Range(0f, 8f)] public float Size_FocusedComponent = 0.2f;
@@ -541,8 +544,8 @@ namespace LogansNavigationExtension
 
 			Debug.Log($"edge0: '{Edges_currentlySelected[0].MyCoordinate}', edge1: '{Edges_currentlySelected[1].MyCoordinate}'");
 
-			if ( 
-				!_LNX_NavMesh.GetTriangle(Edges_currentlySelected[0]).AmAdjacentToTri(tri1) ||
+			if (
+				tri0.Relationships[tri1.Index_parallelWithParentArray].NumberofSharedVerts != 2 ||
 				!Edges_currentlySelected[0].AmTerminal || !Edges_currentlySelected[1].AmTerminal ||
 				Edges_currentlySelected[0].AmTouching(Edges_currentlySelected[1])
 			)
@@ -551,13 +554,17 @@ namespace LogansNavigationExtension
 				return;
 			}
 			#endregion
+
 			Debug.Log("decided CAN cut. trying...");
 
+
+
+			/* old way
 			//first, find the edge that should be moved...
 			List<LNX_Vertex> vrtsFound = LNX_Utils.GetMoveVerts_forInsertLoop( _LNX_NavMesh, Edges_currentlySelected[0], Edges_currentlySelected[1] );
 			Debug.Log($"found '{vrtsFound.Count}' verts...");
 
-			if( vrtsFound.Count == 3 )
+			if( vrtsFound.Count == 3 ) //There should be 3 verts to move, 2 shared at same position by tris
 			{
 				for ( int i = 0; i < 3; i++ ) // Reposition initial verts...
 				{
@@ -595,9 +602,10 @@ namespace LogansNavigationExtension
 
 				#endregion
 
+
 				_LNX_NavMesh.RefeshMesh();
 			}
-
+				*/
 			//Debug.DrawLine(moveEdge.MidPosition, moveEdge.MidPosition + (Vector3.up * 3f), Color.yellow, 3f);
 
 			//now I need to convert to verts...
@@ -606,23 +614,10 @@ namespace LogansNavigationExtension
 		}
 		#endregion
 
-		private bool selectedVertsContainTriIndex( int triIndex )
-		{
-			for ( int i = 0; i < Verts_currentlySelected.Count; i++ )
-			{
-				if( Verts_currentlySelected[i].MyCoordinate.TriIndex == triIndex )
-				{
-					return true;
-				}
-			}
-
-			return false;
-		}
-
 		public Ray ray;
 		public bool AmPointingATBounds = false;
 
-
+#if UNITY_EDITOR
 		private void OnDrawGizmos()
 		{
 			if( Application.isPlaying || _LNX_NavMesh == null )
@@ -636,57 +631,63 @@ namespace LogansNavigationExtension
 				Gizmos.color = _LNX_NavMesh.color_mesh;
 				Gizmos.DrawMesh(_LNX_NavMesh._Mesh);
 
-				if ( drawNavMeshLines )
+				if ( drawNavMeshLines || drawTriLabels || drawEdgeLabels )
 				{
+					GUIStyle gstl_label = GUIStyle.none;
+					//gstl_nrml.normal.textColor = Color.white;
+
 					for ( int i = 0; i < _LNX_NavMesh.Triangles.Length; i++ )
 					{
-						if( _LNX_NavMesh.Triangles[i].v_normal == Vector3.zero )
+						bool amKosher = _LNX_NavMesh.Triangles[i].v_normal != Vector3.zero;
+
+						if( !amKosher )
 						{
-							//Handles.color = Color.red;
+							Handles.color = Color.red;
 							Gizmos.color = Color.red;
 						}
 						else
 						{
 							if( _LNX_NavMesh.Triangles[i].Flag_amModified )
 							{
-								//Handles.color = color_modifiedTri;
+								Handles.color = color_modifiedTri;
 								Gizmos.color = color_modifiedTri;
 							}
 							else
 							{
-								//Handles.color = color_edgeLines;
+								Handles.color = color_edgeLines;
 								Gizmos.color = color_edgeLines;
 							}
 						}
-						/*
-						Mesh msh = new Mesh();
-						Vector3[] vrtPositions = new Vector3[3] {
-							_LNX_NavMesh.Triangles[i].Verts[0].Position,
-							_LNX_NavMesh.Triangles[i].Verts[1].Position,
-							_LNX_NavMesh.Triangles[i].Verts[2].Position
-						};
 
-						int[] triangles = new int[3] { 0, 1, 2 };
+						if ( drawTriLabels )
+						{
+							gstl_label.normal.textColor = amKosher ? Color.white : Color.red;
 
-						Vector2[] uvs = new Vector2[3] {
-							Vector2.up,
-							Vector2.up,
-							Vector2.up
-						};
+							Handles.Label( 
+								_LNX_NavMesh.Triangles[i].V_center, 
+								_LNX_NavMesh.Triangles[i].Index_parallelWithParentArray.ToString(), gstl_label
+							);
+						}
 
-						Vector3[] nrmls = new Vector3[3] { 
-							Vector3.up, 
-							Vector3.up,
-							Vector3.up
-						};
+						if( drawNavMeshLines )
+						{
+							LNX_Utils.DrawTriGizmos( _LNX_NavMesh.Triangles[i] );
+							//LNX_Utils.DrawTriHandles( _LNX_NavMesh.Triangles[i], thickness_edges );
+						}
 
-						msh.vertices = vrtPositions;
-						msh.triangles = triangles;
-						msh.normals = nrmls;
 
-						Gizmos.DrawMesh(msh);*/
-
-						DrawTriGizmos(_LNX_NavMesh.Triangles[i], thickness_edges);
+						if ( drawEdgeLabels )
+						{
+							Handles.Label( 
+								_LNX_NavMesh.Triangles[i].Edges[0].MidPosition + (_LNX_NavMesh.Triangles[i].Edges[0].v_cross * 0.05f), 
+								"e0", gstl_label);
+							Handles.Label(
+								_LNX_NavMesh.Triangles[i].Edges[1].MidPosition + (_LNX_NavMesh.Triangles[i].Edges[1].v_cross * 0.05f), 
+								"e1", gstl_label);
+							Handles.Label(
+								_LNX_NavMesh.Triangles[i].Edges[2].MidPosition + (_LNX_NavMesh.Triangles[i].Edges[2].v_cross * 0.05f), 
+								"e2", gstl_label);
+						}
 					}
 				}
 
@@ -697,7 +698,8 @@ namespace LogansNavigationExtension
 
 					for ( int i = 0; i < indices_lockedTris.Count; i++ )
 					{
-						DrawTriGizmos( _LNX_NavMesh.Triangles[indices_lockedTris[i]], Thickness_LockedTriEdge );
+						LNX_Utils.DrawTriGizmos( _LNX_NavMesh.Triangles[indices_lockedTris[i]] );
+
 					}
 				}
 				else
@@ -708,7 +710,7 @@ namespace LogansNavigationExtension
 
 						for ( int i = 0; i < indices_selectedTris.Count; i++ )
 						{
-							DrawTriGizmos( _LNX_NavMesh.Triangles[indices_selectedTris[i]], Size_SelectedComponent );
+							LNX_Utils.DrawTriGizmos( _LNX_NavMesh.Triangles[indices_selectedTris[i]] );
 						}
 					}
 					/*
@@ -722,11 +724,10 @@ namespace LogansNavigationExtension
 					{
 						//Handles.color = Color.yellow;
 						Gizmos.color = Color.yellow;
-						DrawTriGizmos( PointingAtTri, Size_HoveredComponent );
+						LNX_Utils.DrawTriGizmos( PointingAtTri );
 					}
 				}
 			}
-
 			#endregion
 
 			#region VERTICES --------------------------------------------
@@ -801,6 +802,7 @@ namespace LogansNavigationExtension
 
 			generateDbgString();
 		}
+#endif
 
 		private void generateDbgString()
 		{
@@ -827,18 +829,6 @@ namespace LogansNavigationExtension
 				$"";
 
 
-		}
-
-		public void DrawTriGizmos( LNX_Triangle tri, float thickness )
-		{
-			/*
-			Handles.DrawLine( tri.Verts[0].Position, tri.Verts[1].Position, thickness );
-			Handles.DrawLine( tri.Verts[1].Position, tri.Verts[2].Position, thickness );
-			Handles.DrawLine( tri.Verts[2].Position, tri.Verts[0].Position, thickness );
-			*/
-			Gizmos.DrawLine( tri.Verts[0].Position, tri.Verts[1].Position );
-			Gizmos.DrawLine( tri.Verts[1].Position, tri.Verts[2].Position );
-			Gizmos.DrawLine( tri.Verts[2].Position, tri.Verts[0].Position );
 		}
 	}
 }

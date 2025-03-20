@@ -77,6 +77,7 @@ namespace LogansNavigationExtension
 		private void Btn_fetchTriangulation_action()
 		{
 			_targetScript._LNX_NavMesh.FetchTriangulation();
+			_targetScript.ClearSelection();
 		}
 
 		private void btn_clearModifications_action()

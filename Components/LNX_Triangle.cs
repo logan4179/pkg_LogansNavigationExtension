@@ -24,9 +24,9 @@ namespace LogansNavigationExtension
 
 		/// <summary>Distance around the triangle</summary>
 		[HideInInspector] public float Perimeter;
-		[HideInInspector] public float Area;
 
-		[HideInInspector] public int AreaMask;
+		[HideInInspector, Tooltip("Corresponds to the areas set up in the Navigation window.")] 
+		public float Area;
 
 		/// <summary>The longest edge of this triangle. This can be used for effecient decision-making. 
 		/// IE: IF a position's distance from this triangle's center is greater than half of this value, it can't possibly 
@@ -57,6 +57,8 @@ namespace LogansNavigationExtension
 
 			Index_parallelWithParentArray = triIndx;
 
+			Area = nmTriangulation.areas[triIndx];
+
 			Vector3 vrtPos0 = nmTriangulation.vertices[ nmTriangulation.indices[(triIndx * 3)] ];
 			Vector3 vrtPos1 = nmTriangulation.vertices[ nmTriangulation.indices[(triIndx * 3) + 1] ];
 			Vector3 vrtPos2 = nmTriangulation.vertices[ nmTriangulation.indices[(triIndx * 3) + 2] ];
@@ -74,7 +76,9 @@ namespace LogansNavigationExtension
 			Edges[2] = new LNX_Edge( Verts[1], Verts[0], V_center, v_normal,
 				new LNX_ComponentCoordinate(Index_parallelWithParentArray, 2) );
 
-			CalculateTriInfo( lrMask );
+			CalculateDerivedInfo( lrMask );
+
+			TrySampleNormal( lrMask, true );
 		}
 
 		public LNX_Triangle( LNX_Triangle baseTri, int triIndx )
@@ -87,7 +91,6 @@ namespace LogansNavigationExtension
 			v_normal = baseTri.v_normal;
 			Perimeter = baseTri.Perimeter;
 			Area = baseTri.Area;
-			AreaMask = baseTri.AreaMask;
 			LongestEdgeLength = baseTri.LongestEdgeLength;
 			ShortestEdgeLength = baseTri.ShortestEdgeLength;
 			Verts = new LNX_Vertex[3];
@@ -123,7 +126,6 @@ namespace LogansNavigationExtension
 			v_normal = TriCollection[modification.OriginalStateIndex].v_normal;
 			Perimeter = TriCollection[modification.OriginalStateIndex].Perimeter;
 			Area = TriCollection[modification.OriginalStateIndex].Area;
-			AreaMask = TriCollection[modification.OriginalStateIndex].AreaMask;
 			LongestEdgeLength = TriCollection[modification.OriginalStateIndex].LongestEdgeLength;
 			ShortestEdgeLength = TriCollection[modification.OriginalStateIndex].ShortestEdgeLength;
 
@@ -171,7 +173,6 @@ namespace LogansNavigationExtension
 			v_normal = baseTri.v_normal;
 			Perimeter = baseTri.Perimeter;
 			Area = baseTri.Area;
-			AreaMask = baseTri.AreaMask;
 			LongestEdgeLength = baseTri.LongestEdgeLength;
 			ShortestEdgeLength = baseTri.ShortestEdgeLength;
 			Verts[0].AdoptValues( baseTri.Verts[0] );
@@ -228,9 +229,10 @@ namespace LogansNavigationExtension
 		}
 
 		/// <summary>
-		/// Regenerates and re-caches the information a tri has about itself. Use this after you edit a tri's components.
+		/// Calculates/recalculates the information a tri derives about itself using the positions of it's vertices. 
+		/// Use this after you edit a tri's components.
 		/// </summary>
-		public void CalculateTriInfo( int lrMask, bool logMessages = true )
+		public void CalculateDerivedInfo( int lrMask, bool logMessages = true )
 		{
 			DbgCalculateTriInfo = string.Empty;
 
@@ -253,8 +255,6 @@ namespace LogansNavigationExtension
 			LongestEdgeLength = Mathf.Max(Edges[0].EdgeLength, Edges[1].EdgeLength, Edges[2].EdgeLength);
 			ShortestEdgeLength = Mathf.Min(Edges[0].EdgeLength, Edges[1].EdgeLength, Edges[2].EdgeLength);
 
-			TrySampleNormal( lrMask, logMessages );
-
 			name = $"ind: '{Index_parallelWithParentArray}', ctr: '{V_center}'";
 
 			DbgCalculateTriInfo += $"nrml: '{v_normal}'\n" +
@@ -266,7 +266,10 @@ namespace LogansNavigationExtension
 		{
 			if (DirtyFlag_repositionedVert)
 			{
-				CalculateTriInfo( nm.CachedLayerMask, logMessages );
+				CalculateDerivedInfo( nm.CachedLayerMask, logMessages );
+
+				TrySampleNormal( nm.CachedLayerMask, logMessages );
+
 				CreateRelationships( nm.Triangles );
 
 				DirtyFlag_repositionedVert = false;
@@ -575,7 +578,12 @@ namespace LogansNavigationExtension
 			DirtyFlag_repositionedVert = true;
 		}
 
-		public bool AmAdjacentToTri( int indx )
+		/// <summary>
+		/// Returns true if the tri with the supplied index is touching this triangle at any vertex.
+		/// </summary>
+		/// <param name="indx"></param>
+		/// <returns></returns>
+		public bool AmAdjacentToTri( int indx ) //todo: unit test
 		{
 			if( AdjacentTriIndices.Length > 0 )
 			{
@@ -591,7 +599,12 @@ namespace LogansNavigationExtension
 			return false;
 		}
 
-		public bool AmAdjacentToTri( LNX_Triangle tri )
+		/// <summary>
+		/// Returns true if the tri with the supplied index is touching this triangle at any vertex.
+		/// </summary>
+		/// <param name="indx"></param>
+		/// <returns></returns>
+		public bool AmAdjacentToTri( LNX_Triangle tri ) //todo: unit test
 		{
 			if ( AdjacentTriIndices.Length > 0 )
 			{

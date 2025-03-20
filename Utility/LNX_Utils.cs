@@ -100,7 +100,7 @@ namespace LogansNavigationExtension
 			return false;
 		}
 
-		public static Vector3 CreateCornerPathPoint( LNX_PathPoint startPt, LNX_PathPoint endPt )
+		public static Vector3 CreateCornerPathPoint(LNX_PathPoint startPt, LNX_PathPoint endPt)
 		{
 			Vector3 resultPt = Vector3.zero;
 
@@ -161,11 +161,11 @@ namespace LogansNavigationExtension
 			return resultPt;
 		}
 
-		public static Vector3 GetCenterVector( Vector3[] corners )
+		public static Vector3 GetCenterVector(Vector3[] corners)
 		{
 			Vector3 vCenter = Vector3.zero;
 
-			for ( int i = 0; i < corners.Length; i++ )
+			for (int i = 0; i < corners.Length; i++)
 			{
 				vCenter += corners[i];
 			}
@@ -178,16 +178,16 @@ namespace LogansNavigationExtension
 		#endregion
 
 		#region FOR MESH MANIPULATION-------------------------
-		public static bool AmPointingAt( Vector3 vOrigin, Vector3 vProjection, Vector3 vCenter, Vector3[] corners )
+		public static bool AmPointingAt(Vector3 vOrigin, Vector3 vProjection, Vector3 vCenter, Vector3[] corners)
 		{
-			Vector3 v_originToCenter = Vector3.Normalize( vCenter - vOrigin );
-			float dot_projectionToCenter = Vector3.Dot( v_originToCenter, vProjection );
+			Vector3 v_originToCenter = Vector3.Normalize(vCenter - vOrigin);
+			float dot_projectionToCenter = Vector3.Dot(v_originToCenter, vProjection);
 
-			for ( int i = 0; i < corners.Length; i++ )
+			for (int i = 0; i < corners.Length; i++)
 			{
-				Vector3 v_originToCorner = Vector3.Normalize( corners[i] - vOrigin );
+				Vector3 v_originToCorner = Vector3.Normalize(corners[i] - vOrigin);
 
-				if( dot_projectionToCenter < Vector3.Dot(v_originToCorner, v_originToCenter) )
+				if (dot_projectionToCenter < Vector3.Dot(v_originToCorner, v_originToCenter))
 				{
 					return false;
 				}
@@ -228,11 +228,11 @@ namespace LogansNavigationExtension
 
 		// The idea: every point on the triangle will have at least one other point where the dot product of the vToPtA is more aligned with vToProjection 
 		// than vToPointB...
-		public static bool AmPointingAt( Vector3 vOrigin, Vector3 vProjection, LNX_Triangle tri )
+		public static bool AmPointingAt(Vector3 vOrigin, Vector3 vProjection, LNX_Triangle tri)
 		{
 			Vector3 v_toProjection = Vector3.Normalize((vOrigin + vProjection) - vOrigin);
 
-			Vector3[] vToVerts = new Vector3[3] 
+			Vector3[] vToVerts = new Vector3[3]
 			{
 				Vector3.Normalize(tri.Verts[0].Position - vOrigin),
 				Vector3.Normalize(tri.Verts[1].Position - vOrigin),
@@ -256,7 +256,7 @@ namespace LogansNavigationExtension
 
 
 			//0...
-			if ( alignment_projWithV1 < alignment_v0toV1 &&
+			if (alignment_projWithV1 < alignment_v0toV1 &&
 				alignment_projWithV2 < alignment_v0toV2
 			)
 			{
@@ -264,7 +264,7 @@ namespace LogansNavigationExtension
 			}
 
 			//1...
-			if ( alignment_projWithV0 < alignment_v0toV1 &&
+			if (alignment_projWithV0 < alignment_v0toV1 &&
 				alignment_projWithV2 < alignment_v1toV2
 			)
 			{
@@ -272,7 +272,7 @@ namespace LogansNavigationExtension
 			}
 
 			//2...
-			if ( alignment_projWithV0 < alignment_v0toV2 &&
+			if (alignment_projWithV0 < alignment_v0toV2 &&
 				alignment_projWithV1 < alignment_v1toV2
 			)
 			{
@@ -286,17 +286,17 @@ namespace LogansNavigationExtension
 		{
 			dbgString = $"perspective : '{vOrigin}' vProj: '{vProjection}' \n";
 			Vector3 v_center = GetCenterVector(corners);
-			Vector3 v_originToProjection = Vector3.Normalize( (vOrigin + vProjection) - vOrigin );
+			Vector3 v_originToProjection = Vector3.Normalize((vOrigin + vProjection) - vOrigin);
 
 			Vector3[] originToCrnrVectors = new Vector3[corners.Length];
 			int mostAlignedCrnr = 0;
 			float runningClosestDot = -1f;
-			for ( int i = 0; i < corners.Length; i++ )
+			for (int i = 0; i < corners.Length; i++)
 			{
-				originToCrnrVectors[i] = Vector3.Normalize( corners[i] - vOrigin );
+				originToCrnrVectors[i] = Vector3.Normalize(corners[i] - vOrigin);
 
-				float d = Vector3.Dot( v_originToProjection, originToCrnrVectors[i] );
-				if( d > runningClosestDot )
+				float d = Vector3.Dot(v_originToProjection, originToCrnrVectors[i]);
+				if (d > runningClosestDot)
 				{
 					mostAlignedCrnr = i;
 				}
@@ -305,9 +305,9 @@ namespace LogansNavigationExtension
 			/*
 			Run through all corners and check that v_originToProjection has a closer dot product than...
 			*/
-			for ( int i = 0; i < corners.Length; i++ )
+			for (int i = 0; i < corners.Length; i++)
 			{
-				if( i != mostAlignedCrnr )
+				if (i != mostAlignedCrnr)
 				{
 
 				}
@@ -333,7 +333,7 @@ namespace LogansNavigationExtension
 
 			return true;
 		}
-		
+
 		/// <summary>
 		/// Gets the verts that should be moved during a cut to form the 
 		/// </summary>
@@ -342,20 +342,20 @@ namespace LogansNavigationExtension
 		/// <param name="secondaryEdge"></param>
 		/// <param name="pt"></param>
 		/// <returns></returns>
-		public static List<LNX_Vertex> GetMoveVerts_forInsertLoop( LNX_NavMesh nm, LNX_Edge primaryEdge, LNX_Edge secondaryEdge )
+		public static List<LNX_Vertex> GetMoveVerts_forInsertLoop(LNX_NavMesh nm, LNX_Edge primaryEdge, LNX_Edge secondaryEdge)
 		{
 			List<LNX_Vertex> returnVerts = new List<LNX_Vertex>();
 
 			Vector3 avgdMidPt = (primaryEdge.MidPosition + secondaryEdge.MidPosition) * 0.5f;
 			//Debug.DrawLine(avgdMidPt, avgdMidPt + (Vector3.up * 3f), Color.red, 3f);
 
-			LNX_Triangle primaryTri = nm.GetTriangle( primaryEdge );
+			LNX_Triangle primaryTri = nm.GetTriangle(primaryEdge);
 			float runningfurthestdist = 0f;
 			int edgIndx = -1;
-			for ( int i = 0; i < 3; i++ ) //find the edge with the furthest away mid position
+			for (int i = 0; i < 3; i++) //find the edge with the furthest away mid position
 			{
-				float dst = Vector3.Distance( primaryEdge.MidPosition, avgdMidPt );
-				if ( primaryTri.Edges[i] != primaryEdge && dst > runningfurthestdist )
+				float dst = Vector3.Distance(primaryEdge.MidPosition, avgdMidPt);
+				if (primaryTri.Edges[i] != primaryEdge && dst > runningfurthestdist)
 				{
 					runningfurthestdist = dst;
 					edgIndx = i;
@@ -365,32 +365,49 @@ namespace LogansNavigationExtension
 			LNX_Edge moveEdge = primaryTri.Edges[edgIndx];
 
 			//find verts...
-			returnVerts.Add( primaryTri.Verts[moveEdge.StartVertCoordinate.ComponentIndex] );
-			returnVerts.Add( primaryTri.Verts[moveEdge.EndVertCoordinate.ComponentIndex] );
+			returnVerts.Add(primaryTri.Verts[moveEdge.StartVertCoordinate.ComponentIndex]);
+			returnVerts.Add(primaryTri.Verts[moveEdge.EndVertCoordinate.ComponentIndex]);
 
-			if ( nm.GetVertexAtCoordinate(secondaryEdge.StartVertCoordinate).Position == moveEdge.StartPosition ||
+			if (nm.GetVertexAtCoordinate(secondaryEdge.StartVertCoordinate).Position == moveEdge.StartPosition ||
 				nm.GetVertexAtCoordinate(secondaryEdge.StartVertCoordinate).Position == moveEdge.EndPosition
 			)
 			{
-				returnVerts.Add( nm.GetVertexAtCoordinate(secondaryEdge.StartVertCoordinate) );
+				returnVerts.Add(nm.GetVertexAtCoordinate(secondaryEdge.StartVertCoordinate));
 			}
 			else if (nm.GetVertexAtCoordinate(secondaryEdge.EndVertCoordinate).Position == moveEdge.StartPosition ||
 				nm.GetVertexAtCoordinate(secondaryEdge.EndVertCoordinate).Position == moveEdge.EndPosition
 			)
 			{
-				returnVerts.Add( nm.GetVertexAtCoordinate(secondaryEdge.EndVertCoordinate) );
+				returnVerts.Add(nm.GetVertexAtCoordinate(secondaryEdge.EndVertCoordinate));
 			}
 
 			return returnVerts;
 		}
 		#endregion
 
+#if UNITY_EDITOR
+		#region GIZMO DRAWING-------------------------------------
+		public static void DrawTriGizmos( LNX_Triangle tri )
+		{
+			Gizmos.DrawLine(tri.Verts[0].Position, tri.Verts[1].Position);
+			Gizmos.DrawLine(tri.Verts[1].Position, tri.Verts[2].Position);
+			Gizmos.DrawLine(tri.Verts[2].Position, tri.Verts[0].Position);
+		}
+
+		public static void DrawTriHandles( LNX_Triangle tri, float thickness )
+		{
+			Handles.DrawLine(tri.Verts[0].Position, tri.Verts[1].Position, thickness );
+			Handles.DrawLine(tri.Verts[1].Position, tri.Verts[2].Position, thickness );
+			Handles.DrawLine(tri.Verts[2].Position, tri.Verts[0].Position, thickness );
+		}
+		#endregion
+#endif
 	}
 
 	#region ENUMS-----------------------------------------
 	[System.Serializable]
 	public enum LNX_SelectMode
-	{ 
+	{
 		None = 0,
 		Vertices = 1,
 		Edges = 2,
@@ -405,46 +422,13 @@ namespace LogansNavigationExtension
 	}
 	#endregion
 
-	/*
-	[System.Serializable]
-	public struct LNX_Selection
-	{
-		public int TriIndex;
-		public int EdgeIndex;
-		public int VertIndex;
-
-		private static readonly LNX_Selection noSelection = new LNX_Selection( -1, -1, -1 );
-
-		public static LNX_Selection None
-		{
-			get
-			{
-				return noSelection;
-			}
-		}
-
-		public LNX_Selection(int tIndx, int edgIndx, int vrtIndx )
-        {
-            TriIndex = tIndx;
-			EdgeIndex = edgIndx;
-			VertIndex = vrtIndx;
-        }
-
-        public LNX_Selection( int tIndx )
-        {
-			TriIndex = tIndx;
-			EdgeIndex = -1;
-			VertIndex = -1;
-		}
-    }*/
-
 	[System.Serializable]
 	public struct LNX_ComponentCoordinate
 	{
 		public int TriIndex;
 		public int ComponentIndex;
 
-		private static LNX_ComponentCoordinate none = new LNX_ComponentCoordinate( -1, -1 );
+		private static LNX_ComponentCoordinate none = new LNX_ComponentCoordinate(-1, -1);
 
 		public static LNX_ComponentCoordinate None
 		{
@@ -454,29 +438,29 @@ namespace LogansNavigationExtension
 			}
 		}
 
-        public LNX_ComponentCoordinate( int triIndx, int cmptIndx )
-        {
-            TriIndex = triIndx;
-			ComponentIndex = cmptIndx;
-        }
-
-		public static bool operator ==( LNX_ComponentCoordinate a, LNX_ComponentCoordinate b )
+		public LNX_ComponentCoordinate(int triIndx, int cmptIndx)
 		{
-			return a.Equals( b );
+			TriIndex = triIndx;
+			ComponentIndex = cmptIndx;
 		}
 
-		public static bool operator !=( LNX_ComponentCoordinate a, LNX_ComponentCoordinate b )
+		public static bool operator ==(LNX_ComponentCoordinate a, LNX_ComponentCoordinate b)
 		{
-			return !a.Equals( b) ;
+			return a.Equals(b);
+		}
+
+		public static bool operator !=(LNX_ComponentCoordinate a, LNX_ComponentCoordinate b)
+		{
+			return !a.Equals(b);
 		}
 
 		public override bool Equals(object obj)
 		{
-			if ( !(obj is LNX_ComponentCoordinate) )
+			if (!(obj is LNX_ComponentCoordinate))
 				return false;
 
 			LNX_ComponentCoordinate coord = (LNX_ComponentCoordinate)obj;
-			if( coord.TriIndex != TriIndex || coord.ComponentIndex != ComponentIndex )
+			if (coord.TriIndex != TriIndex || coord.ComponentIndex != ComponentIndex)
 			{
 				return false;
 			}
@@ -500,11 +484,15 @@ namespace LogansNavigationExtension
 		/// <summary>
 		/// Returns originalTri.Index_parallelWithParentArray
 		/// </summary>
-		public int OriginalStateIndex => OriginalTriangleState.Index_parallelWithParentArray;
+		public int OriginalStateIndex => originalStateIndex;
 
-		public LNX_TriangleModification( LNX_Triangle originalTri )
+		private int originalStateIndex;
+
+		public LNX_TriangleModification(LNX_Triangle originalTri)
 		{
-			OriginalTriangleState = new LNX_Triangle( originalTri, originalTri.Index_parallelWithParentArray );
+			OriginalTriangleState = new LNX_Triangle(originalTri, originalTri.Index_parallelWithParentArray);
+
+			originalStateIndex = originalTri.Index_parallelWithParentArray;
 		}
 	}
 
@@ -513,13 +501,13 @@ namespace LogansNavigationExtension
 		public int Index_intersectedTri;
 		public Vector3 HitPosition;
 
-        private static LNX_ProjectionHit none = new LNX_ProjectionHit( -1, Vector3.zero );
+		private static LNX_ProjectionHit none = new LNX_ProjectionHit(-1, Vector3.zero);
 
-        public LNX_ProjectionHit( int indx, Vector3 pos )
-        {
-            Index_intersectedTri = indx;
+		public LNX_ProjectionHit(int indx, Vector3 pos)
+		{
+			Index_intersectedTri = indx;
 			HitPosition = pos;
-        }
+		}
 
 		public static LNX_ProjectionHit None
 		{
@@ -572,7 +560,7 @@ namespace LogansNavigationExtension
 		/// vert belonging to the related triangle at a certain index, the value will be -1, otherwise 
 		/// it will be 0-3.</summary>
 		public int[] IndexMap_OwnedVerts_toShared;
-		
+
 		/// <summary>Conveniency int so you can quickly determine whether the "related" triangle 
 		/// shares vertices with the "perspective" triangle. Otherwise, you'd need to compare the 
 		/// IndexMap_MyVerts_toShared array to see if any entries are not -1.</summary>
@@ -582,15 +570,15 @@ namespace LogansNavigationExtension
 
 		[HideInInspector] public string DbgStruct;
 
-        public LNX_TriangleRelationship_exp( LNX_Triangle selfTri, LNX_Triangle relatedTri )
-        {
+		public LNX_TriangleRelationship_exp(LNX_Triangle selfTri, LNX_Triangle relatedTri)
+		{
 			DbgStruct = string.Empty;
 			HasSharedEdge = false;
 			NumberofSharedVerts = 0;
 			Index_relatedTriangle = relatedTri.Index_parallelWithParentArray;
 			IndexMap_OwnedVerts_toShared = new int[3] { -1, -1, -1 };
 
-			if( selfTri == relatedTri )
+			if (selfTri == relatedTri)
 			{
 				DbgStruct = "self";
 			}
@@ -599,11 +587,11 @@ namespace LogansNavigationExtension
 				DbgStruct += $"Index_RltdTri: '{Index_relatedTriangle}'\n" +
 					$"relationships:\n";
 
-				for ( int i = 0; i < 3; i++ )
+				for (int i = 0; i < 3; i++)
 				{
-					for ( int j = 0; j < 3; j++ )
+					for (int j = 0; j < 3; j++)
 					{
-						if ( selfTri.Verts[i].Position == relatedTri.Verts[j].Position )
+						if (selfTri.Verts[i].Position == relatedTri.Verts[j].Position)
 						{
 							IndexMap_OwnedVerts_toShared[i] = j;
 							NumberofSharedVerts++;
@@ -613,11 +601,11 @@ namespace LogansNavigationExtension
 					DbgStruct += $"tri{selfTri.Index_parallelWithParentArray}v[{i}] to tri{relatedTri.Index_parallelWithParentArray}v: '{IndexMap_OwnedVerts_toShared[i]}'\n";
 				}
 
-				if ( NumberofSharedVerts > 1 )
+				if (NumberofSharedVerts > 1)
 				{
-					for ( int i = 0; i < 3; i++ )
+					for (int i = 0; i < 3; i++)
 					{
-						for ( int j = 0; j < 3; j++ )
+						for (int j = 0; j < 3; j++)
 						{
 							if (
 								(selfTri.Edges[i].StartPosition == relatedTri.Edges[j].StartPosition || selfTri.Edges[i].StartPosition == relatedTri.Edges[j].EndPosition) &&
@@ -632,7 +620,7 @@ namespace LogansNavigationExtension
 					}
 				}
 			}
-        }
-    }
+		}
+	}
 	#endregion
 }
