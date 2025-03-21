@@ -476,26 +476,6 @@ namespace LogansNavigationExtension
 		}
 	}
 
-	[System.Serializable]
-	public class LNX_TriangleModification
-	{
-		public LNX_Triangle OriginalTriangleState;
-
-		/// <summary>
-		/// Returns originalTri.Index_parallelWithParentArray
-		/// </summary>
-		public int OriginalStateIndex => originalStateIndex;
-
-		private int originalStateIndex;
-
-		public LNX_TriangleModification(LNX_Triangle originalTri)
-		{
-			OriginalTriangleState = new LNX_Triangle(originalTri, originalTri.Index_parallelWithParentArray);
-
-			originalStateIndex = originalTri.Index_parallelWithParentArray;
-		}
-	}
-
 	public struct LNX_ProjectionHit
 	{
 		public int Index_intersectedTri;

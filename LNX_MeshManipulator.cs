@@ -647,7 +647,7 @@ namespace LogansNavigationExtension
 						}
 						else
 						{
-							if( _LNX_NavMesh.Triangles[i].Flag_amModified )
+							if( _LNX_NavMesh.Triangles[i].HasBeenModified() )
 							{
 								Handles.color = color_modifiedTri;
 								Gizmos.color = color_modifiedTri;

@@ -10,6 +10,9 @@ namespace LogansNavigationExtension
 	{
 		public Vector3 Position;
 
+		[SerializeField, HideInInspector] Vector3 originalPosition;
+		public Vector3 OriginalPosition => originalPosition;
+
 		[SerializeField] public LNX_ComponentCoordinate MyCoordinate;
 
 		[HideInInspector] public float Angle;
@@ -29,7 +32,6 @@ namespace LogansNavigationExtension
 		public LNX_VertexRelationship_exp[] SiblingRelationships;
 		[HideInInspector] public LNX_VertexRelationship_exp[] Relationships;
 
-		//public List<LNX_ComponentCoordinate> SharedVertexCoordinates; //dws
 		public LNX_ComponentCoordinate[] SharedVertexCoordinates;
 
 		[TextArea(1,5)] public string DBG_constructor;
@@ -38,17 +40,17 @@ namespace LogansNavigationExtension
 		/// Returns the index where this vertex originated in the original NavmeshTriangulation's vertices array.
 		/// </summary>
 		public int PositionInOriginalTriangulation;
-		/*{
-			get
-			{
-				return (MyCoordinate.TriIndex * 3) + MyCoordinate.ComponentIndex;
-			}
-		}*/
 
+		public bool AmModified
+		{
+			get {  return Position != originalPosition; }
+		}
 
 		public LNX_Vertex( LNX_Triangle tri, Vector3 vrtPos, int indx, NavMeshTriangulation nmTriangulation )
         {
 			Position = vrtPos;
+
+			originalPosition = vrtPos;
 			//Position = nmTriangulation.vertices[ nmTriangulation.indices[tri.Index_parallelWithParentArray * 3] + indx ];
 
 			v_toCenter = Vector3.Normalize( tri.V_center - vrtPos );
@@ -91,7 +93,7 @@ namespace LogansNavigationExtension
 			DBG_constructor = vert.DBG_constructor;
 		}
 
-		public void AdoptValues(LNX_Vertex vert)
+		public void AdoptValues( LNX_Vertex vert )
 		{
 			Position = vert.Position;
 

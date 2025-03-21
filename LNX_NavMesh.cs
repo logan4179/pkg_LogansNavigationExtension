@@ -18,12 +18,10 @@ namespace LogansNavigationExtension
 
 		public LNX_Triangle[] Triangles;
 
+		[SerializeField] private List<LNX_Triangle> DeletedTriangles;
+
 		[SerializeField, HideInInspector] private Mesh _mesh;
 		public Mesh _Mesh => _mesh;
-
-		[SerializeField] private List<LNX_TriangleModification> triModifications;
-
-		[SerializeField] private List<LNX_TriangleModification> removedTris;
 
 		[Header("BOUNDS")]
 		/*[SerializeField]*/ private string dbg_Bounds;
@@ -49,6 +47,10 @@ namespace LogansNavigationExtension
 
 		[Header("VISUAL/DEBUG")]
 		public Color color_mesh;
+
+		[Header("OTHER")]
+		public NavMeshTriangulation OriginalTriangulation;
+		[SerializeField] private bool flag_haveModifications = false; 
 
 		private void Awake()
 		{
@@ -162,15 +164,17 @@ namespace LogansNavigationExtension
 		public int[] dbg_Areas;
 		public Vector3[] dbg_Vertices;
 		public int[] dbg_Indices;
+
+
 		[ContextMenu("z - FetchTriangulation()")]
 		public void FetchTriangulation()
 		{
-			NavMeshTriangulation tringltn = NavMesh.CalculateTriangulation();
+			OriginalTriangulation = NavMesh.CalculateTriangulation();
 
-			Debug.Log($"Calculated triangulation with '{tringltn.areas.Length}' areas, '{tringltn.vertices.Length}', " +
-				$"'{tringltn.indices.Length}' indices.");
+			Debug.Log($"Calculated triangulation with '{OriginalTriangulation.areas.Length}' areas, '{OriginalTriangulation.vertices.Length}', " +
+				$"'{OriginalTriangulation.indices.Length}' indices.");
 
-			FetchTriangulation( tringltn );
+			FetchTriangulation( OriginalTriangulation );
 		}
 		public void FetchTriangulation( NavMeshTriangulation tringltn )
 		{
@@ -188,84 +192,44 @@ namespace LogansNavigationExtension
 			Vector3[] nrmls = new Vector3[tringltn.vertices.Length];
 
 			// if this is a re-fetch, and we have modifications to consider...
-			if ( Triangles != null && Triangles.Length > 0 && triModifications != null && triModifications.Count > 0 ) 
+			if ( flag_haveModifications ) 
 			{
 				Debug.Log($"Triangle collection exists with modifications...");
-				LNX_Triangle[] newTriCollection = new LNX_Triangle[tringltn.areas.Length];
 
-				for ( int i = 0; i < newTriCollection.Length; i++ )
+				List<LNX_Triangle> newTriCollection = new List<LNX_Triangle>();
+
+				int runningTriIndex = 0; //I have this because, now that there are deletions, I can't just use the iterator to pass in as the tri index...
+
+				for ( int i = 0; i < tringltn.areas.Length; i++ )
 				{
-					newTriCollection[i] = new LNX_Triangle( i, tringltn, cachedLayerMask );
+					LNX_Triangle tri = new LNX_Triangle( runningTriIndex, tringltn, cachedLayerMask );
 
-					for ( int j = 0; j < triModifications.Count; j++ )
+					if( !ContainsDeletion(tri) )
 					{
-						if( triModifications[j] != null && triModifications[j].OriginalTriangleState.ValueEquals(newTriCollection[i]) )
+						for ( int j = 0; j < Triangles.Length; j++ )
 						{
-							//Debug.Log($"Tri '{i}' using saved modification at old index '{triModifications[j].OriginalStateIndex}' in triangle construction...");
-							newTriCollection[i] = new LNX_Triangle( triModifications[j], Triangles,  i, tringltn );
-							
-							// Correct the positioning of the verts of the modified triangle....
-							meshVrts[newTriCollection[i].Verts[0].PositionInOriginalTriangulation] = newTriCollection[i].Verts[0].Position;
-							meshVrts[newTriCollection[i].Verts[1].PositionInOriginalTriangulation] = newTriCollection[i].Verts[1].Position;
-							meshVrts[newTriCollection[i].Verts[2].PositionInOriginalTriangulation] = newTriCollection[i].Verts[2].Position;
+							if( Triangles[j].HasBeenModified() && Triangles[j].OriginallyMatches(tri) )
+							{
+								tri.AdoptModifiedValues( Triangles[i] );
+							}
 						}
-					}
 
-					if( newTriCollection[i].v_normal != Vector3.zero )
-					{
-						//Debug.DrawRay( newTriCollection[i].V_center, newTriCollection[i].v_normal );
-
-						nrmls[newTriCollection[i].Verts[0].PositionInOriginalTriangulation] = newTriCollection[i].v_normal;
-						nrmls[newTriCollection[i].Verts[1].PositionInOriginalTriangulation] = newTriCollection[i].v_normal;
-						nrmls[newTriCollection[i].Verts[2].PositionInOriginalTriangulation] = newTriCollection[i].v_normal;
-					}
-					else
-					{
-						nrmls[newTriCollection[i].Verts[0].PositionInOriginalTriangulation] = Vector3.up;
-						nrmls[newTriCollection[i].Verts[1].PositionInOriginalTriangulation] = Vector3.up;
-						nrmls[newTriCollection[i].Verts[2].PositionInOriginalTriangulation] = Vector3.up;
+						runningTriIndex++;
 					}
 				}
-
-				for (int i = 0; i < newTriCollection.Length; i++)
-				{
-					newTriCollection[i].CreateRelationships( newTriCollection );
-				}
-
-				Triangles = newTriCollection;
 			}
 			else
 			{
-				Debug.Log($"Triangle collection will be made anew...");
-
 				Triangles = new LNX_Triangle[tringltn.areas.Length];
-				triModifications = new List<LNX_TriangleModification>();
-				meshVrts = tringltn.vertices;
-
-				for ( int i = 0; i < Triangles.Length; i++ )
+				for ( int i = 0; i < tringltn.areas.Length; i++ )
 				{
 					Triangles[i] = new LNX_Triangle( i, tringltn, cachedLayerMask );
-
-					if ( Triangles[i].v_normal != Vector3.zero )
-					{
-						//Debug.DrawRay( Triangles[i].V_center, Triangles[i].v_normal, Color.cyan, 2f );
-
-						nrmls[Triangles[i].Verts[0].PositionInOriginalTriangulation] = Triangles[i].v_normal;
-						nrmls[Triangles[i].Verts[1].PositionInOriginalTriangulation] = Triangles[i].v_normal;
-						nrmls[Triangles[i].Verts[2].PositionInOriginalTriangulation] = Triangles[i].v_normal;
-					}
-					else
-					{
-						nrmls[Triangles[i].Verts[0].PositionInOriginalTriangulation] = Vector3.up;
-						nrmls[Triangles[i].Verts[1].PositionInOriginalTriangulation] = Vector3.up;
-						nrmls[Triangles[i].Verts[2].PositionInOriginalTriangulation] = Vector3.up;
-					}
 				}
+			}
 
-				for ( int i = 0; i < Triangles.Length; i++ )
-				{
-					Triangles[i].CreateRelationships( Triangles );
-				}
+			for ( int i = 0; i < Triangles.Length; i++ )
+			{
+				Triangles[i].CreateRelationships( Triangles );
 			}
 
 			#region FINISH THE MESH--------------------------------
@@ -283,6 +247,13 @@ namespace LogansNavigationExtension
 			CalculateBounds();
 		}
 
+		[ContextMenu("z call SayTriangulation")]
+		public void SayTriangulation()
+		{
+			Debug.Log($"Calculated triangulation with '{OriginalTriangulation.areas.Length}' areas, '{OriginalTriangulation.vertices.Length}', " +
+				$"'{OriginalTriangulation.indices.Length}' indices.");
+		}
+
 		[ContextMenu("z call RefeshMesh()")]
 		public void RefeshMesh()
 		{
@@ -296,27 +267,10 @@ namespace LogansNavigationExtension
 
 		public void MoveVert_managed( LNX_Vertex vert, Vector3 pos )
 		{
-			bool foundMod = false;
-
-			if( triModifications.Count > 0 )
-			{
-				for( int i = 0; i < triModifications.Count; i++ )
-				{
-					if ( vert.MyCoordinate.TriIndex == triModifications[i].OriginalTriangleState.Index_parallelWithParentArray )
-					{
-						foundMod = true;
-					}
-				}
-			}
-			if( !foundMod )
-			{
-				triModifications.Add( new LNX_TriangleModification(Triangles[vert.MyCoordinate.TriIndex]) );
-				Debug.Log("made new modification");
-			}
-
 			Triangles[vert.MyCoordinate.TriIndex].MoveVert_managed( this, vert.MyCoordinate.ComponentIndex, pos );
 
-			Vector3[] tmpVrts = _mesh.vertices; //note: I can't get it to update the mesh if I only change the relevant vertex, it seems like I MUST create and assign a whole new array.
+			Vector3[] tmpVrts = _mesh.vertices; //note: I can't get it to update the mesh if I only change the relevant vertex
+												//within the mesh object, It seems like I MUST create and assign a whole new array.
 			tmpVrts[vert.PositionInOriginalTriangulation] = vert.Position + pos;
 
 			_mesh.vertices = tmpVrts; //apparently you have to assign to the mesh in this manner in order to make this update (apparently I can't just change one of the existing vertices elements)...
@@ -325,49 +279,16 @@ namespace LogansNavigationExtension
 
 		public void DeleteTriangle( int triIndex )
 		{
-			if( removedTris == null )
-			{
-				Debug.LogWarning($"huh...this was null...");
-				removedTris = new List<LNX_TriangleModification>();
-			}
-			
-			if( Triangles.Length > triIndex )
-			{
-				removedTris.Add( new LNX_TriangleModification(Triangles[triIndex]) );
-			}
+
 		}
 
-		public bool ContainsMod( int triIndex )
+		public bool ContainsDeletion( LNX_Triangle tri )
 		{
-			if( triModifications == null || triModifications.Count <= 0 )
+			if( DeletedTriangles != null && DeletedTriangles.Count > 0 )
 			{
-				return false;
-			}
-			else
-			{
-				for ( int i = 0; i < triModifications.Count; i++ )
+				for ( int i = 0; i < DeletedTriangles.Count; i++ )
 				{
-					if ( triModifications[i].OriginalStateIndex == triIndex )
-					{
-						return true;
-					}
-				}
-			}
-
-			return false;
-		}
-
-		public bool AlreadyContainsRemoval( int triIndex ) //Todo: I don't really think I need this. Was using this as a check during removetri method. DWS
-		{
-			if ( removedTris == null || removedTris.Count <= 0 )
-			{
-				return false;
-			}
-			else
-			{
-				for ( int i = 0; i < removedTris.Count; i++ )
-				{
-					if ( removedTris[i].OriginalStateIndex == triIndex )
+					if( DeletedTriangles[i].OriginallyMatches(tri) )
 					{
 						return true;
 					}
@@ -379,28 +300,10 @@ namespace LogansNavigationExtension
 
 		public void ClearModifications()
 		{
-
-			if( triModifications == null || triModifications.Count <= 0 )
-			{
-				Debug.LogWarning($"no existing modifications on LNX_Navmesh");
-				return;
-			}
-
 			for ( int i = 0; i < Triangles.Length; i++ )
 			{
-				for( int j = 0; j < triModifications.Count; j++ )
-				{
-					if( i == triModifications[j].OriginalTriangleState.Index_parallelWithParentArray )
-					{
-						Debug.Log($"matched modification at Triangles[{i}] and mod[{j}]");
-						Triangles[i].AdoptValues( triModifications[j].OriginalTriangleState );
-					}
-				}
+				Triangles[i].ClearModifications();
 			}
-
-			triModifications = new List<LNX_TriangleModification>();
-
-			//todo: now need to put modified triangles back to where they were before...
 		}
 
 		public void CalculateBounds()
