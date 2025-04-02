@@ -30,11 +30,11 @@ namespace LogansNavigationExtension
 		/// and therefore forms part of the boundary of walkable space.</summary>
 		//public bool AmTerminal;
 
-		public LNX_Edge( LNX_Vertex strtVrt, LNX_Vertex endVrt, Vector3 triCtrPos, Vector3 triNrml, LNX_ComponentCoordinate myCoordinate )
+		public LNX_Edge( LNX_Triangle tri, LNX_Vertex strtVrt, LNX_Vertex endVrt, int indx )
 		{
-			CalculateInfo( strtVrt, endVrt, triCtrPos, triNrml );
+			CalculateInfo( tri, strtVrt, endVrt );
 
-			MyCoordinate = myCoordinate;
+			MyCoordinate = new LNX_ComponentCoordinate( tri, indx );
 
 			StartVertCoordinate = strtVrt.MyCoordinate;
 			EndVertCoordinate = endVrt.MyCoordinate;
@@ -84,7 +84,7 @@ namespace LogansNavigationExtension
 			SharedEdge = edge.SharedEdge;
 		}
 
-		public void CalculateInfo( LNX_Vertex strtVrt, LNX_Vertex endVrt, Vector3 triCtrPos, Vector3 triNrml )
+		public void CalculateInfo( LNX_Triangle tri, LNX_Vertex strtVrt, LNX_Vertex endVrt )
 		{
 			StartPosition = strtVrt.Position;
 			EndPosition = endVrt.Position;
@@ -95,8 +95,8 @@ namespace LogansNavigationExtension
 
 			EdgeLength = Vector3.Distance( StartPosition, EndPosition );
 
-			v_toCenter = Vector3.Normalize(triCtrPos - MidPosition);
-			v_cross = Vector3.Cross(v_startToEnd, triNrml).normalized;
+			v_toCenter = Vector3.Normalize(tri.V_center - MidPosition);
+			v_cross = Vector3.Cross(v_startToEnd, tri.v_normal).normalized;
 
 			if (Vector3.Dot(v_cross, v_toCenter) < 0)
 			{

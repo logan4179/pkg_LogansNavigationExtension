@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
+using System.Runtime.CompilerServices;
 using UnityEditor;
 using UnityEngine;
 using static UnityEditor.PlayerSettings;
@@ -425,10 +426,23 @@ namespace LogansNavigationExtension
 	[System.Serializable]
 	public struct LNX_ComponentCoordinate
 	{
-		public int TriIndex;
+		public int TrianglesIndex;
 		public int ComponentIndex;
+		/*
+		public int TriangulationAreasIndex;
+		/// <summary>
+		/// Keeps track of the index inside of the NavMesh.CalculateTriangulation().vertices array where this component
+		/// originated. This value is only relevant if this coordinate is pointing to a vertex. If it's an edge, this 
+		/// value should be -1.
+		/// </summary>
+		public int TriangulationVerticesIndex;
+		*/
 
-		private static LNX_ComponentCoordinate none = new LNX_ComponentCoordinate(-1, -1);
+		private static LNX_ComponentCoordinate none = new LNX_ComponentCoordinate()
+		{
+			TrianglesIndex = -1,
+			ComponentIndex = -1,
+		};
 
 		public static LNX_ComponentCoordinate None
 		{
@@ -438,9 +452,9 @@ namespace LogansNavigationExtension
 			}
 		}
 
-		public LNX_ComponentCoordinate(int triIndx, int cmptIndx)
+		public LNX_ComponentCoordinate( LNX_Triangle containingTri, int cmptIndx )
 		{
-			TriIndex = triIndx;
+			TrianglesIndex = containingTri.Index_inCollection;
 			ComponentIndex = cmptIndx;
 		}
 
@@ -460,7 +474,7 @@ namespace LogansNavigationExtension
 				return false;
 
 			LNX_ComponentCoordinate coord = (LNX_ComponentCoordinate)obj;
-			if (coord.TriIndex != TriIndex || coord.ComponentIndex != ComponentIndex)
+			if (coord.TrianglesIndex != TrianglesIndex || coord.ComponentIndex != ComponentIndex)
 			{
 				return false;
 			}
@@ -472,7 +486,7 @@ namespace LogansNavigationExtension
 
 		public override string ToString()
 		{
-			return $"[{TriIndex}][{ComponentIndex}]";
+			return $"[{TrianglesIndex}][{ComponentIndex}]";
 		}
 	}
 
@@ -500,7 +514,7 @@ namespace LogansNavigationExtension
 
 	#region RELATIONSHIPS------------------------------------------------------------------------
 	[System.Serializable]
-	public struct LNX_VertexRelationship_exp
+	public struct LNX_VertexRelationship
 	{
 		public LNX_ComponentCoordinate PerspectiveVertCoordinate;
 		public LNX_ComponentCoordinate RelatedVertCoordinate;
@@ -516,7 +530,7 @@ namespace LogansNavigationExtension
 		public float Angle_centerToDestinationVertex;
 
 
-		public LNX_VertexRelationship_exp(LNX_Vertex myVert, LNX_Vertex relatedVert)
+		public LNX_VertexRelationship(LNX_Vertex myVert, LNX_Vertex relatedVert)
 		{
 			PerspectiveVertCoordinate = myVert.MyCoordinate;
 			RelatedVertCoordinate = relatedVert.MyCoordinate;
@@ -531,7 +545,7 @@ namespace LogansNavigationExtension
 	}
 
 	[System.Serializable]
-	public struct LNX_TriangleRelationship_exp
+	public struct LNX_TriangleRelationship
 	{
 		public int Index_relatedTriangle;
 
@@ -546,16 +560,22 @@ namespace LogansNavigationExtension
 		/// IndexMap_MyVerts_toShared array to see if any entries are not -1.</summary>
 		public int NumberofSharedVerts;
 
-		public bool HasSharedEdge;
+		public bool HasSharedEdge => NumberofSharedVerts == 2;
+
+		//TODO: Probably would like other data like distances, whether each other is visible, etc
+		/*
+		public Vector3 ClosestPoint;
+		public float DistanceToClosestPoint; //distance between closest two points
+		
+		*/
 
 		[HideInInspector] public string DbgStruct;
 
-		public LNX_TriangleRelationship_exp(LNX_Triangle selfTri, LNX_Triangle relatedTri)
+		public LNX_TriangleRelationship(LNX_Triangle selfTri, LNX_Triangle relatedTri)
 		{
 			DbgStruct = string.Empty;
-			HasSharedEdge = false;
 			NumberofSharedVerts = 0;
-			Index_relatedTriangle = relatedTri.Index_parallelWithParentArray;
+			Index_relatedTriangle = relatedTri.Index_inCollection;
 			IndexMap_OwnedVerts_toShared = new int[3] { -1, -1, -1 };
 
 			if (selfTri == relatedTri)
@@ -578,10 +598,10 @@ namespace LogansNavigationExtension
 						}
 					}
 
-					DbgStruct += $"tri{selfTri.Index_parallelWithParentArray}v[{i}] to tri{relatedTri.Index_parallelWithParentArray}v: '{IndexMap_OwnedVerts_toShared[i]}'\n";
+					DbgStruct += $"tri{selfTri.Index_inCollection}v[{i}] to tri{relatedTri.Index_inCollection}v: '{IndexMap_OwnedVerts_toShared[i]}'\n";
 				}
 
-				if (NumberofSharedVerts > 1)
+				if ( NumberofSharedVerts == 2 )
 				{
 					for (int i = 0; i < 3; i++)
 					{
@@ -592,8 +612,7 @@ namespace LogansNavigationExtension
 								(selfTri.Edges[i].EndPosition == relatedTri.Edges[j].StartPosition || selfTri.Edges[i].EndPosition == relatedTri.Edges[j].EndPosition)
 							)
 							{
-								selfTri.Edges[i].SharedEdge = new LNX_ComponentCoordinate(relatedTri.Index_parallelWithParentArray, j);
-								HasSharedEdge = true;
+								selfTri.Edges[i].SharedEdge = relatedTri.Edges[j].MyCoordinate;
 							}
 						}
 

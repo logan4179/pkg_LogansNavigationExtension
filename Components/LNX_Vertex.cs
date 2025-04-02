@@ -8,13 +8,28 @@ namespace LogansNavigationExtension
 	[System.Serializable]
 	public class LNX_Vertex
 	{
+		/// <summary>Current position of this vertex in 3d space. Potentially modified after initial
+		/// construction of the tri this vertex belongs to.</summary>
 		public Vector3 Position;
 
 		[SerializeField, HideInInspector] Vector3 originalPosition;
+		/// <summary>Initial position, in 3d space, of this vertex upon creation of it's owning triangle, 
+		/// before any modifications </summary>
 		public Vector3 OriginalPosition => originalPosition;
 
-		[SerializeField] public LNX_ComponentCoordinate MyCoordinate;
+		[Header("LOCATION")] //---------------------------------------------------------------
+		public LNX_ComponentCoordinate MyCoordinate;
 
+		/// <summary>Index corresponding to the visualization mesh's triangles array that this vertex 
+		/// corresponds to.</summary>
+		public int MeshIndex_triangles;
+
+		/// <summary>Index corresponding to the visualization mesh's vertices array that this vertex 
+		/// corresponds to.</summary>
+		public int MeshIndex_vertices = -1;
+
+		[Header("CALCULATED/DERIVED")] //---------------------------------------------------------------
+		/// <summary>Inner angle at the triangle point at this vertex.</summary>
 		[HideInInspector] public float Angle;
 
 		/// <summary>Vector pointing from this vertex to the center of it's triangle </summary>
@@ -29,45 +44,84 @@ namespace LogansNavigationExtension
 		/// vert is mid-navmesh, or on a spot where the navmesh terminates.</summary>
 		//public int Valency;
 
-		public LNX_VertexRelationship_exp[] SiblingRelationships;
-		[HideInInspector] public LNX_VertexRelationship_exp[] Relationships;
+		[Header("RELATIONAL")] //---------------------------------------------------------------
+		public LNX_VertexRelationship[] SiblingRelationships;
+		[HideInInspector] public LNX_VertexRelationship[] Relationships;
 
 		public LNX_ComponentCoordinate[] SharedVertexCoordinates;
 
 		[TextArea(1,5)] public string DBG_constructor;
 
-		/// <summary>
-		/// Returns the index where this vertex originated in the original NavmeshTriangulation's vertices array.
-		/// </summary>
-		public int PositionInOriginalTriangulation;
 
 		public bool AmModified
 		{
 			get {  return Position != originalPosition; }
 		}
 
-		public LNX_Vertex( LNX_Triangle tri, Vector3 vrtPos, int indx, NavMeshTriangulation nmTriangulation )
+		/// <summary>
+		/// This overload is for original vertices, meaning vertices that are created with a corresponding vertex in the
+		/// founding triangulation.
+		/// </summary>
+		/// <param name="tri"></param>
+		/// <param name="vrtPos"></param>
+		/// <param name="cmpntIndx"></param>
+		/// <param name="nmTriangulation"></param>
+		public LNX_Vertex( LNX_Triangle tri, Vector3 vrtPos, int cmpntIndx, NavMeshTriangulation nmTriangulation )
         {
 			Position = vrtPos;
 
 			originalPosition = vrtPos;
-			//Position = nmTriangulation.vertices[ nmTriangulation.indices[tri.Index_parallelWithParentArray * 3] + indx ];
 
 			v_toCenter = Vector3.Normalize( tri.V_center - vrtPos );
 			v_normal = tri.v_normal;
 			DistanceToCenter = Vector3.Distance(tri.V_center, vrtPos);
 
-			MyCoordinate = new LNX_ComponentCoordinate( tri.Index_parallelWithParentArray, indx );
+			MyCoordinate = new LNX_ComponentCoordinate( tri, cmpntIndx );
 
-			Relationships = new LNX_VertexRelationship_exp[0];
-			SiblingRelationships = new LNX_VertexRelationship_exp[2];
-			//SharedVertexCoordinates = new List<LNX_ComponentCoordinate>(); //dws
+			Relationships = new LNX_VertexRelationship[0];
+			SiblingRelationships = new LNX_VertexRelationship[2];
 
 			Angle = -1f;
 
-			PositionInOriginalTriangulation = nmTriangulation.indices[(MyCoordinate.TriIndex * 3) + MyCoordinate.ComponentIndex];
+			MeshIndex_triangles = tri.MeshIndex_trianglesStart + cmpntIndx;
+			MeshIndex_vertices = -1;
 
-			DBG_constructor = $"at tri[{MyCoordinate.TriIndex}], [{MyCoordinate.ComponentIndex}]\n" +
+			DBG_constructor = $"at tri[{MyCoordinate.TrianglesIndex}], [{MyCoordinate.ComponentIndex}]\n" +
+				$"Pos: '{Position}', orig: '{originalPosition}'\n" +
+				$"vToCtr: '{v_toCenter}'\n" +
+				$"nml: '{v_normal}', dstToCtr: '{DistanceToCenter}'\n" +
+				$"";
+		}
+
+		/// <summary>
+		/// This overload is for added vertices, meaning vertices that were added, and have no corresponding vertex in the
+		/// founding triangulation.
+		/// </summary>
+		/// <param name="tri"></param>
+		/// <param name="vrtPos"></param>
+		/// <param name="cmpntIndx"></param>
+		/// <param name="nmTriangulation"></param>
+		public LNX_Vertex( LNX_Triangle tri, Vector3 vrtPos, int cmpntIndx )
+		{
+			Position = vrtPos;
+
+			originalPosition = vrtPos;
+
+			v_toCenter = Vector3.Normalize(tri.V_center - vrtPos);
+			v_normal = tri.v_normal;
+			DistanceToCenter = Vector3.Distance(tri.V_center, vrtPos);
+
+			MyCoordinate = new LNX_ComponentCoordinate(tri, cmpntIndx);
+
+			Relationships = new LNX_VertexRelationship[0];
+			SiblingRelationships = new LNX_VertexRelationship[2];
+
+			Angle = -1f;
+
+			MeshIndex_triangles = -1;
+			MeshIndex_vertices = -1;
+
+			DBG_constructor = $"at tri[{MyCoordinate.TrianglesIndex}], [{MyCoordinate.ComponentIndex}]\n" +
 				$"Pos: '{Position}', vToCtr: '{v_toCenter}'\n" +
 				$"nml: '{v_normal}', dstToCtr: '{DistanceToCenter}'\n" +
 				$"";
@@ -88,7 +142,8 @@ namespace LogansNavigationExtension
 
 			Angle = vert.Angle;
 
-			PositionInOriginalTriangulation = vert.PositionInOriginalTriangulation;
+			MeshIndex_triangles = vert.MeshIndex_triangles;
+			MeshIndex_vertices = vert.MeshIndex_vertices;
 
 			DBG_constructor = vert.DBG_constructor;
 		}
@@ -119,9 +174,9 @@ namespace LogansNavigationExtension
 		/// <param name="vB"></param>
 		public void SetSiblingRelationships( LNX_Vertex vA, LNX_Vertex vB )
 		{
-			SiblingRelationships = new LNX_VertexRelationship_exp[2];
-			SiblingRelationships[0] = new LNX_VertexRelationship_exp( this, vA );
-			SiblingRelationships[1] = new LNX_VertexRelationship_exp( this, vB );
+			SiblingRelationships = new LNX_VertexRelationship[2];
+			SiblingRelationships[0] = new LNX_VertexRelationship( this, vA );
+			SiblingRelationships[1] = new LNX_VertexRelationship( this, vB );
 
 			Vector3 v_toA = Vector3.Normalize( vA.Position - Position );
 			Vector3 v_toB = Vector3.Normalize( vB.Position - Position );
@@ -187,11 +242,11 @@ namespace LogansNavigationExtension
 
 		public void Ping( LNX_Triangle[] tris )
 		{
-			Relationships = new LNX_VertexRelationship_exp[(tris.Length * 3)-1]; //minus one to account for not needing a relationship to itself...
+			Relationships = new LNX_VertexRelationship[(tris.Length * 3)-1]; //minus one to account for not needing a relationship to itself...
 
 			for ( int i = 0; i < tris.Length; i++ )
 			{
-				if( i == MyCoordinate.TriIndex )
+				if( i == MyCoordinate.TrianglesIndex )
 				{
 
 				}

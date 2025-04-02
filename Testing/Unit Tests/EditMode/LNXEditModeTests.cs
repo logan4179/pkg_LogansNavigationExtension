@@ -29,6 +29,11 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		string filePath_test_pointingAndGrabbing = $"{Directory.GetCurrentDirectory()}\\Packages\\LogansNavigationExtension\\Testing\\Unit Tests\\Test Data\\pointingAndGrabbing_A.json";
 		Test_pointingAndGrabbing _test_pointingAndGrabbing;
 
+		/// <summary>Saved LNX_NavMesh that gets saved and reconstructed from JSON represented the expected state/values for the checking tests.</summary>
+		LNX_NavMesh _expectedLnxNavmesh; //note: originally I was going to use this to save the _mesh and triangulation collection lengths instead of testing a hard-coded value, but those things don't seem to get serialized to JSON. Leaving this here in case I think of something else to do with it...
+		string filePath_test_expectedLnxNavmesh = $"{Directory.GetCurrentDirectory()}\\Packages\\LogansNavigationExtension\\Testing\\Unit Tests\\Test Data\\expectedNM_A.json";
+
+
 		#region A - Setup Tests---------------------------------------------------------------------------
 		[Test]
 		public void a1_SetUpObjects()
@@ -40,6 +45,9 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			_lnx_meshManipulator = go.AddComponent<LNX_MeshManipulator>();
 			_lnx_meshManipulator._LNX_NavMesh = _lnx_navmesh;
 
+			Assert.NotNull( _lnx_navmesh );
+
+
 			//Note: decided not to do the following lines which create a navmesh from json because the navmesh is setup by 
 			//a navmeshtriangulation object, which needs to be tested...
 			//Debug.Log (File.Exists(filePath_lnx_navmesh) );
@@ -49,6 +57,13 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			//nm = JsonUtility.FromJson<LNX_NavMesh>( nmJsonString ); //note: this won't work bc FromJson() doesn't support deserializing a monobehavior object
 			//JsonUtility.FromJsonOverwrite(jsonString, nm); //note: this apparently does work to deserialize a monobehaviour...
 			//Debug.Log(nm.Triangles.Length);
+
+			_expectedLnxNavmesh = go.AddComponent<LNX_NavMesh>();
+			string jsonString = File.ReadAllText( filePath_test_expectedLnxNavmesh );
+			JsonUtility.FromJsonOverwrite( jsonString, _expectedLnxNavmesh );
+
+			Assert.NotNull( _expectedLnxNavmesh );
+
 		}
 
 		[Test]
@@ -58,15 +73,104 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			Debug.Log($"{nameof(NavMesh.CalculateTriangulation)} calculated '{_nmTriangulation.vertices}' vertices, '{_nmTriangulation.areas}' areas, and '{_nmTriangulation.indices}' indices.");
 
 			_lnx_navmesh.LayerMaskName = "lr_EnvSolid"; //not necessary, but just to be sure...
-			_lnx_navmesh.FetchTriangulation();
+			_lnx_navmesh.CalculateTriangulation();
 
             Assert.AreEqual( _nmTriangulation.areas.Length, _lnx_navmesh.Triangles.Length );
-
-
         }
 
+		// TRIANGULATION ---------------------------------------------------------------------------------------------
+		int expectedNumberOfAreas = 84;
 		[Test]
-		public void a3_Relationships_Tests()
+		public void a3_checkTriangulationAreasArrayLength()
+		{
+			Debug.Log($"{nameof(a3_checkTriangulationAreasArrayLength)}()---------------------------------");
+			Debug.Log($"collection null: '{_lnx_navmesh.OriginalTriangulation.areas == null}'");
+
+			Assert.AreEqual( _lnx_navmesh.OriginalTriangulation.areas.Length, expectedNumberOfAreas );
+
+		}
+
+		int expectedNumberOfVerts = 75;
+		[Test]
+		public void a3_checkTriangulationVerticesArrayLength()
+		{
+			Debug.Log($"{nameof(a3_checkTriangulationVerticesArrayLength)}()---------------------------------");
+			Debug.Log($"collection null: '{_lnx_navmesh.OriginalTriangulation.vertices == null}'");
+
+			Assert.AreEqual(_lnx_navmesh.OriginalTriangulation.vertices.Length, expectedNumberOfVerts);
+		}
+
+		[Test]
+		public void a3_checkTriangulationIndicesArrayLength()
+		{
+			Debug.Log($"{nameof(a3_checkTriangulationIndicesArrayLength)}()---------------------------------");
+			Debug.Log($"collection null: '{_lnx_navmesh.OriginalTriangulation.vertices == null}'");
+
+			Assert.AreEqual(_lnx_navmesh.OriginalTriangulation.indices.Length, expectedNumberOfAreas * 3);
+		}
+
+		// MESH -------------------------------------------------------------------------------------------------------
+		[Test]
+		public void a4_checkMeshTrianglesArrayLength()
+		{
+			Debug.Log($"{nameof(a4_checkMeshTrianglesArrayLength)}()---------------------------------");
+			Debug.Log($"collection null: '{_lnx_navmesh._Mesh.triangles == null}'");
+
+			Assert.AreEqual( _lnx_navmesh._Mesh.triangles.Length, expectedNumberOfAreas * 3 );
+		}
+
+		[Test]
+		public void a4_checkMeshVerticesArrayLength()
+		{
+			Debug.Log($"{nameof(a4_checkMeshVerticesArrayLength)}()---------------------------------");
+			Debug.Log($"collection null: '{_lnx_navmesh._Mesh.vertices == null}'");
+
+			Assert.AreEqual( _lnx_navmesh._Mesh.vertices.Length, expectedNumberOfVerts );
+		}
+
+		[Test]
+		public void a4_checkMeshNormalsArrayLength()
+		{
+			Debug.Log($"{nameof(a4_checkMeshNormalsArrayLength)}()---------------------------------");
+			Debug.Log($"collection null: '{_lnx_navmesh._Mesh.normals == null}'");
+
+			Assert.AreEqual( _lnx_navmesh._Mesh.normals.Length, expectedNumberOfVerts );
+		}
+
+		//----------------------------------------------------------------------------------------------------------------
+		[Test]
+		public void a5_CheckEachTriIndex_inCollection_Tests()
+		{
+			for ( int i = 0; i < _lnx_navmesh.Triangles.Length; i++ )
+			{
+				Debug.Log($"{i}...");
+				Assert.Greater( _lnx_navmesh.Triangles[i].Index_inCollection, -1 );
+			}
+		}
+
+		[Test]
+		public void a6_Bounds_Tests()
+		{
+			Debug.Log($"\nChecking bounds...");
+
+			// CENTER-------------------------------------------------------
+			UnityEngine.Assertions.Assert.AreApproximatelyEqual( _lnx_navmesh.V_BoundsCenter.x, _expectedLnxNavmesh.V_BoundsCenter.x );
+			UnityEngine.Assertions.Assert.AreApproximatelyEqual( _lnx_navmesh.V_BoundsCenter.y, _expectedLnxNavmesh.V_BoundsCenter.y );
+			UnityEngine.Assertions.Assert.AreApproximatelyEqual( _lnx_navmesh.V_BoundsCenter.z, _expectedLnxNavmesh.V_BoundsCenter.z );
+
+			// BOUNDS-------------------------------------------------------
+			for( int i = 0; i < 6; i++ )
+			{
+				Debug.Log($"{i}...");
+
+				UnityEngine.Assertions.Assert.AreApproximatelyEqual( _lnx_navmesh.V_Bounds[i].x, _expectedLnxNavmesh.V_Bounds[i].x );
+				UnityEngine.Assertions.Assert.AreApproximatelyEqual( _lnx_navmesh.V_Bounds[i].y, _expectedLnxNavmesh.V_Bounds[i].y );
+				UnityEngine.Assertions.Assert.AreApproximatelyEqual( _lnx_navmesh.V_Bounds[i].z, _expectedLnxNavmesh.V_Bounds[i].z );
+			}
+		}
+
+		[Test]
+		public void a7_Relationships_Tests()
 		{
 			Debug.Log($"\nChecking relationships...");
 			for ( int i = 0; i < _lnx_navmesh.Triangles.Length; i++ )
@@ -78,6 +182,16 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				Assert.Greater( _lnx_navmesh.Triangles[i].AdjacentTriIndices.Length, 0 );
 			}
 		}
+
+		/*
+		[Test]
+		public void aX_SharedVertexCoordinates_Tests()
+		{
+			//TODO: Check that multiple vertices have the expected sharedvertex coordinates...
+			Debug.Log($"\nChecking SharedVertexCoordinates...");
+
+		}
+		*/
 
 		/*
 		[Test]
@@ -196,6 +310,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		#endregion
 
 		#region C - Mesh Manipulation Tests---------------------------------------------------------------------------
+		
 		[Test]
 		public void c1_SetupPointingAndGrabbingObject()
 		{
@@ -415,6 +530,8 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		}
 
 		#endregion
+
+		//todo: check that no triangles have all verts occupying the same space
 
 		/*
 		[Test]

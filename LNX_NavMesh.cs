@@ -18,7 +18,14 @@ namespace LogansNavigationExtension
 
 		public LNX_Triangle[] Triangles;
 
-		[SerializeField] private List<LNX_Triangle> DeletedTriangles;
+		public Vector3[] Vertices;
+
+		[SerializeField] private List<LNX_Triangle> deletedTriangles;
+		/// <summary>
+		/// Which triangles in the Triangles array were added by modification as opposed to made 
+		/// via the original triangulation.
+		/// </summary>
+		[SerializeField] private List<int> addedTriangles;
 
 		[SerializeField, HideInInspector] private Mesh _mesh;
 		public Mesh _Mesh => _mesh;
@@ -50,7 +57,6 @@ namespace LogansNavigationExtension
 
 		[Header("OTHER")]
 		public NavMeshTriangulation OriginalTriangulation;
-		[SerializeField] private bool flag_haveModifications = false; 
 
 		private void Awake()
 		{
@@ -77,7 +83,7 @@ namespace LogansNavigationExtension
 
 		public LNX_Triangle GetTriangle( LNX_Edge edge )
 		{
-			return Triangles[edge.MyCoordinate.TriIndex];
+			return Triangles[edge.MyCoordinate.TrianglesIndex];
 		}
 		#endregion
 
@@ -85,7 +91,7 @@ namespace LogansNavigationExtension
 		public LNX_Vertex GetVertexAtCoordinate( LNX_ComponentCoordinate coord )
 		{
 			string dbgMe = $"GetVertexAtCoordinate({coord})\n";
-			if( Triangles == null || Triangles.Length <= 0 || coord.TriIndex > Triangles.Length-1 || coord.ComponentIndex > 2 || coord.ComponentIndex < 0 )
+			if( Triangles == null || Triangles.Length <= 0 || coord.TrianglesIndex > Triangles.Length-1 || coord.ComponentIndex > 2 || coord.ComponentIndex < 0 )
 			{
 				dbgMe += "returning null...";
 				//Debug.Log(dbgMe);
@@ -96,7 +102,7 @@ namespace LogansNavigationExtension
 				dbgMe += $"found vert";
 				//Debug.Log(dbgMe);
 
-				return Triangles[coord.TriIndex].Verts[coord.ComponentIndex];
+				return Triangles[coord.TrianglesIndex].Verts[coord.ComponentIndex];
 			}
 		}
 		public LNX_Vertex GetVertexAtCoordinate( int triIndex, int componentIndex )
@@ -115,18 +121,18 @@ namespace LogansNavigationExtension
 		{
 			List<LNX_Vertex> returnList = new List<LNX_Vertex>();
 
-			if (Triangles == null || Triangles.Length <= 0 || coord.TriIndex > Triangles.Length - 1 || coord.ComponentIndex > 2 || coord.ComponentIndex < 0)
+			if (Triangles == null || Triangles.Length <= 0 || coord.TrianglesIndex > Triangles.Length - 1 || coord.ComponentIndex > 2 || coord.ComponentIndex < 0)
 			{
 				return null;
 			}
 			else
 			{
-				LNX_Vertex vert = Triangles[coord.TriIndex].Verts[coord.ComponentIndex];
+				LNX_Vertex vert = Triangles[coord.TrianglesIndex].Verts[coord.ComponentIndex];
 				returnList.Add( vert );
 
 				for ( int i = 0; i < vert.SharedVertexCoordinates.Length; i++ ) 
 				{
-					returnList.Add( Triangles[vert.SharedVertexCoordinates[i].TriIndex].Verts[vert.SharedVertexCoordinates[i].TriIndex] );
+					returnList.Add( Triangles[vert.SharedVertexCoordinates[i].TrianglesIndex].Verts[vert.SharedVertexCoordinates[i].TrianglesIndex] );
 				}
 			}
 
@@ -137,13 +143,13 @@ namespace LogansNavigationExtension
 		#region Edge Fetchers --------------------------------------------------
 		public LNX_Edge GetEdgeAtCoordinate( LNX_ComponentCoordinate coord )
 		{
-			if (Triangles == null || Triangles.Length <= 0 || coord.TriIndex > Triangles.Length - 1 || coord.ComponentIndex > 2 || coord.ComponentIndex < 0)
+			if (Triangles == null || Triangles.Length <= 0 || coord.TrianglesIndex > Triangles.Length - 1 || coord.ComponentIndex > 2 || coord.ComponentIndex < 0)
 			{
 				return null;
 			}
 			else
 			{
-				return Triangles[coord.TriIndex].Edges[coord.ComponentIndex];
+				return Triangles[coord.TrianglesIndex].Edges[coord.ComponentIndex];
 			}
 		}
 
@@ -160,121 +166,381 @@ namespace LogansNavigationExtension
 		}
 		#endregion
 
-
 		public int[] dbg_Areas;
 		public Vector3[] dbg_Vertices;
 		public int[] dbg_Indices;
 
 
-		[ContextMenu("z - FetchTriangulation()")]
-		public void FetchTriangulation()
-		{
-			OriginalTriangulation = NavMesh.CalculateTriangulation();
 
-			Debug.Log($"Calculated triangulation with '{OriginalTriangulation.areas.Length}' areas, '{OriginalTriangulation.vertices.Length}', " +
-				$"'{OriginalTriangulation.indices.Length}' indices.");
-
-			FetchTriangulation( OriginalTriangulation );
-		}
-		public void FetchTriangulation( NavMeshTriangulation tringltn )
+		#region CREATION ---------------------------------------------------------
+		[ContextMenu("z - call CalculateTriangulation()")]
+		public void CalculateTriangulation()
 		{
+			Debug.Log($"{nameof(CalculateTriangulation)}()");
+
 			if ( string.IsNullOrEmpty(LayerMaskName) )
 			{
-				Debug.LogError("LogansNavmeshExtender ERROR! You need to set which layer mask to cast against.");
+				Debug.LogError("LogansNavmeshExtender ERROR! You need to set an environmental layer mask in order to construct the navmesh.");
 				return;
 			}
-			cachedLayerMask = LayerMask.GetMask( LayerMaskName );
+			else
+			{
+				cachedLayerMask = LayerMask.GetMask(LayerMaskName);
+			}
+
+			OriginalTriangulation = fetchKosherTriangulation();
 
 			_mesh = new Mesh();
-			//Vector3[] meshVrts = new Vector3[tringltn.vertices.Length];
-			Vector3[] meshVrts = tringltn.vertices;
 
-			Vector3[] nrmls = new Vector3[tringltn.vertices.Length];
 
-			// if this is a re-fetch, and we have modifications to consider...
-			if ( flag_haveModifications ) 
+			if ( HaveModifications() ) // if this is a re-fetch, and we have modifications to consider...
 			{
 				Debug.Log($"Triangle collection exists with modifications...");
 
 				List<LNX_Triangle> newTriCollection = new List<LNX_Triangle>();
 
-				int runningTriIndex = 0; //I have this because, now that there are deletions, I can't just use the iterator to pass in as the tri index...
+				List<int> constructedTriangles = OriginalTriangulation.indices.ToList(); //length should be 3x
+				List<Vector3> constructedVertices_unique = OriginalTriangulation.vertices.ToList();
 
-				for ( int i = 0; i < tringltn.areas.Length; i++ )
+				for ( int i = 0; i < OriginalTriangulation.areas.Length; i++ )
 				{
-					LNX_Triangle tri = new LNX_Triangle( runningTriIndex, tringltn, cachedLayerMask );
-
-					if( !ContainsDeletion(tri) )
+					Debug.Log($"iterating triangulation at {i}------------------------------------------------------");
+					if ( !ContainsDeletion(OriginalTriangulation, i) )
 					{
+						LNX_Triangle tri = new LNX_Triangle( i, OriginalTriangulation, cachedLayerMask );
+
 						for ( int j = 0; j < Triangles.Length; j++ )
 						{
-							if( Triangles[j].HasBeenModified() && Triangles[j].OriginallyMatches(tri) )
+							if ( Triangles[j].HasBeenModified && Triangles[j].OriginallyMatches(tri) )
 							{
 								tri.AdoptModifiedValues( Triangles[i] );
 							}
 						}
 
-						runningTriIndex++;
+						newTriCollection.Add( tri );
 					}
 				}
-			}
-			else
-			{
-				Triangles = new LNX_Triangle[tringltn.areas.Length];
+
+				/*
+				int runningTriIndex = 0; //I have this because, now that there are deletions, I can't just use the iterator to pass in as the tri index...
+
 				for ( int i = 0; i < tringltn.areas.Length; i++ )
 				{
-					Triangles[i] = new LNX_Triangle( i, tringltn, cachedLayerMask );
+					Debug.Log($"iterating triangulation at {i}------------------------------------------------------");
+					if ( !ContainsDeletion(tringltn, i) )
+					{
+						LNX_Triangle tri = new LNX_Triangle( runningTriIndex, tringltn, cachedLayerMask );
+
+						for ( int j = 0; j < Triangles.Length; j++ )
+						{
+							if ( Triangles[j].HasBeenModified && Triangles[j].OriginallyMatches(tri) )
+							{
+								tri.AdoptModifiedValues( Triangles[i] );
+							}
+						}
+
+						newTriCollection.Add( tri );
+						runningTriIndex++;
+
+						Debug.Log($"finding unique verts. unique vert list currently '{constructedVertices_unique.Count}' long...");
+						#region log unique verts if existing...
+						bool[] matchedVert = new bool[3] { false, false, false };
+						int[] foundVrtsIndices = new int[3] { -1, -1, -1 };
+						for (int i_cnstrctdVrtcs = 0; i_cnstrctdVrtcs < constructedVertices_unique.Count; i_cnstrctdVrtcs++)
+						{
+							if ( constructedVertices_unique[i_cnstrctdVrtcs] == tri.Verts[0].Position )
+							{
+								matchedVert[0] = true;
+								foundVrtsIndices[0] = i_cnstrctdVrtcs;
+								tri.Verts[0].MeshIndex_vertices = i_cnstrctdVrtcs;
+							}
+							else if ( constructedVertices_unique[i_cnstrctdVrtcs] == tri.Verts[1].Position )
+							{
+								matchedVert[1] = true;
+								foundVrtsIndices[1] = i_cnstrctdVrtcs;
+								tri.Verts[1].MeshIndex_vertices = i_cnstrctdVrtcs;
+							}
+							else if ( constructedVertices_unique[i_cnstrctdVrtcs] == tri.Verts[2].Position )
+							{
+								matchedVert[2] = true;
+								foundVrtsIndices[2] = i_cnstrctdVrtcs;
+								tri.Verts[2].MeshIndex_vertices = i_cnstrctdVrtcs;
+							}
+						}
+
+						if( !matchedVert[0] )
+						{
+							constructedVertices_unique.Add( tri.Verts[0].Position );
+							constructedNormals.Add( tri.v_normal );
+							constructedTriangles.Add( constructedVertices_unique.Count - 1 );
+							tri.Verts[0].MeshIndex_vertices = constructedVertices_unique.Count - 1;
+						}
+						else
+						{
+							constructedTriangles.Add( foundVrtsIndices[0] );
+						}
+
+						if ( !matchedVert[1] )
+						{
+							constructedVertices_unique.Add( tri.Verts[1].Position );
+							constructedNormals.Add(tri.v_normal);
+							constructedTriangles.Add( constructedVertices_unique.Count - 1 );
+							tri.Verts[1].MeshIndex_vertices = constructedVertices_unique.Count - 1;
+						}
+						else
+						{
+							constructedTriangles.Add( foundVrtsIndices[1] );
+						}
+
+						if (!matchedVert[2])
+						{
+							constructedVertices_unique.Add( tri.Verts[2].Position );
+							constructedNormals.Add(tri.v_normal);
+							constructedTriangles.Add( constructedVertices_unique.Count - 1 );
+							tri.Verts[2].MeshIndex_vertices = constructedVertices_unique.Count - 1;
+						}
+						else
+						{
+							constructedTriangles.Add( foundVrtsIndices[2] );
+						}
+						#endregion
+					}
 				}
+				*/
+
+				Triangles = newTriCollection.ToArray();
+
+				List<Vector3> constructedNormals = new List<Vector3>(); //length should be 3x
+				for ( int i = 0; i < constructedVertices_unique.Count; i++ )
+				{
+					constructedNormals.Add( Vector3.up );
+				}
+
+				//Construct mesh data...............
+				_mesh.vertices = constructedVertices_unique.ToArray();
+				_mesh.triangles = constructedTriangles.ToArray();
+				_mesh.normals = constructedNormals.ToArray();
+
 			}
+			else //There are no modifications...
+			{
+				Debug.Log( $"no modifications..." );
+				Triangles = new LNX_Triangle[OriginalTriangulation.areas.Length];
+				for ( int i = 0; i < OriginalTriangulation.areas.Length; i++ )
+				{
+					Triangles[i] = new LNX_Triangle( i, OriginalTriangulation, cachedLayerMask );
+				}
+
+				#region FINISH THE MESH--------------------------------
+				_mesh.vertices = OriginalTriangulation.vertices;
+
+				Vector3[] nrmls = new Vector3[_mesh.vertices.Length];
+				for ( int i = 0; i < nrmls.Length; i++ )
+				{
+					nrmls[i] = Vector3.up; //todo: What should I actually do here?
+				}
+				_mesh.normals = nrmls;
+
+				_mesh.triangles = OriginalTriangulation.indices; //apparently this MUST come AFTER setting the vertices or will throw error
+				#endregion
+			}
+
+			Debug.Log($"constructed '{_mesh.triangles.Length}' tris (indices), '{_mesh.vertices.Length}' vertices, and '{_mesh.normals.Length}' normals...");
 
 			for ( int i = 0; i < Triangles.Length; i++ )
 			{
 				Triangles[i].CreateRelationships( Triangles );
 			}
 
-			#region FINISH THE MESH--------------------------------
-			Debug.Log($"Finishing the mesh representation. Assigning '{meshVrts.Length}' verts, '{tringltn.indices.Length}' tris, and '{nrmls.Length}' normals...");
-			_mesh.vertices = meshVrts;
-			_mesh.triangles = tringltn.indices; //apparently this MUST come after setting the vertices. If you try to set triangles before vertices, it will throw an error
-
-			_mesh.normals = nrmls;
-			#endregion
-
-			dbg_Areas = tringltn.areas;
-			dbg_Vertices = tringltn.vertices;
-			dbg_Indices = tringltn.indices;
-
 			CalculateBounds();
+
+			//--------------------------------------------------
+			/*
+			dbg_Areas = OriginalTriangulation.areas;
+			dbg_Vertices = OriginalTriangulation.vertices;
+			dbg_Indices = OriginalTriangulation.indices;*/
+
+			UnityEditor.EditorUtility.SetDirty( this );
 		}
 
-		[ContextMenu("z call SayTriangulation")]
-		public void SayTriangulation()
+		public void AddTriangle( LNX_Triangle triangle )
 		{
-			Debug.Log($"Calculated triangulation with '{OriginalTriangulation.areas.Length}' areas, '{OriginalTriangulation.vertices.Length}', " +
-				$"'{OriginalTriangulation.indices.Length}' indices.");
-		}
+			List<Vector3> vrtList = Vertices.ToList();
 
-		[ContextMenu("z call RefeshMesh()")]
-		public void RefeshMesh()
-		{
-			for ( int i = 0; i < Triangles.Length; i++ )
+			for ( int i = 0; i < Vertices.Length; i++ ) //Check if there's a new unique vertex...
 			{
-				Triangles[i].RefreshTriangle( this, false );
+
+			}
+		}
+
+		[ContextMenu("z call fetchKosherTriangulation()")]
+		/// <summary>
+		/// Returns a NavMeshTriangulation object without repeated vertices. Takes into account existing modifications.
+		/// </summary>
+		/// <returns></returns>
+		private NavMeshTriangulation fetchKosherTriangulation()
+		{
+			Debug.Log($"{nameof(fetchKosherTriangulation)}()");
+			string dbgThis = $"{nameof(fetchKosherTriangulation)}()\n";
+			NavMeshTriangulation triangulation = NavMesh.CalculateTriangulation();
+			dbgThis += ($"inital triangulation has '{triangulation.areas.Length}' areas, '{triangulation.vertices.Length}' vertices, and '{triangulation.indices.Length}' indices.\n");
+
+			bool hvMods = HaveModifications();
+
+			List<int> areas_kosher = new List<int>(); //as many as there are triangles...
+			List<Vector3> vertices_kosher = new List<Vector3>(); // seemingly arbitrary, but largest count
+			List<int> indices_kosher = new List<int>(); // legnth is areas * 3. Values correspond to vertices list.
+
+			int correctedIndx = 0;
+			for ( int i = 0; i < triangulation.areas.Length; i++ )
+			{
+				dbgThis += ($"{i} --------------------------////////////////////////////////////\n");
+				if ( !hvMods || !ContainsDeletion(triangulation, i) )
+				{
+					//Debug.Log("doesn't contain deletion...");
+					areas_kosher.Add( triangulation.areas[i] );
+
+					int[] vertIndices = new int[3] { -1, -1, -1 };
+					dbgThis += ($"checking verts in growing list of '{vertices_kosher.Count}' verts...\n");
+					for ( int j = 0; j < vertices_kosher.Count; j++ )
+					{
+						if( vertices_kosher[j] == triangulation.vertices[triangulation.indices[i*3]] )
+						{
+							vertIndices[0] = j;
+						}
+						else if ( vertices_kosher[j] == triangulation.vertices[triangulation.indices[(i*3) + 1]] )
+						{
+							vertIndices[1] = j;
+						}
+						else if ( vertices_kosher[j] == triangulation.vertices[triangulation.indices[(i * 3) + 2]] )
+						{
+							vertIndices[2] = j;
+						}
+					}
+
+					dbgThis += ($"end. 0: '{vertIndices[0]}', 1: '{vertIndices[1]}', 2: '{vertIndices[2]}'...\n");
+					if( vertIndices[0] == -1 )
+					{
+						dbgThis += $"adding new vert/indx for 0...\n";
+						vertices_kosher.Add( triangulation.vertices[triangulation.indices[i * 3]] );
+						indices_kosher.Add( vertices_kosher.Count - 1 );
+					}
+					else
+					{
+						indices_kosher.Add( vertIndices[0] );
+					}
+
+					if ( vertIndices[1] == -1 )
+					{
+						dbgThis += $"adding new vert/indx for 1...\n";
+
+						vertices_kosher.Add( triangulation.vertices[triangulation.indices[(i*3) + 1]] );
+						indices_kosher.Add( vertices_kosher.Count - 1 );
+					}
+					else
+					{
+						indices_kosher.Add( vertIndices[1] );
+					}
+
+					if ( vertIndices[2] == -1 )
+					{
+						dbgThis += $"adding new vert/indx for 2...\n";
+
+						vertices_kosher.Add( triangulation.vertices[triangulation.indices[(i*3) + 2]] );
+						indices_kosher.Add( vertices_kosher.Count - 1 );
+					}
+					else
+					{
+						indices_kosher.Add( vertIndices[2] );
+					}
+				}
 			}
 
-			CalculateBounds();
+			triangulation.areas = areas_kosher.ToArray();
+			triangulation.vertices = vertices_kosher.ToArray();
+			triangulation.indices = indices_kosher.ToArray();
+
+			dbgThis += ($"final triangulation has '{triangulation.areas.Length}' areas, '{triangulation.vertices.Length}' vertices, and '{triangulation.indices.Length}' indices.");
+			Debug.Log( dbgThis );
+
+			dbg_Areas = triangulation.areas;
+			dbg_Vertices = triangulation.vertices;
+			dbg_Indices = triangulation.indices;
+			
+			return triangulation;
 		}
 
+		#endregion
+
+		[ContextMenu("z call CheckForRepeats()")]
+		public void CheckForRepeats() //helper method
+		{
+			for ( int i = 0; i < dbg_Vertices.Length; i++ )
+			{
+				for ( int j = 0; j < dbg_Vertices.Length; j++ )
+				{
+					if( i != j && dbg_Vertices[i] == dbg_Vertices[j] )
+					{
+						Debug.LogWarning($"found same at i: '{i}' and j: '{j}'");
+						return;
+					}
+				}
+			}
+		}
+
+		#region MODIFICATION-----------------------------------------------------------
+		/// <summary>
+		/// Checks to see if any madifications exist on this LNX_NavMesh. Warning: Relatively slow operation. 
+		/// Not as cheap as checking a boolean flag.
+		/// </summary>
+		/// <returns></returns>
+		public bool HaveModifications()
+		{
+			Debug.Log($"{nameof(HaveModifications)}()");
+
+			if( deletedTriangles != null && deletedTriangles.Count > 0 )
+			{
+				Debug.LogWarning($"{nameof(deletedTriangles)}, count: '{deletedTriangles.Count}'");
+				return true;
+			}
+
+			if ( addedTriangles != null && addedTriangles.Count > 0)
+			{
+				Debug.LogWarning($"{nameof(addedTriangles)}, count: '{addedTriangles.Count}'");
+				return true;
+			}
+			if ( Triangles != null && Triangles.Length > 0 )
+			{
+				for( int i = 0; i < Triangles.Length; i++ )
+				{
+					if(Triangles[i].HasBeenModified )
+					{
+						Debug.LogWarning($"tri {i} has been modified.");
+						return true;
+					}
+				}
+			}
+
+			Debug.Log($"found no modifications. returning false....");
+
+			return false;
+		} //Todo: remember to unit test this
+		
 		public void MoveVert_managed( LNX_Vertex vert, Vector3 pos )
 		{
-			Triangles[vert.MyCoordinate.TriIndex].MoveVert_managed( this, vert.MyCoordinate.ComponentIndex, pos );
+			Debug.LogWarning($"MOVED!");
+			Triangles[vert.MyCoordinate.TrianglesIndex].MoveVert_managed( this, vert.MyCoordinate.ComponentIndex, pos );
 
-			Vector3[] tmpVrts = _mesh.vertices; //note: I can't get it to update the mesh if I only change the relevant vertex
-												//within the mesh object, It seems like I MUST create and assign a whole new array.
-			tmpVrts[vert.PositionInOriginalTriangulation] = vert.Position + pos;
+			if( vert.MeshIndex_vertices > -1 )
+			{
+				Debug.Log($"moving vert '{vert.MyCoordinate.ToString()}' with {nameof(vert.MeshIndex_vertices)}: '{vert.MeshIndex_vertices}'");
 
-			_mesh.vertices = tmpVrts; //apparently you have to assign to the mesh in this manner in order to make this update (apparently I can't just change one of the existing vertices elements)...
-			
+				Vector3[] tmpVrts = _mesh.vertices; //note: I can't get it to update the mesh if I only change the relevant vertex within the mesh object, It seems like I MUST create and assign a whole new array.
+				tmpVrts[vert.MeshIndex_vertices] = vert.Position + pos;
+				_mesh.vertices = tmpVrts; //apparently you have to assign to the mesh in this manner in order to make this update (apparently I can't just change one of the existing vertices elements)...
+			}
+
+			//flag_haveModifications = true; //todo: now using method instead. DWS
 		}
 
 		public void DeleteTriangle( int triIndex )
@@ -284,11 +550,27 @@ namespace LogansNavigationExtension
 
 		public bool ContainsDeletion( LNX_Triangle tri )
 		{
-			if( DeletedTriangles != null && DeletedTriangles.Count > 0 )
+			if( deletedTriangles != null && deletedTriangles.Count > 0 )
 			{
-				for ( int i = 0; i < DeletedTriangles.Count; i++ )
+				for ( int i = 0; i < deletedTriangles.Count; i++ )
 				{
-					if( DeletedTriangles[i].OriginallyMatches(tri) )
+					if( deletedTriangles[i].OriginallyMatches(tri) )
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+		public bool ContainsDeletion( NavMeshTriangulation nmTriangulation, int indx_indices )
+		{
+			if ( deletedTriangles != null && deletedTriangles.Count > 0 )
+			{
+				for ( int i = 0; i < deletedTriangles.Count; i++ )
+				{
+					if ( deletedTriangles[i].GetVertIndextAtOriginalPosition(nmTriangulation.vertices[indx_indices]) != -1 )
 					{
 						return true;
 					}
@@ -300,12 +582,21 @@ namespace LogansNavigationExtension
 
 		public void ClearModifications()
 		{
+			Debug.Log($"{nameof(ClearModifications)}()");
 			for ( int i = 0; i < Triangles.Length; i++ )
 			{
 				Triangles[i].ClearModifications();
 			}
-		}
 
+			deletedTriangles = new List<LNX_Triangle>();
+			addedTriangles = new List<int>();
+
+			UnityEditor.EditorUtility.SetDirty( this );
+			//flag_haveModifications = false; //todo: now using method instead. DWS
+		}
+		#endregion
+
+		#region CALCULATION ---------------------------------------------------------
 		public void CalculateBounds()
 		{
 			dbg_Bounds = string.Empty;
@@ -411,6 +702,17 @@ namespace LogansNavigationExtension
 
 		}
 
+		[ContextMenu("z call RefeshMesh()")]
+		public void RefeshMesh()
+		{
+			for (int i = 0; i < Triangles.Length; i++)
+			{
+				Triangles[i].RefreshTriangle(this, false);
+			}
+
+			CalculateBounds();
+		}
+
 		/*[SerializeField]*/
 		private string dbgCalculatePath;
 		public bool CalculatePath( Vector3 startPos_passed, Vector3 endPos_passed, float maxDistance )
@@ -441,6 +743,7 @@ namespace LogansNavigationExtension
 
 			return true;
 		}
+		#endregion
 
 		/// <summary>
 		/// Returns true if the supplied position is within the projection of any triangle on the navmesh, 

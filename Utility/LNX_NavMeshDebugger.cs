@@ -123,7 +123,7 @@ namespace LogansNavigationExtension
 			if (DrawTriLabels)
 			{
 				//Handles.Label( tri.V_center + (tri.v_normal * length_labels * 1.5f) + (tri.v_normal * 0.05f), tri.Index_parallelWithParentArray.ToString(), gstl_label );
-				Handles.Label(tri.V_center, tri.Index_parallelWithParentArray.ToString(), gstl_label);
+				Handles.Label(tri.V_center, tri.Index_inCollection.ToString(), gstl_label);
 			}
 
 			#region EDGES -------------------------------------------------------

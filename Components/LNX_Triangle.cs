@@ -16,8 +16,11 @@ namespace LogansNavigationExtension
 		[SerializeField] private string DbgCalculateTriInfo;
 
 		/// <summary>Describes this triangle's position inside the containing manager's Triangles array </summary>
-		[SerializeField, HideInInspector] private int index_parallelWithParentArray;
-		public int Index_parallelWithParentArray => index_parallelWithParentArray; 
+		[SerializeField, HideInInspector] private int index_inCollection;
+		public int Index_inCollection => index_inCollection;
+		/// <summary>Index where this triangle's vertices start in the visualization mesh's .triangles array. Note: 
+		/// this is just Index_inCollection * 3.</summary>
+		public int MeshIndex_trianglesStart => index_inCollection * 3;
 
 		[HideInInspector, Tooltip("Corresponds to the areas set up in the Navigation window.")] 
 		public float Area;
@@ -38,7 +41,7 @@ namespace LogansNavigationExtension
 
 
 		[Header("RELATIONAL")]
-		public LNX_TriangleRelationship_exp[] Relationships;
+		public LNX_TriangleRelationship[] Relationships;
 		/// <summary>
 		/// Array of indices of triangles that share at least one vertex with this triangle.
 		/// </summary>
@@ -49,27 +52,45 @@ namespace LogansNavigationExtension
 		/// re-calculate it's derived info when the user stops moving the vert.</summary>
 		[SerializeField, HideInInspector] private bool dirtyFlag_repositionedVert = false;
 
-		[SerializeField, HideInInspector] private bool wasAddedViaMod = false;
+		[SerializeField][HideInInspector] private bool wasAddedViaMod;
 		/// <summary>Whether this triangle was added by a mesh modification, as opposed to being created 
 		/// as part of the original navmesh triangulation.</summary>
 		public bool WasAddedViaMod => wasAddedViaMod;
+
+		public bool HasBeenModified
+		{
+			get
+			{
+				return Verts[0].AmModified || Verts[1].AmModified || Verts[2].AmModified;
+			}
+		}
 
 
 		[Header("OTHER")]
 		[HideInInspector] public Vector3 v_normal;
 
 
-		public LNX_Triangle( int triIndx, NavMeshTriangulation nmTriangulation, int lrMask )
+		public LNX_Triangle( int parallelIndex, NavMeshTriangulation nmTriangulation, int lrMask )
 		{
+			Debug.Log($"tri ctor. {nameof(parallelIndex)}: '{parallelIndex}' (x3: '{parallelIndex * 3}'). verts start: '{nmTriangulation.indices[(parallelIndex * 3)]}'");
+
 			DbgCalculateTriInfo = string.Empty;
 
-			index_parallelWithParentArray = triIndx;
+			index_inCollection = parallelIndex;
 
-			Area = nmTriangulation.areas[triIndx];
+			Area = nmTriangulation.areas[parallelIndex];
 
-			Vector3 vrtPos0 = nmTriangulation.vertices[ nmTriangulation.indices[(triIndx * 3)] ];
-			Vector3 vrtPos1 = nmTriangulation.vertices[ nmTriangulation.indices[(triIndx * 3) + 1] ];
-			Vector3 vrtPos2 = nmTriangulation.vertices[ nmTriangulation.indices[(triIndx * 3) + 2] ];
+			Vector3 vrtPos0 = nmTriangulation.vertices[ nmTriangulation.indices[(parallelIndex * 3)] ];
+
+			Debug.Log($"");
+			Vector3 vrtPos1 = nmTriangulation.vertices[ nmTriangulation.indices[(parallelIndex * 3) + 1] ];
+
+			Debug.Log($"Trying to get tringltn.vertices['{nmTriangulation.indices[(parallelIndex * 3) + 2]}'], with collection length: '{nmTriangulation.vertices.Length}'");
+			Debug.Log($"parallelIndex: '{parallelIndex}', indices indx: '{(parallelIndex * 3) + 2}' " +
+				$"indices len '{nmTriangulation.indices.Length}'.");
+			
+
+			Vector3 vrtPos2 = nmTriangulation.vertices[ nmTriangulation.indices[(parallelIndex * 3) + 2] ];
 
 			Verts = new LNX_Vertex[3];
 			Verts[0] = new LNX_Vertex( this, vrtPos0, 0, nmTriangulation );
@@ -77,12 +98,9 @@ namespace LogansNavigationExtension
 			Verts[2] = new LNX_Vertex( this, vrtPos2, 2, nmTriangulation );
 
 			Edges = new LNX_Edge[3];
-			Edges[0] = new LNX_Edge( Verts[1], Verts[2], V_center, v_normal, 
-				new LNX_ComponentCoordinate(index_parallelWithParentArray, 0) );
-			Edges[1] = new LNX_Edge( Verts[0], Verts[2], V_center, v_normal,
-				new LNX_ComponentCoordinate(index_parallelWithParentArray, 1) );
-			Edges[2] = new LNX_Edge( Verts[1], Verts[0], V_center, v_normal,
-				new LNX_ComponentCoordinate(index_parallelWithParentArray, 2) );
+			Edges[0] = new LNX_Edge( this, Verts[1], Verts[2], 0 );
+			Edges[1] = new LNX_Edge( this, Verts[0], Verts[2], 1 );
+			Edges[2] = new LNX_Edge( this, Verts[1], Verts[0], 2 );
 
 			CalculateDerivedInfo();
 
@@ -91,7 +109,7 @@ namespace LogansNavigationExtension
 
 		public LNX_Triangle( LNX_Triangle baseTri, int triIndx )
 		{
-			index_parallelWithParentArray = triIndx;
+			index_inCollection = triIndx;
 
 			DbgCalculateTriInfo = baseTri.DbgCalculateTriInfo;
 
@@ -115,12 +133,12 @@ namespace LogansNavigationExtension
 			AdjacentTriIndices = baseTri.AdjacentTriIndices;
 			dirtyFlag_repositionedVert = false;
 
-			name = $"ind: '{index_parallelWithParentArray}', ctr: '{V_center}'";
+			name = $"ind: '{index_inCollection}', ctr: '{V_center}'";
 		}
 
 		public void AdoptValues( LNX_Triangle baseTri )
 		{
-			index_parallelWithParentArray = baseTri.index_parallelWithParentArray;
+			index_inCollection = baseTri.index_inCollection;
 
 			DbgCalculateTriInfo = baseTri.DbgCalculateTriInfo;
 
@@ -142,20 +160,20 @@ namespace LogansNavigationExtension
 			AdjacentTriIndices = baseTri.AdjacentTriIndices;
 			dirtyFlag_repositionedVert = false;
 
-			name = $"ind: '{index_parallelWithParentArray}', ctr: '{V_center}'";
+			name = $"ind: '{index_inCollection}', ctr: '{V_center}'";
 		}
 
 		public void ChangeIndex( int indx )
 		{
-			index_parallelWithParentArray = indx;
+			index_inCollection = indx;
 
-			Verts[0].MyCoordinate.TriIndex = index_parallelWithParentArray;
-			Verts[1].MyCoordinate.TriIndex = index_parallelWithParentArray;
-			Verts[2].MyCoordinate.TriIndex = index_parallelWithParentArray;
+			Verts[0].MyCoordinate.TrianglesIndex = index_inCollection;
+			Verts[1].MyCoordinate.TrianglesIndex = index_inCollection;
+			Verts[2].MyCoordinate.TrianglesIndex = index_inCollection;
 
-			Edges[0].MyCoordinate.TriIndex = index_parallelWithParentArray;
-			Edges[1].MyCoordinate.TriIndex = index_parallelWithParentArray;
-			Edges[2].MyCoordinate.TriIndex = index_parallelWithParentArray;
+			Edges[0].MyCoordinate.TrianglesIndex = index_inCollection;
+			Edges[1].MyCoordinate.TrianglesIndex = index_inCollection;
+			Edges[2].MyCoordinate.TrianglesIndex = index_inCollection;
 
 			//todo: in the future when I start caching relational info, I might need to refresh it here...
 		}
@@ -170,9 +188,9 @@ namespace LogansNavigationExtension
 			}
 
 			if (
-				otherTri.GetVerIndextAtPosition(Verts[0].Position) == -1 ||
-				otherTri.GetVerIndextAtPosition(Verts[1].Position) == -1 ||
-				otherTri.GetVerIndextAtPosition(Verts[2].Position) == -1
+				otherTri.GetVertIndextAtPosition(Verts[0].Position) == -1 ||
+				otherTri.GetVertIndextAtPosition(Verts[1].Position) == -1 ||
+				otherTri.GetVertIndextAtPosition(Verts[2].Position) == -1
 			)
 			{
 				return false;
@@ -196,9 +214,9 @@ namespace LogansNavigationExtension
 			}
 
 			if (
-				otherTri.GetVerIndextAtPosition(Verts[0].OriginalPosition) == -1 ||
-				otherTri.GetVerIndextAtPosition(Verts[1].OriginalPosition) == -1 ||
-				otherTri.GetVerIndextAtPosition(Verts[2].OriginalPosition) == -1
+				otherTri.GetVertIndextAtPosition(Verts[0].OriginalPosition) == -1 ||
+				otherTri.GetVertIndextAtPosition(Verts[1].OriginalPosition) == -1 ||
+				otherTri.GetVertIndextAtPosition(Verts[2].OriginalPosition) == -1
 			)
 			{
 				return false;
@@ -246,9 +264,9 @@ namespace LogansNavigationExtension
 
 			V_center = (Verts[0].Position + Verts[1].Position + Verts[2].Position) / 3f;
 
-			Edges[0].CalculateInfo( Verts[1], Verts[2], V_center, v_normal );
-			Edges[1].CalculateInfo( Verts[0], Verts[2], V_center, v_normal );
-			Edges[2].CalculateInfo( Verts[1], Verts[0], V_center, v_normal );
+			Edges[0].CalculateInfo( this, Verts[1], Verts[2] );
+			Edges[1].CalculateInfo(this, Verts[0], Verts[2]);
+			Edges[2].CalculateInfo(this, Verts[1], Verts[0]);
 
 			Perimeter = Edges[0].EdgeLength + Edges[1].EdgeLength + Edges[2].EdgeLength;
 
@@ -263,7 +281,7 @@ namespace LogansNavigationExtension
 			LongestEdgeLength = Mathf.Max(Edges[0].EdgeLength, Edges[1].EdgeLength, Edges[2].EdgeLength);
 			ShortestEdgeLength = Mathf.Min(Edges[0].EdgeLength, Edges[1].EdgeLength, Edges[2].EdgeLength);
 
-			name = $"ind: '{index_parallelWithParentArray}', ctr: '{V_center}'";
+			name = $"ind: '{index_inCollection}', ctr: '{V_center}'";
 
 			DbgCalculateTriInfo += $"nrml: '{v_normal}'\n" +
 				$"edge lengths: '{Edges[0].EdgeLength}', '{Edges[1].EdgeLength}', '{Edges[2].EdgeLength}'\n" +
@@ -282,67 +300,67 @@ namespace LogansNavigationExtension
 			}
 		}
 
+		/// <summary>
+		/// Creates the relationship structures relating this triangle to all other triangles.
+		/// </summary>
+		/// <param name="Tris"></param>
+		/// <param name="amThorough">If false, bypasses re-processing the sharedvertexcoordinates collections, 
+		/// which is not necessary in some cases.</param>
 		public void CreateRelationships( LNX_Triangle[] Tris, bool amThorough = true )
 		{
-			Relationships = new LNX_TriangleRelationship_exp[Tris.Length];
-			List<int> foundAdjacentTriIndices_temp = new List<int>();
-			List<LNX_ComponentCoordinate> sharedVertCoords0_temp = new List<LNX_ComponentCoordinate>();
-			List<LNX_ComponentCoordinate> sharedVertCoords1_temp = new List<LNX_ComponentCoordinate>();
-			List<LNX_ComponentCoordinate> sharedVertCoords2_temp = new List<LNX_ComponentCoordinate>();
-
+			Relationships = new LNX_TriangleRelationship[Tris.Length];
 			for ( int i_otherTri = 0; i_otherTri < Tris.Length; i_otherTri++ )
 			{
-				Relationships[i_otherTri] = new LNX_TriangleRelationship_exp( this, Tris[i_otherTri] );
+				Relationships[i_otherTri] = new LNX_TriangleRelationship( this, Tris[i_otherTri] );
+			}
+			
+			if( amThorough )
+			{
+				List<int> foundAdjacentTriIndices_temp = new List<int>();
+				List<LNX_ComponentCoordinate> sharedVertCoords0_temp = new List<LNX_ComponentCoordinate>();
+				List<LNX_ComponentCoordinate> sharedVertCoords1_temp = new List<LNX_ComponentCoordinate>();
+				List<LNX_ComponentCoordinate> sharedVertCoords2_temp = new List<LNX_ComponentCoordinate>();
 
-				if ( i_otherTri == index_parallelWithParentArray ) //IF we've iterated to this triangle's self, just continue...
+				for ( int i_otherTri = 0; i_otherTri < Tris.Length; i_otherTri++ )
 				{
-					continue;
-				}
+					Relationships[i_otherTri] = new LNX_TriangleRelationship( this, Tris[i_otherTri] );
 
-				if ( Relationships[i_otherTri].NumberofSharedVerts > 0 )
-				{
-					foundAdjacentTriIndices_temp.Add( i_otherTri );
-				}
-
-				if ( !amThorough )
-				{
-					continue;
-				}
-
-				for ( int i_myVerts = 0; i_myVerts < 3; i_myVerts++ ) //Construct sharedvertexcoordinates collection--------------------
-				{
-					for ( int i_otherVerts = 0; i_otherVerts < 3; i_otherVerts++ )
+					if ( i_otherTri == index_inCollection ) //IF we've iterated to this triangle's self, just continue...
 					{
-						if ( Verts[i_myVerts].Position == Tris[i_otherTri].Verts[i_otherVerts].Position )
+						continue;
+					}
+
+					if ( Relationships[i_otherTri].NumberofSharedVerts > 0 )
+					{
+						foundAdjacentTriIndices_temp.Add( i_otherTri );
+
+						if ( Relationships[i_otherTri].IndexMap_OwnedVerts_toShared[0] != -1 )
 						{
-							if( i_myVerts == 0 )
-							{
-								sharedVertCoords0_temp.Add(
-									new LNX_ComponentCoordinate(Tris[i_otherTri].index_parallelWithParentArray, i_otherVerts)
-								);
-							}
-							else if ( i_myVerts == 1 )
-							{
-								sharedVertCoords1_temp.Add(
-									new LNX_ComponentCoordinate(Tris[i_otherTri].index_parallelWithParentArray, i_otherVerts)
-								);
-							}
-							else if ( i_myVerts == 2 )
-							{
-								sharedVertCoords2_temp.Add(
-									new LNX_ComponentCoordinate(Tris[i_otherTri].index_parallelWithParentArray, i_otherVerts)
-								);
-							}
+							sharedVertCoords0_temp.Add(
+								Tris[i_otherTri].Verts[Relationships[i_otherTri].IndexMap_OwnedVerts_toShared[0]].MyCoordinate
+							);
+						}
+						if ( Relationships[i_otherTri].IndexMap_OwnedVerts_toShared[1] != -1 )
+						{
+							sharedVertCoords1_temp.Add(
+								Tris[i_otherTri].Verts[Relationships[i_otherTri].IndexMap_OwnedVerts_toShared[1]].MyCoordinate
+							);
+						}
+						if ( Relationships[i_otherTri].IndexMap_OwnedVerts_toShared[2] != -1 )
+						{
+							sharedVertCoords2_temp.Add(
+								Tris[i_otherTri].Verts[Relationships[i_otherTri].IndexMap_OwnedVerts_toShared[2]].MyCoordinate
+							);
 						}
 					}
 				}
+
+				AdjacentTriIndices = foundAdjacentTriIndices_temp.ToArray();
+
+				Verts[0].SharedVertexCoordinates = sharedVertCoords0_temp.ToArray();
+				Verts[1].SharedVertexCoordinates = sharedVertCoords1_temp.ToArray();
+				Verts[2].SharedVertexCoordinates = sharedVertCoords2_temp.ToArray();
 			}
-
-			AdjacentTriIndices = foundAdjacentTriIndices_temp.ToArray();
-
-			Verts[0].SharedVertexCoordinates = sharedVertCoords0_temp.ToArray();
-			Verts[1].SharedVertexCoordinates = sharedVertCoords1_temp.ToArray();
-			Verts[2].SharedVertexCoordinates = sharedVertCoords2_temp.ToArray();
 		}
 
 		public void TrySampleNormal( int lrMsk, bool logMessages = true)
@@ -377,7 +395,7 @@ namespace LogansNavigationExtension
 			}
 			else if( logMessages )
 			{
-				Debug.LogWarning($"Not able to resolve normal for tri: '{index_parallelWithParentArray}'.");
+				Debug.LogWarning($"Not able to resolve normal for tri: '{index_inCollection}'.");
 			}
 		}
 
@@ -558,15 +576,14 @@ namespace LogansNavigationExtension
 		}
 		#endregion
 
-		/// <summary>
-		/// Movies a vertex belonging to this triangle in a managed fashion. Sets appropriate flags and 
-		/// does what's necessary after a movement has been made.
-		/// </summary>
-		/// <param name="vertIndex"></param>
-		/// <param name="pos"></param>
-		/// <param name="positionIsAbsolute"></param>
+
 
 		#region MODIFICATION ----------------------------------------------------
+		/// <summary>
+		/// Takes in a previously-modified triangle, and gives this triangle the same values. This is 
+		/// used when re-making a mesh.
+		/// </summary>
+		/// <param name="baseTri"></param>
 		public void AdoptModifiedValues(LNX_Triangle baseTri)
 		{
 			v_normal = baseTri.v_normal;
@@ -578,6 +595,13 @@ namespace LogansNavigationExtension
 			CalculateDerivedInfo();
 		}
 
+		/// <summary>
+		/// Movies a vertex belonging to this triangle in a managed fashion. Sets appropriate flags and 
+		/// does what's necessary after a movement has been made.
+		/// </summary>
+		/// <param name="vertIndex"></param>
+		/// <param name="pos"></param>
+		/// <param name="positionIsAbsolute"></param>
 		public void MoveVert_managed( LNX_NavMesh nm, int vertIndex, Vector3 pos, bool positionIsAbsolute = false )
 		{
 			Verts[vertIndex].Position = (positionIsAbsolute ? pos : Verts[vertIndex].Position + pos);
@@ -595,31 +619,26 @@ namespace LogansNavigationExtension
 			dirtyFlag_repositionedVert = true;
 		}
 
-		public bool HasBeenModified()
-		{
-			if( 
-				Verts[0].AmModified || Verts[1].AmModified || Verts[2].AmModified
-			)
-			{
-				return true;
-			}
-
-			return false;
-		}
-
 		public void ClearModifications()
 		{
+			Debug.Log($"tri[{index_inCollection}].ClearModifications()");
+
 			if( Verts[0].AmModified )
 			{
 				Verts[0].Position = Verts[0].OriginalPosition;
+				Debug.LogWarning($"vert 0 was modified");
 			}
 			if ( Verts[1].AmModified )
 			{
 				Verts[1].Position = Verts[1].OriginalPosition;
+				Debug.LogWarning($"vert 1 was modified");
+
 			}
 			if ( Verts[2].AmModified )
 			{
 				Verts[2].Position = Verts[2].OriginalPosition;
+				Debug.LogWarning($"vert 2 was modified");
+
 			}
 		}
 		#endregion
@@ -656,7 +675,7 @@ namespace LogansNavigationExtension
 			{
 				for ( int i = 0; i < AdjacentTriIndices.Length; i++ )
 				{
-					if (AdjacentTriIndices[i] == tri.index_parallelWithParentArray )
+					if (AdjacentTriIndices[i] == tri.index_inCollection )
 					{
 						return true;
 					}
@@ -686,7 +705,7 @@ namespace LogansNavigationExtension
 			return returnCollection;
 		}
 
-		public int GetVerIndextAtPosition( Vector3 pos )
+		public int GetVertIndextAtPosition( Vector3 pos )
 		{
 			if ( Verts[0].Position == pos )
 			{
@@ -704,7 +723,7 @@ namespace LogansNavigationExtension
 			return -1;
 		}
 
-		public int GetOriginalVerIndextAtPosition(Vector3 pos)
+		public int GetVertIndextAtOriginalPosition(Vector3 pos)
 		{
 			if (Verts[0].OriginalPosition == pos)
 			{
