@@ -76,7 +76,7 @@ namespace LogansNavigationExtension
 
 		private void Btn_fetchTriangulation_action()
 		{
-			_targetScript._LNX_NavMesh.FetchTriangulation();
+			_targetScript._LNX_NavMesh.CalculateTriangulation();
 			_targetScript.ClearSelection();
 		}
 
@@ -118,21 +118,23 @@ namespace LogansNavigationExtension
 			}
 
 			#region HOTKEYS --------------------------
-			if( Event.current.isMouse )
+			if( Event.current.isMouse ) //fires continuously when the mouse is both in the scene and moving. Does not fire when mouse is in the scene and still.
 			{
 				flag_mouseDownThisFrame = false;
 				flag_mouseUpThisFrame = false;
 
 				if( Event.current.type == EventType.MouseDown )
 				{
+					Debug.Log("is mousedown");
 					flag_mouseDownThisFrame = true;
 				}
 				else if( Event.current.type == EventType.MouseUp )
 				{
+					Debug.Log("is mouseup");
 					flag_mouseUpThisFrame = true;
 					if( flag_moveHandleIsDirty )
 					{
-						Debug.Log( "refreshing..." );
+						Debug.LogWarning( "refreshing..." );
 						flag_moveHandleIsDirty = false;
 						_targetScript._LNX_NavMesh.RefeshMesh();
 					}

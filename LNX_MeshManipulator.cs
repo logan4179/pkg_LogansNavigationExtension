@@ -131,7 +131,6 @@ namespace LogansNavigationExtension
 		//[Header("OTHER")]
 		public Vector3 manipulatorPos = Vector3.zero;
 
-
 		#region CLEARING/INITIALIZING ------------------------
 		public void InitState()
 		{
@@ -305,30 +304,32 @@ namespace LogansNavigationExtension
 
 				Vert_CurrentlyPointingAt = _LNX_NavMesh.GetVertexAtCoordinate( runningBestTriIndex, runningBestVertIndex );
 			}
-
 			else if ( SelectMode == LNX_SelectMode.Edges )
 			{
 				LNX_ComponentCoordinate runningBestCoordinate = LNX_ComponentCoordinate.None;
 				float runningBestAlignment = 0.9f;
 
-				for ( int i = 0; i < _LNX_NavMesh.Triangles.Length; i++ )
+				for ( int i_tris = 0; i_tris < _LNX_NavMesh.Triangles.Length; i_tris++ )
 				{
-					if (amLocked && !indices_lockedTris.Contains(i))
+					if ( amLocked && !indices_lockedTris.Contains(i_tris) )
 					{
 						continue;
 					}
 
-					for ( int j = 0; j < 3; j++ )
+					for ( int i_edges = 0; i_edges < 3; i_edges++ )
 					{
-						Vector3 vTo = Vector3.Normalize( _LNX_NavMesh.GetEdgeAtCoordinate(i, j).MidPosition - vPerspective );
+						Vector3 vTo = Vector3.Normalize(
+							_LNX_NavMesh.Triangles[i_tris].Edges[i_edges].MidPosition - vPerspective
+						);
+
 						float alignment = Vector3.Dot( vTo, vDirection );
 
 						if ( alignment > runningBestAlignment )
 						{
-							DebugPointAt += $"vert: [{i}][{j}]. alignment: '{alignment}'\n";
+							DebugPointAt += $"vert: [{i_tris}][{i_edges}]. alignment: '{alignment}'\n";
 							runningBestAlignment = alignment;
 
-							runningBestCoordinate = new LNX_ComponentCoordinate( i, j );
+							runningBestCoordinate = _LNX_NavMesh.Triangles[i_tris].Edges[i_edges].MyCoordinate;
 						}
 					}
 				}
@@ -478,7 +479,7 @@ namespace LogansNavigationExtension
 				{
 					DebugSelectedReport += $"trying {Verts_currentlySelected[i].SharedVertexCoordinates[j].ToString()}... ";
 
-					if( amLocked && !indices_lockedTris.Contains(Verts_currentlySelected[i].SharedVertexCoordinates[j].TriIndex) )
+					if( amLocked && !indices_lockedTris.Contains(Verts_currentlySelected[i].SharedVertexCoordinates[j].TrianglesIndex) )
 					{
 						continue;
 					}
@@ -507,10 +508,10 @@ namespace LogansNavigationExtension
 		}
 
 		#region MESH MANIPULATION -----------------------------------------------------
-		public void MoveSelectedVerts( Vector3 pos )
+		public void MoveSelectedVerts( Vector3 endPos )
 		{
-			string dbgMoveSelected = $"{nameof(MoveSelectedVerts)}('{pos}') on '{Verts_currentlySelected.Count}' verts...\n";
-			Vector3 vDiff = pos - manipulatorPos;
+			string dbgMoveSelected = $"{nameof(MoveSelectedVerts)}('{endPos}') on '{Verts_currentlySelected.Count}' verts...\n";
+			Vector3 vDiff = endPos - manipulatorPos;
 			dbgMoveSelected += $"vdiff: '{vDiff}', manip pos: '{manipulatorPos}'\n";
 
 			if ( Verts_currentlySelected != null && Verts_currentlySelected.Count > 0 )
@@ -525,7 +526,7 @@ namespace LogansNavigationExtension
 				}
 			}
 
-			manipulatorPos = pos;
+			manipulatorPos = endPos;
 			//Debug.Log( dbgMoveSelected );
 		}
 
@@ -545,7 +546,7 @@ namespace LogansNavigationExtension
 			Debug.Log($"edge0: '{Edges_currentlySelected[0].MyCoordinate}', edge1: '{Edges_currentlySelected[1].MyCoordinate}'");
 
 			if (
-				tri0.Relationships[tri1.Index_parallelWithParentArray].NumberofSharedVerts != 2 ||
+				tri0.Relationships[tri1.Index_inCollection].NumberofSharedVerts != 2 ||
 				!Edges_currentlySelected[0].AmTerminal || !Edges_currentlySelected[1].AmTerminal ||
 				Edges_currentlySelected[0].AmTouching(Edges_currentlySelected[1])
 			)
@@ -647,7 +648,7 @@ namespace LogansNavigationExtension
 						}
 						else
 						{
-							if( _LNX_NavMesh.Triangles[i].Flag_amModified )
+							if( _LNX_NavMesh.Triangles[i].HasBeenModified )
 							{
 								Handles.color = color_modifiedTri;
 								Gizmos.color = color_modifiedTri;
@@ -665,7 +666,7 @@ namespace LogansNavigationExtension
 
 							Handles.Label( 
 								_LNX_NavMesh.Triangles[i].V_center, 
-								_LNX_NavMesh.Triangles[i].Index_parallelWithParentArray.ToString(), gstl_label
+								_LNX_NavMesh.Triangles[i].Index_inCollection.ToString(), gstl_label
 							);
 						}
 
@@ -800,6 +801,7 @@ namespace LogansNavigationExtension
 			}
 			#endregion
 
+			//Debug.Log(name);
 			generateDbgString();
 		}
 #endif
