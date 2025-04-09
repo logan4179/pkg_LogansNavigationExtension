@@ -26,7 +26,7 @@ namespace LogansNavigationExtension
 		public int AreaIndex;
 
 		[Header("COMPONENTS")]
-		public LNX_Vertex[] Verts;
+		[HideInInspector] public LNX_Vertex[] Verts;
 		public LNX_Edge[] Edges;
 
 		[Header("CALCULATED/DERIVED")]
@@ -70,7 +70,7 @@ namespace LogansNavigationExtension
 		[HideInInspector] public Vector3 v_normal;
 
 
-		public LNX_Triangle( int parallelIndex, int triangulationIndex, NavMeshTriangulation nmTriangulation, int lrMask ) //todo: can possibly get rid of the second parameter (triangulationIndex) and just use the first index instead now that I'm creating a kosher triangulation...
+		public LNX_Triangle( int parallelIndex, int triangulationIndex, NavMeshTriangulation nmTriangulation, LNX_Vertex v0, LNX_Vertex v1, LNX_Vertex v2, int lrMask ) //todo: can possibly get rid of the second parameter (triangulationIndex) and just use the first index instead now that I'm creating a kosher triangulation...
 		{
 			//Debug.Log($"tri ctor. {nameof(parallelIndex)}: '{parallelIndex}' (x3: '{parallelIndex * 3}'). verts start: '{nmTriangulation.indices[(parallelIndex * 3)]}'");
 
@@ -80,14 +80,9 @@ namespace LogansNavigationExtension
 			
 			AreaIndex = nmTriangulation.areas[triangulationIndex];
 
-			Vector3 vrtPos0 = nmTriangulation.vertices[ nmTriangulation.indices[(triangulationIndex * 3)] ];
-			Vector3 vrtPos1 = nmTriangulation.vertices[ nmTriangulation.indices[(triangulationIndex * 3) + 1] ];
-			Vector3 vrtPos2 = nmTriangulation.vertices[ nmTriangulation.indices[(triangulationIndex * 3) + 2] ];
-
-			Verts = new LNX_Vertex[3];
-			Verts[0] = new LNX_Vertex( this, vrtPos0, 0, nmTriangulation.indices[MeshIndex_trianglesStart] );
-			Verts[1] = new LNX_Vertex( this, vrtPos1, 1, nmTriangulation.indices[MeshIndex_trianglesStart + 1] );
-			Verts[2] = new LNX_Vertex( this, vrtPos2, 2, nmTriangulation.indices[MeshIndex_trianglesStart + 2] );
+			Verts[0] = v0;
+			Verts[1] = v1;
+			Verts[2] = v2;
 
 			Edges = new LNX_Edge[3];
 			Edges[0] = new LNX_Edge( this, Verts[1], Verts[2], 0 );
@@ -97,35 +92,6 @@ namespace LogansNavigationExtension
 			CalculateDerivedInfo();
 
 			TrySampleNormal( lrMask, true );
-		}
-
-		public LNX_Triangle( LNX_Triangle baseTri, int triIndx )
-		{
-			index_inCollection = triIndx;
-
-			DbgCalculateTriInfo = baseTri.DbgCalculateTriInfo;
-
-			V_center = baseTri.V_center;
-			v_normal = baseTri.v_normal;
-			Perimeter = baseTri.Perimeter;
-			AreaIndex = baseTri.AreaIndex;
-			LongestEdgeLength = baseTri.LongestEdgeLength;
-			ShortestEdgeLength = baseTri.ShortestEdgeLength;
-			Verts = new LNX_Vertex[3];
-			Verts[0] = new LNX_Vertex( baseTri.Verts[0] );
-			Verts[1] = new LNX_Vertex( baseTri.Verts[1] );
-			Verts[2] = new LNX_Vertex( baseTri.Verts[2] );
-
-			Edges = new LNX_Edge[3];
-			Edges[0] = new LNX_Edge( baseTri.Edges[0] );
-			Edges[1] = new LNX_Edge( baseTri.Edges[1] );
-			Edges[2] = new LNX_Edge( baseTri.Edges[2] );
-
-			Relationships = baseTri.Relationships;
-			AdjacentTriIndices = baseTri.AdjacentTriIndices;
-			dirtyFlag_repositionedVert = false;
-
-			name = $"ind: '{index_inCollection}', ctr: '{V_center}'";
 		}
 
 		public void AdoptValues( LNX_Triangle baseTri )
@@ -240,8 +206,6 @@ namespace LogansNavigationExtension
 			{
 				return false;
 			}
-
-
 
 			return true;
 		}

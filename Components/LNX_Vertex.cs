@@ -18,7 +18,7 @@ namespace LogansNavigationExtension
 		public Vector3 OriginalPosition => originalPosition;
 
 		[Header("LOCATION")] //---------------------------------------------------------------
-		public LNX_ComponentCoordinate MyCoordinate;
+		public List<LNX_ComponentCoordinate> MyCoordinates;
 
 		/// <summary>Index corresponding to the visualization mesh's triangles array that this vertex 
 		/// corresponds to.</summary>
@@ -76,6 +76,32 @@ namespace LogansNavigationExtension
 			DistanceToCenter = Vector3.Distance(tri.V_center, vrtPos);
 
 			MyCoordinate = new LNX_ComponentCoordinate( tri, cmpntIndx );
+
+			Relationships = new LNX_VertexRelationship[0];
+			SiblingRelationships = new LNX_VertexRelationship[2];
+
+			Angle = -1f;
+
+			MeshIndex_triangles = tri.MeshIndex_trianglesStart + cmpntIndx;
+			MeshIndex_vertices = mshVrtIndx;
+
+			DBG_constructor = $"at tri[{MyCoordinate.TrianglesIndex}], [{MyCoordinate.ComponentIndex}]\n" +
+				$"Pos: '{Position}', orig: '{originalPosition}'\n" +
+				$"vToCtr: '{v_toCenter}'\n" +
+				$"nml: '{v_normal}', dstToCtr: '{DistanceToCenter}'\n" +
+				$"";
+		}
+		public LNX_Vertex( Vector3 vrtPos, int cmpntIndx, int mshVrtIndx)
+		{
+			Position = vrtPos;
+
+			originalPosition = vrtPos;
+
+			v_toCenter = Vector3.Normalize(tri.V_center - vrtPos);
+			v_normal = tri.v_normal;
+			DistanceToCenter = Vector3.Distance(tri.V_center, vrtPos);
+
+			MyCoordinate = new LNX_ComponentCoordinate(tri, cmpntIndx);
 
 			Relationships = new LNX_VertexRelationship[0];
 			SiblingRelationships = new LNX_VertexRelationship[2];
