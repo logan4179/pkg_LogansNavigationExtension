@@ -18,11 +18,9 @@ namespace LogansNavigationExtension
 		public Vector3 OriginalPosition => originalPosition;
 
 		[Header("LOCATION")] //---------------------------------------------------------------
-		public LNX_ComponentCoordinate MyCoordinate;
-
-		/// <summary>Index corresponding to the visualization mesh's triangles array that this vertex 
-		/// corresponds to.</summary>
-		public int MeshIndex_triangles;
+		/// <summary>Describes this Vertex's position inside the containing manager's Vertices array </summary>
+		[SerializeField, HideInInspector] private int index_inCollection;
+		public int Index_inCollection => index_inCollection;
 
 		/// <summary>Index corresponding to the visualization mesh's vertices array that this vertex 
 		/// corresponds to.</summary>
@@ -75,18 +73,14 @@ namespace LogansNavigationExtension
 			v_normal = tri.v_normal;
 			DistanceToCenter = Vector3.Distance(tri.V_center, vrtPos);
 
-			MyCoordinate = new LNX_ComponentCoordinate( tri, cmpntIndx );
-
 			Relationships = new LNX_VertexRelationship[0];
 			SiblingRelationships = new LNX_VertexRelationship[2];
 
 			Angle = -1f;
 
-			MeshIndex_triangles = tri.MeshIndex_trianglesStart + cmpntIndx;
 			MeshIndex_vertices = mshVrtIndx;
 
-			DBG_constructor = $"at tri[{MyCoordinate.TrianglesIndex}], [{MyCoordinate.ComponentIndex}]\n" +
-				$"Pos: '{Position}', orig: '{originalPosition}'\n" +
+			DBG_constructor = $"Pos: '{Position}', orig: '{originalPosition}'\n" +
 				$"vToCtr: '{v_toCenter}'\n" +
 				$"nml: '{v_normal}', dstToCtr: '{DistanceToCenter}'\n" +
 				$"";

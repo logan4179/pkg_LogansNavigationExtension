@@ -26,7 +26,7 @@ namespace LogansNavigationExtension
 		public int AreaIndex;
 
 		[Header("COMPONENTS")]
-		public LNX_Vertex[] Verts;
+		//public LNX_Vertex[] Verts;
 		public LNX_Edge[] Edges;
 
 		[Header("CALCULATED/DERIVED")]
@@ -39,6 +39,17 @@ namespace LogansNavigationExtension
 		[HideInInspector] public float LongestEdgeLength;
 		[HideInInspector] public float ShortestEdgeLength;
 		[HideInInspector] public float Area;
+
+		/// <summary>
+		/// Indices corresponding to the LNX_NavMesh's Vertices array for the vertices that make up this triangle.
+		/// </summary>
+		[HideInInspector] public int Index_Vert0, Index_Vert1, Index_Vert2;
+
+		/// <summary>Angles at each of the vertices (corners) that make up this triangle.</summary>
+		[HideInInspector] public float Angle_atVert0, Angle_atVert1, Angle_atVert2;
+
+		/// <summary>Vectors pointing to the center at each of the vertices (corners) that make up this triangle.</summary>
+		[HideInInspector] public Vector3 vToCenter_atVert0, vToCenter_atVert1, vToCenter_atVert2;
 
 		[Header("RELATIONAL")]
 		public LNX_TriangleRelationship[] Relationships;
@@ -57,7 +68,7 @@ namespace LogansNavigationExtension
 		/// as part of the original navmesh triangulation.</summary>
 		public bool WasAddedViaMod => wasAddedViaMod;
 
-		public bool HasBeenModified
+		public bool HasBeenModified //todo: maybe with unified components I get rid of this, and only use the Vertices to decide this?
 		{
 			get
 			{
@@ -80,9 +91,14 @@ namespace LogansNavigationExtension
 			
 			AreaIndex = nmTriangulation.areas[triangulationIndex];
 
-			Vector3 vrtPos0 = nmTriangulation.vertices[ nmTriangulation.indices[(triangulationIndex * 3)] ];
-			Vector3 vrtPos1 = nmTriangulation.vertices[ nmTriangulation.indices[(triangulationIndex * 3) + 1] ];
-			Vector3 vrtPos2 = nmTriangulation.vertices[ nmTriangulation.indices[(triangulationIndex * 3) + 2] ];
+			Index_Vert0 = nmTriangulation.indices[(triangulationIndex * 3)];
+			Index_Vert1 = nmTriangulation.indices[(triangulationIndex * 3) + 1];
+			Index_Vert2 = nmTriangulation.indices[(triangulationIndex * 3) + 2];
+
+			Vector3 vrtPos0 = nmTriangulation.vertices[ Index_Vert0 ];
+			Vector3 vrtPos1 = nmTriangulation.vertices[ Index_Vert1 ];
+			Vector3 vrtPos2 = nmTriangulation.vertices[ Index_Vert2 ];
+
 
 			Verts = new LNX_Vertex[3];
 			Verts[0] = new LNX_Vertex( this, vrtPos0, 0, nmTriangulation.indices[MeshIndex_trianglesStart] );
@@ -170,33 +186,12 @@ namespace LogansNavigationExtension
 			//todo: in the future when I start caching relational info, I might need to refresh it here...
 		}
 
-		public bool VertsEqual( LNX_Triangle otherTri )
-		{
-			if (
-				otherTri.Verts == null || otherTri.Verts.Length != 3 || Verts == null || Verts.Length != 3
-			)
-			{
-				return false;
-			}
-
-			if (
-				otherTri.GetVertIndextAtPosition(Verts[0].Position) == -1 ||
-				otherTri.GetVertIndextAtPosition(Verts[1].Position) == -1 ||
-				otherTri.GetVertIndextAtPosition(Verts[2].Position) == -1
-			)
-			{
-				return false;
-			}
-
-			return true;
-		}
-
 		/// <summary>
 		/// Tests if this triangle's original state is a match the supplied triangle's current state.
 		/// </summary>
 		/// <param name="otherTri"></param>
 		/// <returns></returns>
-		public bool OriginallyMatches( LNX_Triangle otherTri )
+		public bool OriginallyMatches( LNX_Triangle otherTri,  )
 		{
 			if (
 				otherTri.Verts == null || otherTri.Verts.Length != 3 || Verts == null || Verts.Length != 3
@@ -213,35 +208,6 @@ namespace LogansNavigationExtension
 			{
 				return false;
 			}
-
-			return true;
-		}
-
-		/// <summary>
-		/// For checking if another triangle has equal values.
-		/// </summary>
-		/// <param name="tri"></param>
-		/// <returns></returns>
-		public bool ValueEquals( LNX_Triangle tri )
-		{
-			if( !VertsEqual(tri) )
-			{
-				return false;
-			}
-
-			if ( 
-				V_center != tri.V_center || 
-				v_normal != tri.v_normal ||
-				Perimeter != tri.Perimeter || 
-				AreaIndex != tri.AreaIndex || 
-				LongestEdgeLength != tri.LongestEdgeLength || 
-				ShortestEdgeLength != tri.ShortestEdgeLength
-			)
-			{
-				return false;
-			}
-
-
 
 			return true;
 		}
