@@ -22,8 +22,8 @@ namespace LogansNavigationExtension
 		/// this is just Index_inCollection * 3.</summary>
 		public int MeshIndex_trianglesStart => index_inCollection * 3;
 
-		[HideInInspector, Tooltip("Corresponds to the areas set up in the Navigation window.")] 
-		public float Area;
+		[HideInInspector, Tooltip("Corresponds to the area indices set up in the Navigation window.")] 
+		public int AreaIndex;
 
 		[Header("COMPONENTS")]
 		public LNX_Vertex[] Verts;
@@ -38,7 +38,7 @@ namespace LogansNavigationExtension
 		/// be on this triangle</summary>
 		[HideInInspector] public float LongestEdgeLength;
 		[HideInInspector] public float ShortestEdgeLength;
-
+		[HideInInspector] public float Area;
 
 		[Header("RELATIONAL")]
 		public LNX_TriangleRelationship[] Relationships;
@@ -70,32 +70,24 @@ namespace LogansNavigationExtension
 		[HideInInspector] public Vector3 v_normal;
 
 
-		public LNX_Triangle( int parallelIndex, NavMeshTriangulation nmTriangulation, int lrMask )
+		public LNX_Triangle( int parallelIndex, int triangulationIndex, NavMeshTriangulation nmTriangulation, int lrMask ) //todo: can possibly get rid of the second parameter (triangulationIndex) and just use the first index instead now that I'm creating a kosher triangulation...
 		{
-			Debug.Log($"tri ctor. {nameof(parallelIndex)}: '{parallelIndex}' (x3: '{parallelIndex * 3}'). verts start: '{nmTriangulation.indices[(parallelIndex * 3)]}'");
+			//Debug.Log($"tri ctor. {nameof(parallelIndex)}: '{parallelIndex}' (x3: '{parallelIndex * 3}'). verts start: '{nmTriangulation.indices[(parallelIndex * 3)]}'");
 
 			DbgCalculateTriInfo = string.Empty;
 
 			index_inCollection = parallelIndex;
-
-			Area = nmTriangulation.areas[parallelIndex];
-
-			Vector3 vrtPos0 = nmTriangulation.vertices[ nmTriangulation.indices[(parallelIndex * 3)] ];
-
-			Debug.Log($"");
-			Vector3 vrtPos1 = nmTriangulation.vertices[ nmTriangulation.indices[(parallelIndex * 3) + 1] ];
-
-			Debug.Log($"Trying to get tringltn.vertices['{nmTriangulation.indices[(parallelIndex * 3) + 2]}'], with collection length: '{nmTriangulation.vertices.Length}'");
-			Debug.Log($"parallelIndex: '{parallelIndex}', indices indx: '{(parallelIndex * 3) + 2}' " +
-				$"indices len '{nmTriangulation.indices.Length}'.");
 			
+			AreaIndex = nmTriangulation.areas[triangulationIndex];
 
-			Vector3 vrtPos2 = nmTriangulation.vertices[ nmTriangulation.indices[(parallelIndex * 3) + 2] ];
+			Vector3 vrtPos0 = nmTriangulation.vertices[ nmTriangulation.indices[(triangulationIndex * 3)] ];
+			Vector3 vrtPos1 = nmTriangulation.vertices[ nmTriangulation.indices[(triangulationIndex * 3) + 1] ];
+			Vector3 vrtPos2 = nmTriangulation.vertices[ nmTriangulation.indices[(triangulationIndex * 3) + 2] ];
 
 			Verts = new LNX_Vertex[3];
-			Verts[0] = new LNX_Vertex( this, vrtPos0, 0, nmTriangulation );
-			Verts[1] = new LNX_Vertex( this, vrtPos1, 1, nmTriangulation );
-			Verts[2] = new LNX_Vertex( this, vrtPos2, 2, nmTriangulation );
+			Verts[0] = new LNX_Vertex( this, vrtPos0, 0, nmTriangulation.indices[MeshIndex_trianglesStart] );
+			Verts[1] = new LNX_Vertex( this, vrtPos1, 1, nmTriangulation.indices[MeshIndex_trianglesStart + 1] );
+			Verts[2] = new LNX_Vertex( this, vrtPos2, 2, nmTriangulation.indices[MeshIndex_trianglesStart + 2] );
 
 			Edges = new LNX_Edge[3];
 			Edges[0] = new LNX_Edge( this, Verts[1], Verts[2], 0 );
@@ -116,7 +108,7 @@ namespace LogansNavigationExtension
 			V_center = baseTri.V_center;
 			v_normal = baseTri.v_normal;
 			Perimeter = baseTri.Perimeter;
-			Area = baseTri.Area;
+			AreaIndex = baseTri.AreaIndex;
 			LongestEdgeLength = baseTri.LongestEdgeLength;
 			ShortestEdgeLength = baseTri.ShortestEdgeLength;
 			Verts = new LNX_Vertex[3];
@@ -145,7 +137,7 @@ namespace LogansNavigationExtension
 			V_center = baseTri.V_center;
 			v_normal = baseTri.v_normal;
 			Perimeter = baseTri.Perimeter;
-			Area = baseTri.Area;
+			AreaIndex = baseTri.AreaIndex;
 			LongestEdgeLength = baseTri.LongestEdgeLength;
 			ShortestEdgeLength = baseTri.ShortestEdgeLength;
 			Verts[0].AdoptValues( baseTri.Verts[0] );
@@ -241,7 +233,7 @@ namespace LogansNavigationExtension
 				V_center != tri.V_center || 
 				v_normal != tri.v_normal ||
 				Perimeter != tri.Perimeter || 
-				Area != tri.Area || 
+				AreaIndex != tri.AreaIndex || 
 				LongestEdgeLength != tri.LongestEdgeLength || 
 				ShortestEdgeLength != tri.ShortestEdgeLength
 			)
@@ -285,7 +277,7 @@ namespace LogansNavigationExtension
 
 			DbgCalculateTriInfo += $"nrml: '{v_normal}'\n" +
 				$"edge lengths: '{Edges[0].EdgeLength}', '{Edges[1].EdgeLength}', '{Edges[2].EdgeLength}'\n" +
-				$"Prmtr: '{Perimeter}', Area: '{Area}'\n";
+				$"Prmtr: '{Perimeter}', Area: '{AreaIndex}'\n";
 		}
 
 		public void RefreshTriangle( LNX_NavMesh nm, bool logMessages = true)
@@ -621,7 +613,7 @@ namespace LogansNavigationExtension
 
 		public void ClearModifications()
 		{
-			Debug.Log($"tri[{index_inCollection}].ClearModifications()");
+			//Debug.Log($"tri[{index_inCollection}].ClearModifications()");
 
 			if( Verts[0].AmModified )
 			{

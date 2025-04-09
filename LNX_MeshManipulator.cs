@@ -131,7 +131,6 @@ namespace LogansNavigationExtension
 		//[Header("OTHER")]
 		public Vector3 manipulatorPos = Vector3.zero;
 
-
 		#region CLEARING/INITIALIZING ------------------------
 		public void InitState()
 		{
@@ -509,10 +508,10 @@ namespace LogansNavigationExtension
 		}
 
 		#region MESH MANIPULATION -----------------------------------------------------
-		public void MoveSelectedVerts( Vector3 pos )
+		public void MoveSelectedVerts( Vector3 endPos )
 		{
-			string dbgMoveSelected = $"{nameof(MoveSelectedVerts)}('{pos}') on '{Verts_currentlySelected.Count}' verts...\n";
-			Vector3 vDiff = pos - manipulatorPos;
+			string dbgMoveSelected = $"{nameof(MoveSelectedVerts)}('{endPos}') on '{Verts_currentlySelected.Count}' verts...\n";
+			Vector3 vDiff = endPos - manipulatorPos;
 			dbgMoveSelected += $"vdiff: '{vDiff}', manip pos: '{manipulatorPos}'\n";
 
 			if ( Verts_currentlySelected != null && Verts_currentlySelected.Count > 0 )
@@ -527,7 +526,7 @@ namespace LogansNavigationExtension
 				}
 			}
 
-			manipulatorPos = pos;
+			manipulatorPos = endPos;
 			//Debug.Log( dbgMoveSelected );
 		}
 
@@ -802,6 +801,7 @@ namespace LogansNavigationExtension
 			}
 			#endregion
 
+			//Debug.Log(name);
 			generateDbgString();
 		}
 #endif

@@ -40,6 +40,10 @@ namespace LogansNavigationExtension
 		[HideInInspector] public Vector3 v_normal;
 
 		// TRUTH...........
+		public bool AmModified
+		{
+			get {  return Position != originalPosition; }
+		}
 		/// <summary>How many verts share the exact position of this one. Can be used to quickly tell if this 
 		/// vert is mid-navmesh, or on a spot where the navmesh terminates.</summary>
 		//public int Valency;
@@ -53,11 +57,6 @@ namespace LogansNavigationExtension
 		[TextArea(1,5)] public string DBG_constructor;
 
 
-		public bool AmModified
-		{
-			get {  return Position != originalPosition; }
-		}
-
 		/// <summary>
 		/// This overload is for original vertices, meaning vertices that are created with a corresponding vertex in the
 		/// founding triangulation.
@@ -66,7 +65,7 @@ namespace LogansNavigationExtension
 		/// <param name="vrtPos"></param>
 		/// <param name="cmpntIndx"></param>
 		/// <param name="nmTriangulation"></param>
-		public LNX_Vertex( LNX_Triangle tri, Vector3 vrtPos, int cmpntIndx, NavMeshTriangulation nmTriangulation )
+		public LNX_Vertex( LNX_Triangle tri, Vector3 vrtPos, int cmpntIndx, int mshVrtIndx )
         {
 			Position = vrtPos;
 
@@ -84,45 +83,11 @@ namespace LogansNavigationExtension
 			Angle = -1f;
 
 			MeshIndex_triangles = tri.MeshIndex_trianglesStart + cmpntIndx;
-			MeshIndex_vertices = -1;
+			MeshIndex_vertices = mshVrtIndx;
 
 			DBG_constructor = $"at tri[{MyCoordinate.TrianglesIndex}], [{MyCoordinate.ComponentIndex}]\n" +
 				$"Pos: '{Position}', orig: '{originalPosition}'\n" +
 				$"vToCtr: '{v_toCenter}'\n" +
-				$"nml: '{v_normal}', dstToCtr: '{DistanceToCenter}'\n" +
-				$"";
-		}
-
-		/// <summary>
-		/// This overload is for added vertices, meaning vertices that were added, and have no corresponding vertex in the
-		/// founding triangulation.
-		/// </summary>
-		/// <param name="tri"></param>
-		/// <param name="vrtPos"></param>
-		/// <param name="cmpntIndx"></param>
-		/// <param name="nmTriangulation"></param>
-		public LNX_Vertex( LNX_Triangle tri, Vector3 vrtPos, int cmpntIndx )
-		{
-			Position = vrtPos;
-
-			originalPosition = vrtPos;
-
-			v_toCenter = Vector3.Normalize(tri.V_center - vrtPos);
-			v_normal = tri.v_normal;
-			DistanceToCenter = Vector3.Distance(tri.V_center, vrtPos);
-
-			MyCoordinate = new LNX_ComponentCoordinate(tri, cmpntIndx);
-
-			Relationships = new LNX_VertexRelationship[0];
-			SiblingRelationships = new LNX_VertexRelationship[2];
-
-			Angle = -1f;
-
-			MeshIndex_triangles = -1;
-			MeshIndex_vertices = -1;
-
-			DBG_constructor = $"at tri[{MyCoordinate.TrianglesIndex}], [{MyCoordinate.ComponentIndex}]\n" +
-				$"Pos: '{Position}', vToCtr: '{v_toCenter}'\n" +
 				$"nml: '{v_normal}', dstToCtr: '{DistanceToCenter}'\n" +
 				$"";
 		}
