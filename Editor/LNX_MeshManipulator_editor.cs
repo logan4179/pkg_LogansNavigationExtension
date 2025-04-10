@@ -125,16 +125,16 @@ namespace LogansNavigationExtension
 
 				if( Event.current.type == EventType.MouseDown )
 				{
-					Debug.Log("is mousedown");
+					//Debug.Log("is mousedown");
 					flag_mouseDownThisFrame = true;
 				}
 				else if( Event.current.type == EventType.MouseUp )
 				{
-					Debug.Log("is mouseup");
+					//Debug.Log("is mouseup");
 					flag_mouseUpThisFrame = true;
 					if( flag_moveHandleIsDirty )
 					{
-						Debug.LogWarning( "refreshing..." );
+						//Debug.LogWarning( "refreshing..." );
 						flag_moveHandleIsDirty = false;
 						_targetScript._LNX_NavMesh.RefeshMesh();
 					}

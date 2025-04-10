@@ -2528,8 +2528,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _LNX_NavMesh: {fileID: 1153391160}
-  SelectMode: 1
-  OperationMode: 1
+  SelectMode: 2
+  OperationMode: 0
   Index_TriLastSelected: -1
   Index_TriPointingAt: -1
   indices_selectedTris: 
@@ -2589,25 +2589,25 @@ MonoBehaviour:
       TrianglesIndex: 0
       ComponentIndex: 0
   Edge_CurrentlyPointingAt:
-    EdgeLength: 0
-    StartPosition: {x: 0, y: 0, z: 0}
+    EdgeLength: 4.86925
+    StartPosition: {x: 15.360001, y: 0.0006940365, z: 0.00000047683716}
     StartVertCoordinate:
-      TrianglesIndex: 0
+      TrianglesIndex: 70
       ComponentIndex: 0
-    MidPosition: {x: 0, y: 0, z: 0}
-    EndPosition: {x: 0, y: 0, z: 0}
+    MidPosition: {x: 14.43, y: 0.0006940365, z: 2.2500002}
+    EndPosition: {x: 13.500001, y: 0.0006940365, z: 4.5}
     EndVertCoordinate:
-      TrianglesIndex: 0
-      ComponentIndex: 0
-    v_startToEnd: {x: 0, y: 0, z: 0}
-    v_endToStart: {x: 0, y: 0, z: 0}
-    v_toCenter: {x: 0, y: 0, z: 0}
+      TrianglesIndex: 70
+      ComponentIndex: 2
+    v_startToEnd: {x: 0.38198894, y: 0, z: -0.9241669}
+    v_endToStart: {x: -0.38198894, y: 0, z: 0.9241669}
+    v_toCenter: {x: -0.64142007, y: 0, z: -0.7671898}
     v_cross: {x: 0, y: 0, z: 0}
     MyCoordinate:
-      TrianglesIndex: 0
-      ComponentIndex: 0
+      TrianglesIndex: 70
+      ComponentIndex: 1
     SharedEdge:
-      TrianglesIndex: 0
+      TrianglesIndex: 71
       ComponentIndex: 0
   Edges_currentlySelected: []
   drawTriLabels: 1
@@ -2621,8 +2621,8 @@ MonoBehaviour:
   Size_HoveredComponent: 6.82
   color_lockedTri: {r: 1, g: 0, b: 0.99189234, a: 1}
   Thickness_LockedTriEdge: 0.2
-  Flag_AComponentIsCurrentlyHighlighted: 0
-  manipulatorPos: {x: 9.0272875, y: 0.0006940365, z: -1.952997}
+  Flag_AComponentIsCurrentlyHighlighted: 1
+  manipulatorPos: {x: 11.52, y: 0.21069407, z: 5.61}
   DBG_locked: 'set: ''True''
 
     locked ''2'' tris
@@ -2649,21 +2649,54 @@ MonoBehaviour:
     Pointing --------------------
 
     Flag_AComponentIsCurrentlyHighlighted:
-    ''False''
+    ''True''
 
 '
-  DebugPointAt: 
-  DebugSelectedReport: "Mode: 'Vertices', mod: 'False'\npointing at: '[1][2]' \nnow
-    checking for additional verts. Shared collection is showing '3'...\ntrying [6][2]...
-    added\ntrying [10][2]... added\ntrying [11][1]... added\nnow checking for additional
-    verts. Shared collection is showing '3'...\ntrying [1][2]... NOT added/already
-    contained...\ntrying [10][2]... NOT added/already contained...\ntrying [11][1]...
-    NOT added/already contained...\nnow checking for additional verts. Shared collection
-    is showing '3'...\ntrying [1][2]... NOT added/already contained...\ntrying [6][2]...
-    NOT added/already contained...\ntrying [11][1]... NOT added/already contained...\nnow
-    checking for additional verts. Shared collection is showing '3'...\ntrying [1][2]...
-    NOT added/already contained...\ntrying [6][2]... NOT added/already contained...\ntrying
-    [10][2]... NOT added/already contained...\n"
+  DebugPointAt: 'vert: [2][0]. alignment: ''0.9478715''
+
+    vert: [12][0]. alignment:
+    ''0.9808028''
+
+    vert: [36][0]. alignment: ''0.9829988''
+
+    vert: [52][1].
+    alignment: ''0.9836634''
+
+    vert: [69][0]. alignment: ''0.9838744''
+
+    vert:
+    [69][1]. alignment: ''0.9852393''
+
+    vert: [70][1]. alignment: ''0.9944225''
+
+'
+  DebugSelectedReport: "Mode: 'Edges', mod: 'True'\npointing at: 'LogansNavigationExtension.LNX_Edge'
+    \nadded pointingat at '[49][0]' to selection\ngenerating initial vertices list
+    looking through '2' edges...\nedge: 0 ([48][2])...\nend\nedge: 1 ([49][0])...\nend\nnow
+    checking for additional verts. Shared collection is showing '2'...\ntrying [50][0]...
+    added\ntrying [51][0]... added\nnow checking for additional verts. Shared collection
+    is showing '3'...\ntrying [46][2]... added\ntrying [47][1]... added\ntrying [49][0]...
+    added\nnow checking for additional verts. Shared collection is showing '2'...\ntrying
+    [48][2]... added\ntrying [51][2]... added\nnow checking for additional verts.
+    Shared collection is showing '1'...\ntrying [47][2]... added\nnow checking for
+    additional verts. Shared collection is showing '2'...\ntrying [48][1]... NOT
+    added/already contained...\ntrying [51][0]... NOT added/already contained...\nnow
+    checking for additional verts. Shared collection is showing '2'...\ntrying [48][1]...
+    NOT added/already contained...\ntrying [50][0]... NOT added/already contained...\nnow
+    checking for additional verts. Shared collection is showing '3'...\ntrying [47][1]...
+    NOT added/already contained...\ntrying [48][0]... NOT added/already contained...\ntrying
+    [49][0]... NOT added/already contained...\nnow checking for additional verts.
+    Shared collection is showing '3'...\ntrying [46][2]... NOT added/already contained...\ntrying
+    [48][0]... NOT added/already contained...\ntrying [49][0]... NOT added/already
+    contained...\nnow checking for additional verts. Shared collection is showing
+    '3'...\ntrying [46][2]... NOT added/already contained...\ntrying [47][1]... NOT
+    added/already contained...\ntrying [48][0]... NOT added/already contained...\nnow
+    checking for additional verts. Shared collection is showing '2'...\ntrying [49][1]...
+    NOT added/already contained...\ntrying [51][2]... NOT added/already contained...\nnow
+    checking for additional verts. Shared collection is showing '2'...\ntrying [48][2]...
+    NOT added/already contained...\ntrying [49][1]... NOT added/already contained...\nnow
+    checking for additional verts. Shared collection is showing '1'...\ntrying [49][2]...
+    NOT added/already contained...\n"
   AmPointingATBounds: 0
 --- !u!114 &1153391159
 MonoBehaviour:
@@ -2679,9 +2712,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _mgr: {fileID: 1153391160}
   AmDebugging: 0
-  AmAllowingFocus: 0
+  AmAllowingFocus: 1
   FocusExclusively: 1
-  Index_TriFocus: 0
+  Index_TriFocus: 47
   Thickness_focusTri: 2.84
   AmAllowingVertFocus: 1
   Index_VertFocus: 2
@@ -2689,7 +2722,7 @@ MonoBehaviour:
   DrawEdges: 1
   color_edgeLines: {r: 0, g: 1, b: 0.0701077, a: 1}
   Thickness_edges: 1
-  drawEdgeLabels: 0
+  drawEdgeLabels: 1
   drawVertSpheres: 0
   DrawVertLables: 1
   color_vertSphere: {r: 0.7126914, g: 1, b: 0, a: 1}

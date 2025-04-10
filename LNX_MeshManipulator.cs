@@ -187,14 +187,14 @@ namespace LogansNavigationExtension
 			{
 				
 			}
-			else if( mode == LNX_SelectMode.Vertices )
+			else if ( mode == LNX_SelectMode.Vertices )
 			{
 				if( mode != SelectMode ) //selection has changed to this...
 				{
 
 				}
 			}
-			else if( mode == LNX_SelectMode.Edges )
+			else if ( mode == LNX_SelectMode.Edges )
 			{
 
 			}
@@ -556,9 +556,34 @@ namespace LogansNavigationExtension
 			}
 			#endregion
 
+			#region Get the "Bridge" edges ---------------------
+			LNX_ComponentCoordinate bridgeEdge0 = LNX_ComponentCoordinate.None;
+			LNX_ComponentCoordinate bridgeEdge1 = LNX_ComponentCoordinate.None;
+			for ( int i = 0; i < 3; i++ ) 
+			{
+				if( tri0.Edges[i] != Edges_currentlySelected[0] && tri0.Edges[i].SharedEdge.TrianglesIndex != tri1.Index_inCollection )
+				{
+					bridgeEdge0 = tri0.Edges[i].SharedEdge;
+					Debug.Log($"Found edge index 1 at '{bridgeEdge0}'");
+				}
+				else if ( tri1.Edges[i] != Edges_currentlySelected[1] && tri1.Edges[i].SharedEdge.TrianglesIndex != tri0.Index_inCollection )
+				{
+					bridgeEdge1 = tri1.Edges[i].SharedEdge;
+					Debug.Log($"Found edge index 2 at '{bridgeEdge1}'");
+				}
+			}
+
+			//Debug.DrawLine(_LNX_NavMesh.GetEdgeAtCoordinate(edgeIndex0).MidPosition, _LNX_NavMesh.GetEdgeAtCoordinate(edgeIndex0).MidPosition + (Vector3.up * 2f), Color.blue, 2f );
+			//Debug.DrawLine(_LNX_NavMesh.GetEdgeAtCoordinate(edgeIndex1).MidPosition, _LNX_NavMesh.GetEdgeAtCoordinate(edgeIndex1).MidPosition + (Vector3.up * 2f), Color.blue, 2f );
+			#endregion
+
+			Vector3 v_midPoint0 = Edges_currentlySelected[0].MidPosition;
+			Vector3 v_midPoint1 = Edges_currentlySelected[1].MidPosition;
+
+
 			Debug.Log("decided CAN cut. trying...");
 
-
+			//_LNX_NavMesh.DeleteTriangle();
 
 			/* old way
 			//first, find the edge that should be moved...

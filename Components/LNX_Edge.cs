@@ -21,6 +21,7 @@ namespace LogansNavigationExtension
 
 		public LNX_ComponentCoordinate MyCoordinate;
 
+		/// <summary> Currently set in the Triangle relationship constructor</summary>
 		public LNX_ComponentCoordinate SharedEdge;
 
 		public bool AmTerminal => SharedEdge == LNX_ComponentCoordinate.None;
@@ -141,6 +142,12 @@ namespace LogansNavigationExtension
 			return true;
 		}
 
+		/// <summary>
+		/// Checks whether the supplied edge is touching this edge at both the start 
+		/// and end position.
+		/// </summary>
+		/// <param name="edge"></param>
+		/// <returns></returns>
 		public bool AmTouching( LNX_Edge edge )
 		{
 			if( edge.StartPosition == StartPosition || edge.EndPosition == StartPosition )
