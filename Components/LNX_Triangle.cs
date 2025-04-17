@@ -57,7 +57,7 @@ namespace LogansNavigationExtension
 		/// as part of the original navmesh triangulation.</summary>
 		public bool WasAddedViaMod => wasAddedViaMod;
 
-		public bool HasBeenModified
+		public bool HasBeenModifiedAfterCreation
 		{
 			get
 			{
@@ -99,6 +99,41 @@ namespace LogansNavigationExtension
 			TrySampleNormal( lrMask, true );
 		}
 
+		/// <summary>
+		/// This overload is for Triangles added after creation via the LNX_MeshManipulator.
+		/// </summary>
+		/// <param name="parallelIndex">Index where this triangle resides in the Triangles list.</param>
+		/// <param name="meshVisIndex">Index where this triangle starts in the visualization mesh's triangles array</param>
+		/// <param name="areaIndx"></param>
+		/// <param name="vrtPos0"></param>
+		/// <param name="vrtPos1"></param>
+		/// <param name="vrtPos2"></param>
+		/// <param name="lrMask"></param>
+		public LNX_Triangle( int parallelIndex, int meshVisIndex, int areaIndx, Vector3 vrtPos0, Vector3 vrtPos1, Vector3 vrtPos2, int lrMask ) //todo: can possibly get rid of the second parameter (triangulationIndex) and just use the first index instead now that I'm creating a kosher triangulation...
+		{
+			//Debug.Log($"tri ctor. {nameof(parallelIndex)}: '{parallelIndex}' (x3: '{parallelIndex * 3}'). verts start: '{nmTriangulation.indices[(parallelIndex * 3)]}'");
+
+			DbgCalculateTriInfo = string.Empty;
+
+			index_inCollection = parallelIndex;
+
+			AreaIndex = areaIndx;
+
+			Verts = new LNX_Vertex[3];
+			Verts[0] = new LNX_Vertex(this, vrtPos0, 0, meshVisIndex );
+			Verts[1] = new LNX_Vertex(this, vrtPos1, 1, meshVisIndex + 1 );
+			Verts[2] = new LNX_Vertex(this, vrtPos2, 2, meshVisIndex + 2 );
+
+			Edges = new LNX_Edge[3];
+			Edges[0] = new LNX_Edge(this, Verts[1], Verts[2], 0);
+			Edges[1] = new LNX_Edge(this, Verts[0], Verts[2], 1);
+			Edges[2] = new LNX_Edge(this, Verts[1], Verts[0], 2);
+
+			CalculateDerivedInfo();
+
+			TrySampleNormal(lrMask, true);
+		}
+
 		public LNX_Triangle( LNX_Triangle baseTri, int triIndx )
 		{
 			index_inCollection = triIndx;
@@ -128,6 +163,8 @@ namespace LogansNavigationExtension
 			name = $"ind: '{index_inCollection}', ctr: '{V_center}'";
 		}
 
+		public Ln
+
 		public void AdoptValues( LNX_Triangle baseTri )
 		{
 			index_inCollection = baseTri.index_inCollection;
@@ -155,7 +192,8 @@ namespace LogansNavigationExtension
 			name = $"ind: '{index_inCollection}', ctr: '{V_center}'";
 		}
 
-		public void ChangeIndex( int indx )
+
+		private void changeMyIndex( int indx )
 		{
 			index_inCollection = indx;
 
@@ -168,6 +206,18 @@ namespace LogansNavigationExtension
 			Edges[2].MyCoordinate.TrianglesIndex = index_inCollection;
 
 			//todo: in the future when I start caching relational info, I might need to refresh it here...
+		}
+
+		public void TriIndexChangedAction( int oldTriIndex, int newTriIndex) //todo: unit test
+		{
+			if( oldTriIndex == index_inCollection )
+			{
+				changeMyIndex( newTriIndex );
+			}
+			else
+			{
+				
+			}
 		}
 
 		public bool VertsEqual( LNX_Triangle otherTri )
@@ -308,6 +358,12 @@ namespace LogansNavigationExtension
 			
 			if( amThorough )
 			{
+				#region Create Vertex sibling relationships....
+				Verts[0].SetSiblingRelationships( Verts[1], Verts[2] );
+				Verts[1].SetSiblingRelationships( Verts[0], Verts[2] );
+				Verts[2].SetSiblingRelationships( Verts[0], Verts[1] );
+				#endregion
+
 				List<int> foundAdjacentTriIndices_temp = new List<int>();
 				List<LNX_ComponentCoordinate> sharedVertCoords0_temp = new List<LNX_ComponentCoordinate>();
 				List<LNX_ComponentCoordinate> sharedVertCoords1_temp = new List<LNX_ComponentCoordinate>();

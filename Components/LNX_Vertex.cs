@@ -131,13 +131,31 @@ namespace LogansNavigationExtension
 			DBG_constructor = vert.DBG_constructor;
 		}
 
+		public void TriIndexChangedAction( int oldTriIndex, int newTriIndex ) //todo: unit test
+		{
+			if( MyCoordinate.TrianglesIndex == oldTriIndex )
+			{
+				MyCoordinate.TrianglesIndex = newTriIndex;
+			}
+			else // Update relational stuff...
+			{
+				foreach( LNX_VertexRelationship rel in SiblingRelationships )
+				{
+					if( rel.RelatedVertCoordinate.TrianglesIndex == oldTriIndex )
+					{
+
+					}
+				}
+			}
+		}
+
 		/// <summary>
 		/// Creates SiblingRelationship objects for other 2 sibling vertices. Calculates and 
 		/// caches convenience variables for relating this vertex to it's sibling vertices.
 		/// </summary>
 		/// <param name="vA"></param>
 		/// <param name="vB"></param>
-		public void SetSiblingRelationships( LNX_Vertex vA, LNX_Vertex vB )
+		public void SetSiblingRelationships( LNX_Vertex vA, LNX_Vertex vB ) //todo: unit test
 		{
 			SiblingRelationships = new LNX_VertexRelationship[2];
 			SiblingRelationships[0] = new LNX_VertexRelationship( this, vA );

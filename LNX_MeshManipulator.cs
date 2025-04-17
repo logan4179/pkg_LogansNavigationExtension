@@ -530,6 +530,16 @@ namespace LogansNavigationExtension
 			//Debug.Log( dbgMoveSelected );
 		}
 
+		public void DeleteTriangle()
+		{
+
+		}
+
+		public void DeleteTriangles( params LNX_Triangle[] tris )
+		{
+
+		}
+
 		[ContextMenu("z call TryInsertLoop")]
 		public void TryInsertLoop()
 		{
@@ -557,85 +567,39 @@ namespace LogansNavigationExtension
 			#endregion
 
 			#region Get the "Bridge" edges ---------------------
-			LNX_ComponentCoordinate bridgeEdge0 = LNX_ComponentCoordinate.None;
-			LNX_ComponentCoordinate bridgeEdge1 = LNX_ComponentCoordinate.None;
+			// Note: these are the edges that will be at the start and end of the bridge
+			LNX_Edge endEdge0 = null;
+			LNX_Edge endEdge1 = null;
 			for ( int i = 0; i < 3; i++ ) 
 			{
 				if( tri0.Edges[i] != Edges_currentlySelected[0] && tri0.Edges[i].SharedEdge.TrianglesIndex != tri1.Index_inCollection )
 				{
-					bridgeEdge0 = tri0.Edges[i].SharedEdge;
-					Debug.Log($"Found edge index 1 at '{bridgeEdge0}'");
+					endEdge0 = new LNX_Edge( _LNX_NavMesh.GetEdgeAtCoordinate(tri0.Edges[i].SharedEdge) );
+					Debug.Log($"Found edge index 1 at '{endEdge0}'");
 				}
 				else if ( tri1.Edges[i] != Edges_currentlySelected[1] && tri1.Edges[i].SharedEdge.TrianglesIndex != tri0.Index_inCollection )
 				{
-					bridgeEdge1 = tri1.Edges[i].SharedEdge;
-					Debug.Log($"Found edge index 2 at '{bridgeEdge1}'");
+					endEdge1 = new LNX_Edge( _LNX_NavMesh.GetEdgeAtCoordinate(tri1.Edges[i].SharedEdge) );
+					Debug.Log($"Found edge index 2 at '{endEdge1}'");
 				}
 			}
 
-			//Debug.DrawLine(_LNX_NavMesh.GetEdgeAtCoordinate(edgeIndex0).MidPosition, _LNX_NavMesh.GetEdgeAtCoordinate(edgeIndex0).MidPosition + (Vector3.up * 2f), Color.blue, 2f );
-			//Debug.DrawLine(_LNX_NavMesh.GetEdgeAtCoordinate(edgeIndex1).MidPosition, _LNX_NavMesh.GetEdgeAtCoordinate(edgeIndex1).MidPosition + (Vector3.up * 2f), Color.blue, 2f );
+			//Debug.DrawLine(endEdge0.MidPosition, endEdge0.MidPosition + (Vector3.up * 2f), Color.blue, 2f );
+			//Debug.DrawLine(endEdge1.MidPosition, endEdge1.MidPosition + (Vector3.up * 2f), Color.blue, 2f );
 			#endregion
 
 			Vector3 v_midPoint0 = Edges_currentlySelected[0].MidPosition;
 			Vector3 v_midPoint1 = Edges_currentlySelected[1].MidPosition;
 
-
 			Debug.Log("decided CAN cut. trying...");
 
-			//_LNX_NavMesh.DeleteTriangle();
+			DeleteTriangles( tri0, tri1 );
 
-			/* old way
-			//first, find the edge that should be moved...
-			List<LNX_Vertex> vrtsFound = LNX_Utils.GetMoveVerts_forInsertLoop( _LNX_NavMesh, Edges_currentlySelected[0], Edges_currentlySelected[1] );
-			Debug.Log($"found '{vrtsFound.Count}' verts...");
+			_LNX_NavMesh.AddTriangle( endEdge0.StartPosition, endEdge0.EndPosition, endEdge0.StartPosition );
+			_LNX_NavMesh.AddTriangle( endEdge1.StartPosition, endEdge1.EndPosition, v_midPoint1 );
 
-			if( vrtsFound.Count == 3 ) //There should be 3 verts to move, 2 shared at same position by tris
-			{
-				for ( int i = 0; i < 3; i++ ) // Reposition initial verts...
-				{
-					if ( vrtsFound[i].Position == _LNX_NavMesh.GetVertexAtCoordinate(Edges_currentlySelected[0].StartVertCoordinate).Position ||
-						vrtsFound[i].Position == _LNX_NavMesh.GetVertexAtCoordinate(Edges_currentlySelected[0].EndVertCoordinate).Position
-					)
-					{
-						//vrtsFound[i].Position = Edges_currentlySelected[0].MidPosition;
-						_LNX_NavMesh.Triangles[vrtsFound[i].MyCoordinate.TriIndex].MoveVert_managed(
-							_LNX_NavMesh,
-							vrtsFound[i].MyCoordinate.ComponentIndex,
-							Edges_currentlySelected[0].MidPosition,
-							true
-						);
-					}
-					if (vrtsFound[i].Position == _LNX_NavMesh.GetVertexAtCoordinate(Edges_currentlySelected[1].StartVertCoordinate).Position ||
-						vrtsFound[i].Position == _LNX_NavMesh.GetVertexAtCoordinate(Edges_currentlySelected[1].EndVertCoordinate).Position
-					)
-					{
-						//vrtsFound[i].Position = Edges_currentlySelected[1].MidPosition;
-						_LNX_NavMesh.Triangles[vrtsFound[i].MyCoordinate.TriIndex].MoveVert_managed(
-							_LNX_NavMesh,
-							vrtsFound[i].MyCoordinate.ComponentIndex,
-							Edges_currentlySelected[1].MidPosition,
-							true
-						);
-					}
-				}
-
-				#region CREATE NEW TRIANGLES ------------------------------
-
-				#endregion
-
-				#region MAKE NEW CUT THE SELECTED VERTS --------------------
-
-				#endregion
-
-
-				_LNX_NavMesh.RefeshMesh();
-			}
-				*/
-			//Debug.DrawLine(moveEdge.MidPosition, moveEdge.MidPosition + (Vector3.up * 3f), Color.yellow, 3f);
-
-			//now I need to convert to verts...
-
+			_LNX_NavMesh.AddTriangle( v_midPoint0, v_midPoint1, endEdge1.StartPosition );
+			_LNX_NavMesh.AddTriangle( v_midPoint0, endEdge1.StartPosition, endEdge1.EndPosition );
 
 		}
 		#endregion
@@ -673,7 +637,7 @@ namespace LogansNavigationExtension
 						}
 						else
 						{
-							if( _LNX_NavMesh.Triangles[i].HasBeenModified )
+							if( _LNX_NavMesh.Triangles[i].HasBeenModifiedAfterCreation )
 							{
 								Handles.color = color_modifiedTri;
 								Gizmos.color = color_modifiedTri;

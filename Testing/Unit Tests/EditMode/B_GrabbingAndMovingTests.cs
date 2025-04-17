@@ -12,30 +12,28 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 {
     public class B_GrabbingAndMovingTests
     {
-        LNX_NavMesh _previouslyGeneratedNavmesh;
+        LNX_NavMesh _serializedLNXNavmesh;
 
 		LNX_MeshManipulator _lnx_meshManipulator;
 
 		[Header("TEST OBJECTS")]
-		string filePath_test_PointingAndGrabbing = $"{Directory.GetCurrentDirectory()}\\Packages\\LogansNavigationExtension\\Testing\\Unit Tests\\Test Data\\pointingAndGrabbing_A.json";
-		Test_pointingAndGrabbing _test_pointingAndGrabbing;
-
-		string filePath_test_MeshManipulation = $"{Directory.GetCurrentDirectory()}\\Packages\\LogansNavigationExtension\\Testing\\Unit Tests\\Test Data\\meshManipulation_A.json";
-		Test_MoveComponents _test_meshManipulation;
+		TDG_pointingAndGrabbing _tdg_pointingAndGrabbing;
+		TDG_MoveComponents _tdg_MoveComponents;
 
 
 		#region A - Setup --------------------------------------------------------------------------------
 		[Test]
 		public void a1_SetupObjects()
 		{
-			GameObject go = GameObject.Find("TestLNX_Navmesh");
+			GameObject go = GameObject.Find( "SerializedNavmesh" );
 
-			_previouslyGeneratedNavmesh = go.GetComponent<LNX_NavMesh>();
+			_serializedLNXNavmesh = go.GetComponent<LNX_NavMesh>();
+			Assert.NotNull(_serializedLNXNavmesh);
 
-			_lnx_meshManipulator = go.AddComponent<LNX_MeshManipulator>();
-			_lnx_meshManipulator._LNX_NavMesh = _previouslyGeneratedNavmesh;
 
-			Assert.NotNull(_previouslyGeneratedNavmesh);
+			_lnx_meshManipulator = go.GetComponent<LNX_MeshManipulator>();
+			Assert.NotNull(_serializedLNXNavmesh);
+
 		}
 
 		[Test]
@@ -44,31 +42,41 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			Debug.Log($"Creating test object from Json...");
 
 			#region pointing and grabbing -------------------------------------------------------
-			if ( !File.Exists(filePath_test_PointingAndGrabbing) )
+			if ( !File.Exists(TDG_Manager.filePath_testData_pointingAndGrabbing) )
 			{
 				Debug.LogError($"PROBLEM!!!!! file at test path does not exist. Cannot perform test.");
 				return;
 			}
 
 			//CREATE TEST OBJECT -----------------------------
-			_test_pointingAndGrabbing = _previouslyGeneratedNavmesh.gameObject.AddComponent<Test_pointingAndGrabbing>();
-			string jsonString = File.ReadAllText(filePath_test_PointingAndGrabbing);
-			JsonUtility.FromJsonOverwrite(jsonString, _test_pointingAndGrabbing);
-			Assert.NotNull(_test_pointingAndGrabbing);
+			_tdg_pointingAndGrabbing = _serializedLNXNavmesh.gameObject.AddComponent<TDG_pointingAndGrabbing>();
+			string jsonString = File.ReadAllText( TDG_Manager.filePath_testData_pointingAndGrabbing );
+			JsonUtility.FromJsonOverwrite(jsonString, _tdg_pointingAndGrabbing);
+			Assert.NotNull(_tdg_pointingAndGrabbing);
 			#endregion
 
 			#region mesh manipulation -------------------------------------------------------
-			if ( !File.Exists(filePath_test_MeshManipulation) )
+			if ( !File.Exists(TDG_Manager.filePath_testData_moveComponents) )
 			{
 				Debug.LogError($"PROBLEM!!!!! file at test path does not exist. Cannot perform test.");
 				return;
 			}
 
 			//CREATE TEST OBJECT -----------------------------
-			_test_meshManipulation = _previouslyGeneratedNavmesh.gameObject.AddComponent<Test_MoveComponents>();
-			jsonString = File.ReadAllText( filePath_test_MeshManipulation );
-			JsonUtility.FromJsonOverwrite( jsonString, _test_meshManipulation );
-			Assert.NotNull( _test_meshManipulation );
+			_tdg_MoveComponents = _serializedLNXNavmesh.gameObject.AddComponent<TDG_MoveComponents>();
+			jsonString = File.ReadAllText( TDG_Manager.filePath_testData_moveComponents );
+			JsonUtility.FromJsonOverwrite( jsonString, _tdg_MoveComponents );
+			Assert.NotNull( _tdg_MoveComponents );
+
+			if (_tdg_MoveComponents.TestMousePositions_vert == null || _tdg_MoveComponents.TestMousePositions_vert.Count == 0)
+			{
+				Debug.LogError($"couldn't do test because {nameof(_tdg_MoveComponents.TestMousePositions_vert)} was either null or 0 count. Returning early...");
+				return;
+			}
+			else
+			{
+				Debug.Log($"{nameof(_tdg_MoveComponents.TestMousePositions_vert)} count is '{_tdg_MoveComponents.TestMousePositions_vert.Count}'. Proceeding...");
+			}
 			#endregion
 		}
 		#endregion
@@ -78,78 +86,59 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		public void b1_PointingAtAndGrabbingVerts()
 		{
 			Debug.Log($"{nameof(b1_PointingAtAndGrabbingVerts)}--------------------------------");
-			Debug.Log($"Creating test object from Json...");
-
-			if ( !File.Exists(filePath_test_PointingAndGrabbing) )
-			{
-				Debug.LogError($"PROBLEM!!!!! file at test path does not exist. Cannot perform test.");
-				return;
-			}
-			else
-			{
-				Debug.Log($"File path does exist. Creating test object...");
-			}
-
-			#region CREATE TEST OBJECT -----------------------------
-			_test_pointingAndGrabbing = _previouslyGeneratedNavmesh.gameObject.AddComponent<Test_pointingAndGrabbing>();
-			string jsonString = File.ReadAllText(filePath_test_PointingAndGrabbing);
-
-			JsonUtility.FromJsonOverwrite(jsonString, _test_pointingAndGrabbing);
-			#endregion
-			Debug.Log( string.Format(LNX_UnitTestUtilities.UnitTestSectionEndString, "setup") );
 
 			//Debug.Log(_lnx_meshManipulator.SelectMode);
 			_lnx_meshManipulator.SelectMode = LNX_SelectMode.Vertices;
-			for (int i = 0; i < _test_pointingAndGrabbing.TestPositions_vert.Count; i++)
+			for (int i = 0; i < _tdg_pointingAndGrabbing.TestPositions_vert.Count; i++)
 			{
 				Debug.Log($"{i}...");
 
 				_lnx_meshManipulator.TryPointAtComponentViaDirection(
-					_test_pointingAndGrabbing.TestPositions_vert[i],
-					_test_pointingAndGrabbing.TestDirections_vert[i]
+					_tdg_pointingAndGrabbing.TestPositions_vert[i],
+					_tdg_pointingAndGrabbing.TestDirections_vert[i]
 				);
 
 				if (_lnx_meshManipulator.Vert_CurrentlyPointingAt == null)
 				{
-					Assert.AreEqual(_test_pointingAndGrabbing.CapturedVertPositions[i], Vector3.zero);
+					Assert.AreEqual(_tdg_pointingAndGrabbing.CapturedVertPositions[i], Vector3.zero);
 				}
 				else
 				{
 					//Debug.Log($"{_test_pointingAndGrabbing.CapturedVertPositions[i]} || {_lnx_meshManipulator.Vert_CurrentlyPointingAt.Position}");
 
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_test_pointingAndGrabbing.CapturedVertPositions[i].x, _lnx_meshManipulator.Vert_CurrentlyPointingAt.Position.x);
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_test_pointingAndGrabbing.CapturedVertPositions[i].y, _lnx_meshManipulator.Vert_CurrentlyPointingAt.Position.y);
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_test_pointingAndGrabbing.CapturedVertPositions[i].z, _lnx_meshManipulator.Vert_CurrentlyPointingAt.Position.z);
+					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_pointingAndGrabbing.CapturedVertPositions[i].x, _lnx_meshManipulator.Vert_CurrentlyPointingAt.Position.x);
+					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_pointingAndGrabbing.CapturedVertPositions[i].y, _lnx_meshManipulator.Vert_CurrentlyPointingAt.Position.y);
+					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_pointingAndGrabbing.CapturedVertPositions[i].z, _lnx_meshManipulator.Vert_CurrentlyPointingAt.Position.z);
 
 					//Debug.Log("trying grab stuff...");
 					_lnx_meshManipulator.TryGrab();
 
 					//-------------------------------------------------------------------------------------------------------
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_test_pointingAndGrabbing.GrabbedPositions_vert[i].x, _lnx_meshManipulator.Vert_LastSelected.Position.x
+						_tdg_pointingAndGrabbing.GrabbedPositions_vert[i].x, _lnx_meshManipulator.Vert_LastSelected.Position.x
 					);
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_test_pointingAndGrabbing.GrabbedPositions_vert[i].y, _lnx_meshManipulator.Vert_LastSelected.Position.y
+						_tdg_pointingAndGrabbing.GrabbedPositions_vert[i].y, _lnx_meshManipulator.Vert_LastSelected.Position.y
 					);
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_test_pointingAndGrabbing.GrabbedPositions_vert[i].z, _lnx_meshManipulator.Vert_LastSelected.Position.z
+						_tdg_pointingAndGrabbing.GrabbedPositions_vert[i].z, _lnx_meshManipulator.Vert_LastSelected.Position.z
 					);
 
 
 					//-------------------------------------------------------------------------------------------------------
 					// Debug.Log($"trying count. expecting '{_test_pointingAndGrabbing.CapturedNumberOfSharedVerts[i]}'...");
-					UnityEngine.Assertions.Assert.AreEqual(_test_pointingAndGrabbing.CapturedNumberOfSharedVerts[i], _lnx_meshManipulator.Verts_currentlySelected.Count);
+					UnityEngine.Assertions.Assert.AreEqual(_tdg_pointingAndGrabbing.CapturedNumberOfSharedVerts[i], _lnx_meshManipulator.Verts_currentlySelected.Count);
 
 					//-------------------------------------------------------------------------------------------------------
 					//Debug.Log($"trying manipulator pos. expecting '{_test_pointingAndGrabbing.GrabbedManipulatorPos_vert[i]}'...");
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_test_pointingAndGrabbing.GrabbedManipulatorPos_vert[i].x, _lnx_meshManipulator.manipulatorPos.x
+						_tdg_pointingAndGrabbing.GrabbedManipulatorPos_vert[i].x, _lnx_meshManipulator.manipulatorPos.x
 					);
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_test_pointingAndGrabbing.GrabbedManipulatorPos_vert[i].y, _lnx_meshManipulator.manipulatorPos.y
+						_tdg_pointingAndGrabbing.GrabbedManipulatorPos_vert[i].y, _lnx_meshManipulator.manipulatorPos.y
 					);
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_test_pointingAndGrabbing.GrabbedManipulatorPos_vert[i].z, _lnx_meshManipulator.manipulatorPos.z
+						_tdg_pointingAndGrabbing.GrabbedManipulatorPos_vert[i].z, _lnx_meshManipulator.manipulatorPos.z
 					);
 				}
 			}
@@ -160,61 +149,69 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		{
 			Debug.Log($"{nameof(b2_PointingAtAndGrabbingEdges)}--------------------------------");
 
+			Debug.Log($"iterating through '{_tdg_pointingAndGrabbing.TestPositions_edge.Count}' test positions " +
+				$"and '{_tdg_pointingAndGrabbing.CapturedEdgeCenterPositions.Count}' captured positions...");
 			_lnx_meshManipulator.SelectMode = LNX_SelectMode.Edges;
-			for (int i = 0; i < _test_pointingAndGrabbing.TestPositions_vert.Count; i++)
+			for (int i = 0; i < _tdg_pointingAndGrabbing.TestPositions_edge.Count; i++)
 			{
 				Debug.Log($"{i}...");
 
 				_lnx_meshManipulator.TryPointAtComponentViaDirection(
-					_test_pointingAndGrabbing.TestPositions_edge[i],
-					_test_pointingAndGrabbing.TestDirections_edge[i]
+					_tdg_pointingAndGrabbing.TestPositions_edge[i],
+					_tdg_pointingAndGrabbing.TestDirections_edge[i]
 				);
 
 				Debug.Log($"flag after pointing: '{_lnx_meshManipulator.Flag_AComponentIsCurrentlyHighlighted}'");
 
-				if (_lnx_meshManipulator.Edge_CurrentlyPointingAt == null)
+				if ( _lnx_meshManipulator.Edge_CurrentlyPointingAt == null )
 				{
-					Debug.Log($"{nameof(_lnx_meshManipulator.Edge_CurrentlyPointingAt)} was null...");
-					Assert.AreEqual(_test_pointingAndGrabbing.CapturedEdgeCenterPositions[i], Vector3.zero);
+					Debug.Log( $"{nameof(_lnx_meshManipulator.Edge_CurrentlyPointingAt)} was null..." );
+					Assert.AreEqual( _tdg_pointingAndGrabbing.CapturedEdgeCenterPositions[i], Vector3.zero );
 				}
 				else
 				{
-					Debug.Log($"{nameof(_lnx_meshManipulator.Edge_CurrentlyPointingAt)} was NOT null...");
+					Debug.Log( $"{nameof(_lnx_meshManipulator.Edge_CurrentlyPointingAt)} was NOT null..." );
 
 					//Debug.Log($"{_test_pointingAndGrabbing.CapturedEdgeCenterPositions[i]} || {_lnx_meshManipulator.Edge_CurrentlyPointingAt.Position}");
 
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_test_pointingAndGrabbing.CapturedEdgeCenterPositions[i].x, _lnx_meshManipulator.Edge_CurrentlyPointingAt.MidPosition.x);
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_test_pointingAndGrabbing.CapturedEdgeCenterPositions[i].y, _lnx_meshManipulator.Edge_CurrentlyPointingAt.MidPosition.y);
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_test_pointingAndGrabbing.CapturedEdgeCenterPositions[i].z, _lnx_meshManipulator.Edge_CurrentlyPointingAt.MidPosition.z);
-
-					//Debug.Log("trying grab stuff...");
-					_lnx_meshManipulator.TryGrab();
+					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
+						_tdg_pointingAndGrabbing.CapturedEdgeCenterPositions[i].x, _lnx_meshManipulator.Edge_CurrentlyPointingAt.MidPosition.x
+					);
+					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
+						_tdg_pointingAndGrabbing.CapturedEdgeCenterPositions[i].y, _lnx_meshManipulator.Edge_CurrentlyPointingAt.MidPosition.y
+					);
+					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
+						_tdg_pointingAndGrabbing.CapturedEdgeCenterPositions[i].z, _lnx_meshManipulator.Edge_CurrentlyPointingAt.MidPosition.z
+					);
 
 					//-------------------------------------------------------------------------------------------------------
+					Debug.Log("now trying grab...");
+					_lnx_meshManipulator.TryGrab();
+
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_test_pointingAndGrabbing.GrabbedPositions_edge[i].x, _lnx_meshManipulator.Edge_LastSelected.MidPosition.x
+						_tdg_pointingAndGrabbing.GrabbedPositions_edge[i].x, _lnx_meshManipulator.Edge_LastSelected.MidPosition.x
 					);
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_test_pointingAndGrabbing.GrabbedPositions_edge[i].y, _lnx_meshManipulator.Edge_LastSelected.MidPosition.y
+						_tdg_pointingAndGrabbing.GrabbedPositions_edge[i].y, _lnx_meshManipulator.Edge_LastSelected.MidPosition.y
 					);
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_test_pointingAndGrabbing.GrabbedPositions_edge[i].z, _lnx_meshManipulator.Edge_LastSelected.MidPosition.z
+						_tdg_pointingAndGrabbing.GrabbedPositions_edge[i].z, _lnx_meshManipulator.Edge_LastSelected.MidPosition.z
 					);
 
 					//-------------------------------------------------------------------------------------------------------
 					// Debug.Log($"trying count. expecting '{_test_pointingAndGrabbing.CapturedNumberOfSharedVerts[i]}'...");
-					UnityEngine.Assertions.Assert.AreEqual(_test_pointingAndGrabbing.CapturedNumberOfSharedVerts_edge[i], _lnx_meshManipulator.Verts_currentlySelected.Count);
+					UnityEngine.Assertions.Assert.AreEqual(_tdg_pointingAndGrabbing.CapturedNumberOfSharedVerts_edge[i], _lnx_meshManipulator.Verts_currentlySelected.Count);
 
 					//-------------------------------------------------------------------------------------------------------
 					//Debug.Log($"trying manipulator pos. expecting '{_test_pointingAndGrabbing.GrabbedManipulatorPos_edge[i]}'...");
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_test_pointingAndGrabbing.GrabbedManipulatorPos_edge[i].x, _lnx_meshManipulator.manipulatorPos.x
+						_tdg_pointingAndGrabbing.GrabbedManipulatorPos_edge[i].x, _lnx_meshManipulator.manipulatorPos.x
 					);
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_test_pointingAndGrabbing.GrabbedManipulatorPos_edge[i].y, _lnx_meshManipulator.manipulatorPos.y
+						_tdg_pointingAndGrabbing.GrabbedManipulatorPos_edge[i].y, _lnx_meshManipulator.manipulatorPos.y
 					);
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_test_pointingAndGrabbing.GrabbedManipulatorPos_edge[i].z, _lnx_meshManipulator.manipulatorPos.z
+						_tdg_pointingAndGrabbing.GrabbedManipulatorPos_edge[i].z, _lnx_meshManipulator.manipulatorPos.z
 					);
 				}
 			}
@@ -226,57 +223,57 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			Debug.Log($"{nameof(b3_PointingAtAndGrabbingFaces)}--------------------------------");
 
 			_lnx_meshManipulator.SelectMode = LNX_SelectMode.Faces;
-			Debug.Log($"running '{_test_pointingAndGrabbing.TestPositions_face.Count}' test positions...");
-			for (int i = 0; i < _test_pointingAndGrabbing.TestPositions_face.Count; i++)
+			Debug.Log($"running '{_tdg_pointingAndGrabbing.TestPositions_face.Count}' test positions...");
+			for (int i = 0; i < _tdg_pointingAndGrabbing.TestPositions_face.Count; i++)
 			{
 				Debug.Log($"{i}...");
 
 				_lnx_meshManipulator.TryPointAtComponentViaDirection(
-					_test_pointingAndGrabbing.TestPositions_face[i],
-					_test_pointingAndGrabbing.TestDirections_face[i]
+					_tdg_pointingAndGrabbing.TestPositions_face[i],
+					_tdg_pointingAndGrabbing.TestDirections_face[i]
 				);
 
 				if (_lnx_meshManipulator.Index_TriPointingAt < 0)
 				{
-					Assert.AreEqual(_test_pointingAndGrabbing.CapturedFaceCenterPositions[i], Vector3.zero);
+					Assert.AreEqual(_tdg_pointingAndGrabbing.CapturedFaceCenterPositions[i], Vector3.zero);
 				}
 				else
 				{
 					//Debug.Log($"{_test_pointingAndGrabbing.CapturedEdgeCenterPositions[i]} || {_lnx_meshManipulator.Edge_CurrentlyPointingAt.Position}");
 
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_test_pointingAndGrabbing.CapturedFaceCenterPositions[i].x, _lnx_meshManipulator.PointingAtTri.V_center.x);
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_test_pointingAndGrabbing.CapturedFaceCenterPositions[i].y, _lnx_meshManipulator.PointingAtTri.V_center.y);
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_test_pointingAndGrabbing.CapturedFaceCenterPositions[i].z, _lnx_meshManipulator.PointingAtTri.V_center.z);
+					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_pointingAndGrabbing.CapturedFaceCenterPositions[i].x, _lnx_meshManipulator.PointingAtTri.V_center.x);
+					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_pointingAndGrabbing.CapturedFaceCenterPositions[i].y, _lnx_meshManipulator.PointingAtTri.V_center.y);
+					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_pointingAndGrabbing.CapturedFaceCenterPositions[i].z, _lnx_meshManipulator.PointingAtTri.V_center.z);
 
 					//Debug.Log("trying grab stuff...");
 					_lnx_meshManipulator.TryGrab();
 
 					//-------------------------------------------------------------------------------------------------------
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_test_pointingAndGrabbing.GrabbedPositions_face[i].x, _lnx_meshManipulator.LastSelectedTri.V_center.x
+						_tdg_pointingAndGrabbing.GrabbedPositions_face[i].x, _lnx_meshManipulator.LastSelectedTri.V_center.x
 					);
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_test_pointingAndGrabbing.GrabbedPositions_face[i].y, _lnx_meshManipulator.LastSelectedTri.V_center.y
+						_tdg_pointingAndGrabbing.GrabbedPositions_face[i].y, _lnx_meshManipulator.LastSelectedTri.V_center.y
 					);
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_test_pointingAndGrabbing.GrabbedPositions_face[i].z, _lnx_meshManipulator.LastSelectedTri.V_center.z
+						_tdg_pointingAndGrabbing.GrabbedPositions_face[i].z, _lnx_meshManipulator.LastSelectedTri.V_center.z
 					);
 
 
 					//-------------------------------------------------------------------------------------------------------
 					// Debug.Log($"trying count. expecting '{_test_pointingAndGrabbing.CapturedNumberOfSharedVerts[i]}'...");
-					UnityEngine.Assertions.Assert.AreEqual(_test_pointingAndGrabbing.CapturedNumberOfSharedVerts_face[i], _lnx_meshManipulator.Verts_currentlySelected.Count);
+					UnityEngine.Assertions.Assert.AreEqual(_tdg_pointingAndGrabbing.CapturedNumberOfSharedVerts_face[i], _lnx_meshManipulator.Verts_currentlySelected.Count);
 
 					//-------------------------------------------------------------------------------------------------------
 					//Debug.Log($"trying manipulator pos. expecting '{_test_pointingAndGrabbing.GrabbedManipulatorPos_edge[i]}'...");
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_test_pointingAndGrabbing.GrabbedManipulatorPos_face[i].x, _lnx_meshManipulator.manipulatorPos.x
+						_tdg_pointingAndGrabbing.GrabbedManipulatorPos_face[i].x, _lnx_meshManipulator.manipulatorPos.x
 					);
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_test_pointingAndGrabbing.GrabbedManipulatorPos_face[i].y, _lnx_meshManipulator.manipulatorPos.y
+						_tdg_pointingAndGrabbing.GrabbedManipulatorPos_face[i].y, _lnx_meshManipulator.manipulatorPos.y
 					);
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_test_pointingAndGrabbing.GrabbedManipulatorPos_face[i].z, _lnx_meshManipulator.manipulatorPos.z
+						_tdg_pointingAndGrabbing.GrabbedManipulatorPos_face[i].z, _lnx_meshManipulator.manipulatorPos.z
 					);
 				}
 			}
@@ -289,46 +286,17 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		public void c1_MovingVerts()
 		{
 			Debug.Log($"{nameof(c1_MovingVerts)}--------------------------------");
-			Debug.Log($"Creating test object from Json...");
 
-			#region CREATE TEST OBJECT -----------------------------
-			if (!File.Exists(filePath_test_MeshManipulation))
-			{
-				Debug.LogError($"PROBLEM!!!!! file at test path does not exist. Cannot perform test.");
-				return;
-			}
-			else
-			{
-				Debug.Log($"File path does exist. Creating test object...");
-			}
-
-			_test_meshManipulation = _previouslyGeneratedNavmesh.gameObject.AddComponent<Test_MoveComponents>();
-			string jsonString = File.ReadAllText( filePath_test_MeshManipulation );
-
-			JsonUtility.FromJsonOverwrite( jsonString, _test_meshManipulation );
-			#endregion
-
-			if( _test_meshManipulation.TestMousePositions_vert == null || _test_meshManipulation.TestMousePositions_vert.Count == 0 )
-			{
-				Debug.LogError($"couldn't do test because {nameof(_test_meshManipulation.TestMousePositions_vert)} was either null or 0 count. Returning early...");
-				return;
-			}
-			else
-			{
-				Debug.Log($"{nameof(_test_meshManipulation.TestMousePositions_vert)} count is '{_test_meshManipulation.TestMousePositions_vert.Count}'. Proceeding...");
-			}
-			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestSectionEndString, "setup"));
-
-			Debug.Log($"now selecting and moving {_test_meshManipulation.TestMousePositions_vert.Count} verts...");
+			Debug.Log($"now selecting and moving {_tdg_MoveComponents.TestMousePositions_vert.Count} verts...");
 			//Debug.Log(_lnx_meshManipulator.SelectMode);
 			_lnx_meshManipulator.SelectMode = LNX_SelectMode.Vertices;
-			for ( int i = 0; i < _test_meshManipulation.TestMousePositions_vert.Count; i++ )
+			for ( int i = 0; i < _tdg_MoveComponents.TestMousePositions_vert.Count; i++ )
 			{
 				Debug.Log($"{i}...........................................................................");
 
 				_lnx_meshManipulator.TryPointAtComponentViaDirection(
-					_test_meshManipulation.TestMousePositions_vert[i],
-					_test_meshManipulation.TestMouseDirections_vert[i]
+					_tdg_MoveComponents.TestMousePositions_vert[i],
+					_tdg_MoveComponents.TestMouseDirections_vert[i]
 				);
 
 				if ( _lnx_meshManipulator.Vert_CurrentlyPointingAt == null )
@@ -346,10 +314,10 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 					Debug.Log($"Grab operation executed. mesh manipulator vert last selected coordinate: " +
 						$"'{_lnx_meshManipulator.Vert_LastSelected.MyCoordinate}'. current pos: '{_lnx_meshManipulator.Vert_LastSelected.Position}'. " +
-						$"expected position: '{_test_meshManipulation.GrabbedPositions_vert[i]}'");
+						$"expected position: '{_tdg_MoveComponents.GrabbedPositions_vert[i]}'");
 
 					Vector3 vOffset = new Vector3( 1.5f, 1.5f, 1.5f );
-					Vector3 v_moveTo = _test_meshManipulation.GrabbedPositions_vert[i] + vOffset;
+					Vector3 v_moveTo = _tdg_MoveComponents.GrabbedPositions_vert[i] + vOffset;
 
 					Debug.Log($"now moving to '{v_moveTo}'...");
 
@@ -368,18 +336,18 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 					Debug.Log($"pos now: '{_lnx_meshManipulator.Vert_LastSelected.Position}'");
 
 					#region move back-------------------------------------------------
-					Debug.Log($"now moving '{_lnx_meshManipulator.Vert_LastSelected.Position}' back to '{_test_meshManipulation.GrabbedPositions_vert[i]}'...");
+					Debug.Log($"now moving '{_lnx_meshManipulator.Vert_LastSelected.Position}' back to '{_tdg_MoveComponents.GrabbedPositions_vert[i]}'...");
 
-					_lnx_meshManipulator.MoveSelectedVerts( _test_meshManipulation.GrabbedPositions_vert[i] );
+					_lnx_meshManipulator.MoveSelectedVerts( _tdg_MoveComponents.GrabbedPositions_vert[i] );
 
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_test_meshManipulation.GrabbedPositions_vert[i].x, _lnx_meshManipulator.Vert_LastSelected.Position.x
+						_tdg_MoveComponents.GrabbedPositions_vert[i].x, _lnx_meshManipulator.Vert_LastSelected.Position.x
 					);
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_test_meshManipulation.GrabbedPositions_vert[i].y, _lnx_meshManipulator.Vert_LastSelected.Position.y
+						_tdg_MoveComponents.GrabbedPositions_vert[i].y, _lnx_meshManipulator.Vert_LastSelected.Position.y
 					);
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_test_meshManipulation.GrabbedPositions_vert[i].z, _lnx_meshManipulator.Vert_LastSelected.Position.z
+						_tdg_MoveComponents.GrabbedPositions_vert[i].z, _lnx_meshManipulator.Vert_LastSelected.Position.z
 					);
 
 					Debug.Log($"pos now: '{_lnx_meshManipulator.Vert_LastSelected.Position}'");
@@ -394,25 +362,25 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			Debug.Log($"{nameof(c2_MovingEdges)}--------------------------------");
 			Debug.Log($"Creating test object from Json...");
 
-			if (_test_meshManipulation.TestMousePositions_edge == null || _test_meshManipulation.TestMousePositions_edge.Count == 0)
+			if (_tdg_MoveComponents.TestMousePositions_edge == null || _tdg_MoveComponents.TestMousePositions_edge.Count == 0)
 			{
-				Debug.LogError($"couldn't do test because {nameof(_test_meshManipulation.TestMousePositions_edge)} was either null or 0 count. Returning early...");
+				Debug.LogError($"couldn't do test because {nameof(_tdg_MoveComponents.TestMousePositions_edge)} was either null or 0 count. Returning early...");
 				return;
 			}
 			else
 			{
-				Debug.Log($"{nameof(_test_meshManipulation.TestMousePositions_edge)} count is '{_test_meshManipulation.TestMousePositions_edge.Count}'. Proceeding...");
+				Debug.Log($"{nameof(_tdg_MoveComponents.TestMousePositions_edge)} count is '{_tdg_MoveComponents.TestMousePositions_edge.Count}'. Proceeding...");
 			}
 			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestSectionEndString, "setup"));
 
 			_lnx_meshManipulator.SelectMode = LNX_SelectMode.Edges;
-			for ( int i = 0; i < _test_meshManipulation.TestMousePositions_edge.Count; i++ )
+			for ( int i = 0; i < _tdg_MoveComponents.TestMousePositions_edge.Count; i++ )
 			{
 				Debug.Log($"{i}...........................................................................");
 
 				_lnx_meshManipulator.TryPointAtComponentViaDirection(
-					_test_meshManipulation.TestMousePositions_edge[i],
-					_test_meshManipulation.TestMouseDirections_edge[i]
+					_tdg_MoveComponents.TestMousePositions_edge[i],
+					_tdg_MoveComponents.TestMouseDirections_edge[i]
 				);
 
 				if ( _lnx_meshManipulator.Edge_CurrentlyPointingAt == null )
@@ -434,10 +402,10 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 					Debug.Log($"Grab operation executed. mesh manipulator edge last selected coordinate: " +
 						$"'{_lnx_meshManipulator.Edge_LastSelected.MyCoordinate}'. midpos: '{_lnx_meshManipulator.Edge_LastSelected.MidPosition}', " +
-						$"logged midpos: '{_test_meshManipulation.GrabbedMidPositions_edge[i]}'");
+						$"logged midpos: '{_tdg_MoveComponents.GrabbedMidPositions_edge[i]}'");
 
 					Vector3 vOffset = new Vector3(1.5f, 1.5f, 1.5f);
-					Vector3 v_moveTo = _test_meshManipulation.GrabbedMidPositions_edge[i] + vOffset;
+					Vector3 v_moveTo = _tdg_MoveComponents.GrabbedMidPositions_edge[i] + vOffset;
 
 					Debug.Log($"now moving to '{v_moveTo}'...");
 
@@ -457,19 +425,19 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 					);
 
 					#region move back-------------------------------------------------
-					Debug.Log($"now moving '{_lnx_meshManipulator.Edge_LastSelected.MidPosition}' back to '{_test_meshManipulation.GrabbedMidPositions_edge[i]}'...");
+					Debug.Log($"now moving '{_lnx_meshManipulator.Edge_LastSelected.MidPosition}' back to '{_tdg_MoveComponents.GrabbedMidPositions_edge[i]}'...");
 
-					_lnx_meshManipulator.MoveSelectedVerts( _test_meshManipulation.GrabbedMidPositions_edge[i] );
+					_lnx_meshManipulator.MoveSelectedVerts( _tdg_MoveComponents.GrabbedMidPositions_edge[i] );
 					_lnx_meshManipulator._LNX_NavMesh.RefeshMesh(); //important so that the midpos will get re-calculated.
 
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_test_meshManipulation.GrabbedMidPositions_edge[i].x, _lnx_meshManipulator.Edge_LastSelected.MidPosition.x
+						_tdg_MoveComponents.GrabbedMidPositions_edge[i].x, _lnx_meshManipulator.Edge_LastSelected.MidPosition.x
 					);
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_test_meshManipulation.GrabbedMidPositions_edge[i].y, _lnx_meshManipulator.Edge_LastSelected.MidPosition.y
+						_tdg_MoveComponents.GrabbedMidPositions_edge[i].y, _lnx_meshManipulator.Edge_LastSelected.MidPosition.y
 					);
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_test_meshManipulation.GrabbedMidPositions_edge[i].z, _lnx_meshManipulator.Edge_LastSelected.MidPosition.z
+						_tdg_MoveComponents.GrabbedMidPositions_edge[i].z, _lnx_meshManipulator.Edge_LastSelected.MidPosition.z
 					);
 
 					Debug.Log($"pos now: '{_lnx_meshManipulator.Edge_LastSelected.MidPosition}'");
