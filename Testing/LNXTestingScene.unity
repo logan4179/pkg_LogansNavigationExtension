@@ -661,7 +661,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   LastWriteTime: 4/11/2025 10:46:32 AM
   _lnxNavmesh: {fileID: 1153391160}
-  fileName_lnxNavMesh: expectedNM_A
   areas: 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
   indices: 0000000001000000020000000000000002000000030000000400000005000000060000000700000008000000090000000a0000000b0000000c0000000a0000000c0000000d0000000e0000000f0000001000000011000000120000001300000014000000150000001600000014000000160000001700000018000000190000001a000000180000001a0000001b0000001c0000001d0000001e0000001c0000001e0000001f000000200000002100000022000000230000002400000025000000260000002700000028000000290000002a0000002b0000002c0000002d0000002e0000002f00000030000000310000002f00000031000000320000003300000034000000350000003600000037000000380000003600000038000000390000003a0000003b0000003c0000003d0000003e0000003f000000400000004100000042000000430000004400000045000000460000004700000048000000490000004a0000004b000000490000004b0000004c0000004d0000004e0000004f0000004d0000004f00000050000000510000005200000053000000510000005300000054000000550000005600000057000000550000005700000058000000590000005a0000005b0000005c0000005d0000005e0000005f000000600000006100000062000000630000006400000065000000660000006700000068000000690000006a000000680000006a0000006b0000006c0000006d0000006e0000006c0000006e0000006f0000007000000071000000720000007000000072000000730000007400000075000000760000007700000078000000790000007a0000007b0000007c0000007a0000007c0000007d0000007e0000007f000000800000007e00000080000000810000008200000083000000840000008200000084000000850000008600000087000000880000008600000088000000890000008a0000008b0000008c0000008a0000008c0000008d0000008a0000008d0000008e0000008f000000900000009100000092000000930000009400000095000000960000009700000098000000990000009a000000980000009a0000009b0000009c0000009d0000009e0000009c0000009e0000009f000000a0000000a1000000a2000000a3000000a4000000a5000000a6000000a7000000a8000000a9000000aa000000ab000000a9000000ab000000ac000000ad000000ae000000af000000b0000000b1000000b2000000b0000000b2000000b3000000b4000000b5000000b6000000b7000000b8000000b9000000b7000000b9000000ba000000bb000000bc000000bd000000bb000000bd000000be000000bf000000c0000000c1000000c2000000c3000000c4000000c2000000c4000000c5000000
   vertices:
@@ -2294,958 +2293,86 @@ MonoBehaviour:
   _LNX_NavMesh: {fileID: 1153391160}
   SelectMode: 3
   OperationMode: 0
-  Index_TriLastSelected: 19
-  Index_TriPointingAt: 18
-  indices_selectedTris: 13000000
+  Index_TriLastSelected: -1
+  Index_TriPointingAt: 1
+  indices_selectedTris: 
   indices_lockedTris: 
   Vert_LastSelected:
-    Position: {x: 7.26, y: 0.0006940365, z: 0}
-    originalPosition: {x: 7.26, y: 0.0006940365, z: 0}
+    Position: {x: 0, y: 0, z: 0}
+    originalPosition: {x: 0, y: 0, z: 0}
     MyCoordinate:
-      TrianglesIndex: 8
-      ComponentIndex: 2
-    MeshIndex_triangles: 26
-    MeshIndex_vertices: 13
-    Angle: 29.054586
-    v_toCenter: {x: -1, y: -0.00009559731, z: 0}
-    DistanceToCenter: 7.26
+      TrianglesIndex: 0
+      ComponentIndex: 0
+    MeshIndex_triangles: 0
+    MeshIndex_vertices: 0
+    Angle: 0
+    v_toCenter: {x: 0, y: 0, z: 0}
+    DistanceToCenter: 0
     v_normal: {x: 0, y: 0, z: 0}
-    SiblingRelationships:
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 8
-        ComponentIndex: 2
-      RelatedVertCoordinate:
-        TrianglesIndex: 8
-        ComponentIndex: 0
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 0.6177382
-      v_to: {x: 0.8741574, y: 0, z: 0.48564264}
-      Angle_centerToDestinationVertex: 150.94542
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 8
-        ComponentIndex: 2
-      RelatedVertCoordinate:
-        TrianglesIndex: 8
-        ComponentIndex: 1
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 0.54000044
-      v_to: {x: 1, y: 0, z: 0}
-      Angle_centerToDestinationVertex: 180
+    SiblingRelationships: []
     Relationships: []
-    SharedVertexCoordinates:
-    - TrianglesIndex: 9
-      ComponentIndex: 1
-    - TrianglesIndex: 77
-      ComponentIndex: 0
-    - TrianglesIndex: 78
-      ComponentIndex: 0
-    DBG_constructor: "at tri[8], [2]\nPos: '(7.26, 0.00, 0.00)', orig: '(7.26, 0.00,
-      0.00)'\nvToCtr: '(-1.00, 0.00, 0.00)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
-      '7.26'\n\tAngle: '29.05459'. A: '150.9454', B: '180'"
+    SharedVertexCoordinates: []
+    DBG_constructor: 
   Vert_CurrentlyPointingAt:
-    Position: {x: 7.26, y: 0.0006940365, z: 0}
-    originalPosition: {x: 7.26, y: 0.0006940365, z: 0}
+    Position: {x: 0, y: 0, z: 0}
+    originalPosition: {x: 0, y: 0, z: 0}
     MyCoordinate:
-      TrianglesIndex: 8
-      ComponentIndex: 2
-    MeshIndex_triangles: 26
-    MeshIndex_vertices: 13
-    Angle: 29.054586
-    v_toCenter: {x: -1, y: -0.00009559731, z: 0}
-    DistanceToCenter: 7.26
+      TrianglesIndex: 0
+      ComponentIndex: 0
+    MeshIndex_triangles: 0
+    MeshIndex_vertices: 0
+    Angle: 0
+    v_toCenter: {x: 0, y: 0, z: 0}
+    DistanceToCenter: 0
     v_normal: {x: 0, y: 0, z: 0}
-    SiblingRelationships:
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 8
-        ComponentIndex: 2
-      RelatedVertCoordinate:
-        TrianglesIndex: 8
-        ComponentIndex: 0
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 0.6177382
-      v_to: {x: 0.8741574, y: 0, z: 0.48564264}
-      Angle_centerToDestinationVertex: 150.94542
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 8
-        ComponentIndex: 2
-      RelatedVertCoordinate:
-        TrianglesIndex: 8
-        ComponentIndex: 1
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 0.54000044
-      v_to: {x: 1, y: 0, z: 0}
-      Angle_centerToDestinationVertex: 180
+    SiblingRelationships: []
     Relationships: []
-    SharedVertexCoordinates:
-    - TrianglesIndex: 9
-      ComponentIndex: 1
-    - TrianglesIndex: 77
-      ComponentIndex: 0
-    - TrianglesIndex: 78
-      ComponentIndex: 0
-    DBG_constructor: "at tri[8], [2]\nPos: '(7.26, 0.00, 0.00)', orig: '(7.26, 0.00,
-      0.00)'\nvToCtr: '(-1.00, 0.00, 0.00)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
-      '7.26'\n\tAngle: '29.05459'. A: '150.9454', B: '180'"
-  Verts_currentlySelected:
-  - Position: {x: 11.220001, y: 0.0006940365, z: 4.38}
-    originalPosition: {x: 11.220001, y: 0.0006940365, z: 4.38}
-    MyCoordinate:
-      TrianglesIndex: 19
-      ComponentIndex: 0
-    MeshIndex_triangles: 57
-    MeshIndex_vertices: 28
-    Angle: 34.84836
-    v_toCenter: {x: -0.93153644, y: -0.00005762212, z: -0.36364788}
-    DistanceToCenter: 12.044619
-    v_normal: {x: 0, y: 0, z: 0}
-    SiblingRelationships:
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 19
-        ComponentIndex: 0
-      RelatedVertCoordinate:
-        TrianglesIndex: 19
-        ComponentIndex: 1
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 3.9889848
-      v_to: {x: 0.12033125, y: 0, z: -0.9927338}
-      Angle_centerToDestinationVertex: 75.58683
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 19
-        ComponentIndex: 0
-      RelatedVertCoordinate:
-        TrianglesIndex: 19
-        ComponentIndex: 2
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 4.4823656
-      v_to: {x: -0.4685027, y: 0, z: -0.8834621}
-      Angle_centerToDestinationVertex: 40.738457
-    Relationships: []
-    SharedVertexCoordinates:
-    - TrianglesIndex: 20
-      ComponentIndex: 0
-    - TrianglesIndex: 24
-      ComponentIndex: 0
-    - TrianglesIndex: 25
-      ComponentIndex: 2
-    - TrianglesIndex: 27
-      ComponentIndex: 2
-    - TrianglesIndex: 29
-      ComponentIndex: 2
-    - TrianglesIndex: 30
-      ComponentIndex: 1
-    DBG_constructor: "at tri[19], [0]\nPos: '(11.22, 0.00, 4.38)', orig: '(11.22,
-      0.00, 4.38)'\nvToCtr: '(-0.93, 0.00, -0.36)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
-      '12.04462'\n\tAngle: '34.84836'. A: '75.58683', B: '40.73846'"
-  - Position: {x: 11.700001, y: 0.0006940365, z: 0.42000002}
-    originalPosition: {x: 11.700001, y: 0.0006940365, z: 0.42000002}
-    MyCoordinate:
-      TrianglesIndex: 19
-      ComponentIndex: 1
-    MeshIndex_triangles: 58
-    MeshIndex_vertices: 19
-    Angle: 83.08878
-    v_toCenter: {x: -0.9993563, y: -0.00005928117, z: -0.03587433}
-    DistanceToCenter: 11.707537
-    v_normal: {x: 0, y: 0, z: 0}
-    SiblingRelationships:
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 19
-        ComponentIndex: 1
-      RelatedVertCoordinate:
-        TrianglesIndex: 19
-        ComponentIndex: 0
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 3.9889848
-      v_to: {x: -0.12033125, y: 0, z: 0.9927338}
-      Angle_centerToDestinationVertex: 85.14467
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 19
-        ComponentIndex: 1
-      RelatedVertCoordinate:
-        TrianglesIndex: 19
-        ComponentIndex: 2
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 2.58
-      v_to: {x: -1, y: 0, z: 0}
-      Angle_centerToDestinationVertex: 2.0558562
-    Relationships: []
-    SharedVertexCoordinates:
-    - TrianglesIndex: 12
-      ComponentIndex: 1
-    - TrianglesIndex: 23
-      ComponentIndex: 2
-    - TrianglesIndex: 24
-      ComponentIndex: 2
-    DBG_constructor: "at tri[19], [1]\nPos: '(11.70, 0.00, 0.42)', orig: '(11.70,
-      0.00, 0.42)'\nvToCtr: '(-1.00, 0.00, -0.04)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
-      '11.70754'\n\tAngle: '83.08878'. A: '85.14467', B: '2.055856'"
-  - Position: {x: 9.120001, y: 0.0006940365, z: 0.42000002}
-    originalPosition: {x: 9.120001, y: 0.0006940365, z: 0.42000002}
-    MyCoordinate:
-      TrianglesIndex: 19
-      ComponentIndex: 2
-    MeshIndex_triangles: 59
-    MeshIndex_vertices: 18
-    Angle: 62.062855
-    v_toCenter: {x: -0.9989413, y: -0.00007601992, z: -0.046003874}
-    DistanceToCenter: 9.129666
-    v_normal: {x: 0, y: 0, z: 0}
-    SiblingRelationships:
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 19
-        ComponentIndex: 2
-      RelatedVertCoordinate:
-        TrianglesIndex: 19
-        ComponentIndex: 0
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 4.4823656
-      v_to: {x: 0.4685027, y: 0, z: 0.8834621}
-      Angle_centerToDestinationVertex: 120.573906
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 19
-        ComponentIndex: 2
-      RelatedVertCoordinate:
-        TrianglesIndex: 19
-        ComponentIndex: 1
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 2.58
-      v_to: {x: 1, y: 0, z: 0}
-      Angle_centerToDestinationVertex: 177.3633
-    Relationships: []
-    SharedVertexCoordinates:
-    - TrianglesIndex: 12
-      ComponentIndex: 0
-    - TrianglesIndex: 13
-      ComponentIndex: 0
-    - TrianglesIndex: 17
-      ComponentIndex: 0
-    - TrianglesIndex: 20
-      ComponentIndex: 1
-    DBG_constructor: "at tri[19], [2]\nPos: '(9.12, 0.00, 0.42)', orig: '(9.12, 0.00,
-      0.42)'\nvToCtr: '(-1.00, 0.00, -0.05)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
-      '9.129666'\n\tAngle: '62.06285'. A: '120.5739', B: '177.3633'"
-  - Position: {x: 11.220001, y: 0.0006940365, z: 4.38}
-    originalPosition: {x: 11.220001, y: 0.0006940365, z: 4.38}
-    MyCoordinate:
-      TrianglesIndex: 20
-      ComponentIndex: 0
-    MeshIndex_triangles: 60
-    MeshIndex_vertices: 28
-    Angle: 62.062855
-    v_toCenter: {x: -0.93153644, y: -0.00005762212, z: -0.36364788}
-    DistanceToCenter: 12.044619
-    v_normal: {x: 0, y: 0, z: 0}
-    SiblingRelationships:
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 20
-        ComponentIndex: 0
-      RelatedVertCoordinate:
-        TrianglesIndex: 20
-        ComponentIndex: 1
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 4.4823656
-      v_to: {x: -0.4685027, y: 0, z: -0.8834621}
-      Angle_centerToDestinationVertex: 40.738457
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 20
-        ComponentIndex: 0
-      RelatedVertCoordinate:
-        TrianglesIndex: 20
-        ComponentIndex: 2
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 3.960001
-      v_to: {x: -1, y: 0, z: 0}
-      Angle_centerToDestinationVertex: 21.324392
-    Relationships: []
-    SharedVertexCoordinates:
-    - TrianglesIndex: 19
-      ComponentIndex: 0
-    - TrianglesIndex: 24
-      ComponentIndex: 0
-    - TrianglesIndex: 25
-      ComponentIndex: 2
-    - TrianglesIndex: 27
-      ComponentIndex: 2
-    - TrianglesIndex: 29
-      ComponentIndex: 2
-    - TrianglesIndex: 30
-      ComponentIndex: 1
-    DBG_constructor: "at tri[20], [0]\nPos: '(11.22, 0.00, 4.38)', orig: '(11.22,
-      0.00, 4.38)'\nvToCtr: '(-0.93, 0.00, -0.36)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
-      '12.04462'\n\tAngle: '62.06285'. A: '40.73846', B: '21.32439'"
-  - Position: {x: 11.220001, y: 0.0006940365, z: 4.38}
-    originalPosition: {x: 11.220001, y: 0.0006940365, z: 4.38}
-    MyCoordinate:
-      TrianglesIndex: 24
-      ComponentIndex: 0
-    MeshIndex_triangles: 72
-    MeshIndex_vertices: 28
-    Angle: 83.821434
-    v_toCenter: {x: -0.93153644, y: -0.00005762212, z: -0.36364788}
-    DistanceToCenter: 12.044619
-    v_normal: {x: 0, y: 0, z: 0}
-    SiblingRelationships:
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 24
-        ComponentIndex: 0
-      RelatedVertCoordinate:
-        TrianglesIndex: 24
-        ComponentIndex: 1
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 0.2012455
-      v_to: {x: 0.8944267, y: 0.44721454, z: 0}
-      Angle_centerToDestinationVertex: 146.43062
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 24
-        ComponentIndex: 0
-      RelatedVertCoordinate:
-        TrianglesIndex: 24
-        ComponentIndex: 2
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 3.9889848
-      v_to: {x: 0.12033125, y: 0, z: -0.9927338}
-      Angle_centerToDestinationVertex: 75.58683
-    Relationships: []
-    SharedVertexCoordinates:
-    - TrianglesIndex: 19
-      ComponentIndex: 0
-    - TrianglesIndex: 20
-      ComponentIndex: 0
-    - TrianglesIndex: 25
-      ComponentIndex: 2
-    - TrianglesIndex: 27
-      ComponentIndex: 2
-    - TrianglesIndex: 29
-      ComponentIndex: 2
-    - TrianglesIndex: 30
-      ComponentIndex: 1
-    DBG_constructor: "at tri[24], [0]\nPos: '(11.22, 0.00, 4.38)', orig: '(11.22,
-      0.00, 4.38)'\nvToCtr: '(-0.93, 0.00, -0.36)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
-      '12.04462'\n\tAngle: '83.82143'. A: '146.4306', B: '75.58683'"
-  - Position: {x: 11.220001, y: 0.0006940365, z: 4.38}
-    originalPosition: {x: 11.220001, y: 0.0006940365, z: 4.38}
-    MyCoordinate:
-      TrianglesIndex: 25
-      ComponentIndex: 2
-    MeshIndex_triangles: 77
-    MeshIndex_vertices: 28
-    Angle: 47.779015
-    v_toCenter: {x: -0.93153644, y: -0.00005762212, z: -0.36364788}
-    DistanceToCenter: 12.044619
-    v_normal: {x: 0, y: 0, z: 0}
-    SiblingRelationships:
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 25
-        ComponentIndex: 2
-      RelatedVertCoordinate:
-        TrianglesIndex: 25
-        ComponentIndex: 0
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 1.2134258
-      v_to: {x: -0.9889363, y: 0, z: 0.1483406}
-      Angle_centerToDestinationVertex: 29.855171
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 25
-        ComponentIndex: 2
-      RelatedVertCoordinate:
-        TrianglesIndex: 25
-        ComponentIndex: 1
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 0.21633379
-      v_to: {x: -0.5547022, y: 0, z: 0.83204895}
-      Angle_centerToDestinationVertex: 77.63419
-    Relationships: []
-    SharedVertexCoordinates:
-    - TrianglesIndex: 19
-      ComponentIndex: 0
-    - TrianglesIndex: 20
-      ComponentIndex: 0
-    - TrianglesIndex: 24
-      ComponentIndex: 0
-    - TrianglesIndex: 27
-      ComponentIndex: 2
-    - TrianglesIndex: 29
-      ComponentIndex: 2
-    - TrianglesIndex: 30
-      ComponentIndex: 1
-    DBG_constructor: "at tri[25], [2]\nPos: '(11.22, 0.00, 4.38)', orig: '(11.22,
-      0.00, 4.38)'\nvToCtr: '(-0.93, 0.00, -0.36)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
-      '12.04462'\n\tAngle: '47.77901'. A: '29.85517', B: '77.63419'"
-  - Position: {x: 11.220001, y: 0.0006940365, z: 4.38}
-    originalPosition: {x: 11.220001, y: 0.0006940365, z: 4.38}
-    MyCoordinate:
-      TrianglesIndex: 27
-      ComponentIndex: 2
-    MeshIndex_triangles: 83
-    MeshIndex_vertices: 28
-    Angle: 6.248805
-    v_toCenter: {x: -0.93153644, y: -0.00005762212, z: -0.36364788}
-    DistanceToCenter: 12.044619
-    v_normal: {x: 0, y: 0, z: 0}
-    SiblingRelationships:
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 27
-        ComponentIndex: 2
-      RelatedVertCoordinate:
-        TrianglesIndex: 27
-        ComponentIndex: 0
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 1.3997511
-      v_to: {x: -0.9858903, y: 0.10716181, z: 0.12859452}
-      Angle_centerToDestinationVertex: 29.352148
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 27
-        ComponentIndex: 2
-      RelatedVertCoordinate:
-        TrianglesIndex: 27
-        ComponentIndex: 1
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 1.2134258
-      v_to: {x: -0.9889363, y: 0, z: 0.1483406}
-      Angle_centerToDestinationVertex: 29.855171
-    Relationships: []
-    SharedVertexCoordinates:
-    - TrianglesIndex: 19
-      ComponentIndex: 0
-    - TrianglesIndex: 20
-      ComponentIndex: 0
-    - TrianglesIndex: 24
-      ComponentIndex: 0
-    - TrianglesIndex: 25
-      ComponentIndex: 2
-    - TrianglesIndex: 29
-      ComponentIndex: 2
-    - TrianglesIndex: 30
-      ComponentIndex: 1
-    DBG_constructor: "at tri[27], [2]\nPos: '(11.22, 0.00, 4.38)', orig: '(11.22,
-      0.00, 4.38)'\nvToCtr: '(-0.93, 0.00, -0.36)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
-      '12.04462'\n\tAngle: '6.248805'. A: '29.35215', B: '29.85517'"
-  - Position: {x: 11.220001, y: 0.0006940365, z: 4.38}
-    originalPosition: {x: 11.220001, y: 0.0006940365, z: 4.38}
-    MyCoordinate:
-      TrianglesIndex: 29
-      ComponentIndex: 2
-    MeshIndex_triangles: 89
-    MeshIndex_vertices: 28
-    Angle: 4.4470406
-    v_toCenter: {x: -0.93153644, y: -0.00005762212, z: -0.36364788}
-    DistanceToCenter: 12.044619
-    v_normal: {x: 0, y: 0, z: 0}
-    SiblingRelationships:
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 29
-        ComponentIndex: 2
-      RelatedVertCoordinate:
-        TrianglesIndex: 29
-        ComponentIndex: 0
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 2.5906186
-      v_to: {x: -0.99590147, y: 0.057901174, z: 0.06948159}
-      Angle_centerToDestinationVertex: 25.51821
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 29
-        ComponentIndex: 2
-      RelatedVertCoordinate:
-        TrianglesIndex: 29
-        ComponentIndex: 1
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 1.3997511
-      v_to: {x: -0.9858903, y: 0.10716181, z: 0.12859452}
-      Angle_centerToDestinationVertex: 29.352148
-    Relationships: []
-    SharedVertexCoordinates:
-    - TrianglesIndex: 19
-      ComponentIndex: 0
-    - TrianglesIndex: 20
-      ComponentIndex: 0
-    - TrianglesIndex: 24
-      ComponentIndex: 0
-    - TrianglesIndex: 25
-      ComponentIndex: 2
-    - TrianglesIndex: 27
-      ComponentIndex: 2
-    - TrianglesIndex: 30
-      ComponentIndex: 1
-    DBG_constructor: "at tri[29], [2]\nPos: '(11.22, 0.00, 4.38)', orig: '(11.22,
-      0.00, 4.38)'\nvToCtr: '(-0.93, 0.00, -0.36)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
-      '12.04462'\n\tAngle: '4.447041'. A: '25.51821', B: '29.35215'"
-  - Position: {x: 11.220001, y: 0.0006940365, z: 4.38}
-    originalPosition: {x: 11.220001, y: 0.0006940365, z: 4.38}
-    MyCoordinate:
-      TrianglesIndex: 30
-      ComponentIndex: 1
-    MeshIndex_triangles: 91
-    MeshIndex_vertices: 28
-    Angle: 5.189162
-    v_toCenter: {x: -0.93153644, y: -0.00005762212, z: -0.36364788}
-    DistanceToCenter: 12.044619
-    v_normal: {x: 0, y: 0, z: 0}
-    SiblingRelationships:
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 30
-        ComponentIndex: 1
-      RelatedVertCoordinate:
-        TrianglesIndex: 30
-        ComponentIndex: 0
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 2.5906186
-      v_to: {x: -0.99590147, y: 0.057901174, z: 0.06948159}
-      Angle_centerToDestinationVertex: 25.51821
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 30
-        ComponentIndex: 1
-      RelatedVertCoordinate:
-        TrianglesIndex: 30
-        ComponentIndex: 2
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 3.960001
-      v_to: {x: -1, y: 0, z: 0}
-      Angle_centerToDestinationVertex: 21.324392
-    Relationships: []
-    SharedVertexCoordinates:
-    - TrianglesIndex: 19
-      ComponentIndex: 0
-    - TrianglesIndex: 20
-      ComponentIndex: 0
-    - TrianglesIndex: 24
-      ComponentIndex: 0
-    - TrianglesIndex: 25
-      ComponentIndex: 2
-    - TrianglesIndex: 27
-      ComponentIndex: 2
-    - TrianglesIndex: 29
-      ComponentIndex: 2
-    DBG_constructor: "at tri[30], [1]\nPos: '(11.22, 0.00, 4.38)', orig: '(11.22,
-      0.00, 4.38)'\nvToCtr: '(-0.93, 0.00, -0.36)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
-      '12.04462'\n\tAngle: '5.189162'. A: '25.51821', B: '21.32439'"
-  - Position: {x: 11.700001, y: 0.0006940365, z: 0.42000002}
-    originalPosition: {x: 11.700001, y: 0.0006940365, z: 0.42000002}
-    MyCoordinate:
-      TrianglesIndex: 12
-      ComponentIndex: 1
-    MeshIndex_triangles: 37
-    MeshIndex_vertices: 19
-    Angle: 45.000027
-    v_toCenter: {x: -0.9993563, y: -0.00005928117, z: -0.03587433}
-    DistanceToCenter: 11.707537
-    v_normal: {x: 0, y: 0, z: 0}
-    SiblingRelationships:
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 12
-        ComponentIndex: 1
-      RelatedVertCoordinate:
-        TrianglesIndex: 12
-        ComponentIndex: 0
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 2.58
-      v_to: {x: -1, y: 0, z: 0}
-      Angle_centerToDestinationVertex: 2.0558562
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 12
-        ComponentIndex: 1
-      RelatedVertCoordinate:
-        TrianglesIndex: 12
-        ComponentIndex: 2
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 0.16970555
-      v_to: {x: -0.7071064, y: 0, z: -0.7071071}
-      Angle_centerToDestinationVertex: 42.944138
-    Relationships: []
-    SharedVertexCoordinates:
-    - TrianglesIndex: 19
-      ComponentIndex: 1
-    - TrianglesIndex: 23
-      ComponentIndex: 2
-    - TrianglesIndex: 24
-      ComponentIndex: 2
-    DBG_constructor: "at tri[12], [1]\nPos: '(11.70, 0.00, 0.42)', orig: '(11.70,
-      0.00, 0.42)'\nvToCtr: '(-1.00, 0.00, -0.04)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
-      '11.70754'\n\tAngle: '45.00003'. A: '2.055856', B: '42.94414'"
-  - Position: {x: 11.700001, y: 0.0006940365, z: 0.42000002}
-    originalPosition: {x: 11.700001, y: 0.0006940365, z: 0.42000002}
-    MyCoordinate:
-      TrianglesIndex: 23
-      ComponentIndex: 2
-    MeshIndex_triangles: 71
-    MeshIndex_vertices: 19
-    Angle: 94.33121
-    v_toCenter: {x: -0.9993563, y: -0.00005928117, z: -0.03587433}
-    DistanceToCenter: 11.707537
-    v_normal: {x: 0, y: 0, z: 0}
-    SiblingRelationships:
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 23
-        ComponentIndex: 2
-      RelatedVertCoordinate:
-        TrianglesIndex: 23
-        ComponentIndex: 0
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 3.972367
-      v_to: {x: -0.07552177, y: 0.022656495, z: 0.99688673}
-      Angle_centerToDestinationVertex: 87.724236
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 23
-        ComponentIndex: 2
-      RelatedVertCoordinate:
-        TrianglesIndex: 23
-        ComponentIndex: 1
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 1.1999998
-      v_to: {x: 1, y: 0, z: 0}
-      Angle_centerToDestinationVertex: 177.94415
-    Relationships: []
-    SharedVertexCoordinates:
-    - TrianglesIndex: 12
-      ComponentIndex: 1
-    - TrianglesIndex: 19
-      ComponentIndex: 1
-    - TrianglesIndex: 24
-      ComponentIndex: 2
-    DBG_constructor: "at tri[23], [2]\nPos: '(11.70, 0.00, 0.42)', orig: '(11.70,
-      0.00, 0.42)'\nvToCtr: '(-1.00, 0.00, -0.04)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
-      '11.70754'\n\tAngle: '94.33121'. A: '87.72424', B: '177.9442'"
-  - Position: {x: 11.700001, y: 0.0006940365, z: 0.42000002}
-    originalPosition: {x: 11.700001, y: 0.0006940365, z: 0.42000002}
-    MyCoordinate:
-      TrianglesIndex: 24
-      ComponentIndex: 2
-    MeshIndex_triangles: 74
-    MeshIndex_vertices: 19
-    Angle: 2.8869686
-    v_toCenter: {x: -0.9993563, y: -0.00005928117, z: -0.03587433}
-    DistanceToCenter: 11.707537
-    v_normal: {x: 0, y: 0, z: 0}
-    SiblingRelationships:
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 24
-        ComponentIndex: 2
-      RelatedVertCoordinate:
-        TrianglesIndex: 24
-        ComponentIndex: 0
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 3.9889848
-      v_to: {x: -0.12033125, y: 0, z: 0.9927338}
-      Angle_centerToDestinationVertex: 85.14467
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 24
-        ComponentIndex: 2
-      RelatedVertCoordinate:
-        TrianglesIndex: 24
-        ComponentIndex: 1
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 3.972367
-      v_to: {x: -0.07552177, y: 0.022656495, z: 0.99688673}
-      Angle_centerToDestinationVertex: 87.724236
-    Relationships: []
-    SharedVertexCoordinates:
-    - TrianglesIndex: 12
-      ComponentIndex: 1
-    - TrianglesIndex: 19
-      ComponentIndex: 1
-    - TrianglesIndex: 23
-      ComponentIndex: 2
-    DBG_constructor: "at tri[24], [2]\nPos: '(11.70, 0.00, 0.42)', orig: '(11.70,
-      0.00, 0.42)'\nvToCtr: '(-1.00, 0.00, -0.04)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
-      '11.70754'\n\tAngle: '2.886969'. A: '85.14467', B: '87.72424'"
-  - Position: {x: 9.120001, y: 0.0006940365, z: 0.42000002}
-    originalPosition: {x: 9.120001, y: 0.0006940365, z: 0.42000002}
-    MyCoordinate:
-      TrianglesIndex: 12
-      ComponentIndex: 0
-    MeshIndex_triangles: 36
-    MeshIndex_vertices: 18
-    Angle: 2.7926714
-    v_toCenter: {x: -0.9989413, y: -0.00007601992, z: -0.046003874}
-    DistanceToCenter: 9.129666
-    v_normal: {x: 0, y: 0, z: 0}
-    SiblingRelationships:
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 12
-        ComponentIndex: 0
-      RelatedVertCoordinate:
-        TrianglesIndex: 12
-        ComponentIndex: 1
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 2.58
-      v_to: {x: 1, y: 0, z: 0}
-      Angle_centerToDestinationVertex: 177.3633
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 12
-        ComponentIndex: 0
-      RelatedVertCoordinate:
-        TrianglesIndex: 12
-        ComponentIndex: 2
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 2.4629252
-      v_to: {x: 0.9988123, y: 0, z: -0.048722554}
-      Angle_centerToDestinationVertex: 174.57054
-    Relationships: []
-    SharedVertexCoordinates:
-    - TrianglesIndex: 13
-      ComponentIndex: 0
-    - TrianglesIndex: 17
-      ComponentIndex: 0
-    - TrianglesIndex: 19
-      ComponentIndex: 2
-    - TrianglesIndex: 20
-      ComponentIndex: 1
-    DBG_constructor: "at tri[12], [0]\nPos: '(9.12, 0.00, 0.42)', orig: '(9.12, 0.00,
-      0.42)'\nvToCtr: '(-1.00, 0.00, -0.05)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
-      '9.129666'\n\tAngle: '2.792671'. A: '177.3633', B: '174.5705'"
-  - Position: {x: 9.120001, y: 0.0006940365, z: 0.42000002}
-    originalPosition: {x: 9.120001, y: 0.0006940365, z: 0.42000002}
-    MyCoordinate:
-      TrianglesIndex: 13
-      ComponentIndex: 0
-    MeshIndex_triangles: 39
-    MeshIndex_vertices: 18
-    Angle: 42.207325
-    v_toCenter: {x: -0.9989413, y: -0.00007601992, z: -0.046003874}
-    DistanceToCenter: 9.129666
-    v_normal: {x: 0, y: 0, z: 0}
-    SiblingRelationships:
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 13
-        ComponentIndex: 0
-      RelatedVertCoordinate:
-        TrianglesIndex: 13
-        ComponentIndex: 1
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 2.4629252
-      v_to: {x: 0.9988123, y: 0, z: -0.048722554}
-      Angle_centerToDestinationVertex: 174.57054
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 13
-        ComponentIndex: 0
-      RelatedVertCoordinate:
-        TrianglesIndex: 13
-        ComponentIndex: 2
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 0.16970555
-      v_to: {x: 0.7071064, y: 0, z: -0.7071071}
-      Angle_centerToDestinationVertex: 132.36322
-    Relationships: []
-    SharedVertexCoordinates:
-    - TrianglesIndex: 12
-      ComponentIndex: 0
-    - TrianglesIndex: 17
-      ComponentIndex: 0
-    - TrianglesIndex: 19
-      ComponentIndex: 2
-    - TrianglesIndex: 20
-      ComponentIndex: 1
-    DBG_constructor: "at tri[13], [0]\nPos: '(9.12, 0.00, 0.42)', orig: '(9.12, 0.00,
-      0.42)'\nvToCtr: '(-1.00, 0.00, -0.05)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
-      '9.129666'\n\tAngle: '42.20732'. A: '174.5705', B: '132.3632'"
-  - Position: {x: 9.120001, y: 0.0006940365, z: 0.42000002}
-    originalPosition: {x: 9.120001, y: 0.0006940365, z: 0.42000002}
-    MyCoordinate:
-      TrianglesIndex: 17
-      ComponentIndex: 0
-    MeshIndex_triangles: 51
-    MeshIndex_vertices: 18
-    Angle: 64.84069
-    v_toCenter: {x: -0.9989413, y: -0.00007601992, z: -0.046003874}
-    DistanceToCenter: 9.129666
-    v_normal: {x: 0, y: 0, z: 0}
-    SiblingRelationships:
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 17
-        ComponentIndex: 0
-      RelatedVertCoordinate:
-        TrianglesIndex: 17
-        ComponentIndex: 1
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 1.2000003
-      v_to: {x: -1, y: 0, z: 0}
-      Angle_centerToDestinationVertex: 2.6367075
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 17
-        ComponentIndex: 0
-      RelatedVertCoordinate:
-        TrianglesIndex: 17
-        ComponentIndex: 2
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 4.375066
-      v_to: {x: -0.4251366, y: 0, z: 0.90512925}
-      Angle_centerToDestinationVertex: 67.477455
-    Relationships: []
-    SharedVertexCoordinates:
-    - TrianglesIndex: 12
-      ComponentIndex: 0
-    - TrianglesIndex: 13
-      ComponentIndex: 0
-    - TrianglesIndex: 19
-      ComponentIndex: 2
-    - TrianglesIndex: 20
-      ComponentIndex: 1
-    DBG_constructor: "at tri[17], [0]\nPos: '(9.12, 0.00, 0.42)', orig: '(9.12, 0.00,
-      0.42)'\nvToCtr: '(-1.00, 0.00, -0.05)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
-      '9.129666'\n\tAngle: '64.84069'. A: '2.636708', B: '67.47746'"
-  - Position: {x: 9.120001, y: 0.0006940365, z: 0.42000002}
-    originalPosition: {x: 9.120001, y: 0.0006940365, z: 0.42000002}
-    MyCoordinate:
-      TrianglesIndex: 20
-      ComponentIndex: 1
-    MeshIndex_triangles: 61
-    MeshIndex_vertices: 18
-    Angle: 53.096455
-    v_toCenter: {x: -0.9989413, y: -0.00007601992, z: -0.046003874}
-    DistanceToCenter: 9.129666
-    v_normal: {x: 0, y: 0, z: 0}
-    SiblingRelationships:
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 20
-        ComponentIndex: 1
-      RelatedVertCoordinate:
-        TrianglesIndex: 20
-        ComponentIndex: 0
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 4.4823656
-      v_to: {x: 0.4685027, y: 0, z: 0.8834621}
-      Angle_centerToDestinationVertex: 120.573906
-    - PerspectiveVertCoordinate:
-        TrianglesIndex: 20
-        ComponentIndex: 1
-      RelatedVertCoordinate:
-        TrianglesIndex: 20
-        ComponentIndex: 2
-      CanSee: 1
-      AmOverlapping: 0
-      Distance: 4.375066
-      v_to: {x: -0.4251366, y: 0, z: 0.90512925}
-      Angle_centerToDestinationVertex: 67.477455
-    Relationships: []
-    SharedVertexCoordinates:
-    - TrianglesIndex: 12
-      ComponentIndex: 0
-    - TrianglesIndex: 13
-      ComponentIndex: 0
-    - TrianglesIndex: 17
-      ComponentIndex: 0
-    - TrianglesIndex: 19
-      ComponentIndex: 2
-    DBG_constructor: "at tri[20], [1]\nPos: '(9.12, 0.00, 0.42)', orig: '(9.12, 0.00,
-      0.42)'\nvToCtr: '(-1.00, 0.00, -0.05)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
-      '9.129666'\n\tAngle: '53.09645'. A: '120.5739', B: '67.47746'"
+    SharedVertexCoordinates: []
+    DBG_constructor: 
+  Verts_currentlySelected: []
   Edge_LastSelected:
-    EdgeLength: 0.5531731
-    StartPosition: {x: 7.26, y: 0.0006940365, z: 0.42000002}
+    EdgeLength: 0
+    StartPosition: {x: 0, y: 0, z: 0}
     StartVertCoordinate:
-      TrianglesIndex: 7
+      TrianglesIndex: 0
       ComponentIndex: 0
-    MidPosition: {x: 7.5300007, y: 0.0006940365, z: 0.36}
-    EndPosition: {x: 7.8000007, y: 0.0006940365, z: 0.3}
+    MidPosition: {x: 0, y: 0, z: 0}
+    EndPosition: {x: 0, y: 0, z: 0}
     EndVertCoordinate:
-      TrianglesIndex: 7
-      ComponentIndex: 2
-    v_startToEnd: {x: -0.97618705, y: 0, z: 0.21693029}
-    v_endToStart: {x: 0.97618705, y: 0, z: -0.21693029}
-    v_toCenter: {x: 0.9883716, y: 0, z: 0.15205768}
+      TrianglesIndex: 0
+      ComponentIndex: 0
+    v_startToEnd: {x: 0, y: 0, z: 0}
+    v_endToStart: {x: 0, y: 0, z: 0}
+    v_toCenter: {x: 0, y: 0, z: 0}
     v_cross: {x: 0, y: 0, z: 0}
     MyCoordinate:
-      TrianglesIndex: 7
-      ComponentIndex: 1
+      TrianglesIndex: 0
+      ComponentIndex: 0
     SharedEdge:
-      TrianglesIndex: 9
-      ComponentIndex: 1
+      TrianglesIndex: 0
+      ComponentIndex: 0
   Edge_CurrentlyPointingAt:
-    EdgeLength: 0.5531731
-    StartPosition: {x: 7.26, y: 0.0006940365, z: 0.42000002}
+    EdgeLength: 0
+    StartPosition: {x: 0, y: 0, z: 0}
     StartVertCoordinate:
-      TrianglesIndex: 7
+      TrianglesIndex: 0
       ComponentIndex: 0
-    MidPosition: {x: 7.5300007, y: 0.0006940365, z: 0.36}
-    EndPosition: {x: 7.8000007, y: 0.0006940365, z: 0.3}
+    MidPosition: {x: 0, y: 0, z: 0}
+    EndPosition: {x: 0, y: 0, z: 0}
     EndVertCoordinate:
-      TrianglesIndex: 7
-      ComponentIndex: 2
-    v_startToEnd: {x: -0.97618705, y: 0, z: 0.21693029}
-    v_endToStart: {x: 0.97618705, y: 0, z: -0.21693029}
-    v_toCenter: {x: 0.9883716, y: 0, z: 0.15205768}
+      TrianglesIndex: 0
+      ComponentIndex: 0
+    v_startToEnd: {x: 0, y: 0, z: 0}
+    v_endToStart: {x: 0, y: 0, z: 0}
+    v_toCenter: {x: 0, y: 0, z: 0}
     v_cross: {x: 0, y: 0, z: 0}
     MyCoordinate:
-      TrianglesIndex: 7
-      ComponentIndex: 1
-    SharedEdge:
-      TrianglesIndex: 9
-      ComponentIndex: 1
-  Edges_currentlySelected:
-  - EdgeLength: 0.5531731
-    StartPosition: {x: 7.26, y: 0.0006940365, z: 0.42000002}
-    StartVertCoordinate:
-      TrianglesIndex: 7
+      TrianglesIndex: 0
       ComponentIndex: 0
-    MidPosition: {x: 7.5300007, y: 0.0006940365, z: 0.36}
-    EndPosition: {x: 7.8000007, y: 0.0006940365, z: 0.3}
-    EndVertCoordinate:
-      TrianglesIndex: 7
-      ComponentIndex: 2
-    v_startToEnd: {x: -0.97618705, y: 0, z: 0.21693029}
-    v_endToStart: {x: 0.97618705, y: 0, z: -0.21693029}
-    v_toCenter: {x: 0.9883716, y: 0, z: 0.15205768}
-    v_cross: {x: 0, y: 0, z: 0}
-    MyCoordinate:
-      TrianglesIndex: 7
-      ComponentIndex: 1
     SharedEdge:
-      TrianglesIndex: 9
-      ComponentIndex: 1
-  - EdgeLength: 0.5531731
-    StartPosition: {x: 7.8000007, y: 0.0006940365, z: 0.3}
-    StartVertCoordinate:
-      TrianglesIndex: 9
+      TrianglesIndex: 0
       ComponentIndex: 0
-    MidPosition: {x: 7.5300007, y: 0.0006940365, z: 0.36}
-    EndPosition: {x: 7.26, y: 0.0006940365, z: 0.42000002}
-    EndVertCoordinate:
-      TrianglesIndex: 9
-      ComponentIndex: 2
-    v_startToEnd: {x: 0.97618705, y: 0, z: -0.21693029}
-    v_endToStart: {x: -0.97618705, y: 0, z: 0.21693029}
-    v_toCenter: {x: -0.6000006, y: 0, z: -0.79999954}
-    v_cross: {x: 0, y: 0, z: 0}
-    MyCoordinate:
-      TrianglesIndex: 9
-      ComponentIndex: 1
-    SharedEdge:
-      TrianglesIndex: 7
-      ComponentIndex: 1
+  Edges_currentlySelected: []
   drawTriLabels: 1
   drawNavMeshLines: 1
   color_edgeLines: {r: 0.20288353, g: 0.7735849, b: 0.50570464, a: 0.3882353}
@@ -3258,7 +2385,7 @@ MonoBehaviour:
   color_lockedTri: {r: 1, g: 0, b: 0.99189234, a: 1}
   Thickness_LockedTriEdge: 0.2
   Flag_AComponentIsCurrentlyHighlighted: 1
-  manipulatorPos: {x: 10.68, y: 0.0006940365, z: 1.7400001}
+  manipulatorPos: {x: 0, y: 0, z: 0}
   DBG_locked: 'set: ''True''
 
     locked ''2'' tris
@@ -3266,11 +2393,11 @@ MonoBehaviour:
 '
   DbgClass: 'Selected --------------------
 
-    ''1'' tris
+    ''0'' tris
 
-    ''16'' verts
+    ''0'' verts
 
-    ''2''
+    ''0''
     edges
 
 
@@ -3288,14 +2415,9 @@ MonoBehaviour:
     ''True''
 
 '
-  DebugPointAt: 'tri: [15]. alignment: ''0.9288226''
+  DebugPointAt: 'tri: [1]. alignment: ''0.9151689''
 
-    Index_TriPointingAt: ''15''
-
-    tri:
-    [18]. alignment: ''0.9458158''
-
-    Index_TriPointingAt: ''18''
+    Index_TriPointingAt: ''1''
 
 '
   DebugSelectedReport: "Mode: 'Faces', mod: 'False'\npointing at: '19' \nnow checking
@@ -133631,7 +132753,7 @@ MonoBehaviour:
     v_normal: {x: 0, y: 1, z: 1.4558394e-17}
   Vertices: []
   deletedTriangles: []
-  _mesh: {fileID: 1723982664}
+  _Mesh: {fileID: 1955470578}
   Bounds:
   - 7.26
   - 16.86
@@ -133652,8 +132774,7 @@ MonoBehaviour:
   V_BoundsSize: {x: 9.6, y: 1.47, z: 14.88}
   BoundsContainmentDistanceThreshold: 8.884472
   color_mesh: {r: 0.08024918, g: 0.83396226, b: 0.6329721, a: 0.64705884}
-  dbg_Areas: 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-  dbg_Vertices:
+  dbgVis_vertices:
   - {x: 16.86, y: 0.0006940365, z: 9.4800005}
   - {x: 16.740002, y: 0.0006940365, z: 0.42000002}
   - {x: 15.540001, y: 0.0006940365, z: 0.42000002}
@@ -133729,7 +132850,361 @@ MonoBehaviour:
   - {x: 12.900001, y: 0.0006940365, z: -1.4999995}
   - {x: 7.8000007, y: 0.0006940365, z: -1.3799996}
   - {x: 13.02, y: 0.0006940365, z: -1.3799996}
-  dbg_Indices: 000000000100000002000000000000000200000003000000000000000400000001000000010000000400000005000000060000000700000008000000060000000800000003000000030000000200000006000000090000000a0000000b0000000b0000000c0000000d0000000b0000000d000000090000000e0000000f000000100000000e000000100000001100000012000000130000000e000000120000000e000000110000001400000015000000160000001700000018000000190000000a000000090000001a000000120000000a0000001a000000180000001b000000190000001c00000013000000120000001c000000120000001a0000001d0000001e0000001f000000200000001d0000001f000000200000001f000000130000001c000000200000001300000021000000220000001c0000001a000000230000002400000025000000210000001c0000001a000000240000002600000026000000250000001c000000260000001c0000001a000000140000002700000028000000140000002800000029000000280000002a0000002b000000280000002b000000290000002a0000001d000000200000002a000000200000002b000000080000002c0000002d0000001f0000001e0000002e000000150000002f000000160000001b00000018000000300000003100000024000000230000001b00000030000000310000001b00000031000000230000002500000026000000320000002500000032000000330000003200000034000000350000003200000035000000330000002f000000150000003600000022000000210000003700000036000000220000003700000036000000370000002f000000140000001600000017000000140000001700000027000000080000002d0000001f000000080000001f0000002e00000003000000080000002e000000030000002e000000380000003900000027000000170000003900000017000000190000003900000019000000030000000300000038000000390000003a0000003b0000003c0000003b0000003a0000003d0000003e0000003a0000003c0000003e0000003c0000003f00000008000000070000004000000008000000400000003f000000400000003e0000003f000000410000004200000043000000410000004300000044000000100000000f0000004500000010000000450000004600000047000000480000003f000000470000003f000000410000004700000041000000440000004900000043000000420000000d0000000c000000490000000d00000049000000420000004500000047000000440000004500000044000000460000004a0000002c00000008000000480000004a0000000800000048000000080000003f000000
+  dbgVis_normals:
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  dbgVis_triangles: 000000000100000002000000000000000200000003000000000000000400000001000000010000000400000005000000060000000700000008000000060000000800000003000000030000000200000006000000090000000a0000000b0000000b0000000c0000000d0000000b0000000d000000090000000e0000000f000000100000000e000000100000001100000012000000130000000e000000120000000e000000110000001400000015000000160000001700000018000000190000000a000000090000001a000000120000000a0000001a000000180000001b000000190000001c00000013000000120000001c000000120000001a0000001d0000001e0000001f000000200000001d0000001f000000200000001f000000130000001c000000200000001300000021000000220000001c0000001a000000230000002400000025000000210000001c0000001a000000240000002600000026000000250000001c000000260000001c0000001a000000140000002700000028000000140000002800000029000000280000002a0000002b000000280000002b000000290000002a0000001d000000200000002a000000200000002b000000080000002c0000002d0000001f0000001e0000002e000000150000002f000000160000001b00000018000000300000003100000024000000230000001b00000030000000310000001b00000031000000230000002500000026000000320000002500000032000000330000003200000034000000350000003200000035000000330000002f000000150000003600000022000000210000003700000036000000220000003700000036000000370000002f000000140000001600000017000000140000001700000027000000080000002d0000001f000000080000001f0000002e00000003000000080000002e000000030000002e000000380000003900000027000000170000003900000017000000190000003900000019000000030000000300000038000000390000003a0000003b0000003c0000003b0000003a0000003d0000003e0000003a0000003c0000003e0000003c0000003f00000008000000070000004000000008000000400000003f000000400000003e0000003f000000410000004200000043000000410000004300000044000000100000000f0000004500000010000000450000004600000047000000480000003f000000470000003f000000410000004700000041000000440000004900000043000000420000000d0000000c000000490000000d00000049000000420000004500000047000000440000004500000044000000460000004a0000002c00000008000000480000004a0000000800000048000000080000003f000000
+  dbgTriangulation_Areas: 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+  dbgTriangulation_Vertices:
+  - {x: 16.86, y: 0.0006940365, z: 9.4800005}
+  - {x: 16.740002, y: 0.0006940365, z: 0.42000002}
+  - {x: 15.540001, y: 0.0006940365, z: 0.42000002}
+  - {x: 15.360001, y: 0.0006940365, z: 9.4800005}
+  - {x: 16.86, y: 0.0006940365, z: 9.4800005}
+  - {x: 16.86, y: 0.0006940365, z: 0.42000002}
+  - {x: 16.740002, y: 0.0006940365, z: 0.42000002}
+  - {x: 16.740002, y: 0.0006940365, z: 0.42000002}
+  - {x: 16.86, y: 0.0006940365, z: 0.42000002}
+  - {x: 16.800001, y: 0.0006940365, z: 0.3}
+  - {x: 15.420001, y: 0.0006940365, z: 0.3}
+  - {x: 15.420001, y: 0.0006940365, z: 0}
+  - {x: 15.360001, y: 0.0006940365, z: 0}
+  - {x: 15.360001, y: 0.0006940365, z: 9.4800005}
+  - {x: 15.360001, y: 0.0006940365, z: 9.4800005}
+  - {x: 15.540001, y: 0.0006940365, z: 0.42000002}
+  - {x: 15.420001, y: 0.0006940365, z: 0.3}
+  - {x: 7.26, y: 0.0006940365, z: 0.42000002}
+  - {x: 7.9200006, y: 0.0006940365, z: 0.42000002}
+  - {x: 7.8000007, y: 0.0006940365, z: 0.3}
+  - {x: 7.8000007, y: 0.0006940365, z: 0.3}
+  - {x: 7.8000007, y: 0.0006940365, z: 0}
+  - {x: 7.26, y: 0.0006940365, z: 0}
+  - {x: 7.26, y: 0.0006940365, z: 0.42000002}
+  - {x: 11.580001, y: 0.0006940365, z: 0.3}
+  - {x: 11.580001, y: 0.0006940365, z: 0}
+  - {x: 9.240001, y: 0.0006940365, z: 0}
+  - {x: 9.240001, y: 0.0006940365, z: 0.3}
+  - {x: 9.120001, y: 0.0006940365, z: 0.42000002}
+  - {x: 11.700001, y: 0.0006940365, z: 0.42000002}
+  - {x: 11.580001, y: 0.0006940365, z: 0.3}
+  - {x: 9.240001, y: 0.0006940365, z: 0.3}
+  - {x: 11.400001, y: 0.09069395, z: 6.84}
+  - {x: 11.220001, y: 0.0006940365, z: 6.84}
+  - {x: 10.14, y: 0.0006940365, z: 7.8}
+  - {x: 10.02, y: 0.0006940365, z: 7.92}
+  - {x: 8.460001, y: 0.0006940365, z: 7.92}
+  - {x: 7.26, y: 0.0006940365, z: 9.4800005}
+  - {x: 7.9200006, y: 0.0006940365, z: 0.42000002}
+  - {x: 7.26, y: 0.0006940365, z: 0.42000002}
+  - {x: 7.26, y: 0.0006940365, z: 4.38}
+  - {x: 9.120001, y: 0.0006940365, z: 0.42000002}
+  - {x: 7.9200006, y: 0.0006940365, z: 0.42000002}
+  - {x: 7.26, y: 0.0006940365, z: 4.38}
+  - {x: 8.460001, y: 0.0006940365, z: 7.92}
+  - {x: 7.26, y: 0.0006940365, z: 7.92}
+  - {x: 7.26, y: 0.0006940365, z: 9.4800005}
+  - {x: 11.220001, y: 0.0006940365, z: 4.38}
+  - {x: 11.700001, y: 0.0006940365, z: 0.42000002}
+  - {x: 9.120001, y: 0.0006940365, z: 0.42000002}
+  - {x: 7.26, y: 0.0006940365, z: 4.38}
+  - {x: 13.200001, y: 0.09069395, z: 4.38}
+  - {x: 13.380001, y: 0.0006940365, z: 4.38}
+  - {x: 12.900001, y: 0.0006940365, z: 0.42000002}
+  - {x: 11.400001, y: 0.09069395, z: 4.38}
+  - {x: 13.200001, y: 0.09069395, z: 4.38}
+  - {x: 12.900001, y: 0.0006940365, z: 0.42000002}
+  - {x: 11.700001, y: 0.0006940365, z: 0.42000002}
+  - {x: 11.220001, y: 0.0006940365, z: 4.38}
+  - {x: 11.400001, y: 0.09069395, z: 4.38}
+  - {x: 11.700001, y: 0.0006940365, z: 0.42000002}
+  - {x: 10.02, y: 0.0006940365, z: 4.5600004}
+  - {x: 11.1, y: 0.0006940365, z: 4.5600004}
+  - {x: 11.220001, y: 0.0006940365, z: 4.38}
+  - {x: 7.26, y: 0.0006940365, z: 4.38}
+  - {x: 7.26, y: 0.0006940365, z: 4.5600004}
+  - {x: 8.460001, y: 0.0006940365, z: 4.5600004}
+  - {x: 9.84, y: 0.1506939, z: 4.5600004}
+  - {x: 10.02, y: 0.0006940365, z: 4.5600004}
+  - {x: 11.220001, y: 0.0006940365, z: 4.38}
+  - {x: 7.26, y: 0.0006940365, z: 4.38}
+  - {x: 8.460001, y: 0.0006940514, z: 4.5600004}
+  - {x: 8.64, y: 0.1506939, z: 4.5600004}
+  - {x: 8.64, y: 0.1506939, z: 4.5600004}
+  - {x: 9.84, y: 0.1506939, z: 4.5600004}
+  - {x: 11.220001, y: 0.0006940365, z: 4.38}
+  - {x: 7.26, y: 0.0006940365, z: 4.38}
+  - {x: 11.400001, y: 0.09069395, z: 6.84}
+  - {x: 13.200001, y: 0.09069395, z: 6.84}
+  - {x: 13.080001, y: 0.21069407, z: 6.7200003}
+  - {x: 11.52, y: 0.21069407, z: 6.7200003}
+  - {x: 13.080001, y: 0.21069407, z: 6.7200003}
+  - {x: 13.080001, y: 0.21069407, z: 4.5}
+  - {x: 11.52, y: 0.21069407, z: 4.5}
+  - {x: 11.52, y: 0.21069407, z: 6.7200003}
+  - {x: 13.080001, y: 0.21069407, z: 4.5}
+  - {x: 13.200001, y: 0.09069395, z: 4.38}
+  - {x: 11.400001, y: 0.09069395, z: 4.38}
+  - {x: 11.52, y: 0.21069407, z: 4.5}
+  - {x: 15.360001, y: 0.0006940365, z: 0}
+  - {x: 13.02, y: 0.0006940365, z: 0}
+  - {x: 13.02, y: 0.0006940365, z: 0.3}
+  - {x: 12.900001, y: 0.0006940365, z: 0.42000002}
+  - {x: 13.380001, y: 0.0006940365, z: 4.38}
+  - {x: 13.500001, y: 0.0006940365, z: 4.5}
+  - {x: 11.220001, y: 0.0006940365, z: 6.84}
+  - {x: 10.14, y: 0.0006940365, z: 6.84}
+  - {x: 10.14, y: 0.0006940365, z: 7.8}
+  - {x: 7.26, y: 0.0006940365, z: 7.92}
+  - {x: 8.460001, y: 0.0006940365, z: 7.92}
+  - {x: 8.34, y: 0.0006940365, z: 7.8}
+  - {x: 8.34, y: 0.0006940365, z: 4.6800003}
+  - {x: 8.460001, y: 0.0006940365, z: 4.5600004}
+  - {x: 7.26, y: 0.0006940365, z: 4.5600004}
+  - {x: 7.26, y: 0.0006940365, z: 7.92}
+  - {x: 8.34, y: 0.0006940365, z: 7.8}
+  - {x: 8.34, y: 0.0006940365, z: 4.6800003}
+  - {x: 7.26, y: 0.0006940365, z: 4.5600004}
+  - {x: 9.84, y: 0.1506939, z: 4.5600004}
+  - {x: 8.64, y: 0.1506939, z: 4.5600004}
+  - {x: 8.76, y: 0.21069407, z: 4.6800003}
+  - {x: 9.72, y: 0.21069407, z: 4.6800003}
+  - {x: 8.76, y: 0.21069407, z: 4.6800003}
+  - {x: 8.76, y: 1.4706941, z: 6.84}
+  - {x: 9.72, y: 1.4706941, z: 6.84}
+  - {x: 9.72, y: 0.21069407, z: 4.6800003}
+  - {x: 10.14, y: 0.0006940365, z: 6.84}
+  - {x: 11.220001, y: 0.0006940365, z: 6.84}
+  - {x: 11.1, y: 0.0006940365, z: 6.7200003}
+  - {x: 11.1, y: 0.0006940365, z: 4.5600004}
+  - {x: 10.02, y: 0.0006940365, z: 4.5600004}
+  - {x: 10.14, y: 0.0006940365, z: 4.6800003}
+  - {x: 11.1, y: 0.0006940365, z: 6.7200003}
+  - {x: 11.1, y: 0.0006940365, z: 4.5600004}
+  - {x: 10.14, y: 0.0006940365, z: 4.6800003}
+  - {x: 10.14, y: 0.0006940365, z: 6.84}
+  - {x: 11.400001, y: 0.09069395, z: 6.84}
+  - {x: 10.14, y: 0.0006940365, z: 7.8}
+  - {x: 10.02, y: 0.0006940365, z: 7.92}
+  - {x: 13.200001, y: 0.09069395, z: 6.84}
+  - {x: 15.360001, y: 0.0006940365, z: 0}
+  - {x: 13.02, y: 0.0006940365, z: 0.3}
+  - {x: 12.900001, y: 0.0006940365, z: 0.42000002}
+  - {x: 13.500001, y: 0.0006940365, z: 4.5}
+  - {x: 15.360001, y: 0.0006940365, z: 9.4800005}
+  - {x: 15.360001, y: 0.0006940365, z: 0}
+  - {x: 13.500001, y: 0.0006940365, z: 4.5}
+  - {x: 13.500001, y: 0.0006940365, z: 6.7200003}
+  - {x: 13.380001, y: 0.0006940365, z: 6.84}
+  - {x: 13.200001, y: 0.09069395, z: 6.84}
+  - {x: 10.02, y: 0.0006940365, z: 7.92}
+  - {x: 7.26, y: 0.0006940365, z: 9.4800005}
+  - {x: 15.360001, y: 0.0006940365, z: 9.4800005}
+  - {x: 15.360001, y: 0.0006940365, z: 9.4800005}
+  - {x: 13.500001, y: 0.0006940365, z: 6.7200003}
+  - {x: 13.380001, y: 0.0006940365, z: 6.84}
+  - {x: 16.740002, y: 0.0006940365, z: -1.4999995}
+  - {x: 16.86, y: 0.0006940365, z: -1.4999995}
+  - {x: 16.86, y: 0.0006940365, z: -5.3999996}
+  - {x: 16.86, y: 0.0006940365, z: -1.4999995}
+  - {x: 16.740002, y: 0.0006940365, z: -1.4999995}
+  - {x: 16.800001, y: 0.0006940365, z: -1.3799996}
+  - {x: 15.540001, y: 0.0006940365, z: -1.4999995}
+  - {x: 16.740002, y: 0.0006940365, z: -1.4999995}
+  - {x: 16.86, y: 0.0006940365, z: -5.3999996}
+  - {x: 15.360001, y: 0.0006940365, z: -5.3999996}
+  - {x: 15.360001, y: 0.0006940365, z: 0.00000047683716}
+  - {x: 15.420001, y: 0.0006940365, z: 0.00000047683716}
+  - {x: 15.420001, y: 0.0006940365, z: -1.3799996}
+  - {x: 15.360001, y: 0.0006940365, z: -5.3999996}
+  - {x: 15.420001, y: 0.0006940365, z: -1.3799996}
+  - {x: 15.540001, y: 0.0006940365, z: -1.4999995}
+  - {x: 15.360001, y: 0.0006940365, z: -5.3999996}
+  - {x: 7.26, y: 0.0006940365, z: -5.3999996}
+  - {x: 7.26, y: 0.0006940365, z: -1.4999995}
+  - {x: 7.9200006, y: 0.0006940365, z: -1.4999995}
+  - {x: 7.26, y: 0.0006940365, z: -5.3999996}
+  - {x: 7.9200006, y: 0.0006940365, z: -1.4999995}
+  - {x: 9.120001, y: 0.0006940365, z: -1.4999995}
+  - {x: 9.240001, y: 0.0006940365, z: 0.00000047683716}
+  - {x: 11.580001, y: 0.0006940365, z: 0.00000047683716}
+  - {x: 11.580001, y: 0.0006940365, z: -1.3799996}
+  - {x: 9.240001, y: 0.0006940365, z: -1.3799996}
+  - {x: 11.700001, y: 0.0006940365, z: -1.4999995}
+  - {x: 12.900001, y: 0.0006940365, z: -1.4999995}
+  - {x: 15.360001, y: 0.0006940365, z: -5.3999996}
+  - {x: 11.700001, y: 0.0006940365, z: -1.4999995}
+  - {x: 15.360001, y: 0.0006940365, z: -5.3999996}
+  - {x: 7.26, y: 0.0006940365, z: -5.3999996}
+  - {x: 9.120001, y: 0.0006940365, z: -1.4999995}
+  - {x: 7.8000007, y: 0.0006940365, z: -1.3799996}
+  - {x: 7.9200006, y: 0.0006940365, z: -1.4999995}
+  - {x: 7.26, y: 0.0006940365, z: -1.4999995}
+  - {x: 7.26, y: 0.0006940365, z: 0.00000047683716}
+  - {x: 7.8000007, y: 0.0006940365, z: 0.00000047683716}
+  - {x: 7.8000007, y: 0.0006940365, z: -1.3799996}
+  - {x: 7.26, y: 0.0006940365, z: -1.4999995}
+  - {x: 11.580001, y: 0.0006940365, z: -1.3799996}
+  - {x: 11.700001, y: 0.0006940365, z: -1.4999995}
+  - {x: 9.120001, y: 0.0006940365, z: -1.4999995}
+  - {x: 9.240001, y: 0.0006940365, z: -1.3799996}
+  - {x: 13.02, y: 0.0006940365, z: -1.3799996}
+  - {x: 13.02, y: 0.0006940365, z: 0.00000047683716}
+  - {x: 15.360001, y: 0.0006940365, z: 0.00000047683716}
+  - {x: 12.900001, y: 0.0006940365, z: -1.4999995}
+  - {x: 13.02, y: 0.0006940365, z: -1.3799996}
+  - {x: 15.360001, y: 0.0006940365, z: 0.00000047683716}
+  - {x: 15.360001, y: 0.0006940365, z: -5.3999996}
+  dbgTriangulation_Indices: 0000000001000000020000000000000002000000030000000400000005000000060000000700000008000000090000000a0000000b0000000c0000000a0000000c0000000d0000000e0000000f0000001000000011000000120000001300000014000000150000001600000014000000160000001700000018000000190000001a000000180000001a0000001b0000001c0000001d0000001e0000001c0000001e0000001f000000200000002100000022000000230000002400000025000000260000002700000028000000290000002a0000002b0000002c0000002d0000002e0000002f00000030000000310000002f00000031000000320000003300000034000000350000003600000037000000380000003600000038000000390000003a0000003b0000003c0000003d0000003e0000003f000000400000004100000042000000430000004400000045000000460000004700000048000000490000004a0000004b000000490000004b0000004c0000004d0000004e0000004f0000004d0000004f00000050000000510000005200000053000000510000005300000054000000550000005600000057000000550000005700000058000000590000005a0000005b0000005c0000005d0000005e0000005f000000600000006100000062000000630000006400000065000000660000006700000068000000690000006a000000680000006a0000006b0000006c0000006d0000006e0000006c0000006e0000006f0000007000000071000000720000007000000072000000730000007400000075000000760000007700000078000000790000007a0000007b0000007c0000007a0000007c0000007d0000007e0000007f000000800000007e00000080000000810000008200000083000000840000008200000084000000850000008600000087000000880000008600000088000000890000008a0000008b0000008c0000008a0000008c0000008d0000008a0000008d0000008e0000008f000000900000009100000092000000930000009400000095000000960000009700000098000000990000009a000000980000009a0000009b0000009c0000009d0000009e0000009c0000009e0000009f000000a0000000a1000000a2000000a3000000a4000000a5000000a6000000a7000000a8000000a9000000aa000000ab000000a9000000ab000000ac000000ad000000ae000000af000000b0000000b1000000b2000000b0000000b2000000b3000000b4000000b5000000b6000000b7000000b8000000b9000000b7000000b9000000ba000000bb000000bc000000bd000000bb000000bd000000be000000bf000000c0000000c1000000c2000000c3000000c4000000c2000000c4000000c5000000
+  dbgKosher_Triangles: 000000000100000002000000000000000200000003000000000000000400000001000000010000000400000005000000060000000700000008000000060000000800000003000000030000000200000006000000090000000a0000000b0000000b0000000c0000000d0000000b0000000d000000090000000e0000000f000000100000000e000000100000001100000012000000130000000e000000120000000e000000110000001400000015000000160000001700000018000000190000000a000000090000001a000000120000000a0000001a000000180000001b000000190000001c00000013000000120000001c000000120000001a0000001d0000001e0000001f000000200000001d0000001f000000200000001f000000130000001c000000200000001300000021000000220000001c0000001a000000230000002400000025000000210000001c0000001a000000240000002600000026000000250000001c000000260000001c0000001a000000140000002700000028000000140000002800000029000000280000002a0000002b000000280000002b000000290000002a0000001d000000200000002a000000200000002b000000080000002c0000002d0000001f0000001e0000002e000000150000002f000000160000001b00000018000000300000003100000024000000230000001b00000030000000310000001b00000031000000230000002500000026000000320000002500000032000000330000003200000034000000350000003200000035000000330000002f000000150000003600000022000000210000003700000036000000220000003700000036000000370000002f000000140000001600000017000000140000001700000027000000080000002d0000001f000000080000001f0000002e00000003000000080000002e000000030000002e000000380000003900000027000000170000003900000017000000190000003900000019000000030000000300000038000000390000003a0000003b0000003c0000003b0000003a0000003d0000003e0000003a0000003c0000003e0000003c0000003f00000008000000070000004000000008000000400000003f000000400000003e0000003f000000410000004200000043000000410000004300000044000000100000000f0000004500000010000000450000004600000047000000480000003f000000470000003f000000410000004700000041000000440000004900000043000000420000000d0000000c000000490000000d00000049000000420000004500000047000000440000004500000044000000460000004a0000002c00000008000000480000004a0000000800000048000000080000003f000000
+  dbgKosher_vertices:
+  - {x: 16.86, y: 0.0006940365, z: 9.4800005}
+  - {x: 16.740002, y: 0.0006940365, z: 0.42000002}
+  - {x: 15.540001, y: 0.0006940365, z: 0.42000002}
+  - {x: 15.360001, y: 0.0006940365, z: 9.4800005}
+  - {x: 16.86, y: 0.0006940365, z: 0.42000002}
+  - {x: 16.800001, y: 0.0006940365, z: 0.3}
+  - {x: 15.420001, y: 0.0006940365, z: 0.3}
+  - {x: 15.420001, y: 0.0006940365, z: 0}
+  - {x: 15.360001, y: 0.0006940365, z: 0}
+  - {x: 7.26, y: 0.0006940365, z: 0.42000002}
+  - {x: 7.9200006, y: 0.0006940365, z: 0.42000002}
+  - {x: 7.8000007, y: 0.0006940365, z: 0.3}
+  - {x: 7.8000007, y: 0.0006940365, z: 0}
+  - {x: 7.26, y: 0.0006940365, z: 0}
+  - {x: 11.580001, y: 0.0006940365, z: 0.3}
+  - {x: 11.580001, y: 0.0006940365, z: 0}
+  - {x: 9.240001, y: 0.0006940365, z: 0}
+  - {x: 9.240001, y: 0.0006940365, z: 0.3}
+  - {x: 9.120001, y: 0.0006940365, z: 0.42000002}
+  - {x: 11.700001, y: 0.0006940365, z: 0.42000002}
+  - {x: 11.400001, y: 0.09069395, z: 6.84}
+  - {x: 11.220001, y: 0.0006940365, z: 6.84}
+  - {x: 10.14, y: 0.0006940365, z: 7.8}
+  - {x: 10.02, y: 0.0006940365, z: 7.92}
+  - {x: 8.460001, y: 0.0006940365, z: 7.92}
+  - {x: 7.26, y: 0.0006940365, z: 9.4800005}
+  - {x: 7.26, y: 0.0006940365, z: 4.38}
+  - {x: 7.26, y: 0.0006940365, z: 7.92}
+  - {x: 11.220001, y: 0.0006940365, z: 4.38}
+  - {x: 13.200001, y: 0.09069395, z: 4.38}
+  - {x: 13.380001, y: 0.0006940365, z: 4.38}
+  - {x: 12.900001, y: 0.0006940365, z: 0.42000002}
+  - {x: 11.400001, y: 0.09069395, z: 4.38}
+  - {x: 10.02, y: 0.0006940365, z: 4.5600004}
+  - {x: 11.1, y: 0.0006940365, z: 4.5600004}
+  - {x: 7.26, y: 0.0006940365, z: 4.5600004}
+  - {x: 8.460001, y: 0.0006940365, z: 4.5600004}
+  - {x: 9.84, y: 0.1506939, z: 4.5600004}
+  - {x: 8.64, y: 0.1506939, z: 4.5600004}
+  - {x: 13.200001, y: 0.09069395, z: 6.84}
+  - {x: 13.080001, y: 0.21069407, z: 6.7200003}
+  - {x: 11.52, y: 0.21069407, z: 6.7200003}
+  - {x: 13.080001, y: 0.21069407, z: 4.5}
+  - {x: 11.52, y: 0.21069407, z: 4.5}
+  - {x: 13.02, y: 0.0006940365, z: 0}
+  - {x: 13.02, y: 0.0006940365, z: 0.3}
+  - {x: 13.500001, y: 0.0006940365, z: 4.5}
+  - {x: 10.14, y: 0.0006940365, z: 6.84}
+  - {x: 8.34, y: 0.0006940365, z: 7.8}
+  - {x: 8.34, y: 0.0006940365, z: 4.6800003}
+  - {x: 8.76, y: 0.21069407, z: 4.6800003}
+  - {x: 9.72, y: 0.21069407, z: 4.6800003}
+  - {x: 8.76, y: 1.4706941, z: 6.84}
+  - {x: 9.72, y: 1.4706941, z: 6.84}
+  - {x: 11.1, y: 0.0006940365, z: 6.7200003}
+  - {x: 10.14, y: 0.0006940365, z: 4.6800003}
+  - {x: 13.500001, y: 0.0006940365, z: 6.7200003}
+  - {x: 13.380001, y: 0.0006940365, z: 6.84}
+  - {x: 16.740002, y: 0.0006940365, z: -1.4999995}
+  - {x: 16.86, y: 0.0006940365, z: -1.4999995}
+  - {x: 16.86, y: 0.0006940365, z: -5.3999996}
+  - {x: 16.800001, y: 0.0006940365, z: -1.3799996}
+  - {x: 15.540001, y: 0.0006940365, z: -1.4999995}
+  - {x: 15.360001, y: 0.0006940365, z: -5.3999996}
+  - {x: 15.420001, y: 0.0006940365, z: -1.3799996}
+  - {x: 7.26, y: 0.0006940365, z: -5.3999996}
+  - {x: 7.26, y: 0.0006940365, z: -1.4999995}
+  - {x: 7.9200006, y: 0.0006940365, z: -1.4999995}
+  - {x: 9.120001, y: 0.0006940365, z: -1.4999995}
+  - {x: 11.580001, y: 0.0006940365, z: -1.3799996}
+  - {x: 9.240001, y: 0.0006940365, z: -1.3799996}
+  - {x: 11.700001, y: 0.0006940365, z: -1.4999995}
+  - {x: 12.900001, y: 0.0006940365, z: -1.4999995}
+  - {x: 7.8000007, y: 0.0006940365, z: -1.3799996}
+  - {x: 13.02, y: 0.0006940365, z: -1.3799996}
   DbgSamplePosition: 'Searching through ''84'' tris...
 
     i: ''0''....................
@@ -134570,171 +134045,6 @@ MonoBehaviour:
   TestMouseDirections_face: []
   GrabbedPositions_face: []
   CapturedNumberOfSharedVerts_face: 
---- !u!43 &1723982664
-Mesh:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  serializedVersion: 11
-  m_SubMeshes:
-  - serializedVersion: 2
-    firstByte: 0
-    indexCount: 252
-    topology: 0
-    baseVertex: 0
-    firstVertex: 0
-    vertexCount: 75
-    localAABB:
-      m_Center: {x: 12.06, y: 0.73569405, z: 2.0400004}
-      m_Extent: {x: 4.8, y: 0.735, z: 7.44}
-  m_Shapes:
-    vertices: []
-    shapes: []
-    channels: []
-    fullWeights: []
-  m_BindPose: []
-  m_BoneNameHashes: 
-  m_RootBoneNameHash: 0
-  m_BonesAABB: []
-  m_VariableBoneCountWeights:
-    m_Data: 
-  m_MeshCompression: 0
-  m_IsReadable: 1
-  m_KeepVertices: 1
-  m_KeepIndices: 1
-  m_IndexFormat: 0
-  m_IndexBuffer: 00000100020000000200030000000400010001000400050006000700080006000800030003000200060009000a000b000b000c000d000b000d0009000e000f0010000e0010001100120013000e0012000e0011001400150016001700180019000a0009001a0012000a001a0018001b0019001c00130012001c0012001a001d001e001f0020001d001f0020001f0013001c0020001300210022001c001a0023002400250021001c001a0024002600260025001c0026001c001a0014002700280014002800290028002a002b0028002b0029002a001d0020002a0020002b0008002c002d001f001e002e0015002f0016001b00180030003100240023001b00300031001b00310023002500260032002500320033003200340035003200350033002f0015003600220021003700360022003700360037002f0014001600170014001700270008002d001f0008001f002e00030008002e0003002e0038003900270017003900170019003900190003000300380039003a003b003c003b003a003d003e003a003c003e003c003f00080007004000080040003f0040003e003f0041004200430041004300440010000f004500100045004600470048003f0047003f0041004700410044004900430042000d000c0049000d00490042004500470044004500440046004a002c00080048004a000800480008003f00
-  m_VertexData:
-    serializedVersion: 3
-    m_VertexCount: 75
-    m_Channels:
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 3
-    - stream: 0
-      offset: 12
-      format: 0
-      dimension: 3
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    m_DataSize: 1800
-    _typelessdata: 48e1864100f0353a15ae1741000000000000803f0000000086eb854100f0353a3e0ad73e000000000000803f00000000d8a3784100f0353a3e0ad73e000000000000803f0000000090c2754100f0353a15ae1741000000000000803f0000000048e1864100f0353a3e0ad73e000000000000803f000000006766864100f0353a9a99993e000000000000803f0000000053b8764100f0353a9a99993e000000000000803f0000000053b8764100f0353a00000000000000000000803f0000000090c2754100f0353a00000000000000000000803f00000000ec51e84000f0353a3e0ad73e000000000000803f00000000a570fd4000f0353a3e0ad73e000000000000803f000000009b99f94000f0353a9a99993e000000000000803f000000009b99f94000f0353a00000000000000000000803f00000000ec51e84000f0353a00000000000000000000803f00000000af47394100f0353a9a99993e000000000000803f00000000af47394100f0353a00000000000000000000803f000000000bd7134100f0353a00000000000000000000803f000000000bd7134100f0353a9a99993e000000000000803f0000000086eb114100f0353a3e0ad73e000000000000803f0000000034333b4100f0353a3e0ad73e000000000000803f0000000067663641c0bdb93d48e1da40000000000000803f000000002085334100f0353a48e1da40000000000000803f00000000713d224100f0353a9a99f940000000000000803f00000000ec51204100f0353aa470fd40000000000000803f000000002a5c074100f0353aa470fd40000000000000803f00000000ec51e84000f0353a15ae1741000000000000803f00000000ec51e84000f0353af6288c40000000000000803f00000000ec51e84000f0353aa470fd40000000000000803f000000002085334100f0353af6288c40000000000000803f0000000034335341c0bdb93df6288c40000000000000803f000000007c14564100f0353af6288c40000000000000803f0000000067664e4100f0353a3e0ad73e000000000000803f0000000067663641c0bdb93df6288c40000000000000803f00000000ec51204100f0353a86eb9140000000000000803f000000009a99314100f0353a86eb9140000000000000803f00000000ec51e84000f0353a86eb9140000000000000803f000000002a5c074100f0353a86eb9140000000000000803f00000000a4701d41804f1a3e86eb9140000000000000803f00000000713d0a41804f1a3e86eb9140000000000000803f0000000034335341c0bdb93d48e1da40000000000000803f00000000af47514130c0573e3e0ad740000000000000803f00000000ec51384130c0573e3e0ad740000000000000803f00000000af47514130c0573e00009040000000000000803f00000000ec51384130c0573e00009040000000000000803f00000000ec51504100f0353a00000000000000000000803f00000000ec51504100f0353a9a99993e000000000000803f000000000100584100f0353a00009040000000000000803f00000000713d224100f0353a48e1da40000000000000803f00000000a470054100f0353a9a99f940000000000000803f00000000a470054100f0353a90c29540000000000000803f00000000f6280c4130c0573e90c29540000000000000803f000000001f851b4130c0573e90c29540000000000000803f00000000f6280c41b43fbc3f48e1da40000000000000803f000000001f851b41b43fbc3f48e1da40000000000000803f000000009a99314100f0353a3e0ad740000000000000803f00000000713d224100f0353a90c29540000000000000803f000000000100584100f0353a3e0ad740000000000000803f000000007c14564100f0353a48e1da40000000000000803f0000000086eb854100f0353afcffbfbf000000000000803f0000000048e1864100f0353afcffbfbf000000000000803f0000000048e1864100f0353accccacc0000000000000803f000000006766864100f0353ad4a3b0bf000000000000803f00000000d8a3784100f0353afcffbfbf000000000000803f0000000090c2754100f0353accccacc0000000000000803f0000000053b8764100f0353ad4a3b0bf000000000000803f00000000ec51e84000f0353accccacc0000000000000803f00000000ec51e84000f0353afcffbfbf000000000000803f00000000a570fd4000f0353afcffbfbf000000000000803f0000000086eb114100f0353afcffbfbf000000000000803f00000000af47394100f0353ad4a3b0bf000000000000803f000000000bd7134100f0353ad4a3b0bf000000000000803f0000000034333b4100f0353afcffbfbf000000000000803f0000000067664e4100f0353afcffbfbf000000000000803f000000009b99f94000f0353ad4a3b0bf000000000000803f00000000ec51504100f0353ad4a3b0bf000000000000803f00000000
-  m_CompressedMesh:
-    m_Vertices:
-      m_NumItems: 0
-      m_Range: 0
-      m_Start: 0
-      m_Data: 
-      m_BitSize: 0
-    m_UV:
-      m_NumItems: 0
-      m_Range: 0
-      m_Start: 0
-      m_Data: 
-      m_BitSize: 0
-    m_Normals:
-      m_NumItems: 0
-      m_Range: 0
-      m_Start: 0
-      m_Data: 
-      m_BitSize: 0
-    m_Tangents:
-      m_NumItems: 0
-      m_Range: 0
-      m_Start: 0
-      m_Data: 
-      m_BitSize: 0
-    m_Weights:
-      m_NumItems: 0
-      m_Data: 
-      m_BitSize: 0
-    m_NormalSigns:
-      m_NumItems: 0
-      m_Data: 
-      m_BitSize: 0
-    m_TangentSigns:
-      m_NumItems: 0
-      m_Data: 
-      m_BitSize: 0
-    m_FloatColors:
-      m_NumItems: 0
-      m_Range: 0
-      m_Start: 0
-      m_Data: 
-      m_BitSize: 0
-    m_BoneIndices:
-      m_NumItems: 0
-      m_Data: 
-      m_BitSize: 0
-    m_Triangles:
-      m_NumItems: 0
-      m_Data: 
-      m_BitSize: 0
-    m_UVInfo: 0
-  m_LocalAABB:
-    m_Center: {x: 12.06, y: 0.73569405, z: 2.0400004}
-    m_Extent: {x: 4.8, y: 0.735, z: 7.44}
-  m_MeshUsageFlags: 0
-  m_CookingOptions: 30
-  m_BakedConvexCollisionMesh: 
-  m_BakedTriangleCollisionMesh: 
-  m_MeshMetrics[0]: 1
-  m_MeshMetrics[1]: 1
-  m_MeshOptimizationFlags: 1
-  m_StreamData:
-    serializedVersion: 2
-    offset: 0
-    size: 0
-    path: 
 --- !u!1 &1766895928
 GameObject:
   m_ObjectHideFlags: 0
@@ -135128,6 +134438,171 @@ Transform:
   m_Children: []
   m_Father: {fileID: 285147961}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!43 &1955470578
+Mesh:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  serializedVersion: 11
+  m_SubMeshes:
+  - serializedVersion: 2
+    firstByte: 0
+    indexCount: 252
+    topology: 0
+    baseVertex: 0
+    firstVertex: 0
+    vertexCount: 75
+    localAABB:
+      m_Center: {x: 12.06, y: 0.73569405, z: 2.0400004}
+      m_Extent: {x: 4.8, y: 0.735, z: 7.44}
+  m_Shapes:
+    vertices: []
+    shapes: []
+    channels: []
+    fullWeights: []
+  m_BindPose: []
+  m_BoneNameHashes: 
+  m_RootBoneNameHash: 0
+  m_BonesAABB: []
+  m_VariableBoneCountWeights:
+    m_Data: 
+  m_MeshCompression: 0
+  m_IsReadable: 1
+  m_KeepVertices: 1
+  m_KeepIndices: 1
+  m_IndexFormat: 0
+  m_IndexBuffer: 00000100020000000200030000000400010001000400050006000700080006000800030003000200060009000a000b000b000c000d000b000d0009000e000f0010000e0010001100120013000e0012000e0011001400150016001700180019000a0009001a0012000a001a0018001b0019001c00130012001c0012001a001d001e001f0020001d001f0020001f0013001c0020001300210022001c001a0023002400250021001c001a0024002600260025001c0026001c001a0014002700280014002800290028002a002b0028002b0029002a001d0020002a0020002b0008002c002d001f001e002e0015002f0016001b00180030003100240023001b00300031001b00310023002500260032002500320033003200340035003200350033002f0015003600220021003700360022003700360037002f0014001600170014001700270008002d001f0008001f002e00030008002e0003002e0038003900270017003900170019003900190003000300380039003a003b003c003b003a003d003e003a003c003e003c003f00080007004000080040003f0040003e003f0041004200430041004300440010000f004500100045004600470048003f0047003f0041004700410044004900430042000d000c0049000d00490042004500470044004500440046004a002c00080048004a000800480008003f00
+  m_VertexData:
+    serializedVersion: 3
+    m_VertexCount: 75
+    m_Channels:
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 3
+    - stream: 0
+      offset: 12
+      format: 0
+      dimension: 3
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    m_DataSize: 1800
+    _typelessdata: 48e1864100f0353a15ae1741000000000000803f0000000086eb854100f0353a3e0ad73e000000000000803f00000000d8a3784100f0353a3e0ad73e000000000000803f0000000090c2754100f0353a15ae1741000000000000803f0000000048e1864100f0353a3e0ad73e000000000000803f000000006766864100f0353a9a99993e000000000000803f0000000053b8764100f0353a9a99993e000000000000803f0000000053b8764100f0353a00000000000000000000803f0000000090c2754100f0353a00000000000000000000803f00000000ec51e84000f0353a3e0ad73e000000000000803f00000000a570fd4000f0353a3e0ad73e000000000000803f000000009b99f94000f0353a9a99993e000000000000803f000000009b99f94000f0353a00000000000000000000803f00000000ec51e84000f0353a00000000000000000000803f00000000af47394100f0353a9a99993e000000000000803f00000000af47394100f0353a00000000000000000000803f000000000bd7134100f0353a00000000000000000000803f000000000bd7134100f0353a9a99993e000000000000803f0000000086eb114100f0353a3e0ad73e000000000000803f0000000034333b4100f0353a3e0ad73e000000000000803f0000000067663641c0bdb93d48e1da40000000000000803f000000002085334100f0353a48e1da40000000000000803f00000000713d224100f0353a9a99f940000000000000803f00000000ec51204100f0353aa470fd40000000000000803f000000002a5c074100f0353aa470fd40000000000000803f00000000ec51e84000f0353a15ae1741000000000000803f00000000ec51e84000f0353af6288c40000000000000803f00000000ec51e84000f0353aa470fd40000000000000803f000000002085334100f0353af6288c40000000000000803f0000000034335341c0bdb93df6288c40000000000000803f000000007c14564100f0353af6288c40000000000000803f0000000067664e4100f0353a3e0ad73e000000000000803f0000000067663641c0bdb93df6288c40000000000000803f00000000ec51204100f0353a86eb9140000000000000803f000000009a99314100f0353a86eb9140000000000000803f00000000ec51e84000f0353a86eb9140000000000000803f000000002a5c074100f0353a86eb9140000000000000803f00000000a4701d41804f1a3e86eb9140000000000000803f00000000713d0a41804f1a3e86eb9140000000000000803f0000000034335341c0bdb93d48e1da40000000000000803f00000000af47514130c0573e3e0ad740000000000000803f00000000ec51384130c0573e3e0ad740000000000000803f00000000af47514130c0573e00009040000000000000803f00000000ec51384130c0573e00009040000000000000803f00000000ec51504100f0353a00000000000000000000803f00000000ec51504100f0353a9a99993e000000000000803f000000000100584100f0353a00009040000000000000803f00000000713d224100f0353a48e1da40000000000000803f00000000a470054100f0353a9a99f940000000000000803f00000000a470054100f0353a90c29540000000000000803f00000000f6280c4130c0573e90c29540000000000000803f000000001f851b4130c0573e90c29540000000000000803f00000000f6280c41b43fbc3f48e1da40000000000000803f000000001f851b41b43fbc3f48e1da40000000000000803f000000009a99314100f0353a3e0ad740000000000000803f00000000713d224100f0353a90c29540000000000000803f000000000100584100f0353a3e0ad740000000000000803f000000007c14564100f0353a48e1da40000000000000803f0000000086eb854100f0353afcffbfbf000000000000803f0000000048e1864100f0353afcffbfbf000000000000803f0000000048e1864100f0353accccacc0000000000000803f000000006766864100f0353ad4a3b0bf000000000000803f00000000d8a3784100f0353afcffbfbf000000000000803f0000000090c2754100f0353accccacc0000000000000803f0000000053b8764100f0353ad4a3b0bf000000000000803f00000000ec51e84000f0353accccacc0000000000000803f00000000ec51e84000f0353afcffbfbf000000000000803f00000000a570fd4000f0353afcffbfbf000000000000803f0000000086eb114100f0353afcffbfbf000000000000803f00000000af47394100f0353ad4a3b0bf000000000000803f000000000bd7134100f0353ad4a3b0bf000000000000803f0000000034333b4100f0353afcffbfbf000000000000803f0000000067664e4100f0353afcffbfbf000000000000803f000000009b99f94000f0353ad4a3b0bf000000000000803f00000000ec51504100f0353ad4a3b0bf000000000000803f00000000
+  m_CompressedMesh:
+    m_Vertices:
+      m_NumItems: 0
+      m_Range: 0
+      m_Start: 0
+      m_Data: 
+      m_BitSize: 0
+    m_UV:
+      m_NumItems: 0
+      m_Range: 0
+      m_Start: 0
+      m_Data: 
+      m_BitSize: 0
+    m_Normals:
+      m_NumItems: 0
+      m_Range: 0
+      m_Start: 0
+      m_Data: 
+      m_BitSize: 0
+    m_Tangents:
+      m_NumItems: 0
+      m_Range: 0
+      m_Start: 0
+      m_Data: 
+      m_BitSize: 0
+    m_Weights:
+      m_NumItems: 0
+      m_Data: 
+      m_BitSize: 0
+    m_NormalSigns:
+      m_NumItems: 0
+      m_Data: 
+      m_BitSize: 0
+    m_TangentSigns:
+      m_NumItems: 0
+      m_Data: 
+      m_BitSize: 0
+    m_FloatColors:
+      m_NumItems: 0
+      m_Range: 0
+      m_Start: 0
+      m_Data: 
+      m_BitSize: 0
+    m_BoneIndices:
+      m_NumItems: 0
+      m_Data: 
+      m_BitSize: 0
+    m_Triangles:
+      m_NumItems: 0
+      m_Data: 
+      m_BitSize: 0
+    m_UVInfo: 0
+  m_LocalAABB:
+    m_Center: {x: 12.06, y: 0.73569405, z: 2.0400004}
+    m_Extent: {x: 4.8, y: 0.735, z: 7.44}
+  m_MeshUsageFlags: 0
+  m_CookingOptions: 30
+  m_BakedConvexCollisionMesh: 
+  m_BakedTriangleCollisionMesh: 
+  m_MeshMetrics[0]: 1
+  m_MeshMetrics[1]: 1
+  m_MeshOptimizationFlags: 1
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
 --- !u!1 &2024408026
 GameObject:
   m_ObjectHideFlags: 0

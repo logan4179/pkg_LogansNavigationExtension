@@ -39,7 +39,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		[Test]
 		public void a2_CreateTestObjectsFromJson()
 		{
-			Debug.Log($"Creating test object from Json...");
+			Debug.Log($"{nameof(a2_CreateTestObjectsFromJson)}()...");
 
 			#region pointing and grabbing -------------------------------------------------------
 			if ( !File.Exists(TDG_Manager.filePath_testData_pointingAndGrabbing) )

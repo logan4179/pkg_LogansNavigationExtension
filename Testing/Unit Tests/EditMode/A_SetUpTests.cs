@@ -103,7 +103,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		}
 
 		[Test]
-        public void a2_CalculateTriangulation()
+        public void a3_CalculateTriangulation()
         {
 			_nmTriangulation = NavMesh.CalculateTriangulation();
 			Debug.Log($"{nameof(NavMesh.CalculateTriangulation)} calculated '{_nmTriangulation.vertices}' vertices, '{_nmTriangulation.areas}' areas, and '{_nmTriangulation.indices}' indices.");
@@ -115,68 +115,11 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 			Assert.Greater( _sceneGeneratedLnxNavmesh.Triangles.Length, 0 );
         }
+		#endregion
 
-		// TRIANGULATION --------------------------------------------------------------------------------------------
+		#region B) CHECK OBJECTS ------------------------------------------------------------------------------------------
 		[Test]
-		public void a3_checkTriangulationAreasArrayLength()
-		{
-			Debug.Log($"{nameof(a3_checkTriangulationAreasArrayLength)}()---------------------------------");
-			Debug.Log($"collection null: '{_sceneGeneratedLnxNavmesh.OriginalTriangulation.areas == null}'");
-			Debug.Log($"Checking that generated LNX_NavMesh.OriginalTriangulation.areas length ('{_sceneGeneratedLnxNavmesh.OriginalTriangulation.areas.Length}')..." +
-				$"was the same as the expected number of '{expectedNumberOfAreas}'.");
-
-			Assert.AreEqual( _sceneGeneratedLnxNavmesh.OriginalTriangulation.areas.Length, expectedNumberOfAreas );
-		}
-
-		[Test]
-		public void a3_checkTriangulationVerticesArrayLength()
-		{
-			Debug.Log($"{nameof(a3_checkTriangulationVerticesArrayLength)}()---------------------------------");
-			Debug.Log($"collection null: '{_sceneGeneratedLnxNavmesh.OriginalTriangulation.vertices == null}'");
-
-			Assert.AreEqual( expectedNumberOfVerts, _sceneGeneratedLnxNavmesh.OriginalTriangulation.vertices.Length );
-		}
-
-		[Test]
-		public void a3_checkTriangulationIndicesArrayLength()
-		{
-			Debug.Log($"{nameof(a3_checkTriangulationIndicesArrayLength)}()---------------------------------");
-			Debug.Log($"collection null: '{_sceneGeneratedLnxNavmesh.OriginalTriangulation.vertices == null}'");
-
-			Assert.AreEqual(_sceneGeneratedLnxNavmesh.OriginalTriangulation.indices.Length, expectedNumberOfAreas * 3);
-		}
-
-		// MESH -------------------------------------------------------------------------------------------------------
-		[Test]
-		public void a4_checkMeshTrianglesArrayLength()
-		{
-			Debug.Log($"{nameof(a4_checkMeshTrianglesArrayLength)}()---------------------------------");
-			Debug.Log($"collection null: '{_sceneGeneratedLnxNavmesh._Mesh.triangles == null}'");
-
-			Assert.AreEqual( _sceneGeneratedLnxNavmesh._Mesh.triangles.Length, expectedNumberOfAreas * 3 );
-		}
-
-		[Test]
-		public void a4_checkMeshVerticesArrayLength()
-		{
-			Debug.Log($"{nameof(a4_checkMeshVerticesArrayLength)}()---------------------------------");
-			Debug.Log($"collection null: '{_sceneGeneratedLnxNavmesh._Mesh.vertices == null}'");
-
-			Assert.AreEqual( _sceneGeneratedLnxNavmesh._Mesh.vertices.Length, expectedNumberOfVerts );
-		}
-
-		[Test]
-		public void a4_checkMeshNormalsArrayLength()
-		{
-			Debug.Log($"{nameof(a4_checkMeshNormalsArrayLength)}()---------------------------------");
-			Debug.Log($"collection null: '{_sceneGeneratedLnxNavmesh._Mesh.normals == null}'");
-
-			Assert.AreEqual( _sceneGeneratedLnxNavmesh._Mesh.normals.Length, expectedNumberOfVerts );
-		}
-
-		// TRIANGLES COLLECTION --------------------------------------------------------------------------------------
-		[Test]
-		public void a5_CheckTriIndices()
+		public void b1_CheckTriIndices()
 		{
 			for ( int i = 0; i < _sceneGeneratedLnxNavmesh.Triangles.Length; i++ )
 			{
@@ -191,7 +134,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		}
 
 		[Test]
-		public void a5_CheckVertIndices()
+		public void b2_CheckVertIndices()
 		{
 			for (int i = 0; i < _sceneGeneratedLnxNavmesh.Triangles.Length; i++)
 			{
@@ -211,7 +154,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		}
 
 		[Test]
-		public void a6_Bounds_Tests()
+		public void b3_Bounds_Tests()
 		{
 			Debug.Log($"\nChecking bounds...");
 
@@ -232,7 +175,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		}
 
 		[Test]
-		public void a7_Relationships_Tests()
+		public void b4_Relationships_Tests()
 		{
 			Debug.Log($"\nChecking relationships...");
 			for ( int i = 0; i < _sceneGeneratedLnxNavmesh.Triangles.Length; i++ )
@@ -244,6 +187,63 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				Assert.Greater( _sceneGeneratedLnxNavmesh.Triangles[i].AdjacentTriIndices.Length, 0 );
 			}
 		}
+		#endregion
+
+		#region C) CHECK VISUALIZATION MESH ------------------------------------------------------------------------------------------
+		[Test]
+		public void c1_checkMeshTrianglesArrayLength()
+		{
+			Debug.Log($"{nameof(c1_checkMeshTrianglesArrayLength)}()---------------------------------");
+			Debug.Log($"collection null: '{_sceneGeneratedLnxNavmesh._Mesh.triangles == null}'");
+
+			Assert.AreEqual( _sceneGeneratedLnxNavmesh._Mesh.triangles.Length, expectedNumberOfAreas * 3 );
+		}
+
+		[Test]
+		public void c2_checkMeshVerticesArrayLength()
+		{
+			Debug.Log($"{nameof(c2_checkMeshVerticesArrayLength)}()---------------------------------");
+			Debug.Log($"collection null: '{_sceneGeneratedLnxNavmesh._Mesh.vertices == null}'");
+
+			Assert.AreEqual( _sceneGeneratedLnxNavmesh._Mesh.vertices.Length, expectedNumberOfVerts );
+		}
+
+		[Test]
+		public void c3_checkMeshNormalsArrayLength()
+		{
+			Debug.Log($"{nameof(c3_checkMeshNormalsArrayLength)}()---------------------------------");
+			Debug.Log($"collection null: '{_sceneGeneratedLnxNavmesh._Mesh.normals == null}'");
+
+			Assert.AreEqual( _sceneGeneratedLnxNavmesh._Mesh.normals.Length, expectedNumberOfVerts );
+		}
+
+		[Test]
+		public void c4_checkAllVisualizationMeshVerticesHaveCounterpart()
+		{
+			Debug.Log($"{nameof(c4_checkAllVisualizationMeshVerticesHaveCounterpart)}()---------------------------------");
+
+			for ( int i = 0; i < _sceneGeneratedLnxNavmesh._Mesh.vertices.Length; i++ )
+			{
+				Debug.Log($"iterating mesh vertex: '{i}' at pos: '{_sceneGeneratedLnxNavmesh._Mesh.vertices[i]}'...");
+				bool haveFound = false;
+
+				for ( int i_triangles = 0; i_triangles < _sceneGeneratedLnxNavmesh.Triangles.Length; i_triangles++ )
+				{
+					//Debug.Log($"iterating triangle: '{j}'...");
+
+					for (int i_vrts = 0; i_vrts < 3; i_vrts++)
+					{
+						if ( _sceneGeneratedLnxNavmesh.Triangles[i_triangles].GetVertIndextAtPosition(_sceneGeneratedLnxNavmesh._Mesh.vertices[i]) > -1 )
+						{
+							haveFound = true;
+						}
+					}
+				}
+
+				Assert.IsTrue( haveFound );
+			}
+		}
+		#endregion
 
 		/*
 		[Test]
@@ -272,8 +272,8 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 		}
 		*/
-		#endregion
 
+		//TODO: these following tests need to be in their own separate script
 		#region B - LNX_Navmesh function Tests---------------------------------------------------------------------------
 		[Test]
         public void b1_SamplePosition_Tests() //todo: I think these need to be ran against the serialized navmesh

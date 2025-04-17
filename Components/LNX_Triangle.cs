@@ -70,7 +70,9 @@ namespace LogansNavigationExtension
 		[HideInInspector] public Vector3 v_normal;
 
 
-		public LNX_Triangle( int parallelIndex, int triangulationIndex, NavMeshTriangulation nmTriangulation, int lrMask ) //todo: can possibly get rid of the second parameter (triangulationIndex) and just use the first index instead now that I'm creating a kosher triangulation...
+		public LNX_Triangle( 
+			int parallelIndex, ref List<int> areasList, ref List<Vector3> vrtList, ref List<int> trisList, int lrMask 
+		)
 		{
 			//Debug.Log($"tri ctor. {nameof(parallelIndex)}: '{parallelIndex}' (x3: '{parallelIndex * 3}'). verts start: '{nmTriangulation.indices[(parallelIndex * 3)]}'");
 
@@ -78,16 +80,16 @@ namespace LogansNavigationExtension
 
 			index_inCollection = parallelIndex;
 			
-			AreaIndex = nmTriangulation.areas[triangulationIndex];
+			AreaIndex = areasList[parallelIndex];
 
-			Vector3 vrtPos0 = nmTriangulation.vertices[ nmTriangulation.indices[(triangulationIndex * 3)] ];
-			Vector3 vrtPos1 = nmTriangulation.vertices[ nmTriangulation.indices[(triangulationIndex * 3) + 1] ];
-			Vector3 vrtPos2 = nmTriangulation.vertices[ nmTriangulation.indices[(triangulationIndex * 3) + 2] ];
+			Vector3 vrtPos0 = vrtList[ trisList[MeshIndex_trianglesStart] ];
+			Vector3 vrtPos1 = vrtList[ trisList[MeshIndex_trianglesStart + 1] ];
+			Vector3 vrtPos2 = vrtList[ trisList[MeshIndex_trianglesStart + 2] ];
 
 			Verts = new LNX_Vertex[3];
-			Verts[0] = new LNX_Vertex( this, vrtPos0, 0, nmTriangulation.indices[MeshIndex_trianglesStart] );
-			Verts[1] = new LNX_Vertex( this, vrtPos1, 1, nmTriangulation.indices[MeshIndex_trianglesStart + 1] );
-			Verts[2] = new LNX_Vertex( this, vrtPos2, 2, nmTriangulation.indices[MeshIndex_trianglesStart + 2] );
+			Verts[0] = new LNX_Vertex( this, vrtPos0, 0, trisList[MeshIndex_trianglesStart] );
+			Verts[1] = new LNX_Vertex( this, vrtPos1, 1, trisList[MeshIndex_trianglesStart + 1] );
+			Verts[2] = new LNX_Vertex( this, vrtPos2, 2, trisList[MeshIndex_trianglesStart + 2] );
 
 			Edges = new LNX_Edge[3];
 			Edges[0] = new LNX_Edge( this, Verts[1], Verts[2], 0 );
@@ -163,8 +165,6 @@ namespace LogansNavigationExtension
 			name = $"ind: '{index_inCollection}', ctr: '{V_center}'";
 		}
 
-		public Ln
-
 		public void AdoptValues( LNX_Triangle baseTri )
 		{
 			index_inCollection = baseTri.index_inCollection;
@@ -191,7 +191,6 @@ namespace LogansNavigationExtension
 
 			name = $"ind: '{index_inCollection}', ctr: '{V_center}'";
 		}
-
 
 		private void changeMyIndex( int indx )
 		{
@@ -624,8 +623,6 @@ namespace LogansNavigationExtension
 		}
 		#endregion
 
-
-
 		#region MODIFICATION ----------------------------------------------------
 		/// <summary>
 		/// Takes in a previously-modified triangle, and gives this triangle the same values. This is 
@@ -732,9 +729,6 @@ namespace LogansNavigationExtension
 
 			return false;
 		}
-
-		
-
 
 		#region GETTERS/IDENTIFIERS -----------------------------------------------------
 		public LNX_Vertex[] GetVertsOnEdge( int edgeIndex )

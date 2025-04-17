@@ -55,9 +55,20 @@ namespace LogansNavigationExtension
 
 		[Header("VISUAL/DEBUG")]
 		public Color color_mesh;
+		public Vector3[] dbgVis_vertices;
+		public Vector3[] dbgVis_normals;
+		public int[] dbgVis_triangles;
+		[Space(10)]
 
-		[Header("OTHER")]
-		public NavMeshTriangulation OriginalTriangulation;
+		public int[] dbgTriangulation_Areas;
+		public Vector3[] dbgTriangulation_Vertices;
+		public int[] dbgTriangulation_Indices;
+		[Space(10)]
+
+		public List<int> dbgKosher_Triangles = new List<int>(); //length should be 3x
+		public List<Vector3> dbgKosher_vertices = new List<Vector3>();
+		//[Header("OTHER")]
+		//public NavMeshTriangulation OriginalTriangulation;
 
 		private void Awake()
 		{
@@ -167,12 +178,6 @@ namespace LogansNavigationExtension
 		}
 		#endregion
 
-		public int[] dbg_Areas;
-		public Vector3[] dbg_Vertices;
-		public int[] dbg_Indices;
-
-
-
 		#region CREATION ---------------------------------------------------------
 		[ContextMenu("z - call CalculateTriangulation()")]
 		public void CalculateTriangulation()
@@ -190,11 +195,11 @@ namespace LogansNavigationExtension
 			}
 
 			// Make lists-------------------------
-			List<int> constructedAreas = new List<int>();
 			List<int> constructedTriangles = new List<int>(); //length should be 3x
 			List<Vector3> constructedVertices_unique = new List<Vector3>();
+			List<int> constructedAreaIndices = new List<int>();
 
-			OriginalTriangulation = FetchKosherTriangulation( ref constructedAreas, ref constructedVertices_unique, ref constructedTriangles );
+			FetchKosherTriangulation( ref constructedAreaIndices, ref constructedVertices_unique, ref constructedTriangles );
 
 			_Mesh = new Mesh();
 
@@ -204,9 +209,9 @@ namespace LogansNavigationExtension
 
 				List<LNX_Triangle> newTriCollection = new List<LNX_Triangle>();
 
-				for ( int i = 0; i < OriginalTriangulation.areas.Length; i++ )
+				for ( int i = 0; i < constructedAreaIndices.Count; i++ )
 				{
-					LNX_Triangle tri = new LNX_Triangle( i, newTriCollection.Count, OriginalTriangulation, cachedLayerMask );
+					LNX_Triangle tri = new LNX_Triangle( i, ref constructedAreaIndices, ref constructedVertices_unique, ref constructedTriangles, cachedLayerMask );
 
 					for ( int j = 0; j < Triangles.Length; j++ )
 					{
@@ -238,41 +243,29 @@ namespace LogansNavigationExtension
 				}
 
 				Triangles = newTriCollection.ToArray();
-
-				List<Vector3> constructedNormals = new List<Vector3>(); //length should be 3x
-				for ( int i = 0; i < constructedVertices_unique.Count; i++ )
-				{
-					constructedNormals.Add( Vector3.up ); //todo: What should I actually do here?
-				}
-
-				//Construct mesh data...............
-				_Mesh.vertices = constructedVertices_unique.ToArray();
-				_Mesh.triangles = constructedTriangles.ToArray();
-				_Mesh.normals = constructedNormals.ToArray();
-
 			}
 			else //There are no modifications...
 			{
 				Debug.Log( $"no modifications..." );
-				Triangles = new LNX_Triangle[OriginalTriangulation.areas.Length];
-				for ( int i = 0; i < OriginalTriangulation.areas.Length; i++ )
+				Triangles = new LNX_Triangle[ constructedAreaIndices.Count ];
+				for ( int i = 0; i < constructedAreaIndices.Count; i++ )
 				{
-					Triangles[i] = new LNX_Triangle( i, i, OriginalTriangulation, cachedLayerMask );
+					Triangles[i] = new LNX_Triangle( i, ref constructedAreaIndices, ref constructedVertices_unique, ref constructedTriangles, cachedLayerMask );
 				}
-
-				#region FINISH THE MESH--------------------------------
-				_Mesh.vertices = OriginalTriangulation.vertices;
-
-				Vector3[] nrmls = new Vector3[_Mesh.vertices.Length];
-				for ( int i = 0; i < nrmls.Length; i++ )
-				{
-					nrmls[i] = Vector3.up; //todo: What should I actually do here?
-				}
-				_Mesh.normals = nrmls;
-
-				_Mesh.triangles = OriginalTriangulation.indices; //apparently this MUST come AFTER setting the vertices or will throw error
-				#endregion
 			}
+
+			#region CONSTRUCT THE VISUALIZATION MESH--------------------------------
+			List<Vector3> constructedNormals = new List<Vector3>(); //length should be 3x
+			for (int i = 0; i < constructedVertices_unique.Count; i++)
+			{
+				constructedNormals.Add(Vector3.up); //todo: What should I actually do here?
+			}
+
+			//Construct mesh data...............
+			_Mesh.vertices = constructedVertices_unique.ToArray();
+			_Mesh.triangles = constructedTriangles.ToArray();
+			_Mesh.normals = constructedNormals.ToArray();
+			#endregion
 
 			//Debug.Log($"for visualization mesh, constructed '{_mesh.triangles.Length}' tris (indices), '{_mesh.vertices.Length}' vertices, and '{_mesh.normals.Length}' normals...");
 
@@ -282,12 +275,6 @@ namespace LogansNavigationExtension
 			}
 
 			CalculateBounds();
-
-			//--------------------------------------------------
-			
-			dbg_Areas = OriginalTriangulation.areas;
-			dbg_Vertices = OriginalTriangulation.vertices;
-			dbg_Indices = OriginalTriangulation.indices;
 
 			UnityEditor.EditorUtility.SetDirty( this );
 		}
@@ -322,8 +309,8 @@ namespace LogansNavigationExtension
 				}
 			}
 			//Debug.LogWarning($"Logged '{trianglesList.Count}' triangle entries, and decided there were '{uniqueVertCount}' unique verts...");
-
-			Vector3[] uniqueVerts = new Vector3[uniqueVertCount + 1];//need to add 1 because the last index will be the length - 1
+			uniqueVertCount++;//need to add 1 because the last index will be the length - 1
+			Vector3[] uniqueVerts = new Vector3[uniqueVertCount];
 			for( int i_uniqVrt = 0; i_uniqVrt < uniqueVertCount; i_uniqVrt++ ) //I'm doing it this way to make sure the resulting mesh data will be exactly as it was originally.
 			{
 				//Debug.Log($"{nameof(i_uniqVrt)}: '{i_uniqVrt}'...");
@@ -360,6 +347,10 @@ namespace LogansNavigationExtension
 			_Mesh.normals = nrmls;
 
 			_Mesh.triangles = trianglesList.ToArray(); //apparently this MUST come AFTER setting the vertices or will throw error
+
+			dbgVis_triangles = _Mesh.triangles;
+			dbgVis_vertices = _Mesh.vertices;
+			dbgVis_normals = _Mesh.normals;
 		}
 
 		[ContextMenu("z call fetchKosherTriangulation()")]
@@ -367,36 +358,29 @@ namespace LogansNavigationExtension
 		/// Returns a NavMeshTriangulation object without repeated vertices. Takes into account existing modifications.
 		/// </summary>
 		/// <returns></returns>
-		public NavMeshTriangulation FetchKosherTriangulation( ref List<int> areaList_passed, ref List<Vector3> vrtList_passed, ref List<int> trianglesList_passed )
+		public void FetchKosherTriangulation( ref List<int> areaList_passed, ref List<Vector3> vrtList_passed, ref List<int> trianglesList_passed )
 		{
 			Debug.Log($"{nameof(FetchKosherTriangulation)}()");
-			string dbgThis = $"{nameof(FetchKosherTriangulation)}()\n";
 			NavMeshTriangulation triangulation = NavMesh.CalculateTriangulation();
-			dbgThis += ($"inital triangulation has '{triangulation.areas.Length}' areas, '{triangulation.vertices.Length}' vertices, and '{triangulation.indices.Length}' indices.\n");
+			Debug.Log($"inital triangulation has '{triangulation.areas.Length}' areas, '{triangulation.vertices.Length}' vertices, and '{triangulation.indices.Length}' indices.\n");
 
 			bool hvMods = HaveModifications();
 
 			for ( int i = 0; i < triangulation.areas.Length; i++ )
 			{
-				dbgThis += ($"{i} --------------------------////////////////////////////////////\n");
+				Debug.Log($"{i} --------------------------////////////////////////////////////\n");
 				if ( !hvMods || !ContainsDeletion(triangulation, i) )
 				{
 					logTriInfoToKosherLists( triangulation, i, ref areaList_passed, ref vrtList_passed, ref trianglesList_passed );
 				}
 			}
 
-			triangulation.areas = areaList_passed.ToArray();
-			triangulation.vertices = vrtList_passed.ToArray();
-			triangulation.indices = trianglesList_passed.ToArray();
+			dbgTriangulation_Areas = triangulation.areas;
+			dbgTriangulation_Vertices = triangulation.vertices;
+			dbgTriangulation_Indices = triangulation.indices;
 
-			dbgThis += ($"final triangulation has '{triangulation.areas.Length}' areas, '{triangulation.vertices.Length}' vertices, and '{triangulation.indices.Length}' indices.");
-			//Debug.Log( dbgThis );
-
-			dbg_Areas = triangulation.areas;
-			dbg_Vertices = triangulation.vertices;
-			dbg_Indices = triangulation.indices;
-
-			return triangulation;
+			dbgKosher_Triangles = trianglesList_passed;
+			dbgKosher_vertices = vrtList_passed;
 		}
 
 		/// <summary>
@@ -407,7 +391,7 @@ namespace LogansNavigationExtension
 		/// <param name="areas_passed"></param>
 		/// <param name="vrtLst_passed"></param>
 		/// <param name="incs_passed"></param>
-		private void logTriInfoToKosherLists( int areaIndx, Vector3 vrt0Pos, Vector3 vrt1Pos, Vector3 vrt2Pos, ref List<int> areas_passed, ref List<Vector3> vrtLst_passed, ref List<int> indcs_passed )
+		private void logTriInfoToKosherLists( int areaIndx, Vector3 vrt0Pos, Vector3 vrt1Pos, Vector3 vrt2Pos, ref List<int> areas_passed, ref List<Vector3> vrtLst_passed, ref List<int> trianglesLst_passed )
 		{
 			string dbgThis = "";
 			areas_passed.Add( areaIndx );
@@ -435,11 +419,11 @@ namespace LogansNavigationExtension
 			{
 				dbgThis += $"adding new vert/indx for 0...\n";
 				vrtLst_passed.Add( vrt0Pos );
-				indcs_passed.Add( vrtLst_passed.Count - 1 );
+				trianglesLst_passed.Add( vrtLst_passed.Count - 1 );
 			}
 			else
 			{
-				indcs_passed.Add( vertMatchIndices[0] );
+				trianglesLst_passed.Add( vertMatchIndices[0] );
 			}
 
 			if ( vertMatchIndices[1] == -1 )
@@ -447,11 +431,11 @@ namespace LogansNavigationExtension
 				dbgThis += $"adding new vert/indx for 1...\n";
 
 				vrtLst_passed.Add( vrt1Pos );
-				indcs_passed.Add( vrtLst_passed.Count - 1 );
+				trianglesLst_passed.Add( vrtLst_passed.Count - 1 );
 			}
 			else
 			{
-				indcs_passed.Add( vertMatchIndices[1] );
+				trianglesLst_passed.Add( vertMatchIndices[1] );
 			}
 
 			if ( vertMatchIndices[2] == -1 )
@@ -459,15 +443,16 @@ namespace LogansNavigationExtension
 				dbgThis += $"adding new vert/indx for 2...\n";
 
 				vrtLst_passed.Add( vrt2Pos );
-				indcs_passed.Add( vrtLst_passed.Count - 1 );
+				trianglesLst_passed.Add( vrtLst_passed.Count - 1 );
 			}
 			else
 			{
-				indcs_passed.Add( vertMatchIndices[2] );
+				trianglesLst_passed.Add( vertMatchIndices[2] );
 			}
 
 			//Debug.Log(dbgThis);
 		}
+
 		/// <summary>
 		/// Overload that takes in a NavMeshTriangulation object, and a starting index, and does the work of logging the triangulation info 
 		/// to the passed kosher collections.
@@ -477,13 +462,13 @@ namespace LogansNavigationExtension
 		/// <param name="areas_passed"></param>
 		/// <param name="vrtLst_passed"></param>
 		/// <param name="incs_passed"></param>
-		private void logTriInfoToKosherLists( NavMeshTriangulation nmTrngltn, int triIndex, ref List<int> areas_passed, ref List<Vector3> vrtLst_passed, ref List<int> indcs_passed )
+		private void logTriInfoToKosherLists( NavMeshTriangulation nmTrngltn, int triIndex, ref List<int> areas_passed, ref List<Vector3> vrtLst_passed, ref List<int> trianglesLst_passed )
 		{
 			logTriInfoToKosherLists(nmTrngltn.areas[triIndex], 
 				nmTrngltn.vertices[nmTrngltn.indices[triIndex * 3]], 
 				nmTrngltn.vertices[nmTrngltn.indices[(triIndex * 3) + 1]],
 				nmTrngltn.vertices[nmTrngltn.indices[(triIndex * 3) + 2]],
-				ref areas_passed, ref vrtLst_passed, ref indcs_passed
+				ref areas_passed, ref vrtLst_passed, ref trianglesLst_passed
 			);
 		}
 
@@ -492,11 +477,11 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call CheckForRepeats()")]
 		public void CheckForRepeats() //helper method. dws
 		{
-			for ( int i = 0; i < dbg_Vertices.Length; i++ )
+			for ( int i = 0; i < dbgTriangulation_Vertices.Length; i++ )
 			{
-				for ( int j = 0; j < dbg_Vertices.Length; j++ )
+				for ( int j = 0; j < dbgTriangulation_Vertices.Length; j++ )
 				{
-					if( i != j && dbg_Vertices[i] == dbg_Vertices[j] )
+					if( i != j && dbgTriangulation_Vertices[i] == dbgTriangulation_Vertices[j] )
 					{
 						Debug.LogWarning($"found same at i: '{i}' and j: '{j}'");
 						return;
@@ -658,18 +643,18 @@ namespace LogansNavigationExtension
 		#endregion
 
 		#region ADDING ---------------------------------------------------------------
-		public void AddTriangle( int areaIndex, Vector3 vrt0Pos, Vector3 vrt1Pos, Vector3 vrt2Pos)
+		public void AddTriangle( Vector3 vrt0Pos, Vector3 vrt1Pos, Vector3 vrt2Pos)
 		{
 			List<Vector3> UniqueVerts = new List<Vector3>();
 			List<int> constructedAreas = new List<int>();
 			List<int> constructedTriangles = new List<int>();
 
-			for (int i = 0; i < Triangles.Length; i++)
+			for ( int i = 0; i < Triangles.Length; i++ )
 			{
 
 			}
 
-			logTriInfoToKosherLists( areaIndex, ref constructedAreas, ref UniqueVerts, ref constructedTriangles );
+			logTriInfoToKosherLists( 0, vrt0Pos, vrt1Pos, vrt2Pos, ref constructedAreas, ref UniqueVerts, ref constructedTriangles );
 
 		}
 
@@ -857,6 +842,7 @@ namespace LogansNavigationExtension
 		}
 		#endregion
 
+		#region API METHODS----------------------------------------------------------------
 		/// <summary>
 		/// Returns true if the supplied position is within the projection of any triangle on the navmesh, 
 		/// projected along it's normal.
@@ -964,5 +950,7 @@ namespace LogansNavigationExtension
 				return false;
 			}
         }
+
+		#endregion
 	}
 }

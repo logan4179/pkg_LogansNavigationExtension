@@ -798,9 +798,9 @@ namespace LogansNavigationExtension
 		private void generateDbgString()
 		{
 			DbgClass = $"Selected --------------------\n";
-			DbgClass += $"'{indices_selectedTris.Count}' tris\n" +
-				$"'{Verts_currentlySelected.Count}' verts\n" +
-				$"'{Edges_currentlySelected.Count}' edges\n" +
+			DbgClass += $"'{(indices_selectedTris == null ? "null" : indices_selectedTris.Count)}' tris\n" +
+				$"'{(Verts_currentlySelected == null ? "null" : Verts_currentlySelected.Count)}' verts\n" +
+				$"'{(Edges_currentlySelected == null ? "null" : Edges_currentlySelected.Count)}' edges\n" +
 				$"";
 
 			DbgClass += $"\nLock State-----------------\n" +
