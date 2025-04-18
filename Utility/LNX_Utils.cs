@@ -350,7 +350,7 @@ namespace LogansNavigationExtension
 			Vector3 avgdMidPt = (primaryEdge.MidPosition + secondaryEdge.MidPosition) * 0.5f;
 			//Debug.DrawLine(avgdMidPt, avgdMidPt + (Vector3.up * 3f), Color.red, 3f);
 
-			LNX_Triangle primaryTri = nm.GetTriangle(primaryEdge);
+			LNX_Triangle primaryTri = nm.GetTriangle( primaryEdge.MyCoordinate );
 			float runningfurthestdist = 0f;
 			int edgIndx = -1;
 			for (int i = 0; i < 3; i++) //find the edge with the furthest away mid position

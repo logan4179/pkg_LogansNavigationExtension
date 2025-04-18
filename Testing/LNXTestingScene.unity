@@ -2291,10 +2291,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _LNX_NavMesh: {fileID: 1153391160}
-  SelectMode: 3
+  SelectMode: 2
   OperationMode: 0
   Index_TriLastSelected: -1
-  Index_TriPointingAt: 1
+  Index_TriPointingAt: -1
   indices_selectedTris: 
   indices_lockedTris: 
   Vert_LastSelected:
@@ -2329,50 +2329,610 @@ MonoBehaviour:
     Relationships: []
     SharedVertexCoordinates: []
     DBG_constructor: 
-  Verts_currentlySelected: []
+  Verts_currentlySelected:
+  - Position: {x: 11.52, y: 0.21069407, z: 4.5}
+    originalPosition: {x: 11.52, y: 0.21069407, z: 4.5}
+    MyCoordinate:
+      TrianglesIndex: 34
+      ComponentIndex: 1
+    MeshIndex_triangles: 103
+    MeshIndex_vertices: 43
+    Angle: 35.095818
+    v_toCenter: {x: -0.9313223, y: -0.01703334, z: -0.36379772}
+    DistanceToCenter: 12.369511
+    v_normal: {x: 0, y: 0, z: 0}
+    SiblingRelationships:
+    - PerspectiveVertCoordinate:
+        TrianglesIndex: 34
+        ComponentIndex: 1
+      RelatedVertCoordinate:
+        TrianglesIndex: 34
+        ComponentIndex: 0
+      CanSee: 1
+      AmOverlapping: 0
+      Distance: 2.713301
+      v_to: {x: 0.57494557, y: 0, z: 0.8181917}
+      Angle_centerToDestinationVertex: 146.42015
+    - PerspectiveVertCoordinate:
+        TrianglesIndex: 34
+        ComponentIndex: 1
+      RelatedVertCoordinate:
+        TrianglesIndex: 34
+        ComponentIndex: 2
+      CanSee: 1
+      AmOverlapping: 0
+      Distance: 2.2200003
+      v_to: {x: 0, y: 0, z: 1}
+      Angle_centerToDestinationVertex: 111.33362
+    Relationships: []
+    SharedVertexCoordinates:
+    - TrianglesIndex: 33
+      ComponentIndex: 2
+    - TrianglesIndex: 36
+      ComponentIndex: 2
+    DBG_constructor: "at tri[34], [1]\nPos: '(11.52, 0.21, 4.50)', orig: '(11.52,
+      0.21, 4.50)'\nvToCtr: '(-0.93, -0.02, -0.36)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
+      '12.36951'\n\tAngle: '35.09582'. A: '146.4202', B: '111.3336'"
+  - Position: {x: 11.52, y: 0.21069407, z: 6.7200003}
+    originalPosition: {x: 11.52, y: 0.21069407, z: 6.7200003}
+    MyCoordinate:
+      TrianglesIndex: 34
+      ComponentIndex: 2
+    MeshIndex_triangles: 104
+    MeshIndex_vertices: 41
+    Angle: 90
+    v_toCenter: {x: -0.8636711, y: -0.01579604, z: -0.50380814}
+    DistanceToCenter: 13.338411
+    v_normal: {x: 0, y: 0, z: 0}
+    SiblingRelationships:
+    - PerspectiveVertCoordinate:
+        TrianglesIndex: 34
+        ComponentIndex: 2
+      RelatedVertCoordinate:
+        TrianglesIndex: 34
+        ComponentIndex: 0
+      CanSee: 1
+      AmOverlapping: 0
+      Distance: 1.5600004
+      v_to: {x: 1, y: 0, z: 0}
+      Angle_centerToDestinationVertex: 149.73131
+    - PerspectiveVertCoordinate:
+        TrianglesIndex: 34
+        ComponentIndex: 2
+      RelatedVertCoordinate:
+        TrianglesIndex: 34
+        ComponentIndex: 1
+      CanSee: 1
+      AmOverlapping: 0
+      Distance: 2.2200003
+      v_to: {x: 0, y: 0, z: -1}
+      Angle_centerToDestinationVertex: 59.74773
+    Relationships: []
+    SharedVertexCoordinates:
+    - TrianglesIndex: 32
+      ComponentIndex: 2
+    DBG_constructor: "at tri[34], [2]\nPos: '(11.52, 0.21, 6.72)', orig: '(11.52,
+      0.21, 6.72)'\nvToCtr: '(-0.86, -0.02, -0.50)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
+      '13.33841'\n\tAngle: '90'. A: '149.7313', B: '59.74773'"
+  - Position: {x: 13.080001, y: 0.21069407, z: 4.5}
+    originalPosition: {x: 13.080001, y: 0.21069407, z: 4.5}
+    MyCoordinate:
+      TrianglesIndex: 33
+      ComponentIndex: 1
+    MeshIndex_triangles: 100
+    MeshIndex_vertices: 42
+    Angle: 90
+    v_toCenter: {x: -0.9454936, y: -0.015230113, z: -0.32528445}
+    DistanceToCenter: 13.834045
+    v_normal: {x: 0, y: 0, z: 0}
+    SiblingRelationships:
+    - PerspectiveVertCoordinate:
+        TrianglesIndex: 33
+        ComponentIndex: 1
+      RelatedVertCoordinate:
+        TrianglesIndex: 33
+        ComponentIndex: 0
+      CanSee: 1
+      AmOverlapping: 0
+      Distance: 2.2200003
+      v_to: {x: 0, y: 0, z: 1}
+      Angle_centerToDestinationVertex: 108.98281
+    - PerspectiveVertCoordinate:
+        TrianglesIndex: 33
+        ComponentIndex: 1
+      RelatedVertCoordinate:
+        TrianglesIndex: 33
+        ComponentIndex: 2
+      CanSee: 1
+      AmOverlapping: 0
+      Distance: 1.5600004
+      v_to: {x: -1, y: 0, z: 0}
+      Angle_centerToDestinationVertex: 19.004398
+    Relationships: []
+    SharedVertexCoordinates:
+    - TrianglesIndex: 35
+      ComponentIndex: 0
+    - TrianglesIndex: 36
+      ComponentIndex: 0
+    DBG_constructor: "at tri[33], [1]\nPos: '(13.08, 0.21, 4.50)', orig: '(13.08,
+      0.21, 4.50)'\nvToCtr: '(-0.95, -0.02, -0.33)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
+      '13.83405'\n\tAngle: '90'. A: '108.9828', B: '19.0044'"
+  - Position: {x: 13.080001, y: 0.21069407, z: 6.7200003}
+    originalPosition: {x: 13.080001, y: 0.21069407, z: 6.7200003}
+    MyCoordinate:
+      TrianglesIndex: 33
+      ComponentIndex: 0
+    MeshIndex_triangles: 99
+    MeshIndex_vertices: 40
+    Angle: 35.095818
+    v_toCenter: {x: -0.8893861, y: -0.0143263275, z: -0.45693228}
+    DistanceToCenter: 14.706775
+    v_normal: {x: 0, y: 0, z: 0}
+    SiblingRelationships:
+    - PerspectiveVertCoordinate:
+        TrianglesIndex: 33
+        ComponentIndex: 0
+      RelatedVertCoordinate:
+        TrianglesIndex: 33
+        ComponentIndex: 1
+      CanSee: 1
+      AmOverlapping: 0
+      Distance: 2.2200003
+      v_to: {x: 0, y: 0, z: -1}
+      Angle_centerToDestinationVertex: 62.810673
+    - PerspectiveVertCoordinate:
+        TrianglesIndex: 33
+        ComponentIndex: 0
+      RelatedVertCoordinate:
+        TrianglesIndex: 33
+        ComponentIndex: 2
+      CanSee: 1
+      AmOverlapping: 0
+      Distance: 2.713301
+      v_to: {x: -0.57494557, y: 0, z: -0.8181917}
+      Angle_centerToDestinationVertex: 27.723017
+    Relationships: []
+    SharedVertexCoordinates:
+    - TrianglesIndex: 31
+      ComponentIndex: 2
+    - TrianglesIndex: 32
+      ComponentIndex: 1
+    - TrianglesIndex: 34
+      ComponentIndex: 0
+    DBG_constructor: "at tri[33], [0]\nPos: '(13.08, 0.21, 6.72)', orig: '(13.08,
+      0.21, 6.72)'\nvToCtr: '(-0.89, -0.01, -0.46)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
+      '14.70677'\n\tAngle: '35.09582'. A: '62.81067', B: '27.72302'"
+  - Position: {x: 11.52, y: 0.21069407, z: 4.5}
+    originalPosition: {x: 11.52, y: 0.21069407, z: 4.5}
+    MyCoordinate:
+      TrianglesIndex: 33
+      ComponentIndex: 2
+    MeshIndex_triangles: 101
+    MeshIndex_vertices: 43
+    Angle: 54.90418
+    v_toCenter: {x: -0.9313223, y: -0.01703334, z: -0.36379772}
+    DistanceToCenter: 12.369511
+    v_normal: {x: 0, y: 0, z: 0}
+    SiblingRelationships:
+    - PerspectiveVertCoordinate:
+        TrianglesIndex: 33
+        ComponentIndex: 2
+      RelatedVertCoordinate:
+        TrianglesIndex: 33
+        ComponentIndex: 0
+      CanSee: 1
+      AmOverlapping: 0
+      Distance: 2.713301
+      v_to: {x: 0.57494557, y: 0, z: 0.8181917}
+      Angle_centerToDestinationVertex: 146.42015
+    - PerspectiveVertCoordinate:
+        TrianglesIndex: 33
+        ComponentIndex: 2
+      RelatedVertCoordinate:
+        TrianglesIndex: 33
+        ComponentIndex: 1
+      CanSee: 1
+      AmOverlapping: 0
+      Distance: 1.5600004
+      v_to: {x: 1, y: 0, z: 0}
+      Angle_centerToDestinationVertex: 158.64188
+    Relationships: []
+    SharedVertexCoordinates:
+    - TrianglesIndex: 34
+      ComponentIndex: 1
+    - TrianglesIndex: 36
+      ComponentIndex: 2
+    DBG_constructor: "at tri[33], [2]\nPos: '(11.52, 0.21, 4.50)', orig: '(11.52,
+      0.21, 4.50)'\nvToCtr: '(-0.93, -0.02, -0.36)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
+      '12.36951'\n\tAngle: '54.90418'. A: '146.4202', B: '158.6419'"
+  - Position: {x: 11.52, y: 0.21069407, z: 4.5}
+    originalPosition: {x: 11.52, y: 0.21069407, z: 4.5}
+    MyCoordinate:
+      TrianglesIndex: 36
+      ComponentIndex: 2
+    MeshIndex_triangles: 110
+    MeshIndex_vertices: 43
+    Angle: 125.26436
+    v_toCenter: {x: -0.9313223, y: -0.01703334, z: -0.36379772}
+    DistanceToCenter: 12.369511
+    v_normal: {x: 0, y: 0, z: 0}
+    SiblingRelationships:
+    - PerspectiveVertCoordinate:
+        TrianglesIndex: 36
+        ComponentIndex: 2
+      RelatedVertCoordinate:
+        TrianglesIndex: 36
+        ComponentIndex: 0
+      CanSee: 1
+      AmOverlapping: 0
+      Distance: 1.5600004
+      v_to: {x: 1, y: 0, z: 0}
+      Angle_centerToDestinationVertex: 158.64188
+    - PerspectiveVertCoordinate:
+        TrianglesIndex: 36
+        ComponentIndex: 2
+      RelatedVertCoordinate:
+        TrianglesIndex: 36
+        ComponentIndex: 1
+      CanSee: 1
+      AmOverlapping: 0
+      Distance: 0.20784603
+      v_to: {x: -0.5773499, y: -0.57735103, z: -0.5773499}
+      Angle_centerToDestinationVertex: 40.749416
+    Relationships: []
+    SharedVertexCoordinates:
+    - TrianglesIndex: 33
+      ComponentIndex: 2
+    - TrianglesIndex: 34
+      ComponentIndex: 1
+    DBG_constructor: "at tri[36], [2]\nPos: '(11.52, 0.21, 4.50)', orig: '(11.52,
+      0.21, 4.50)'\nvToCtr: '(-0.93, -0.02, -0.36)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
+      '12.36951'\n\tAngle: '125.2644'. A: '158.6419', B: '40.74942'"
+  - Position: {x: 11.52, y: 0.21069407, z: 6.7200003}
+    originalPosition: {x: 11.52, y: 0.21069407, z: 6.7200003}
+    MyCoordinate:
+      TrianglesIndex: 32
+      ComponentIndex: 2
+    MeshIndex_triangles: 98
+    MeshIndex_vertices: 41
+    Angle: 125.26436
+    v_toCenter: {x: -0.8636711, y: -0.01579604, z: -0.50380814}
+    DistanceToCenter: 13.338411
+    v_normal: {x: 0, y: 0, z: 0}
+    SiblingRelationships:
+    - PerspectiveVertCoordinate:
+        TrianglesIndex: 32
+        ComponentIndex: 2
+      RelatedVertCoordinate:
+        TrianglesIndex: 32
+        ComponentIndex: 0
+      CanSee: 1
+      AmOverlapping: 0
+      Distance: 0.20784603
+      v_to: {x: -0.5773499, y: -0.57735103, z: 0.5773499}
+      Angle_centerToDestinationVertex: 77.473755
+    - PerspectiveVertCoordinate:
+        TrianglesIndex: 32
+        ComponentIndex: 2
+      RelatedVertCoordinate:
+        TrianglesIndex: 32
+        ComponentIndex: 1
+      CanSee: 1
+      AmOverlapping: 0
+      Distance: 1.5600004
+      v_to: {x: 1, y: 0, z: 0}
+      Angle_centerToDestinationVertex: 149.73131
+    Relationships: []
+    SharedVertexCoordinates:
+    - TrianglesIndex: 34
+      ComponentIndex: 2
+    DBG_constructor: "at tri[32], [2]\nPos: '(11.52, 0.21, 6.72)', orig: '(11.52,
+      0.21, 6.72)'\nvToCtr: '(-0.86, -0.02, -0.50)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
+      '13.33841'\n\tAngle: '125.2644'. A: '77.47375', B: '149.7313'"
+  - Position: {x: 13.080001, y: 0.21069407, z: 4.5}
+    originalPosition: {x: 13.080001, y: 0.21069407, z: 4.5}
+    MyCoordinate:
+      TrianglesIndex: 35
+      ComponentIndex: 0
+    MeshIndex_triangles: 105
+    MeshIndex_vertices: 42
+    Angle: 119.496185
+    v_toCenter: {x: -0.9454936, y: -0.015230113, z: -0.32528445}
+    DistanceToCenter: 13.834045
+    v_normal: {x: 0, y: 0, z: 0}
+    SiblingRelationships:
+    - PerspectiveVertCoordinate:
+        TrianglesIndex: 35
+        ComponentIndex: 0
+      RelatedVertCoordinate:
+        TrianglesIndex: 35
+        ComponentIndex: 1
+      CanSee: 1
+      AmOverlapping: 0
+      Distance: 0.20784603
+      v_to: {x: 0.5773499, y: -0.57735103, z: -0.5773499}
+      Angle_centerToDestinationVertex: 110.443565
+    - PerspectiveVertCoordinate:
+        TrianglesIndex: 35
+        ComponentIndex: 0
+      RelatedVertCoordinate:
+        TrianglesIndex: 35
+        ComponentIndex: 2
+      CanSee: 1
+      AmOverlapping: 0
+      Distance: 1.68855
+      v_to: {x: -0.99493665, y: -0.07106697, z: -0.07106683}
+      Angle_centerToDestinationVertex: 15.224224
+    Relationships: []
+    SharedVertexCoordinates:
+    - TrianglesIndex: 33
+      ComponentIndex: 1
+    - TrianglesIndex: 36
+      ComponentIndex: 0
+    DBG_constructor: "at tri[35], [0]\nPos: '(13.08, 0.21, 4.50)', orig: '(13.08,
+      0.21, 4.50)'\nvToCtr: '(-0.95, -0.02, -0.33)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
+      '13.83405'\n\tAngle: '119.4962'. A: '110.4436', B: '15.22422'"
+  - Position: {x: 13.080001, y: 0.21069407, z: 4.5}
+    originalPosition: {x: 13.080001, y: 0.21069407, z: 4.5}
+    MyCoordinate:
+      TrianglesIndex: 36
+      ComponentIndex: 0
+    MeshIndex_triangles: 108
+    MeshIndex_vertices: 42
+    Angle: 5.768165
+    v_toCenter: {x: -0.9454936, y: -0.015230113, z: -0.32528445}
+    DistanceToCenter: 13.834045
+    v_normal: {x: 0, y: 0, z: 0}
+    SiblingRelationships:
+    - PerspectiveVertCoordinate:
+        TrianglesIndex: 36
+        ComponentIndex: 0
+      RelatedVertCoordinate:
+        TrianglesIndex: 36
+        ComponentIndex: 1
+      CanSee: 1
+      AmOverlapping: 0
+      Distance: 1.68855
+      v_to: {x: -0.99493665, y: -0.07106697, z: -0.07106683}
+      Angle_centerToDestinationVertex: 15.224224
+    - PerspectiveVertCoordinate:
+        TrianglesIndex: 36
+        ComponentIndex: 0
+      RelatedVertCoordinate:
+        TrianglesIndex: 36
+        ComponentIndex: 2
+      CanSee: 1
+      AmOverlapping: 0
+      Distance: 1.5600004
+      v_to: {x: -1, y: 0, z: 0}
+      Angle_centerToDestinationVertex: 19.004398
+    Relationships: []
+    SharedVertexCoordinates:
+    - TrianglesIndex: 33
+      ComponentIndex: 1
+    - TrianglesIndex: 35
+      ComponentIndex: 0
+    DBG_constructor: "at tri[36], [0]\nPos: '(13.08, 0.21, 4.50)', orig: '(13.08,
+      0.21, 4.50)'\nvToCtr: '(-0.95, -0.02, -0.33)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
+      '13.83405'\n\tAngle: '5.768165'. A: '15.22422', B: '19.0044'"
+  - Position: {x: 13.080001, y: 0.21069407, z: 6.7200003}
+    originalPosition: {x: 13.080001, y: 0.21069407, z: 6.7200003}
+    MyCoordinate:
+      TrianglesIndex: 31
+      ComponentIndex: 2
+    MeshIndex_triangles: 95
+    MeshIndex_vertices: 40
+    Angle: 119.496185
+    v_toCenter: {x: -0.8893861, y: -0.0143263275, z: -0.45693228}
+    DistanceToCenter: 14.706775
+    v_normal: {x: 0, y: 0, z: 0}
+    SiblingRelationships:
+    - PerspectiveVertCoordinate:
+        TrianglesIndex: 31
+        ComponentIndex: 2
+      RelatedVertCoordinate:
+        TrianglesIndex: 31
+        ComponentIndex: 0
+      CanSee: 1
+      AmOverlapping: 0
+      Distance: 1.68855
+      v_to: {x: -0.99493665, y: -0.07106697, z: 0.07106683}
+      Angle_centerToDestinationVertex: 31.413467
+    - PerspectiveVertCoordinate:
+        TrianglesIndex: 31
+        ComponentIndex: 2
+      RelatedVertCoordinate:
+        TrianglesIndex: 31
+        ComponentIndex: 1
+      CanSee: 1
+      AmOverlapping: 0
+      Distance: 0.20784603
+      v_to: {x: 0.5773499, y: -0.57735103, z: 0.5773499}
+      Angle_centerToDestinationVertex: 140.26646
+    Relationships: []
+    SharedVertexCoordinates:
+    - TrianglesIndex: 32
+      ComponentIndex: 1
+    - TrianglesIndex: 33
+      ComponentIndex: 0
+    - TrianglesIndex: 34
+      ComponentIndex: 0
+    DBG_constructor: "at tri[31], [2]\nPos: '(13.08, 0.21, 6.72)', orig: '(13.08,
+      0.21, 6.72)'\nvToCtr: '(-0.89, -0.01, -0.46)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
+      '14.70677'\n\tAngle: '119.4962'. A: '31.41347', B: '140.2665'"
+  - Position: {x: 13.080001, y: 0.21069407, z: 6.7200003}
+    originalPosition: {x: 13.080001, y: 0.21069407, z: 6.7200003}
+    MyCoordinate:
+      TrianglesIndex: 32
+      ComponentIndex: 1
+    MeshIndex_triangles: 97
+    MeshIndex_vertices: 40
+    Angle: 5.768165
+    v_toCenter: {x: -0.8893861, y: -0.0143263275, z: -0.45693228}
+    DistanceToCenter: 14.706775
+    v_normal: {x: 0, y: 0, z: 0}
+    SiblingRelationships:
+    - PerspectiveVertCoordinate:
+        TrianglesIndex: 32
+        ComponentIndex: 1
+      RelatedVertCoordinate:
+        TrianglesIndex: 32
+        ComponentIndex: 0
+      CanSee: 1
+      AmOverlapping: 0
+      Distance: 1.68855
+      v_to: {x: -0.99493665, y: -0.07106697, z: 0.07106683}
+      Angle_centerToDestinationVertex: 31.413467
+    - PerspectiveVertCoordinate:
+        TrianglesIndex: 32
+        ComponentIndex: 1
+      RelatedVertCoordinate:
+        TrianglesIndex: 32
+        ComponentIndex: 2
+      CanSee: 1
+      AmOverlapping: 0
+      Distance: 1.5600004
+      v_to: {x: -1, y: 0, z: 0}
+      Angle_centerToDestinationVertex: 27.203793
+    Relationships: []
+    SharedVertexCoordinates:
+    - TrianglesIndex: 31
+      ComponentIndex: 2
+    - TrianglesIndex: 33
+      ComponentIndex: 0
+    - TrianglesIndex: 34
+      ComponentIndex: 0
+    DBG_constructor: "at tri[32], [1]\nPos: '(13.08, 0.21, 6.72)', orig: '(13.08,
+      0.21, 6.72)'\nvToCtr: '(-0.89, -0.01, -0.46)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
+      '14.70677'\n\tAngle: '5.768165'. A: '31.41347', B: '27.20379'"
+  - Position: {x: 13.080001, y: 0.21069407, z: 6.7200003}
+    originalPosition: {x: 13.080001, y: 0.21069407, z: 6.7200003}
+    MyCoordinate:
+      TrianglesIndex: 34
+      ComponentIndex: 0
+    MeshIndex_triangles: 102
+    MeshIndex_vertices: 40
+    Angle: 54.90418
+    v_toCenter: {x: -0.8893861, y: -0.0143263275, z: -0.45693228}
+    DistanceToCenter: 14.706775
+    v_normal: {x: 0, y: 0, z: 0}
+    SiblingRelationships:
+    - PerspectiveVertCoordinate:
+        TrianglesIndex: 34
+        ComponentIndex: 0
+      RelatedVertCoordinate:
+        TrianglesIndex: 34
+        ComponentIndex: 1
+      CanSee: 1
+      AmOverlapping: 0
+      Distance: 2.713301
+      v_to: {x: -0.57494557, y: 0, z: -0.8181917}
+      Angle_centerToDestinationVertex: 27.723017
+    - PerspectiveVertCoordinate:
+        TrianglesIndex: 34
+        ComponentIndex: 0
+      RelatedVertCoordinate:
+        TrianglesIndex: 34
+        ComponentIndex: 2
+      CanSee: 1
+      AmOverlapping: 0
+      Distance: 1.5600004
+      v_to: {x: -1, y: 0, z: 0}
+      Angle_centerToDestinationVertex: 27.203793
+    Relationships: []
+    SharedVertexCoordinates:
+    - TrianglesIndex: 31
+      ComponentIndex: 2
+    - TrianglesIndex: 32
+      ComponentIndex: 1
+    - TrianglesIndex: 33
+      ComponentIndex: 0
+    DBG_constructor: "at tri[34], [0]\nPos: '(13.08, 0.21, 6.72)', orig: '(13.08,
+      0.21, 6.72)'\nvToCtr: '(-0.89, -0.01, -0.46)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
+      '14.70677'\n\tAngle: '54.90418'. A: '27.72302', B: '27.20379'"
   Edge_LastSelected:
-    EdgeLength: 0
-    StartPosition: {x: 0, y: 0, z: 0}
+    EdgeLength: 2.2200003
+    StartPosition: {x: 13.080001, y: 0.21069407, z: 4.5}
     StartVertCoordinate:
-      TrianglesIndex: 0
-      ComponentIndex: 0
-    MidPosition: {x: 0, y: 0, z: 0}
-    EndPosition: {x: 0, y: 0, z: 0}
+      TrianglesIndex: 33
+      ComponentIndex: 1
+    MidPosition: {x: 13.080001, y: 0.21069407, z: 5.61}
+    EndPosition: {x: 13.080001, y: 0.21069407, z: 6.7200003}
     EndVertCoordinate:
-      TrianglesIndex: 0
+      TrianglesIndex: 33
       ComponentIndex: 0
-    v_startToEnd: {x: 0, y: 0, z: 0}
-    v_endToStart: {x: 0, y: 0, z: 0}
-    v_toCenter: {x: 0, y: 0, z: 0}
+    v_startToEnd: {x: 0, y: 0, z: -1}
+    v_endToStart: {x: 0, y: 0, z: 1}
+    v_toCenter: {x: -0.8147912, y: 0, z: -0.5797546}
     v_cross: {x: 0, y: 0, z: 0}
     MyCoordinate:
-      TrianglesIndex: 0
-      ComponentIndex: 0
+      TrianglesIndex: 33
+      ComponentIndex: 2
     SharedEdge:
-      TrianglesIndex: 0
-      ComponentIndex: 0
+      TrianglesIndex: -1
+      ComponentIndex: -1
   Edge_CurrentlyPointingAt:
-    EdgeLength: 0
-    StartPosition: {x: 0, y: 0, z: 0}
+    EdgeLength: 1.2134258
+    StartPosition: {x: 7.26, y: 0.0006940365, z: 4.38}
     StartVertCoordinate:
-      TrianglesIndex: 0
+      TrianglesIndex: 26
       ComponentIndex: 0
-    MidPosition: {x: 0, y: 0, z: 0}
-    EndPosition: {x: 0, y: 0, z: 0}
+    MidPosition: {x: 7.8600006, y: 0.0006940365, z: 4.4700003}
+    EndPosition: {x: 8.460001, y: 0.0006940365, z: 4.5600004}
     EndVertCoordinate:
-      TrianglesIndex: 0
-      ComponentIndex: 0
-    v_startToEnd: {x: 0, y: 0, z: 0}
-    v_endToStart: {x: 0, y: 0, z: 0}
-    v_toCenter: {x: 0, y: 0, z: 0}
+      TrianglesIndex: 26
+      ComponentIndex: 2
+    v_startToEnd: {x: -0.9889363, y: 0, z: -0.1483406}
+    v_endToStart: {x: 0.9889363, y: 0, z: 0.1483406}
+    v_toCenter: {x: -0.98893625, y: 0, z: 0.14834125}
     v_cross: {x: 0, y: 0, z: 0}
     MyCoordinate:
-      TrianglesIndex: 0
+      TrianglesIndex: 26
+      ComponentIndex: 1
+    SharedEdge:
+      TrianglesIndex: 28
+      ComponentIndex: 2
+  Edges_currentlySelected:
+  - EdgeLength: 2.2200003
+    StartPosition: {x: 11.52, y: 0.21069407, z: 4.5}
+    StartVertCoordinate:
+      TrianglesIndex: 34
+      ComponentIndex: 1
+    MidPosition: {x: 11.52, y: 0.21069407, z: 5.61}
+    EndPosition: {x: 11.52, y: 0.21069407, z: 6.7200003}
+    EndVertCoordinate:
+      TrianglesIndex: 34
+      ComponentIndex: 2
+    v_startToEnd: {x: 0, y: 0, z: -1}
+    v_endToStart: {x: 0, y: 0, z: 1}
+    v_toCenter: {x: 0.8147912, y: 0, z: 0.5797546}
+    v_cross: {x: 0, y: 0, z: 0}
+    MyCoordinate:
+      TrianglesIndex: 34
       ComponentIndex: 0
     SharedEdge:
-      TrianglesIndex: 0
+      TrianglesIndex: -1
+      ComponentIndex: -1
+  - EdgeLength: 2.2200003
+    StartPosition: {x: 13.080001, y: 0.21069407, z: 4.5}
+    StartVertCoordinate:
+      TrianglesIndex: 33
+      ComponentIndex: 1
+    MidPosition: {x: 13.080001, y: 0.21069407, z: 5.61}
+    EndPosition: {x: 13.080001, y: 0.21069407, z: 6.7200003}
+    EndVertCoordinate:
+      TrianglesIndex: 33
       ComponentIndex: 0
-  Edges_currentlySelected: []
+    v_startToEnd: {x: 0, y: 0, z: -1}
+    v_endToStart: {x: 0, y: 0, z: 1}
+    v_toCenter: {x: -0.8147912, y: 0, z: -0.5797546}
+    v_cross: {x: 0, y: 0, z: 0}
+    MyCoordinate:
+      TrianglesIndex: 33
+      ComponentIndex: 2
+    SharedEdge:
+      TrianglesIndex: -1
+      ComponentIndex: -1
   drawTriLabels: 1
   drawNavMeshLines: 1
   color_edgeLines: {r: 0.20288353, g: 0.7735849, b: 0.50570464, a: 0.3882353}
@@ -2385,7 +2945,7 @@ MonoBehaviour:
   color_lockedTri: {r: 1, g: 0, b: 0.99189234, a: 1}
   Thickness_LockedTriEdge: 0.2
   Flag_AComponentIsCurrentlyHighlighted: 1
-  manipulatorPos: {x: 0, y: 0, z: 0}
+  manipulatorPos: {x: 13.080001, y: 0.21069407, z: 5.61}
   DBG_locked: 'set: ''True''
 
     locked ''2'' tris
@@ -2395,9 +2955,9 @@ MonoBehaviour:
 
     ''0'' tris
 
-    ''0'' verts
+    ''12'' verts
 
-    ''0''
+    ''2''
     edges
 
 
@@ -2415,67 +2975,46 @@ MonoBehaviour:
     ''True''
 
 '
-  DebugPointAt: 'tri: [1]. alignment: ''0.9151689''
+  DebugPointAt: 'vert: [16][0]. alignment: ''0.9694493''
 
-    Index_TriPointingAt: ''1''
+    vert: [16][1]. alignment:
+    ''0.9720598''
+
+    vert: [17][1]. alignment: ''0.9728891''
+
+    vert: [26][0].
+    alignment: ''0.9939328''
+
+    vert: [26][1]. alignment: ''0.9952647''
 
 '
-  DebugSelectedReport: "Mode: 'Faces', mod: 'False'\npointing at: '19' \nnow checking
-    for additional verts. Shared collection is showing '6'...\ntrying [20][0]...
-    added\ntrying [24][0]... added\ntrying [25][2]... added\ntrying [27][2]... added\ntrying
-    [29][2]... added\ntrying [30][1]... added\nnow checking for additional verts.
-    Shared collection is showing '3'...\ntrying [12][1]... added\ntrying [23][2]...
-    added\ntrying [24][2]... added\nnow checking for additional verts. Shared collection
-    is showing '4'...\ntrying [12][0]... added\ntrying [13][0]... added\ntrying [17][0]...
-    added\ntrying [20][1]... added\nnow checking for additional verts. Shared collection
-    is showing '6'...\ntrying [19][0]... NOT added/already contained...\ntrying [24][0]...
-    NOT added/already contained...\ntrying [25][2]... NOT added/already contained...\ntrying
-    [27][2]... NOT added/already contained...\ntrying [29][2]... NOT added/already
-    contained...\ntrying [30][1]... NOT added/already contained...\nnow checking
-    for additional verts. Shared collection is showing '6'...\ntrying [19][0]...
-    NOT added/already contained...\ntrying [20][0]... NOT added/already contained...\ntrying
-    [25][2]... NOT added/already contained...\ntrying [27][2]... NOT added/already
-    contained...\ntrying [29][2]... NOT added/already contained...\ntrying [30][1]...
+  DebugSelectedReport: "Mode: 'Edges', mod: 'True'\npointing at: 'LogansNavigationExtension.LNX_Edge'
+    \nadded pointingat at '[33][2]' to selection\ngenerating initial vertices list
+    looking through '2' edges...\nedge: 0 ([34][0])...\nend\nedge: 1 ([33][2])...\nend\nnow
+    checking for additional verts. Shared collection is showing '2'...\ntrying [33][2]...
+    added\ntrying [36][2]... added\nnow checking for additional verts. Shared collection
+    is showing '1'...\ntrying [32][2]... added\nnow checking for additional verts.
+    Shared collection is showing '2'...\ntrying [35][0]... added\ntrying [36][0]...
+    added\nnow checking for additional verts. Shared collection is showing '3'...\ntrying
+    [31][2]... added\ntrying [32][1]... added\ntrying [34][0]... added\nnow checking
+    for additional verts. Shared collection is showing '2'...\ntrying [34][1]...
+    NOT added/already contained...\ntrying [36][2]... NOT added/already contained...\nnow
+    checking for additional verts. Shared collection is showing '2'...\ntrying [33][2]...
+    NOT added/already contained...\ntrying [34][1]... NOT added/already contained...\nnow
+    checking for additional verts. Shared collection is showing '1'...\ntrying [34][2]...
     NOT added/already contained...\nnow checking for additional verts. Shared collection
-    is showing '6'...\ntrying [19][0]... NOT added/already contained...\ntrying [20][0]...
-    NOT added/already contained...\ntrying [24][0]... NOT added/already contained...\ntrying
-    [27][2]... NOT added/already contained...\ntrying [29][2]... NOT added/already
-    contained...\ntrying [30][1]... NOT added/already contained...\nnow checking
-    for additional verts. Shared collection is showing '6'...\ntrying [19][0]...
-    NOT added/already contained...\ntrying [20][0]... NOT added/already contained...\ntrying
-    [24][0]... NOT added/already contained...\ntrying [25][2]... NOT added/already
-    contained...\ntrying [29][2]... NOT added/already contained...\ntrying [30][1]...
+    is showing '2'...\ntrying [33][1]... NOT added/already contained...\ntrying [36][0]...
     NOT added/already contained...\nnow checking for additional verts. Shared collection
-    is showing '6'...\ntrying [19][0]... NOT added/already contained...\ntrying [20][0]...
-    NOT added/already contained...\ntrying [24][0]... NOT added/already contained...\ntrying
-    [25][2]... NOT added/already contained...\ntrying [27][2]... NOT added/already
-    contained...\ntrying [30][1]... NOT added/already contained...\nnow checking
-    for additional verts. Shared collection is showing '6'...\ntrying [19][0]...
-    NOT added/already contained...\ntrying [20][0]... NOT added/already contained...\ntrying
-    [24][0]... NOT added/already contained...\ntrying [25][2]... NOT added/already
-    contained...\ntrying [27][2]... NOT added/already contained...\ntrying [29][2]...
+    is showing '2'...\ntrying [33][1]... NOT added/already contained...\ntrying [35][0]...
     NOT added/already contained...\nnow checking for additional verts. Shared collection
-    is showing '3'...\ntrying [19][1]... NOT added/already contained...\ntrying [23][2]...
-    NOT added/already contained...\ntrying [24][2]... NOT added/already contained...\nnow
-    checking for additional verts. Shared collection is showing '3'...\ntrying [12][1]...
-    NOT added/already contained...\ntrying [19][1]... NOT added/already contained...\ntrying
-    [24][2]... NOT added/already contained...\nnow checking for additional verts.
-    Shared collection is showing '3'...\ntrying [12][1]... NOT added/already contained...\ntrying
-    [19][1]... NOT added/already contained...\ntrying [23][2]... NOT added/already
-    contained...\nnow checking for additional verts. Shared collection is showing
-    '4'...\ntrying [13][0]... NOT added/already contained...\ntrying [17][0]... NOT
-    added/already contained...\ntrying [19][2]... NOT added/already contained...\ntrying
-    [20][1]... NOT added/already contained...\nnow checking for additional verts.
-    Shared collection is showing '4'...\ntrying [12][0]... NOT added/already contained...\ntrying
-    [17][0]... NOT added/already contained...\ntrying [19][2]... NOT added/already
-    contained...\ntrying [20][1]... NOT added/already contained...\nnow checking
-    for additional verts. Shared collection is showing '4'...\ntrying [12][0]...
-    NOT added/already contained...\ntrying [13][0]... NOT added/already contained...\ntrying
-    [19][2]... NOT added/already contained...\ntrying [20][1]... NOT added/already
-    contained...\nnow checking for additional verts. Shared collection is showing
-    '4'...\ntrying [12][0]... NOT added/already contained...\ntrying [13][0]... NOT
-    added/already contained...\ntrying [17][0]... NOT added/already contained...\ntrying
-    [19][2]... NOT added/already contained...\n"
+    is showing '3'...\ntrying [32][1]... NOT added/already contained...\ntrying [33][0]...
+    NOT added/already contained...\ntrying [34][0]... NOT added/already contained...\nnow
+    checking for additional verts. Shared collection is showing '3'...\ntrying [31][2]...
+    NOT added/already contained...\ntrying [33][0]... NOT added/already contained...\ntrying
+    [34][0]... NOT added/already contained...\nnow checking for additional verts.
+    Shared collection is showing '3'...\ntrying [31][2]... NOT added/already contained...\ntrying
+    [32][1]... NOT added/already contained...\ntrying [33][0]... NOT added/already
+    contained...\n"
   AmPointingATBounds: 0
 --- !u!114 &1153391159
 MonoBehaviour:
@@ -45982,7 +46521,7 @@ MonoBehaviour:
         CanSee: 1
         AmOverlapping: 0
         Distance: 1.2134258
-        v_to: {x: 0.9889363, y: 0, z: 0.1483406}
+        v_to: {x: 0.9889363, y: 0.000000012280242, z: 0.1483406}
         Angle_centerToDestinationVertex: 157.42795
       - PerspectiveVertCoordinate:
           TrianglesIndex: 28
@@ -46010,15 +46549,15 @@ MonoBehaviour:
       DBG_constructor: "at tri[28], [0]\nPos: '(7.26, 0.00, 4.38)', orig: '(7.26,
         0.00, 4.38)'\nvToCtr: '(-0.86, 0.00, -0.52)'\nnml: '(0.00, 0.00, 0.00)',
         dstToCtr: '8.478915'\n\tAngle: '6.248805'. A: '157.4279', B: '155.5881'"
-    - Position: {x: 8.460001, y: 0.0006940365, z: 4.5600004}
-      originalPosition: {x: 8.460001, y: 0.0006940365, z: 4.5600004}
+    - Position: {x: 8.460001, y: 0.0006940514, z: 4.5600004}
+      originalPosition: {x: 8.460001, y: 0.0006940514, z: 4.5600004}
       MyCoordinate:
         TrianglesIndex: 28
         ComponentIndex: 1
       MeshIndex_triangles: 85
       MeshIndex_vertices: 36
       Angle: 139.43962
-      v_toCenter: {x: -0.8802706, y: -0.00007221511, z: -0.47447208}
+      v_toCenter: {x: -0.8802706, y: -0.00007221666, z: -0.47447208}
       DistanceToCenter: 9.6106825
       v_normal: {x: 0, y: 0, z: 0}
       SiblingRelationships:
@@ -46031,7 +46570,7 @@ MonoBehaviour:
         CanSee: 1
         AmOverlapping: 0
         Distance: 1.2134258
-        v_to: {x: -0.9889363, y: 0, z: -0.1483406}
+        v_to: {x: -0.9889363, y: -0.000000012280242, z: -0.1483406}
         Angle_centerToDestinationVertex: 19.7942
       - PerspectiveVertCoordinate:
           TrianglesIndex: 28
@@ -46041,8 +46580,8 @@ MonoBehaviour:
           ComponentIndex: 2
         CanSee: 1
         AmOverlapping: 0
-        Distance: 0.2343069
-        v_to: {x: 0.7682204, y: 0.6401854, z: 0}
+        Distance: 0.23430689
+        v_to: {x: 0.7682205, y: 0.64018536, z: 0}
         Angle_centerToDestinationVertex: 132.55426
       Relationships: []
       SharedVertexCoordinates:
@@ -46060,7 +46599,7 @@ MonoBehaviour:
         ComponentIndex: 2
       MeshIndex_triangles: 86
       MeshIndex_vertices: 38
-      Angle: 34.311565
+      Angle: 34.311558
       v_toCenter: {x: -0.88427955, y: -0.015423093, z: -0.46670312}
       DistanceToCenter: 9.770666
       v_normal: {x: 0, y: 0, z: 0}
@@ -46084,8 +46623,8 @@ MonoBehaviour:
           ComponentIndex: 1
         CanSee: 1
         AmOverlapping: 0
-        Distance: 0.2343069
-        v_to: {x: -0.7682204, y: -0.6401854, z: 0}
+        Distance: 0.23430689
+        v_to: {x: -0.7682205, y: -0.64018536, z: 0}
         Angle_centerToDestinationVertex: 46.43356
       Relationships: []
       SharedVertexCoordinates:
@@ -46097,21 +46636,21 @@ MonoBehaviour:
         ComponentIndex: 1
       DBG_constructor: "at tri[28], [2]\nPos: '(8.64, 0.15, 4.56)', orig: '(8.64,
         0.15, 4.56)'\nvToCtr: '(-0.88, -0.02, -0.47)'\nnml: '(0.00, 0.00, 0.00)',
-        dstToCtr: '9.770666'\n\tAngle: '34.31157'. A: '21.0175', B: '46.43356'"
+        dstToCtr: '9.770666'\n\tAngle: '34.31156'. A: '21.0175', B: '46.43356'"
     Edges:
-    - EdgeLength: 0.2343069
-      StartPosition: {x: 8.460001, y: 0.0006940365, z: 4.5600004}
+    - EdgeLength: 0.23430689
+      StartPosition: {x: 8.460001, y: 0.0006940514, z: 4.5600004}
       StartVertCoordinate:
         TrianglesIndex: 28
         ComponentIndex: 1
-      MidPosition: {x: 8.550001, y: 0.075693965, z: 4.5600004}
+      MidPosition: {x: 8.550001, y: 0.07569397, z: 4.5600004}
       EndPosition: {x: 8.64, y: 0.1506939, z: 4.5600004}
       EndVertCoordinate:
         TrianglesIndex: 28
         ComponentIndex: 2
-      v_startToEnd: {x: -0.7682204, y: -0.6401854, z: 0}
-      v_endToStart: {x: 0.7682204, y: 0.6401854, z: 0}
-      v_toCenter: {x: -0.98876715, y: -0.05748624, z: -0.13796698}
+      v_startToEnd: {x: -0.7682205, y: -0.64018536, z: 0}
+      v_endToStart: {x: 0.7682205, y: 0.64018536, z: 0}
+      v_toCenter: {x: -0.98876715, y: -0.057486247, z: -0.13796698}
       v_cross: {x: 0, y: 0, z: 0}
       MyCoordinate:
         TrianglesIndex: 28
@@ -46131,7 +46670,7 @@ MonoBehaviour:
         ComponentIndex: 2
       v_startToEnd: {x: -0.9858903, y: -0.10716188, z: -0.12859459}
       v_endToStart: {x: 0.9858903, y: 0.10716188, z: 0.12859459}
-      v_toCenter: {x: 0.97461593, y: -0.14332607, z: 0.17199266}
+      v_toCenter: {x: 0.97461593, y: -0.14332606, z: 0.17199266}
       v_cross: {x: 0, y: 0, z: 0}
       MyCoordinate:
         TrianglesIndex: 28
@@ -46140,18 +46679,18 @@ MonoBehaviour:
         TrianglesIndex: 30
         ComponentIndex: 1
     - EdgeLength: 1.2134258
-      StartPosition: {x: 8.460001, y: 0.0006940365, z: 4.5600004}
+      StartPosition: {x: 8.460001, y: 0.0006940514, z: 4.5600004}
       StartVertCoordinate:
         TrianglesIndex: 28
         ComponentIndex: 1
-      MidPosition: {x: 7.8600006, y: 0.0006940365, z: 4.4700003}
+      MidPosition: {x: 7.8600006, y: 0.00069404393, z: 4.4700003}
       EndPosition: {x: 7.26, y: 0.0006940365, z: 4.38}
       EndVertCoordinate:
         TrianglesIndex: 28
         ComponentIndex: 0
-      v_startToEnd: {x: 0.9889363, y: 0, z: 0.1483406}
-      v_endToStart: {x: -0.9889363, y: 0, z: -0.1483406}
-      v_toCenter: {x: 0.9757624, y: 0.18764697, z: 0.112589076}
+      v_startToEnd: {x: 0.9889363, y: 0.000000012280242, z: 0.1483406}
+      v_endToStart: {x: -0.9889363, y: -0.000000012280242, z: -0.1483406}
+      v_toCenter: {x: 0.9757624, y: 0.18764696, z: 0.112589076}
       v_cross: {x: 0, y: 0, z: 0}
       MyCoordinate:
         TrianglesIndex: 28
@@ -46159,10 +46698,10 @@ MonoBehaviour:
       SharedEdge:
         TrianglesIndex: 26
         ComponentIndex: 1
-    V_center: {x: 8.12, y: 0.05069399, z: 4.5000005}
+    V_center: {x: 8.12, y: 0.050693993, z: 4.5000005}
     Perimeter: 2.8474827
     LongestEdgeLength: 1.3997501
-    ShortestEdgeLength: 0.2343069
+    ShortestEdgeLength: 0.23430689
     Area: 0.09243741
     Relationships:
     - Index_relatedTriangle: 0
@@ -104829,23 +105368,23 @@ MonoBehaviour:
     DbgCalculateTriInfo: 'nrml: ''(0.00, 0.00, 0.00)''
 
       edge lengths: ''1.38'',
-      ''1.381303'', ''0.06000042''
+      ''1.381304'', ''0.06000042''
 
-      Prmtr: ''2.821303'', Area: ''0''
+      Prmtr: ''2.821304'', Area: ''0''
 
 '
     index_inCollection: 66
     AreaIndex: 0
     Verts:
-    - Position: {x: 15.360001, y: 0.0006940365, z: 0}
-      originalPosition: {x: 15.360001, y: 0.0006940365, z: 0}
+    - Position: {x: 15.360001, y: 0.0006940365, z: 0.00000047683716}
+      originalPosition: {x: 15.360001, y: 0.0006940365, z: 0.00000047683716}
       MyCoordinate:
         TrianglesIndex: 66
         ComponentIndex: 0
       MeshIndex_triangles: 198
       MeshIndex_vertices: 8
-      Angle: 87.51043
-      v_toCenter: {x: -1, y: -0.000045184664, z: 0}
+      Angle: 87.51044
+      v_toCenter: {x: -1, y: -0.000045184664, z: -0.000000031044085}
       DistanceToCenter: 15.360001
       v_normal: {x: 0, y: 0, z: 0}
       SiblingRelationships:
@@ -104868,9 +105407,9 @@ MonoBehaviour:
           ComponentIndex: 2
         CanSee: 1
         AmOverlapping: 0
-        Distance: 1.3813034
-        v_to: {x: 0.043437537, y: 0, z: -0.9990561}
-        Angle_centerToDestinationVertex: 92.48957
+        Distance: 1.3813039
+        v_to: {x: 0.043437522, y: 0, z: -0.9990561}
+        Angle_centerToDestinationVertex: 92.48956
       Relationships: []
       SharedVertexCoordinates:
       - TrianglesIndex: 4
@@ -104895,16 +105434,16 @@ MonoBehaviour:
         ComponentIndex: 1
       DBG_constructor: "at tri[66], [0]\nPos: '(15.36, 0.00, 0.00)', orig: '(15.36,
         0.00, 0.00)'\nvToCtr: '(-1.00, 0.00, 0.00)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
-        '15.36'\n\tAngle: '87.51043'. A: '180', B: '92.48957'"
-    - Position: {x: 15.420001, y: 0.0006940365, z: 0}
-      originalPosition: {x: 15.420001, y: 0.0006940365, z: 0}
+        '15.36'\n\tAngle: '87.51044'. A: '180', B: '92.48956'"
+    - Position: {x: 15.420001, y: 0.0006940365, z: 0.00000047683716}
+      originalPosition: {x: 15.420001, y: 0.0006940365, z: 0.00000047683716}
       MyCoordinate:
         TrianglesIndex: 66
         ComponentIndex: 1
       MeshIndex_triangles: 199
       MeshIndex_vertices: 7
       Angle: 90
-      v_toCenter: {x: -1, y: -0.00004500885, z: 0}
+      v_toCenter: {x: -1, y: -0.00004500885, z: -0.00000003092329}
       DistanceToCenter: 15.420001
       v_normal: {x: 0, y: 0, z: 0}
       SiblingRelationships:
@@ -104927,7 +105466,7 @@ MonoBehaviour:
           ComponentIndex: 2
         CanSee: 1
         AmOverlapping: 0
-        Distance: 1.3799996
+        Distance: 1.3800001
         v_to: {x: 0, y: 0, z: -1}
         Angle_centerToDestinationVertex: 90
       Relationships: []
@@ -104957,8 +105496,8 @@ MonoBehaviour:
           ComponentIndex: 0
         CanSee: 1
         AmOverlapping: 0
-        Distance: 1.3813034
-        v_to: {x: -0.043437537, y: 0, z: 0.9990561}
+        Distance: 1.3813039
+        v_to: {x: -0.043437522, y: 0, z: 0.9990561}
         Angle_centerToDestinationVertex: 82.396416
       - PerspectiveVertCoordinate:
           TrianglesIndex: 66
@@ -104968,7 +105507,7 @@ MonoBehaviour:
           ComponentIndex: 1
         CanSee: 1
         AmOverlapping: 0
-        Distance: 1.3799996
+        Distance: 1.3800001
         v_to: {x: 0, y: 0, z: 1}
         Angle_centerToDestinationVertex: 84.88599
       Relationships: []
@@ -104981,19 +105520,19 @@ MonoBehaviour:
         0.00, -1.38)'\nvToCtr: '(-1.00, 0.00, 0.09)'\nnml: '(0.00, 0.00, 0.00)',
         dstToCtr: '15.48163'\n\tAngle: '2.48955'. A: '82.39642', B: '84.88599'"
     Edges:
-    - EdgeLength: 1.3799996
-      StartPosition: {x: 15.420001, y: 0.0006940365, z: 0}
+    - EdgeLength: 1.3800001
+      StartPosition: {x: 15.420001, y: 0.0006940365, z: 0.00000047683716}
       StartVertCoordinate:
         TrianglesIndex: 66
         ComponentIndex: 1
-      MidPosition: {x: 15.420001, y: 0.0006940365, z: -0.6899998}
+      MidPosition: {x: 15.420001, y: 0.0006940365, z: -0.6899996}
       EndPosition: {x: 15.420001, y: 0.0006940365, z: -1.3799996}
       EndVertCoordinate:
         TrianglesIndex: 66
         ComponentIndex: 2
       v_startToEnd: {x: 0, y: 0, z: 1}
       v_endToStart: {x: 0, y: 0, z: -1}
-      v_toCenter: {x: -0.08662751, y: 0, z: 0.99624074}
+      v_toCenter: {x: -0.086627476, y: 0, z: 0.99624074}
       v_cross: {x: 0, y: 0, z: 0}
       MyCoordinate:
         TrianglesIndex: 66
@@ -105001,19 +105540,19 @@ MonoBehaviour:
       SharedEdge:
         TrianglesIndex: -1
         ComponentIndex: -1
-    - EdgeLength: 1.3813034
-      StartPosition: {x: 15.360001, y: 0.0006940365, z: 0}
+    - EdgeLength: 1.3813039
+      StartPosition: {x: 15.360001, y: 0.0006940365, z: 0.00000047683716}
       StartVertCoordinate:
         TrianglesIndex: 66
         ComponentIndex: 0
-      MidPosition: {x: 15.390001, y: 0.0006940365, z: -0.6899998}
+      MidPosition: {x: 15.390001, y: 0.0006940365, z: -0.6899996}
       EndPosition: {x: 15.420001, y: 0.0006940365, z: -1.3799996}
       EndVertCoordinate:
         TrianglesIndex: 66
         ComponentIndex: 2
-      v_startToEnd: {x: -0.043437537, y: 0, z: 0.9990561}
-      v_endToStart: {x: 0.043437537, y: 0, z: -0.9990561}
-      v_toCenter: {x: 0.04343823, y: 0, z: 0.9990561}
+      v_startToEnd: {x: -0.043437522, y: 0, z: 0.9990561}
+      v_endToStart: {x: 0.043437522, y: 0, z: -0.9990561}
+      v_toCenter: {x: 0.04343821, y: 0, z: 0.9990561}
       v_cross: {x: 0, y: 0, z: 0}
       MyCoordinate:
         TrianglesIndex: 66
@@ -105022,18 +105561,18 @@ MonoBehaviour:
         TrianglesIndex: 67
         ComponentIndex: 2
     - EdgeLength: 0.06000042
-      StartPosition: {x: 15.420001, y: 0.0006940365, z: 0}
+      StartPosition: {x: 15.420001, y: 0.0006940365, z: 0.00000047683716}
       StartVertCoordinate:
         TrianglesIndex: 66
         ComponentIndex: 1
-      MidPosition: {x: 15.390001, y: 0.0006940365, z: 0}
-      EndPosition: {x: 15.360001, y: 0.0006940365, z: 0}
+      MidPosition: {x: 15.390001, y: 0.0006940365, z: 0.00000047683716}
+      EndPosition: {x: 15.360001, y: 0.0006940365, z: 0.00000047683716}
       EndVertCoordinate:
         TrianglesIndex: 66
         ComponentIndex: 0
       v_startToEnd: {x: 1, y: 0, z: 0}
       v_endToStart: {x: -1, y: 0, z: 0}
-      v_toCenter: {x: 0.021734498, y: 0, z: -0.9997638}
+      v_toCenter: {x: 0.021734491, y: 0, z: -0.9997638}
       v_cross: {x: 0, y: 0, z: 0}
       MyCoordinate:
         TrianglesIndex: 66
@@ -105041,11 +105580,11 @@ MonoBehaviour:
       SharedEdge:
         TrianglesIndex: 4
         ComponentIndex: 0
-    V_center: {x: 15.400002, y: 0.0006940365, z: -0.4599999}
-    Perimeter: 2.8213034
-    LongestEdgeLength: 1.3813034
+    V_center: {x: 15.400002, y: 0.0006940365, z: -0.45999956}
+    Perimeter: 2.8213043
+    LongestEdgeLength: 1.3813039
     ShortestEdgeLength: 0.06000042
-    Area: 0.041400194
+    Area: 0.04140021
     Relationships:
     - Index_relatedTriangle: 0
       IndexMap_OwnedVerts_toShared: ffffffffffffffffffffffff
@@ -106387,7 +106926,7 @@ MonoBehaviour:
     DbgCalculateTriInfo: 'nrml: ''(0.00, 0.00, 0.00)''
 
       edge lengths: ''4.020448'',
-      ''5.4'', ''1.381303''
+      ''5.4'', ''1.381304''
 
       Prmtr: ''10.80175'', Area: ''0''
 
@@ -106395,15 +106934,15 @@ MonoBehaviour:
     index_inCollection: 67
     AreaIndex: 0
     Verts:
-    - Position: {x: 15.360001, y: 0.0006940365, z: 0}
-      originalPosition: {x: 15.360001, y: 0.0006940365, z: 0}
+    - Position: {x: 15.360001, y: 0.0006940365, z: 0.00000047683716}
+      originalPosition: {x: 15.360001, y: 0.0006940365, z: 0.00000047683716}
       MyCoordinate:
         TrianglesIndex: 67
         ComponentIndex: 0
       MeshIndex_triangles: 201
       MeshIndex_vertices: 8
       Angle: 2.48955
-      v_toCenter: {x: -1, y: -0.000045184664, z: 0}
+      v_toCenter: {x: -1, y: -0.000045184664, z: -0.000000031044085}
       DistanceToCenter: 15.360001
       v_normal: {x: 0, y: 0, z: 0}
       SiblingRelationships:
@@ -106415,9 +106954,9 @@ MonoBehaviour:
           ComponentIndex: 1
         CanSee: 1
         AmOverlapping: 0
-        Distance: 1.3813034
-        v_to: {x: 0.043437537, y: 0, z: -0.9990561}
-        Angle_centerToDestinationVertex: 92.48957
+        Distance: 1.3813039
+        v_to: {x: 0.043437522, y: 0, z: -0.9990561}
+        Angle_centerToDestinationVertex: 92.48956
       - PerspectiveVertCoordinate:
           TrianglesIndex: 67
           ComponentIndex: 0
@@ -106426,7 +106965,7 @@ MonoBehaviour:
           ComponentIndex: 2
         CanSee: 1
         AmOverlapping: 0
-        Distance: 5.3999996
+        Distance: 5.4
         v_to: {x: 0, y: 0, z: -1}
         Angle_centerToDestinationVertex: 90
       Relationships: []
@@ -106453,7 +106992,7 @@ MonoBehaviour:
         ComponentIndex: 1
       DBG_constructor: "at tri[67], [0]\nPos: '(15.36, 0.00, 0.00)', orig: '(15.36,
         0.00, 0.00)'\nvToCtr: '(-1.00, 0.00, 0.00)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
-        '15.36'\n\tAngle: '2.48955'. A: '92.48957', B: '90'"
+        '15.36'\n\tAngle: '2.48955'. A: '92.48956', B: '90'"
     - Position: {x: 15.420001, y: 0.0006940365, z: -1.3799996}
       originalPosition: {x: 15.420001, y: 0.0006940365, z: -1.3799996}
       MyCoordinate:
@@ -106474,8 +107013,8 @@ MonoBehaviour:
           ComponentIndex: 0
         CanSee: 1
         AmOverlapping: 0
-        Distance: 1.3813034
-        v_to: {x: -0.043437537, y: 0, z: 0.9990561}
+        Distance: 1.3813039
+        v_to: {x: -0.043437522, y: 0, z: 0.9990561}
         Angle_centerToDestinationVertex: 82.396416
       - PerspectiveVertCoordinate:
           TrianglesIndex: 67
@@ -106517,7 +107056,7 @@ MonoBehaviour:
           ComponentIndex: 0
         CanSee: 1
         AmOverlapping: 0
-        Distance: 5.3999996
+        Distance: 5.4
         v_to: {x: 0, y: 0, z: 1}
         Angle_centerToDestinationVertex: 70.63024
       - PerspectiveVertCoordinate:
@@ -106559,7 +107098,7 @@ MonoBehaviour:
         ComponentIndex: 2
       v_startToEnd: {x: 0.014923816, y: 0, z: 0.99988866}
       v_endToStart: {x: -0.014923816, y: 0, z: -0.99988866}
-      v_toCenter: {x: -0.008849415, y: 0, z: 0.99996084}
+      v_toCenter: {x: -0.008849413, y: 0, z: 0.99996084}
       v_cross: {x: 0, y: 0, z: 0}
       MyCoordinate:
         TrianglesIndex: 67
@@ -106567,12 +107106,12 @@ MonoBehaviour:
       SharedEdge:
         TrianglesIndex: 68
         ComponentIndex: 1
-    - EdgeLength: 5.3999996
-      StartPosition: {x: 15.360001, y: 0.0006940365, z: 0}
+    - EdgeLength: 5.4
+      StartPosition: {x: 15.360001, y: 0.0006940365, z: 0.00000047683716}
       StartVertCoordinate:
         TrianglesIndex: 67
         ComponentIndex: 0
-      MidPosition: {x: 15.360001, y: 0.0006940365, z: -2.6999998}
+      MidPosition: {x: 15.360001, y: 0.0006940365, z: -2.6999996}
       EndPosition: {x: 15.360001, y: 0.0006940365, z: -5.3999996}
       EndVertCoordinate:
         TrianglesIndex: 67
@@ -106587,18 +107126,18 @@ MonoBehaviour:
       SharedEdge:
         TrianglesIndex: 83
         ComponentIndex: 0
-    - EdgeLength: 1.3813034
+    - EdgeLength: 1.3813039
       StartPosition: {x: 15.420001, y: 0.0006940365, z: -1.3799996}
       StartVertCoordinate:
         TrianglesIndex: 67
         ComponentIndex: 1
-      MidPosition: {x: 15.390001, y: 0.0006940365, z: -0.6899998}
-      EndPosition: {x: 15.360001, y: 0.0006940365, z: 0}
+      MidPosition: {x: 15.390001, y: 0.0006940365, z: -0.6899996}
+      EndPosition: {x: 15.360001, y: 0.0006940365, z: 0.00000047683716}
       EndVertCoordinate:
         TrianglesIndex: 67
         ComponentIndex: 0
-      v_startToEnd: {x: 0.043437537, y: 0, z: -0.9990561}
-      v_endToStart: {x: -0.043437537, y: 0, z: 0.9990561}
+      v_startToEnd: {x: 0.043437522, y: 0, z: -0.9990561}
+      v_endToStart: {x: -0.043437522, y: 0, z: 0.9990561}
       v_toCenter: {x: -0.0063694436, y: 0, z: -0.99997973}
       v_cross: {x: 0, y: 0, z: 0}
       MyCoordinate:
@@ -106607,11 +107146,11 @@ MonoBehaviour:
       SharedEdge:
         TrianglesIndex: 66
         ComponentIndex: 1
-    V_center: {x: 15.380001, y: 0.0006940365, z: -2.2599998}
-    Perimeter: 10.801751
-    LongestEdgeLength: 5.3999996
-    ShortestEdgeLength: 1.3813034
-    Area: 0.16201995
+    V_center: {x: 15.380001, y: 0.0006940365, z: -2.2599995}
+    Perimeter: 10.801752
+    LongestEdgeLength: 5.4
+    ShortestEdgeLength: 1.3813039
+    Area: 0.16201998
     Relationships:
     - Index_relatedTriangle: 0
       IndexMap_OwnedVerts_toShared: ffffffffffffffffffffffff
@@ -112597,23 +113136,23 @@ MonoBehaviour:
     DbgCalculateTriInfo: 'nrml: ''(0.00, 0.00, 0.00)''
 
       edge lengths: ''1.38'',
-      ''2.716615'', ''2.34''
+      ''2.716616'', ''2.34''
 
-      Prmtr: ''6.436615'', Area: ''0''
+      Prmtr: ''6.436616'', Area: ''0''
 
 '
     index_inCollection: 71
     AreaIndex: 0
     Verts:
-    - Position: {x: 9.240001, y: 0.0006940365, z: 0}
-      originalPosition: {x: 9.240001, y: 0.0006940365, z: 0}
+    - Position: {x: 9.240001, y: 0.0006940365, z: 0.00000047683716}
+      originalPosition: {x: 9.240001, y: 0.0006940365, z: 0.00000047683716}
       MyCoordinate:
         TrianglesIndex: 71
         ComponentIndex: 0
       MeshIndex_triangles: 213
       MeshIndex_vertices: 16
-      Angle: 30.5297
-      v_toCenter: {x: -1, y: -0.00007511217, z: 0}
+      Angle: 30.529707
+      v_toCenter: {x: -1, y: -0.00007511217, z: -0.00000005160575}
       DistanceToCenter: 9.240001
       v_normal: {x: 0, y: 0, z: 0}
       SiblingRelationships:
@@ -112636,9 +113175,9 @@ MonoBehaviour:
           ComponentIndex: 2
         CanSee: 1
         AmOverlapping: 0
-        Distance: 2.7166154
-        v_to: {x: 0.861366, y: 0, z: -0.5079849}
-        Angle_centerToDestinationVertex: 149.4703
+        Distance: 2.7166157
+        v_to: {x: 0.8613659, y: 0, z: -0.50798506}
+        Angle_centerToDestinationVertex: 149.47029
       Relationships: []
       SharedVertexCoordinates:
       - TrianglesIndex: 10
@@ -112649,16 +113188,16 @@ MonoBehaviour:
         ComponentIndex: 0
       DBG_constructor: "at tri[71], [0]\nPos: '(9.24, 0.00, 0.00)', orig: '(9.24,
         0.00, 0.00)'\nvToCtr: '(-1.00, 0.00, 0.00)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
-        '9.240001'\n\tAngle: '30.5297'. A: '180', B: '149.4703'"
-    - Position: {x: 11.580001, y: 0.0006940365, z: 0}
-      originalPosition: {x: 11.580001, y: 0.0006940365, z: 0}
+        '9.240001'\n\tAngle: '30.52971'. A: '180', B: '149.4703'"
+    - Position: {x: 11.580001, y: 0.0006940365, z: 0.00000047683716}
+      originalPosition: {x: 11.580001, y: 0.0006940365, z: 0.00000047683716}
       MyCoordinate:
         TrianglesIndex: 71
         ComponentIndex: 1
       MeshIndex_triangles: 214
       MeshIndex_vertices: 15
       Angle: 90
-      v_toCenter: {x: -1, y: -0.00005993406, z: 0}
+      v_toCenter: {x: -1, y: -0.00005993406, z: -0.000000041177643}
       DistanceToCenter: 11.580001
       v_normal: {x: 0, y: 0, z: 0}
       SiblingRelationships:
@@ -112681,7 +113220,7 @@ MonoBehaviour:
           ComponentIndex: 2
         CanSee: 1
         AmOverlapping: 0
-        Distance: 1.3799996
+        Distance: 1.3800001
         v_to: {x: 0, y: 0, z: -1}
         Angle_centerToDestinationVertex: 90
       Relationships: []
@@ -112698,7 +113237,7 @@ MonoBehaviour:
         ComponentIndex: 2
       MeshIndex_triangles: 215
       MeshIndex_vertices: 69
-      Angle: 59.470306
+      Angle: 59.470295
       v_toCenter: {x: -0.9929739, y: -0.00005951296, z: 0.11833364}
       DistanceToCenter: 11.661939
       v_normal: {x: 0, y: 0, z: 0}
@@ -112711,9 +113250,9 @@ MonoBehaviour:
           ComponentIndex: 0
         CanSee: 1
         AmOverlapping: 0
-        Distance: 2.7166154
-        v_to: {x: -0.861366, y: 0, z: 0.5079849}
-        Angle_centerToDestinationVertex: 23.733751
+        Distance: 2.7166157
+        v_to: {x: -0.8613659, y: 0, z: 0.50798506}
+        Angle_centerToDestinationVertex: 23.73376
       - PerspectiveVertCoordinate:
           TrianglesIndex: 71
           ComponentIndex: 2
@@ -112722,7 +113261,7 @@ MonoBehaviour:
           ComponentIndex: 1
         CanSee: 1
         AmOverlapping: 0
-        Distance: 1.3799996
+        Distance: 1.3800001
         v_to: {x: 0, y: 0, z: 1}
         Angle_centerToDestinationVertex: 83.20406
       Relationships: []
@@ -112735,21 +113274,21 @@ MonoBehaviour:
         ComponentIndex: 0
       DBG_constructor: "at tri[71], [2]\nPos: '(11.58, 0.00, -1.38)', orig: '(11.58,
         0.00, -1.38)'\nvToCtr: '(-0.99, 0.00, 0.12)'\nnml: '(0.00, 0.00, 0.00)',
-        dstToCtr: '11.66194'\n\tAngle: '59.47031'. A: '23.73375', B: '83.20406'"
+        dstToCtr: '11.66194'\n\tAngle: '59.47029'. A: '23.73376', B: '83.20406'"
     Edges:
-    - EdgeLength: 1.3799996
-      StartPosition: {x: 11.580001, y: 0.0006940365, z: 0}
+    - EdgeLength: 1.3800001
+      StartPosition: {x: 11.580001, y: 0.0006940365, z: 0.00000047683716}
       StartVertCoordinate:
         TrianglesIndex: 71
         ComponentIndex: 1
-      MidPosition: {x: 11.580001, y: 0.0006940365, z: -0.6899998}
+      MidPosition: {x: 11.580001, y: 0.0006940365, z: -0.6899996}
       EndPosition: {x: 11.580001, y: 0.0006940365, z: -1.3799996}
       EndVertCoordinate:
         TrianglesIndex: 71
         ComponentIndex: 2
       v_startToEnd: {x: 0, y: 0, z: 1}
       v_endToStart: {x: 0, y: 0, z: -1}
-      v_toCenter: {x: -0.95916957, y: 0, z: 0.28283173}
+      v_toCenter: {x: -0.9591695, y: 0, z: 0.28283182}
       v_cross: {x: 0, y: 0, z: 0}
       MyCoordinate:
         TrianglesIndex: 71
@@ -112757,19 +113296,19 @@ MonoBehaviour:
       SharedEdge:
         TrianglesIndex: -1
         ComponentIndex: -1
-    - EdgeLength: 2.7166154
-      StartPosition: {x: 9.240001, y: 0.0006940365, z: 0}
+    - EdgeLength: 2.7166157
+      StartPosition: {x: 9.240001, y: 0.0006940365, z: 0.00000047683716}
       StartVertCoordinate:
         TrianglesIndex: 71
         ComponentIndex: 0
-      MidPosition: {x: 10.410001, y: 0.0006940365, z: -0.6899998}
+      MidPosition: {x: 10.410001, y: 0.0006940365, z: -0.6899996}
       EndPosition: {x: 11.580001, y: 0.0006940365, z: -1.3799996}
       EndVertCoordinate:
         TrianglesIndex: 71
         ComponentIndex: 2
-      v_startToEnd: {x: -0.861366, y: 0, z: 0.5079849}
-      v_endToStart: {x: 0.861366, y: 0, z: -0.5079849}
-      v_toCenter: {x: 0.8613657, y: 0, z: 0.50798553}
+      v_startToEnd: {x: -0.8613659, y: 0, z: 0.50798506}
+      v_endToStart: {x: 0.8613659, y: 0, z: -0.50798506}
+      v_toCenter: {x: 0.86136556, y: 0, z: 0.50798565}
       v_cross: {x: 0, y: 0, z: 0}
       MyCoordinate:
         TrianglesIndex: 71
@@ -112778,18 +113317,18 @@ MonoBehaviour:
         TrianglesIndex: 72
         ComponentIndex: 2
     - EdgeLength: 2.3400002
-      StartPosition: {x: 11.580001, y: 0.0006940365, z: 0}
+      StartPosition: {x: 11.580001, y: 0.0006940365, z: 0.00000047683716}
       StartVertCoordinate:
         TrianglesIndex: 71
         ComponentIndex: 1
-      MidPosition: {x: 10.410001, y: 0.0006940365, z: 0}
-      EndPosition: {x: 9.240001, y: 0.0006940365, z: 0}
+      MidPosition: {x: 10.410001, y: 0.0006940365, z: 0.00000047683716}
+      EndPosition: {x: 9.240001, y: 0.0006940365, z: 0.00000047683716}
       EndVertCoordinate:
         TrianglesIndex: 71
         ComponentIndex: 0
       v_startToEnd: {x: 1, y: 0, z: 0}
       v_endToStart: {x: -1, y: 0, z: 0}
-      v_toCenter: {x: 0.64668477, y: 0, z: -0.7627574}
+      v_toCenter: {x: 0.64668465, y: 0, z: -0.7627575}
       v_cross: {x: 0, y: 0, z: 0}
       MyCoordinate:
         TrianglesIndex: 71
@@ -112797,11 +113336,11 @@ MonoBehaviour:
       SharedEdge:
         TrianglesIndex: 10
         ComponentIndex: 0
-    V_center: {x: 10.8, y: 0.0006940365, z: -0.4599999}
-    Perimeter: 6.436615
-    LongestEdgeLength: 2.7166154
-    ShortestEdgeLength: 1.3799996
-    Area: 1.6145993
+    V_center: {x: 10.8, y: 0.0006940365, z: -0.45999956}
+    Perimeter: 6.436616
+    LongestEdgeLength: 2.7166157
+    ShortestEdgeLength: 1.3800001
+    Area: 1.6146002
     Relationships:
     - Index_relatedTriangle: 0
       IndexMap_OwnedVerts_toShared: ffffffffffffffffffffffff
@@ -114143,23 +114682,23 @@ MonoBehaviour:
     DbgCalculateTriInfo: 'nrml: ''(0.00, 0.00, 0.00)''
 
       edge lengths: ''2.34'',
-      ''1.38'', ''2.716615''
+      ''1.38'', ''2.716616''
 
-      Prmtr: ''6.436615'', Area: ''0''
+      Prmtr: ''6.436616'', Area: ''0''
 
 '
     index_inCollection: 72
     AreaIndex: 0
     Verts:
-    - Position: {x: 9.240001, y: 0.0006940365, z: 0}
-      originalPosition: {x: 9.240001, y: 0.0006940365, z: 0}
+    - Position: {x: 9.240001, y: 0.0006940365, z: 0.00000047683716}
+      originalPosition: {x: 9.240001, y: 0.0006940365, z: 0.00000047683716}
       MyCoordinate:
         TrianglesIndex: 72
         ComponentIndex: 0
       MeshIndex_triangles: 216
       MeshIndex_vertices: 16
-      Angle: 59.470306
-      v_toCenter: {x: -1, y: -0.00007511217, z: 0}
+      Angle: 59.470295
+      v_toCenter: {x: -1, y: -0.00007511217, z: -0.00000005160575}
       DistanceToCenter: 9.240001
       v_normal: {x: 0, y: 0, z: 0}
       SiblingRelationships:
@@ -114171,9 +114710,9 @@ MonoBehaviour:
           ComponentIndex: 1
         CanSee: 1
         AmOverlapping: 0
-        Distance: 2.7166154
-        v_to: {x: 0.861366, y: 0, z: -0.5079849}
-        Angle_centerToDestinationVertex: 149.4703
+        Distance: 2.7166157
+        v_to: {x: 0.8613659, y: 0, z: -0.50798506}
+        Angle_centerToDestinationVertex: 149.47029
       - PerspectiveVertCoordinate:
           TrianglesIndex: 72
           ComponentIndex: 0
@@ -114182,7 +114721,7 @@ MonoBehaviour:
           ComponentIndex: 2
         CanSee: 1
         AmOverlapping: 0
-        Distance: 1.3799996
+        Distance: 1.3800001
         v_to: {x: 0, y: 0, z: -1}
         Angle_centerToDestinationVertex: 90
       Relationships: []
@@ -114195,7 +114734,7 @@ MonoBehaviour:
         ComponentIndex: 0
       DBG_constructor: "at tri[72], [0]\nPos: '(9.24, 0.00, 0.00)', orig: '(9.24,
         0.00, 0.00)'\nvToCtr: '(-1.00, 0.00, 0.00)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
-        '9.240001'\n\tAngle: '59.47031'. A: '149.4703', B: '90'"
+        '9.240001'\n\tAngle: '59.47029'. A: '149.4703', B: '90'"
     - Position: {x: 11.580001, y: 0.0006940365, z: -1.3799996}
       originalPosition: {x: 11.580001, y: 0.0006940365, z: -1.3799996}
       MyCoordinate:
@@ -114203,7 +114742,7 @@ MonoBehaviour:
         ComponentIndex: 1
       MeshIndex_triangles: 217
       MeshIndex_vertices: 69
-      Angle: 30.5297
+      Angle: 30.529707
       v_toCenter: {x: -0.9929739, y: -0.00005951296, z: 0.11833364}
       DistanceToCenter: 11.661939
       v_normal: {x: 0, y: 0, z: 0}
@@ -114216,9 +114755,9 @@ MonoBehaviour:
           ComponentIndex: 0
         CanSee: 1
         AmOverlapping: 0
-        Distance: 2.7166154
-        v_to: {x: -0.861366, y: 0, z: 0.5079849}
-        Angle_centerToDestinationVertex: 23.733751
+        Distance: 2.7166157
+        v_to: {x: -0.8613659, y: 0, z: 0.50798506}
+        Angle_centerToDestinationVertex: 23.73376
       - PerspectiveVertCoordinate:
           TrianglesIndex: 72
           ComponentIndex: 1
@@ -114240,7 +114779,7 @@ MonoBehaviour:
         ComponentIndex: 0
       DBG_constructor: "at tri[72], [1]\nPos: '(11.58, 0.00, -1.38)', orig: '(11.58,
         0.00, -1.38)'\nvToCtr: '(-0.99, 0.00, 0.12)'\nnml: '(0.00, 0.00, 0.00)',
-        dstToCtr: '11.66194'\n\tAngle: '30.5297'. A: '23.73375', B: '6.795927'"
+        dstToCtr: '11.66194'\n\tAngle: '30.52971'. A: '23.73376', B: '6.795927'"
     - Position: {x: 9.240001, y: 0.0006940365, z: -1.3799996}
       originalPosition: {x: 9.240001, y: 0.0006940365, z: -1.3799996}
       MyCoordinate:
@@ -114261,7 +114800,7 @@ MonoBehaviour:
           ComponentIndex: 0
         CanSee: 1
         AmOverlapping: 0
-        Distance: 1.3799996
+        Distance: 1.3800001
         v_to: {x: 0, y: 0, z: 1}
         Angle_centerToDestinationVertex: 81.50562
       - PerspectiveVertCoordinate:
@@ -114295,7 +114834,7 @@ MonoBehaviour:
         ComponentIndex: 2
       v_startToEnd: {x: 1, y: 0, z: 0}
       v_endToStart: {x: -1, y: 0, z: 0}
-      v_toCenter: {x: -0.6466857, y: 0, z: 0.7627566}
+      v_toCenter: {x: -0.6466856, y: 0, z: 0.7627567}
       v_cross: {x: 0, y: 0, z: 0}
       MyCoordinate:
         TrianglesIndex: 72
@@ -114303,19 +114842,19 @@ MonoBehaviour:
       SharedEdge:
         TrianglesIndex: 80
         ComponentIndex: 1
-    - EdgeLength: 1.3799996
-      StartPosition: {x: 9.240001, y: 0.0006940365, z: 0}
+    - EdgeLength: 1.3800001
+      StartPosition: {x: 9.240001, y: 0.0006940365, z: 0.00000047683716}
       StartVertCoordinate:
         TrianglesIndex: 72
         ComponentIndex: 0
-      MidPosition: {x: 9.240001, y: 0.0006940365, z: -0.6899998}
+      MidPosition: {x: 9.240001, y: 0.0006940365, z: -0.6899996}
       EndPosition: {x: 9.240001, y: 0.0006940365, z: -1.3799996}
       EndVertCoordinate:
         TrianglesIndex: 72
         ComponentIndex: 2
       v_startToEnd: {x: 0, y: 0, z: 1}
       v_endToStart: {x: 0, y: 0, z: -1}
-      v_toCenter: {x: 0.95916945, y: 0, z: -0.28283206}
+      v_toCenter: {x: 0.95916945, y: 0, z: -0.28283215}
       v_cross: {x: 0, y: 0, z: 0}
       MyCoordinate:
         TrianglesIndex: 72
@@ -114323,19 +114862,19 @@ MonoBehaviour:
       SharedEdge:
         TrianglesIndex: -1
         ComponentIndex: -1
-    - EdgeLength: 2.7166154
+    - EdgeLength: 2.7166157
       StartPosition: {x: 11.580001, y: 0.0006940365, z: -1.3799996}
       StartVertCoordinate:
         TrianglesIndex: 72
         ComponentIndex: 1
-      MidPosition: {x: 10.410001, y: 0.0006940365, z: -0.6899998}
-      EndPosition: {x: 9.240001, y: 0.0006940365, z: 0}
+      MidPosition: {x: 10.410001, y: 0.0006940365, z: -0.6899996}
+      EndPosition: {x: 9.240001, y: 0.0006940365, z: 0.00000047683716}
       EndVertCoordinate:
         TrianglesIndex: 72
         ComponentIndex: 0
-      v_startToEnd: {x: 0.861366, y: 0, z: -0.5079849}
-      v_endToStart: {x: -0.861366, y: 0, z: 0.5079849}
-      v_toCenter: {x: -0.86136615, y: 0, z: -0.50798464}
+      v_startToEnd: {x: 0.8613659, y: 0, z: -0.50798506}
+      v_endToStart: {x: -0.8613659, y: 0, z: 0.50798506}
+      v_toCenter: {x: -0.8613661, y: 0, z: -0.50798476}
       v_cross: {x: 0, y: 0, z: 0}
       MyCoordinate:
         TrianglesIndex: 72
@@ -114343,11 +114882,11 @@ MonoBehaviour:
       SharedEdge:
         TrianglesIndex: 71
         ComponentIndex: 1
-    V_center: {x: 10.02, y: 0.0006940365, z: -0.9199998}
-    Perimeter: 6.436615
-    LongestEdgeLength: 2.7166154
-    ShortestEdgeLength: 1.3799996
-    Area: 1.6145993
+    V_center: {x: 10.02, y: 0.0006940365, z: -0.9199996}
+    Perimeter: 6.436616
+    LongestEdgeLength: 2.7166157
+    ShortestEdgeLength: 1.3800001
+    Area: 1.6146002
     Relationships:
     - Index_relatedTriangle: 0
       IndexMap_OwnedVerts_toShared: ffffffffffffffffffffffff
@@ -121897,15 +122436,15 @@ MonoBehaviour:
     index_inCollection: 77
     AreaIndex: 0
     Verts:
-    - Position: {x: 7.26, y: 0.0006940365, z: 0}
-      originalPosition: {x: 7.26, y: 0.0006940365, z: 0}
+    - Position: {x: 7.26, y: 0.0006940365, z: 0.00000047683716}
+      originalPosition: {x: 7.26, y: 0.0006940365, z: 0.00000047683716}
       MyCoordinate:
         TrianglesIndex: 77
         ComponentIndex: 0
       MeshIndex_triangles: 231
       MeshIndex_vertices: 13
-      Angle: 68.62936
-      v_toCenter: {x: -1, y: -0.00009559731, z: 0}
+      Angle: 68.629364
+      v_toCenter: {x: -1, y: -0.00009559731, z: -0.00000006568005}
       DistanceToCenter: 7.26
       v_normal: {x: 0, y: 0, z: 0}
       SiblingRelationships:
@@ -121928,9 +122467,9 @@ MonoBehaviour:
           ComponentIndex: 2
         CanSee: 1
         AmOverlapping: 0
-        Distance: 1.4818906
-        v_to: {x: 0.36439967, y: 0, z: -0.9312426}
-        Angle_centerToDestinationVertex: 111.37065
+        Distance: 1.4818909
+        v_to: {x: 0.36439958, y: 0, z: -0.9312427}
+        Angle_centerToDestinationVertex: 111.370636
       Relationships: []
       SharedVertexCoordinates:
       - TrianglesIndex: 8
@@ -121941,16 +122480,16 @@ MonoBehaviour:
         ComponentIndex: 0
       DBG_constructor: "at tri[77], [0]\nPos: '(7.26, 0.00, 0.00)', orig: '(7.26,
         0.00, 0.00)'\nvToCtr: '(-1.00, 0.00, 0.00)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
-        '7.26'\n\tAngle: '68.62936'. A: '180', B: '111.3707'"
-    - Position: {x: 7.8000007, y: 0.0006940365, z: 0}
-      originalPosition: {x: 7.8000007, y: 0.0006940365, z: 0}
+        '7.26'\n\tAngle: '68.62936'. A: '180', B: '111.3706'"
+    - Position: {x: 7.8000007, y: 0.0006940365, z: 0.00000047683716}
+      originalPosition: {x: 7.8000007, y: 0.0006940365, z: 0.00000047683716}
       MyCoordinate:
         TrianglesIndex: 77
         ComponentIndex: 1
       MeshIndex_triangles: 232
       MeshIndex_vertices: 12
       Angle: 90
-      v_toCenter: {x: -1, y: -0.00008897903, z: 0}
+      v_toCenter: {x: -1, y: -0.00008897903, z: -0.000000061132965}
       DistanceToCenter: 7.8000007
       v_normal: {x: 0, y: 0, z: 0}
       SiblingRelationships:
@@ -121973,7 +122512,7 @@ MonoBehaviour:
           ComponentIndex: 2
         CanSee: 1
         AmOverlapping: 0
-        Distance: 1.3799996
+        Distance: 1.3800001
         v_to: {x: 0, y: 0, z: -1}
         Angle_centerToDestinationVertex: 90
       Relationships: []
@@ -121990,7 +122529,7 @@ MonoBehaviour:
         ComponentIndex: 2
       MeshIndex_triangles: 233
       MeshIndex_vertices: 73
-      Angle: 21.370644
+      Angle: 21.370634
       v_toCenter: {x: -0.98470724, y: -0.00008761829, z: 0.17421737}
       DistanceToCenter: 7.921137
       v_normal: {x: 0, y: 0, z: 0}
@@ -122003,9 +122542,9 @@ MonoBehaviour:
           ComponentIndex: 0
         CanSee: 1
         AmOverlapping: 0
-        Distance: 1.4818906
-        v_to: {x: -0.36439967, y: 0, z: 0.9312426}
-        Angle_centerToDestinationVertex: 58.596233
+        Distance: 1.4818909
+        v_to: {x: -0.36439958, y: 0, z: 0.9312427}
+        Angle_centerToDestinationVertex: 58.59624
       - PerspectiveVertCoordinate:
           TrianglesIndex: 77
           ComponentIndex: 2
@@ -122014,7 +122553,7 @@ MonoBehaviour:
           ComponentIndex: 1
         CanSee: 1
         AmOverlapping: 0
-        Distance: 1.3799996
+        Distance: 1.3800001
         v_to: {x: 0, y: 0, z: 1}
         Angle_centerToDestinationVertex: 79.96689
       Relationships: []
@@ -122025,21 +122564,21 @@ MonoBehaviour:
         ComponentIndex: 1
       DBG_constructor: "at tri[77], [2]\nPos: '(7.80, 0.00, -1.38)', orig: '(7.80,
         0.00, -1.38)'\nvToCtr: '(-0.98, 0.00, 0.17)'\nnml: '(0.00, 0.00, 0.00)',
-        dstToCtr: '7.921137'\n\tAngle: '21.37064'. A: '58.59623', B: '79.96689'"
+        dstToCtr: '7.921137'\n\tAngle: '21.37063'. A: '58.59624', B: '79.96689'"
     Edges:
-    - EdgeLength: 1.3799996
-      StartPosition: {x: 7.8000007, y: 0.0006940365, z: 0}
+    - EdgeLength: 1.3800001
+      StartPosition: {x: 7.8000007, y: 0.0006940365, z: 0.00000047683716}
       StartVertCoordinate:
         TrianglesIndex: 77
         ComponentIndex: 1
-      MidPosition: {x: 7.8000007, y: 0.0006940365, z: -0.6899998}
+      MidPosition: {x: 7.8000007, y: 0.0006940365, z: -0.6899996}
       EndPosition: {x: 7.8000007, y: 0.0006940365, z: -1.3799996}
       EndVertCoordinate:
         TrianglesIndex: 77
         ComponentIndex: 2
       v_startToEnd: {x: 0, y: 0, z: 1}
       v_endToStart: {x: 0, y: 0, z: -1}
-      v_toCenter: {x: -0.61630803, y: 0, z: 0.7875052}
+      v_toCenter: {x: -0.6163079, y: 0, z: 0.7875053}
       v_cross: {x: 0, y: 0, z: 0}
       MyCoordinate:
         TrianglesIndex: 77
@@ -122047,19 +122586,19 @@ MonoBehaviour:
       SharedEdge:
         TrianglesIndex: -1
         ComponentIndex: -1
-    - EdgeLength: 1.4818906
-      StartPosition: {x: 7.26, y: 0.0006940365, z: 0}
+    - EdgeLength: 1.4818909
+      StartPosition: {x: 7.26, y: 0.0006940365, z: 0.00000047683716}
       StartVertCoordinate:
         TrianglesIndex: 77
         ComponentIndex: 0
-      MidPosition: {x: 7.5300007, y: 0.0006940365, z: -0.6899998}
+      MidPosition: {x: 7.5300007, y: 0.0006940365, z: -0.6899996}
       EndPosition: {x: 7.8000007, y: 0.0006940365, z: -1.3799996}
       EndVertCoordinate:
         TrianglesIndex: 77
         ComponentIndex: 2
-      v_startToEnd: {x: -0.36439967, y: 0, z: 0.9312426}
-      v_endToStart: {x: 0.36439967, y: 0, z: -0.9312426}
-      v_toCenter: {x: 0.36439997, y: 0, z: 0.9312425}
+      v_startToEnd: {x: -0.36439958, y: 0, z: 0.9312427}
+      v_endToStart: {x: 0.36439958, y: 0, z: -0.9312427}
+      v_toCenter: {x: 0.36439985, y: 0, z: 0.9312426}
       v_cross: {x: 0, y: 0, z: 0}
       MyCoordinate:
         TrianglesIndex: 77
@@ -122068,18 +122607,18 @@ MonoBehaviour:
         TrianglesIndex: 78
         ComponentIndex: 2
     - EdgeLength: 0.54000044
-      StartPosition: {x: 7.8000007, y: 0.0006940365, z: 0}
+      StartPosition: {x: 7.8000007, y: 0.0006940365, z: 0.00000047683716}
       StartVertCoordinate:
         TrianglesIndex: 77
         ComponentIndex: 1
-      MidPosition: {x: 7.5300007, y: 0.0006940365, z: 0}
-      EndPosition: {x: 7.26, y: 0.0006940365, z: 0}
+      MidPosition: {x: 7.5300007, y: 0.0006940365, z: 0.00000047683716}
+      EndPosition: {x: 7.26, y: 0.0006940365, z: 0.00000047683716}
       EndVertCoordinate:
         TrianglesIndex: 77
         ComponentIndex: 0
       v_startToEnd: {x: 1, y: 0, z: 0}
       v_endToStart: {x: -1, y: 0, z: 0}
-      v_toCenter: {x: 0.19201195, y: 0, z: -0.98139256}
+      v_toCenter: {x: 0.1920119, y: 0, z: -0.98139256}
       v_cross: {x: 0, y: 0, z: 0}
       MyCoordinate:
         TrianglesIndex: 77
@@ -122087,9 +122626,9 @@ MonoBehaviour:
       SharedEdge:
         TrianglesIndex: 8
         ComponentIndex: 0
-    V_center: {x: 7.620001, y: 0.0006940365, z: -0.4599999}
-    Perimeter: 3.4018908
-    LongestEdgeLength: 1.4818906
+    V_center: {x: 7.620001, y: 0.0006940365, z: -0.45999956}
+    Perimeter: 3.4018915
+    LongestEdgeLength: 1.4818909
     ShortestEdgeLength: 0.54000044
     Area: 0.37260032
     Relationships:
@@ -123435,21 +123974,21 @@ MonoBehaviour:
       edge lengths: ''0.5531731'',
       ''1.5'', ''1.481891''
 
-      Prmtr: ''3.535063'', Area: ''0''
+      Prmtr: ''3.535064'', Area: ''0''
 
 '
     index_inCollection: 78
     AreaIndex: 0
     Verts:
-    - Position: {x: 7.26, y: 0.0006940365, z: 0}
-      originalPosition: {x: 7.26, y: 0.0006940365, z: 0}
+    - Position: {x: 7.26, y: 0.0006940365, z: 0.00000047683716}
+      originalPosition: {x: 7.26, y: 0.0006940365, z: 0.00000047683716}
       MyCoordinate:
         TrianglesIndex: 78
         ComponentIndex: 0
       MeshIndex_triangles: 234
       MeshIndex_vertices: 13
-      Angle: 21.370644
-      v_toCenter: {x: -1, y: -0.00009559731, z: 0}
+      Angle: 21.370634
+      v_toCenter: {x: -1, y: -0.00009559731, z: -0.00000006568005}
       DistanceToCenter: 7.26
       v_normal: {x: 0, y: 0, z: 0}
       SiblingRelationships:
@@ -123461,9 +124000,9 @@ MonoBehaviour:
           ComponentIndex: 1
         CanSee: 1
         AmOverlapping: 0
-        Distance: 1.4818906
-        v_to: {x: 0.36439967, y: 0, z: -0.9312426}
-        Angle_centerToDestinationVertex: 111.37065
+        Distance: 1.4818909
+        v_to: {x: 0.36439958, y: 0, z: -0.9312427}
+        Angle_centerToDestinationVertex: 111.370636
       - PerspectiveVertCoordinate:
           TrianglesIndex: 78
           ComponentIndex: 0
@@ -123472,7 +124011,7 @@ MonoBehaviour:
           ComponentIndex: 2
         CanSee: 1
         AmOverlapping: 0
-        Distance: 1.4999995
+        Distance: 1.5
         v_to: {x: 0, y: 0, z: -1}
         Angle_centerToDestinationVertex: 90
       Relationships: []
@@ -123485,7 +124024,7 @@ MonoBehaviour:
         ComponentIndex: 0
       DBG_constructor: "at tri[78], [0]\nPos: '(7.26, 0.00, 0.00)', orig: '(7.26,
         0.00, 0.00)'\nvToCtr: '(-1.00, 0.00, 0.00)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
-        '7.26'\n\tAngle: '21.37064'. A: '111.3707', B: '90'"
+        '7.26'\n\tAngle: '21.37063'. A: '111.3706', B: '90'"
     - Position: {x: 7.8000007, y: 0.0006940365, z: -1.3799996}
       originalPosition: {x: 7.8000007, y: 0.0006940365, z: -1.3799996}
       MyCoordinate:
@@ -123506,9 +124045,9 @@ MonoBehaviour:
           ComponentIndex: 0
         CanSee: 1
         AmOverlapping: 0
-        Distance: 1.4818906
-        v_to: {x: -0.36439967, y: 0, z: 0.9312426}
-        Angle_centerToDestinationVertex: 58.596233
+        Distance: 1.4818909
+        v_to: {x: -0.36439958, y: 0, z: 0.9312427}
+        Angle_centerToDestinationVertex: 58.59624
       - PerspectiveVertCoordinate:
           TrianglesIndex: 78
           ComponentIndex: 1
@@ -123528,7 +124067,7 @@ MonoBehaviour:
         ComponentIndex: 2
       DBG_constructor: "at tri[78], [1]\nPos: '(7.80, 0.00, -1.38)', orig: '(7.80,
         0.00, -1.38)'\nvToCtr: '(-0.98, 0.00, 0.17)'\nnml: '(0.00, 0.00, 0.00)',
-        dstToCtr: '7.921137'\n\tAngle: '81.15815'. A: '58.59623', B: '22.5619'"
+        dstToCtr: '7.921137'\n\tAngle: '81.15815'. A: '58.59624', B: '22.5619'"
     - Position: {x: 7.26, y: 0.0006940365, z: -1.4999995}
       originalPosition: {x: 7.26, y: 0.0006940365, z: -1.4999995}
       MyCoordinate:
@@ -123549,7 +124088,7 @@ MonoBehaviour:
           ComponentIndex: 0
         CanSee: 1
         AmOverlapping: 0
-        Distance: 1.4999995
+        Distance: 1.5
         v_to: {x: 0, y: 0, z: 1}
         Angle_centerToDestinationVertex: 78.326294
       - PerspectiveVertCoordinate:
@@ -123585,7 +124124,7 @@ MonoBehaviour:
         ComponentIndex: 2
       v_startToEnd: {x: 0.97618717, y: 0, z: 0.21693009}
       v_endToStart: {x: -0.97618717, y: 0, z: -0.21693009}
-      v_toCenter: {x: -0.18428889, y: 0, z: 0.9828721}
+      v_toCenter: {x: -0.18428883, y: 0, z: 0.9828721}
       v_cross: {x: 0, y: 0, z: 0}
       MyCoordinate:
         TrianglesIndex: 78
@@ -123593,19 +124132,19 @@ MonoBehaviour:
       SharedEdge:
         TrianglesIndex: 76
         ComponentIndex: 1
-    - EdgeLength: 1.4999995
-      StartPosition: {x: 7.26, y: 0.0006940365, z: 0}
+    - EdgeLength: 1.5
+      StartPosition: {x: 7.26, y: 0.0006940365, z: 0.00000047683716}
       StartVertCoordinate:
         TrianglesIndex: 78
         ComponentIndex: 0
-      MidPosition: {x: 7.26, y: 0.0006940365, z: -0.74999976}
+      MidPosition: {x: 7.26, y: 0.0006940365, z: -0.7499995}
       EndPosition: {x: 7.26, y: 0.0006940365, z: -1.4999995}
       EndVertCoordinate:
         TrianglesIndex: 78
         ComponentIndex: 2
       v_startToEnd: {x: 0, y: 0, z: 1}
       v_endToStart: {x: 0, y: 0, z: -1}
-      v_toCenter: {x: 0.65079206, y: 0, z: -0.75925606}
+      v_toCenter: {x: 0.65079194, y: 0, z: -0.7592561}
       v_cross: {x: 0, y: 0, z: 0}
       MyCoordinate:
         TrianglesIndex: 78
@@ -123613,19 +124152,19 @@ MonoBehaviour:
       SharedEdge:
         TrianglesIndex: -1
         ComponentIndex: -1
-    - EdgeLength: 1.4818906
+    - EdgeLength: 1.4818909
       StartPosition: {x: 7.8000007, y: 0.0006940365, z: -1.3799996}
       StartVertCoordinate:
         TrianglesIndex: 78
         ComponentIndex: 1
-      MidPosition: {x: 7.5300007, y: 0.0006940365, z: -0.6899998}
-      EndPosition: {x: 7.26, y: 0.0006940365, z: 0}
+      MidPosition: {x: 7.5300007, y: 0.0006940365, z: -0.6899996}
+      EndPosition: {x: 7.26, y: 0.0006940365, z: 0.00000047683716}
       EndVertCoordinate:
         TrianglesIndex: 78
         ComponentIndex: 0
-      v_startToEnd: {x: 0.36439967, y: 0, z: -0.9312426}
-      v_endToStart: {x: -0.36439967, y: 0, z: 0.9312426}
-      v_toCenter: {x: -0.31622833, y: 0, z: -0.9486831}
+      v_startToEnd: {x: 0.36439958, y: 0, z: -0.9312427}
+      v_endToStart: {x: -0.36439958, y: 0, z: 0.9312427}
+      v_toCenter: {x: -0.31622827, y: 0, z: -0.9486831}
       v_cross: {x: 0, y: 0, z: 0}
       MyCoordinate:
         TrianglesIndex: 78
@@ -123633,11 +124172,11 @@ MonoBehaviour:
       SharedEdge:
         TrianglesIndex: 77
         ComponentIndex: 1
-    V_center: {x: 7.4400005, y: 0.0006940365, z: -0.95999974}
-    Perimeter: 3.5350633
-    LongestEdgeLength: 1.4999995
+    V_center: {x: 7.4400005, y: 0.0006940365, z: -0.95999956}
+    Perimeter: 3.535064
+    LongestEdgeLength: 1.5
     ShortestEdgeLength: 0.55317307
-    Area: 0.4050003
+    Area: 0.40500033
     Relationships:
     - Index_relatedTriangle: 0
       IndexMap_OwnedVerts_toShared: ffffffffffffffffffffffff
@@ -128075,9 +128614,9 @@ MonoBehaviour:
     DbgCalculateTriInfo: 'nrml: ''(0.00, 0.00, 0.00)''
 
       edge lengths: ''2.34'',
-      ''2.716615'', ''1.38''
+      ''2.716616'', ''1.38''
 
-      Prmtr: ''6.436615'', Area: ''0''
+      Prmtr: ''6.436616'', Area: ''0''
 
 '
     index_inCollection: 81
@@ -128090,7 +128629,7 @@ MonoBehaviour:
         ComponentIndex: 0
       MeshIndex_triangles: 243
       MeshIndex_vertices: 74
-      Angle: 59.470306
+      Angle: 59.470295
       v_toCenter: {x: -0.9944299, y: -0.000053008494, z: 0.10540037}
       DistanceToCenter: 13.09293
       v_normal: {x: 0, y: 0, z: 0}
@@ -128103,7 +128642,7 @@ MonoBehaviour:
           ComponentIndex: 1
         CanSee: 1
         AmOverlapping: 0
-        Distance: 1.3799996
+        Distance: 1.3800001
         v_to: {x: 0, y: 0, z: 1}
         Angle_centerToDestinationVertex: 83.94977
       - PerspectiveVertCoordinate:
@@ -128114,8 +128653,8 @@ MonoBehaviour:
           ComponentIndex: 2
         CanSee: 1
         AmOverlapping: 0
-        Distance: 2.7166154
-        v_to: {x: 0.861366, y: 0, z: 0.5079849}
+        Distance: 2.7166157
+        v_to: {x: 0.8613659, y: 0, z: 0.50798506}
         Angle_centerToDestinationVertex: 143.42007
       Relationships: []
       SharedVertexCoordinates:
@@ -128123,16 +128662,16 @@ MonoBehaviour:
         ComponentIndex: 1
       DBG_constructor: "at tri[81], [0]\nPos: '(13.02, 0.00, -1.38)', orig: '(13.02,
         0.00, -1.38)'\nvToCtr: '(-0.99, 0.00, 0.11)'\nnml: '(0.00, 0.00, 0.00)',
-        dstToCtr: '13.09293'\n\tAngle: '59.47031'. A: '83.94977', B: '143.4201'"
-    - Position: {x: 13.02, y: 0.0006940365, z: 0}
-      originalPosition: {x: 13.02, y: 0.0006940365, z: 0}
+        dstToCtr: '13.09293'\n\tAngle: '59.47029'. A: '83.94977', B: '143.4201'"
+    - Position: {x: 13.02, y: 0.0006940365, z: 0.00000047683716}
+      originalPosition: {x: 13.02, y: 0.0006940365, z: 0.00000047683716}
       MyCoordinate:
         TrianglesIndex: 81
         ComponentIndex: 1
       MeshIndex_triangles: 244
       MeshIndex_vertices: 44
       Angle: 90
-      v_toCenter: {x: -1, y: -0.00005330541, z: 0}
+      v_toCenter: {x: -1, y: -0.00005330541, z: -0.000000036623437}
       DistanceToCenter: 13.02
       v_normal: {x: 0, y: 0, z: 0}
       SiblingRelationships:
@@ -128144,7 +128683,7 @@ MonoBehaviour:
           ComponentIndex: 0
         CanSee: 1
         AmOverlapping: 0
-        Distance: 1.3799996
+        Distance: 1.3800001
         v_to: {x: 0, y: 0, z: -1}
         Angle_centerToDestinationVertex: 90
       - PerspectiveVertCoordinate:
@@ -128165,15 +128704,15 @@ MonoBehaviour:
       DBG_constructor: "at tri[81], [1]\nPos: '(13.02, 0.00, 0.00)', orig: '(13.02,
         0.00, 0.00)'\nvToCtr: '(-1.00, 0.00, 0.00)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
         '13.02'\n\tAngle: '90'. A: '90', B: '180'"
-    - Position: {x: 15.360001, y: 0.0006940365, z: 0}
-      originalPosition: {x: 15.360001, y: 0.0006940365, z: 0}
+    - Position: {x: 15.360001, y: 0.0006940365, z: 0.00000047683716}
+      originalPosition: {x: 15.360001, y: 0.0006940365, z: 0.00000047683716}
       MyCoordinate:
         TrianglesIndex: 81
         ComponentIndex: 2
       MeshIndex_triangles: 245
       MeshIndex_vertices: 8
-      Angle: 30.5297
-      v_toCenter: {x: -1, y: -0.000045184664, z: 0}
+      Angle: 30.529707
+      v_toCenter: {x: -1, y: -0.000045184664, z: -0.000000031044085}
       DistanceToCenter: 15.360001
       v_normal: {x: 0, y: 0, z: 0}
       SiblingRelationships:
@@ -128185,9 +128724,9 @@ MonoBehaviour:
           ComponentIndex: 0
         CanSee: 1
         AmOverlapping: 0
-        Distance: 2.7166154
-        v_to: {x: -0.861366, y: 0, z: -0.5079849}
-        Angle_centerToDestinationVertex: 30.5297
+        Distance: 2.7166157
+        v_to: {x: -0.8613659, y: 0, z: -0.50798506}
+        Angle_centerToDestinationVertex: 30.529707
       - PerspectiveVertCoordinate:
           TrianglesIndex: 81
           ComponentIndex: 2
@@ -128223,21 +128762,21 @@ MonoBehaviour:
         ComponentIndex: 1
       DBG_constructor: "at tri[81], [2]\nPos: '(15.36, 0.00, 0.00)', orig: '(15.36,
         0.00, 0.00)'\nvToCtr: '(-1.00, 0.00, 0.00)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
-        '15.36'\n\tAngle: '30.5297'. A: '30.5297', B: '0'"
+        '15.36'\n\tAngle: '30.52971'. A: '30.52971', B: '0'"
     Edges:
     - EdgeLength: 2.3400002
-      StartPosition: {x: 13.02, y: 0.0006940365, z: 0}
+      StartPosition: {x: 13.02, y: 0.0006940365, z: 0.00000047683716}
       StartVertCoordinate:
         TrianglesIndex: 81
         ComponentIndex: 1
-      MidPosition: {x: 14.190001, y: 0.0006940365, z: 0}
-      EndPosition: {x: 15.360001, y: 0.0006940365, z: 0}
+      MidPosition: {x: 14.190001, y: 0.0006940365, z: 0.00000047683716}
+      EndPosition: {x: 15.360001, y: 0.0006940365, z: 0.00000047683716}
       EndVertCoordinate:
         TrianglesIndex: 81
         ComponentIndex: 2
       v_startToEnd: {x: -1, y: 0, z: 0}
       v_endToStart: {x: 1, y: 0, z: 0}
-      v_toCenter: {x: -0.6466857, y: 0, z: -0.76275665}
+      v_toCenter: {x: -0.6466856, y: 0, z: -0.7627567}
       v_cross: {x: 0, y: 0, z: 0}
       MyCoordinate:
         TrianglesIndex: 81
@@ -128245,19 +128784,19 @@ MonoBehaviour:
       SharedEdge:
         TrianglesIndex: 37
         ComponentIndex: 2
-    - EdgeLength: 2.7166154
+    - EdgeLength: 2.7166157
       StartPosition: {x: 13.02, y: 0.0006940365, z: -1.3799996}
       StartVertCoordinate:
         TrianglesIndex: 81
         ComponentIndex: 0
-      MidPosition: {x: 14.190001, y: 0.0006940365, z: -0.6899998}
-      EndPosition: {x: 15.360001, y: 0.0006940365, z: 0}
+      MidPosition: {x: 14.190001, y: 0.0006940365, z: -0.6899996}
+      EndPosition: {x: 15.360001, y: 0.0006940365, z: 0.00000047683716}
       EndVertCoordinate:
         TrianglesIndex: 81
         ComponentIndex: 2
-      v_startToEnd: {x: -0.861366, y: 0, z: -0.5079849}
-      v_endToStart: {x: 0.861366, y: 0, z: 0.5079849}
-      v_toCenter: {x: -0.86136615, y: 0, z: 0.5079846}
+      v_startToEnd: {x: -0.8613659, y: 0, z: -0.50798506}
+      v_endToStart: {x: 0.8613659, y: 0, z: 0.50798506}
+      v_toCenter: {x: -0.8613661, y: 0, z: 0.50798476}
       v_cross: {x: 0, y: 0, z: 0}
       MyCoordinate:
         TrianglesIndex: 81
@@ -128265,19 +128804,19 @@ MonoBehaviour:
       SharedEdge:
         TrianglesIndex: 82
         ComponentIndex: 0
-    - EdgeLength: 1.3799996
-      StartPosition: {x: 13.02, y: 0.0006940365, z: 0}
+    - EdgeLength: 1.3800001
+      StartPosition: {x: 13.02, y: 0.0006940365, z: 0.00000047683716}
       StartVertCoordinate:
         TrianglesIndex: 81
         ComponentIndex: 1
-      MidPosition: {x: 13.02, y: 0.0006940365, z: -0.6899998}
+      MidPosition: {x: 13.02, y: 0.0006940365, z: -0.6899996}
       EndPosition: {x: 13.02, y: 0.0006940365, z: -1.3799996}
       EndVertCoordinate:
         TrianglesIndex: 81
         ComponentIndex: 0
       v_startToEnd: {x: 0, y: 0, z: 1}
       v_endToStart: {x: 0, y: 0, z: -1}
-      v_toCenter: {x: 0.95916945, y: 0, z: 0.28283203}
+      v_toCenter: {x: 0.95916945, y: 0, z: 0.28283215}
       v_cross: {x: 0, y: 0, z: 0}
       MyCoordinate:
         TrianglesIndex: 81
@@ -128285,11 +128824,11 @@ MonoBehaviour:
       SharedEdge:
         TrianglesIndex: -1
         ComponentIndex: -1
-    V_center: {x: 13.8, y: 0.0006940365, z: -0.4599999}
-    Perimeter: 6.436615
-    LongestEdgeLength: 2.7166154
-    ShortestEdgeLength: 1.3799996
-    Area: 1.6145993
+    V_center: {x: 13.8, y: 0.0006940365, z: -0.45999956}
+    Perimeter: 6.436616
+    LongestEdgeLength: 2.7166157
+    ShortestEdgeLength: 1.3800001
+    Area: 1.6146002
     Relationships:
     - Index_relatedTriangle: 0
       IndexMap_OwnedVerts_toShared: ffffffffffffffffffffffff
@@ -129630,10 +130169,10 @@ MonoBehaviour:
   - name: 'ind: ''82'', ctr: ''(13.76, 0.00, -0.96)'''
     DbgCalculateTriInfo: 'nrml: ''(0.00, 0.00, 0.00)''
 
-      edge lengths: ''2.716615'',
-      ''2.881249'', ''0.1697055''
+      edge lengths: ''2.716616'',
+      ''2.88125'', ''0.1697055''
 
-      Prmtr: ''5.76757'', Area: ''0''
+      Prmtr: ''5.767571'', Area: ''0''
 
 '
     index_inCollection: 82
@@ -129646,7 +130185,7 @@ MonoBehaviour:
         ComponentIndex: 0
       MeshIndex_triangles: 246
       MeshIndex_vertices: 72
-      Angle: 13.626997
+      Angle: 13.626983
       v_toCenter: {x: -0.99330735, y: -0.000053441203, z: 0.115500815}
       DistanceToCenter: 12.9869175
       v_normal: {x: 0, y: 0, z: 0}
@@ -129670,8 +130209,8 @@ MonoBehaviour:
           ComponentIndex: 2
         CanSee: 1
         AmOverlapping: 0
-        Distance: 2.8812494
-        v_to: {x: 0.8537963, y: 0, z: 0.5206073}
+        Distance: 2.8812497
+        v_to: {x: 0.8537962, y: 0, z: 0.5206074}
         Angle_centerToDestinationVertex: 141.99449
       Relationships: []
       SharedVertexCoordinates:
@@ -129681,7 +130220,7 @@ MonoBehaviour:
         ComponentIndex: 0
       DBG_constructor: "at tri[82], [0]\nPos: '(12.90, 0.00, -1.50)', orig: '(12.90,
         0.00, -1.50)'\nvToCtr: '(-0.99, 0.00, 0.12)'\nnml: '(0.00, 0.00, 0.00)',
-        dstToCtr: '12.98692'\n\tAngle: '13.627'. A: '128.3675', B: '141.9945'"
+        dstToCtr: '12.98692'\n\tAngle: '13.62698'. A: '128.3675', B: '141.9945'"
     - Position: {x: 13.02, y: 0.0006940365, z: -1.3799996}
       originalPosition: {x: 13.02, y: 0.0006940365, z: -1.3799996}
       MyCoordinate:
@@ -129689,7 +130228,7 @@ MonoBehaviour:
         ComponentIndex: 1
       MeshIndex_triangles: 247
       MeshIndex_vertices: 74
-      Angle: 165.52971
+      Angle: 165.52972
       v_toCenter: {x: -0.9944299, y: -0.000053008494, z: 0.10540037}
       DistanceToCenter: 13.09293
       v_normal: {x: 0, y: 0, z: 0}
@@ -129713,8 +130252,8 @@ MonoBehaviour:
           ComponentIndex: 2
         CanSee: 1
         AmOverlapping: 0
-        Distance: 2.7166154
-        v_to: {x: 0.861366, y: 0, z: 0.5079849}
+        Distance: 2.7166157
+        v_to: {x: 0.8613659, y: 0, z: 0.50798506}
         Angle_centerToDestinationVertex: 143.42007
       Relationships: []
       SharedVertexCoordinates:
@@ -129723,15 +130262,15 @@ MonoBehaviour:
       DBG_constructor: "at tri[82], [1]\nPos: '(13.02, 0.00, -1.38)', orig: '(13.02,
         0.00, -1.38)'\nvToCtr: '(-0.99, 0.00, 0.11)'\nnml: '(0.00, 0.00, 0.00)',
         dstToCtr: '13.09293'\n\tAngle: '165.5297'. A: '51.05023', B: '143.4201'"
-    - Position: {x: 15.360001, y: 0.0006940365, z: 0}
-      originalPosition: {x: 15.360001, y: 0.0006940365, z: 0}
+    - Position: {x: 15.360001, y: 0.0006940365, z: 0.00000047683716}
+      originalPosition: {x: 15.360001, y: 0.0006940365, z: 0.00000047683716}
       MyCoordinate:
         TrianglesIndex: 82
         ComponentIndex: 2
       MeshIndex_triangles: 248
       MeshIndex_vertices: 8
       Angle: 0.8432553
-      v_toCenter: {x: -1, y: -0.000045184664, z: 0}
+      v_toCenter: {x: -1, y: -0.000045184664, z: -0.000000031044085}
       DistanceToCenter: 15.360001
       v_normal: {x: 0, y: 0, z: 0}
       SiblingRelationships:
@@ -129743,9 +130282,9 @@ MonoBehaviour:
           ComponentIndex: 0
         CanSee: 1
         AmOverlapping: 0
-        Distance: 2.8812494
-        v_to: {x: -0.8537963, y: 0, z: -0.5206073}
-        Angle_centerToDestinationVertex: 31.372992
+        Distance: 2.8812497
+        v_to: {x: -0.8537962, y: 0, z: -0.5206074}
+        Angle_centerToDestinationVertex: 31.373005
       - PerspectiveVertCoordinate:
           TrianglesIndex: 82
           ComponentIndex: 2
@@ -129754,9 +130293,9 @@ MonoBehaviour:
           ComponentIndex: 1
         CanSee: 1
         AmOverlapping: 0
-        Distance: 2.7166154
-        v_to: {x: -0.861366, y: 0, z: -0.5079849}
-        Angle_centerToDestinationVertex: 30.5297
+        Distance: 2.7166157
+        v_to: {x: -0.8613659, y: 0, z: -0.50798506}
+        Angle_centerToDestinationVertex: 30.529707
       Relationships: []
       SharedVertexCoordinates:
       - TrianglesIndex: 4
@@ -129781,21 +130320,21 @@ MonoBehaviour:
         ComponentIndex: 1
       DBG_constructor: "at tri[82], [2]\nPos: '(15.36, 0.00, 0.00)', orig: '(15.36,
         0.00, 0.00)'\nvToCtr: '(-1.00, 0.00, 0.00)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
-        '15.36'\n\tAngle: '0.8432553'. A: '31.37299', B: '30.5297'"
+        '15.36'\n\tAngle: '0.8432553'. A: '31.373', B: '30.52971'"
     Edges:
-    - EdgeLength: 2.7166154
+    - EdgeLength: 2.7166157
       StartPosition: {x: 13.02, y: 0.0006940365, z: -1.3799996}
       StartVertCoordinate:
         TrianglesIndex: 82
         ComponentIndex: 1
-      MidPosition: {x: 14.190001, y: 0.0006940365, z: -0.6899998}
-      EndPosition: {x: 15.360001, y: 0.0006940365, z: 0}
+      MidPosition: {x: 14.190001, y: 0.0006940365, z: -0.6899996}
+      EndPosition: {x: 15.360001, y: 0.0006940365, z: 0.00000047683716}
       EndVertCoordinate:
         TrianglesIndex: 82
         ComponentIndex: 2
-      v_startToEnd: {x: -0.861366, y: 0, z: -0.5079849}
-      v_endToStart: {x: 0.861366, y: 0, z: 0.5079849}
-      v_toCenter: {x: -0.84688973, y: 0, z: -0.5317686}
+      v_startToEnd: {x: -0.8613659, y: 0, z: -0.50798506}
+      v_endToStart: {x: 0.8613659, y: 0, z: 0.50798506}
+      v_toCenter: {x: -0.8468896, y: 0, z: -0.5317687}
       v_cross: {x: 0, y: 0, z: 0}
       MyCoordinate:
         TrianglesIndex: 82
@@ -129803,19 +130342,19 @@ MonoBehaviour:
       SharedEdge:
         TrianglesIndex: 81
         ComponentIndex: 1
-    - EdgeLength: 2.8812494
+    - EdgeLength: 2.8812497
       StartPosition: {x: 12.900001, y: 0.0006940365, z: -1.4999995}
       StartVertCoordinate:
         TrianglesIndex: 82
         ComponentIndex: 0
-      MidPosition: {x: 14.130001, y: 0.0006940365, z: -0.74999976}
-      EndPosition: {x: 15.360001, y: 0.0006940365, z: 0}
+      MidPosition: {x: 14.130001, y: 0.0006940365, z: -0.7499995}
+      EndPosition: {x: 15.360001, y: 0.0006940365, z: 0.00000047683716}
       EndVertCoordinate:
         TrianglesIndex: 82
         ComponentIndex: 2
-      v_startToEnd: {x: -0.8537963, y: 0, z: -0.5206073}
-      v_endToStart: {x: 0.8537963, y: 0, z: 0.5206073}
-      v_toCenter: {x: -0.8696858, y: 0, z: -0.49360558}
+      v_startToEnd: {x: -0.8537962, y: 0, z: -0.5206074}
+      v_endToStart: {x: 0.8537962, y: 0, z: 0.5206074}
+      v_toCenter: {x: -0.86968577, y: 0, z: -0.4936057}
       v_cross: {x: 0, y: 0, z: 0}
       MyCoordinate:
         TrianglesIndex: 82
@@ -129835,7 +130374,7 @@ MonoBehaviour:
         ComponentIndex: 0
       v_startToEnd: {x: 0.70710677, y: 0, z: 0.70710677}
       v_endToStart: {x: -0.70710677, y: 0, z: -0.70710677}
-      v_toCenter: {x: 0.85749304, y: 0, z: 0.51449555}
+      v_toCenter: {x: 0.857493, y: 0, z: 0.5144957}
       v_cross: {x: 0, y: 0, z: 0}
       MyCoordinate:
         TrianglesIndex: 82
@@ -129843,11 +130382,11 @@ MonoBehaviour:
       SharedEdge:
         TrianglesIndex: -1
         ComponentIndex: -1
-    V_center: {x: 13.760001, y: 0.0006940365, z: -0.95999974}
-    Perimeter: 5.7675705
-    LongestEdgeLength: 2.8812494
+    V_center: {x: 13.760001, y: 0.0006940365, z: -0.95999956}
+    Perimeter: 5.767571
+    LongestEdgeLength: 2.8812497
     ShortestEdgeLength: 0.16970547
-    Area: 0.057601117
+    Area: 0.05760112
     Relationships:
     - Index_relatedTriangle: 0
       IndexMap_OwnedVerts_toShared: ffffffffffffffffffffffff
@@ -131189,7 +131728,7 @@ MonoBehaviour:
     DbgCalculateTriInfo: 'nrml: ''(0.00, 0.00, 0.00)''
 
       edge lengths: ''5.4'',
-      ''4.611031'', ''2.881249''
+      ''4.611031'', ''2.88125''
 
       Prmtr: ''12.89228'', Area: ''0''
 
@@ -131204,7 +131743,7 @@ MonoBehaviour:
         ComponentIndex: 0
       MeshIndex_triangles: 249
       MeshIndex_vertices: 72
-      Angle: 89.13052
+      Angle: 89.13053
       v_toCenter: {x: -0.99330735, y: -0.000053441203, z: 0.115500815}
       DistanceToCenter: 12.9869175
       v_normal: {x: 0, y: 0, z: 0}
@@ -131217,8 +131756,8 @@ MonoBehaviour:
           ComponentIndex: 1
         CanSee: 1
         AmOverlapping: 0
-        Distance: 2.8812494
-        v_to: {x: 0.8537963, y: 0, z: 0.5206073}
+        Distance: 2.8812497
+        v_to: {x: 0.8537962, y: 0, z: 0.5206074}
         Angle_centerToDestinationVertex: 141.99449
       - PerspectiveVertCoordinate:
           TrianglesIndex: 83
@@ -131239,16 +131778,16 @@ MonoBehaviour:
         ComponentIndex: 0
       DBG_constructor: "at tri[83], [0]\nPos: '(12.90, 0.00, -1.50)', orig: '(12.90,
         0.00, -1.50)'\nvToCtr: '(-0.99, 0.00, 0.12)'\nnml: '(0.00, 0.00, 0.00)',
-        dstToCtr: '12.98692'\n\tAngle: '89.13052'. A: '141.9945', B: '128.875'"
-    - Position: {x: 15.360001, y: 0.0006940365, z: 0}
-      originalPosition: {x: 15.360001, y: 0.0006940365, z: 0}
+        dstToCtr: '12.98692'\n\tAngle: '89.13053'. A: '141.9945', B: '128.875'"
+    - Position: {x: 15.360001, y: 0.0006940365, z: 0.00000047683716}
+      originalPosition: {x: 15.360001, y: 0.0006940365, z: 0.00000047683716}
       MyCoordinate:
         TrianglesIndex: 83
         ComponentIndex: 1
       MeshIndex_triangles: 250
       MeshIndex_vertices: 8
-      Angle: 58.627003
-      v_toCenter: {x: -1, y: -0.000045184664, z: 0}
+      Angle: 58.627
+      v_toCenter: {x: -1, y: -0.000045184664, z: -0.000000031044085}
       DistanceToCenter: 15.360001
       v_normal: {x: 0, y: 0, z: 0}
       SiblingRelationships:
@@ -131260,9 +131799,9 @@ MonoBehaviour:
           ComponentIndex: 0
         CanSee: 1
         AmOverlapping: 0
-        Distance: 2.8812494
-        v_to: {x: -0.8537963, y: 0, z: -0.5206073}
-        Angle_centerToDestinationVertex: 31.372992
+        Distance: 2.8812497
+        v_to: {x: -0.8537962, y: 0, z: -0.5206074}
+        Angle_centerToDestinationVertex: 31.373005
       - PerspectiveVertCoordinate:
           TrianglesIndex: 83
           ComponentIndex: 1
@@ -131271,7 +131810,7 @@ MonoBehaviour:
           ComponentIndex: 2
         CanSee: 1
         AmOverlapping: 0
-        Distance: 5.3999996
+        Distance: 5.4
         v_to: {x: 0, y: 0, z: -1}
         Angle_centerToDestinationVertex: 90
       Relationships: []
@@ -131298,7 +131837,7 @@ MonoBehaviour:
         ComponentIndex: 2
       DBG_constructor: "at tri[83], [1]\nPos: '(15.36, 0.00, 0.00)', orig: '(15.36,
         0.00, 0.00)'\nvToCtr: '(-1.00, 0.00, 0.00)'\nnml: '(0.00, 0.00, 0.00)', dstToCtr:
-        '15.36'\n\tAngle: '58.627'. A: '31.37299', B: '90'"
+        '15.36'\n\tAngle: '58.627'. A: '31.373', B: '90'"
     - Position: {x: 15.360001, y: 0.0006940365, z: -5.3999996}
       originalPosition: {x: 15.360001, y: 0.0006940365, z: -5.3999996}
       MyCoordinate:
@@ -131330,7 +131869,7 @@ MonoBehaviour:
           ComponentIndex: 1
         CanSee: 1
         AmOverlapping: 0
-        Distance: 5.3999996
+        Distance: 5.4
         v_to: {x: 0, y: 0, z: 1}
         Angle_centerToDestinationVertex: 70.63024
       Relationships: []
@@ -131349,12 +131888,12 @@ MonoBehaviour:
         0.00, -5.40)'\nvToCtr: '(-0.94, 0.00, 0.33)'\nnml: '(0.00, 0.00, 0.00)',
         dstToCtr: '16.28157'\n\tAngle: '32.24246'. A: '38.38777', B: '70.63024'"
     Edges:
-    - EdgeLength: 5.3999996
-      StartPosition: {x: 15.360001, y: 0.0006940365, z: 0}
+    - EdgeLength: 5.4
+      StartPosition: {x: 15.360001, y: 0.0006940365, z: 0.00000047683716}
       StartVertCoordinate:
         TrianglesIndex: 83
         ComponentIndex: 1
-      MidPosition: {x: 15.360001, y: 0.0006940365, z: -2.6999998}
+      MidPosition: {x: 15.360001, y: 0.0006940365, z: -2.6999996}
       EndPosition: {x: 15.360001, y: 0.0006940365, z: -5.3999996}
       EndVertCoordinate:
         TrianglesIndex: 83
@@ -131381,7 +131920,7 @@ MonoBehaviour:
         ComponentIndex: 2
       v_startToEnd: {x: -0.5335033, y: 0, z: 0.8457979}
       v_endToStart: {x: 0.5335033, y: 0, z: -0.8457979}
-      v_toCenter: {x: 0.3358174, y: 0, z: 0.9419271}
+      v_toCenter: {x: 0.33581734, y: 0, z: 0.94192713}
       v_cross: {x: 0, y: 0, z: 0}
       MyCoordinate:
         TrianglesIndex: 83
@@ -131389,18 +131928,18 @@ MonoBehaviour:
       SharedEdge:
         TrianglesIndex: 73
         ComponentIndex: 0
-    - EdgeLength: 2.8812494
-      StartPosition: {x: 15.360001, y: 0.0006940365, z: 0}
+    - EdgeLength: 2.8812497
+      StartPosition: {x: 15.360001, y: 0.0006940365, z: 0.00000047683716}
       StartVertCoordinate:
         TrianglesIndex: 83
         ComponentIndex: 1
-      MidPosition: {x: 14.130001, y: 0.0006940365, z: -0.74999976}
+      MidPosition: {x: 14.130001, y: 0.0006940365, z: -0.7499995}
       EndPosition: {x: 12.900001, y: 0.0006940365, z: -1.4999995}
       EndVertCoordinate:
         TrianglesIndex: 83
         ComponentIndex: 0
-      v_startToEnd: {x: 0.8537963, y: 0, z: 0.5206073}
-      v_endToStart: {x: -0.8537963, y: 0, z: -0.5206073}
+      v_startToEnd: {x: 0.8537962, y: 0, z: 0.5206074}
+      v_endToStart: {x: -0.8537962, y: 0, z: -0.5206074}
       v_toCenter: {x: 0.25572103, y: 0, z: -0.96675056}
       v_cross: {x: 0, y: 0, z: 0}
       MyCoordinate:
@@ -131409,11 +131948,11 @@ MonoBehaviour:
       SharedEdge:
         TrianglesIndex: 82
         ComponentIndex: 1
-    V_center: {x: 14.540001, y: 0.0006940365, z: -2.2999997}
-    Perimeter: 12.89228
-    LongestEdgeLength: 5.3999996
-    ShortestEdgeLength: 2.8812494
-    Area: 6.6419997
+    V_center: {x: 14.540001, y: 0.0006940365, z: -2.2999995}
+    Perimeter: 12.892281
+    LongestEdgeLength: 5.4
+    ShortestEdgeLength: 2.8812497
+    Area: 6.642001
     Relationships:
     - Index_relatedTriangle: 0
       IndexMap_OwnedVerts_toShared: ffffffffffffffffffffffff
@@ -132753,7 +133292,7 @@ MonoBehaviour:
     v_normal: {x: 0, y: 1, z: 1.4558394e-17}
   Vertices: []
   deletedTriangles: []
-  _Mesh: {fileID: 1955470578}
+  _Mesh: {fileID: 1390251905}
   Bounds:
   - 7.26
   - 16.86
@@ -133862,6 +134401,171 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1270750424}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!43 &1390251905
+Mesh:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  serializedVersion: 11
+  m_SubMeshes:
+  - serializedVersion: 2
+    firstByte: 0
+    indexCount: 252
+    topology: 0
+    baseVertex: 0
+    firstVertex: 0
+    vertexCount: 75
+    localAABB:
+      m_Center: {x: 12.06, y: 0.73569405, z: 2.0400004}
+      m_Extent: {x: 4.8, y: 0.735, z: 7.44}
+  m_Shapes:
+    vertices: []
+    shapes: []
+    channels: []
+    fullWeights: []
+  m_BindPose: []
+  m_BoneNameHashes: 
+  m_RootBoneNameHash: 0
+  m_BonesAABB: []
+  m_VariableBoneCountWeights:
+    m_Data: 
+  m_MeshCompression: 0
+  m_IsReadable: 1
+  m_KeepVertices: 1
+  m_KeepIndices: 1
+  m_IndexFormat: 0
+  m_IndexBuffer: 00000100020000000200030000000400010001000400050006000700080006000800030003000200060009000a000b000b000c000d000b000d0009000e000f0010000e0010001100120013000e0012000e0011001400150016001700180019000a0009001a0012000a001a0018001b0019001c00130012001c0012001a001d001e001f0020001d001f0020001f0013001c0020001300210022001c001a0023002400250021001c001a0024002600260025001c0026001c001a0014002700280014002800290028002a002b0028002b0029002a001d0020002a0020002b0008002c002d001f001e002e0015002f0016001b00180030003100240023001b00300031001b00310023002500260032002500320033003200340035003200350033002f0015003600220021003700360022003700360037002f0014001600170014001700270008002d001f0008001f002e00030008002e0003002e0038003900270017003900170019003900190003000300380039003a003b003c003b003a003d003e003a003c003e003c003f00080007004000080040003f0040003e003f0041004200430041004300440010000f004500100045004600470048003f0047003f0041004700410044004900430042000d000c0049000d00490042004500470044004500440046004a002c00080048004a000800480008003f00
+  m_VertexData:
+    serializedVersion: 3
+    m_VertexCount: 75
+    m_Channels:
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 3
+    - stream: 0
+      offset: 12
+      format: 0
+      dimension: 3
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    m_DataSize: 1800
+    _typelessdata: 48e1864100f0353a15ae1741000000000000803f0000000086eb854100f0353a3e0ad73e000000000000803f00000000d8a3784100f0353a3e0ad73e000000000000803f0000000090c2754100f0353a15ae1741000000000000803f0000000048e1864100f0353a3e0ad73e000000000000803f000000006766864100f0353a9a99993e000000000000803f0000000053b8764100f0353a9a99993e000000000000803f0000000053b8764100f0353a00000000000000000000803f0000000090c2754100f0353a00000000000000000000803f00000000ec51e84000f0353a3e0ad73e000000000000803f00000000a570fd4000f0353a3e0ad73e000000000000803f000000009b99f94000f0353a9a99993e000000000000803f000000009b99f94000f0353a00000000000000000000803f00000000ec51e84000f0353a00000000000000000000803f00000000af47394100f0353a9a99993e000000000000803f00000000af47394100f0353a00000000000000000000803f000000000bd7134100f0353a00000000000000000000803f000000000bd7134100f0353a9a99993e000000000000803f0000000086eb114100f0353a3e0ad73e000000000000803f0000000034333b4100f0353a3e0ad73e000000000000803f0000000067663641c0bdb93d48e1da40000000000000803f000000002085334100f0353a48e1da40000000000000803f00000000713d224100f0353a9a99f940000000000000803f00000000ec51204100f0353aa470fd40000000000000803f000000002a5c074100f0353aa470fd40000000000000803f00000000ec51e84000f0353a15ae1741000000000000803f00000000ec51e84000f0353af6288c40000000000000803f00000000ec51e84000f0353aa470fd40000000000000803f000000002085334100f0353af6288c40000000000000803f0000000034335341c0bdb93df6288c40000000000000803f000000007c14564100f0353af6288c40000000000000803f0000000067664e4100f0353a3e0ad73e000000000000803f0000000067663641c0bdb93df6288c40000000000000803f00000000ec51204100f0353a86eb9140000000000000803f000000009a99314100f0353a86eb9140000000000000803f00000000ec51e84000f0353a86eb9140000000000000803f000000002a5c074100f0353a86eb9140000000000000803f00000000a4701d41804f1a3e86eb9140000000000000803f00000000713d0a41804f1a3e86eb9140000000000000803f0000000034335341c0bdb93d48e1da40000000000000803f00000000af47514130c0573e3e0ad740000000000000803f00000000ec51384130c0573e3e0ad740000000000000803f00000000af47514130c0573e00009040000000000000803f00000000ec51384130c0573e00009040000000000000803f00000000ec51504100f0353a00000000000000000000803f00000000ec51504100f0353a9a99993e000000000000803f000000000100584100f0353a00009040000000000000803f00000000713d224100f0353a48e1da40000000000000803f00000000a470054100f0353a9a99f940000000000000803f00000000a470054100f0353a90c29540000000000000803f00000000f6280c4130c0573e90c29540000000000000803f000000001f851b4130c0573e90c29540000000000000803f00000000f6280c41b43fbc3f48e1da40000000000000803f000000001f851b41b43fbc3f48e1da40000000000000803f000000009a99314100f0353a3e0ad740000000000000803f00000000713d224100f0353a90c29540000000000000803f000000000100584100f0353a3e0ad740000000000000803f000000007c14564100f0353a48e1da40000000000000803f0000000086eb854100f0353afcffbfbf000000000000803f0000000048e1864100f0353afcffbfbf000000000000803f0000000048e1864100f0353accccacc0000000000000803f000000006766864100f0353ad4a3b0bf000000000000803f00000000d8a3784100f0353afcffbfbf000000000000803f0000000090c2754100f0353accccacc0000000000000803f0000000053b8764100f0353ad4a3b0bf000000000000803f00000000ec51e84000f0353accccacc0000000000000803f00000000ec51e84000f0353afcffbfbf000000000000803f00000000a570fd4000f0353afcffbfbf000000000000803f0000000086eb114100f0353afcffbfbf000000000000803f00000000af47394100f0353ad4a3b0bf000000000000803f000000000bd7134100f0353ad4a3b0bf000000000000803f0000000034333b4100f0353afcffbfbf000000000000803f0000000067664e4100f0353afcffbfbf000000000000803f000000009b99f94000f0353ad4a3b0bf000000000000803f00000000ec51504100f0353ad4a3b0bf000000000000803f00000000
+  m_CompressedMesh:
+    m_Vertices:
+      m_NumItems: 0
+      m_Range: 0
+      m_Start: 0
+      m_Data: 
+      m_BitSize: 0
+    m_UV:
+      m_NumItems: 0
+      m_Range: 0
+      m_Start: 0
+      m_Data: 
+      m_BitSize: 0
+    m_Normals:
+      m_NumItems: 0
+      m_Range: 0
+      m_Start: 0
+      m_Data: 
+      m_BitSize: 0
+    m_Tangents:
+      m_NumItems: 0
+      m_Range: 0
+      m_Start: 0
+      m_Data: 
+      m_BitSize: 0
+    m_Weights:
+      m_NumItems: 0
+      m_Data: 
+      m_BitSize: 0
+    m_NormalSigns:
+      m_NumItems: 0
+      m_Data: 
+      m_BitSize: 0
+    m_TangentSigns:
+      m_NumItems: 0
+      m_Data: 
+      m_BitSize: 0
+    m_FloatColors:
+      m_NumItems: 0
+      m_Range: 0
+      m_Start: 0
+      m_Data: 
+      m_BitSize: 0
+    m_BoneIndices:
+      m_NumItems: 0
+      m_Data: 
+      m_BitSize: 0
+    m_Triangles:
+      m_NumItems: 0
+      m_Data: 
+      m_BitSize: 0
+    m_UVInfo: 0
+  m_LocalAABB:
+    m_Center: {x: 12.06, y: 0.73569405, z: 2.0400004}
+    m_Extent: {x: 4.8, y: 0.735, z: 7.44}
+  m_MeshUsageFlags: 0
+  m_CookingOptions: 30
+  m_BakedConvexCollisionMesh: 
+  m_BakedTriangleCollisionMesh: 
+  m_MeshMetrics[0]: 1
+  m_MeshMetrics[1]: 1
+  m_MeshOptimizationFlags: 1
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
 --- !u!1 &1404406254
 GameObject:
   m_ObjectHideFlags: 0
@@ -134438,171 +135142,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 285147961}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!43 &1955470578
-Mesh:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  serializedVersion: 11
-  m_SubMeshes:
-  - serializedVersion: 2
-    firstByte: 0
-    indexCount: 252
-    topology: 0
-    baseVertex: 0
-    firstVertex: 0
-    vertexCount: 75
-    localAABB:
-      m_Center: {x: 12.06, y: 0.73569405, z: 2.0400004}
-      m_Extent: {x: 4.8, y: 0.735, z: 7.44}
-  m_Shapes:
-    vertices: []
-    shapes: []
-    channels: []
-    fullWeights: []
-  m_BindPose: []
-  m_BoneNameHashes: 
-  m_RootBoneNameHash: 0
-  m_BonesAABB: []
-  m_VariableBoneCountWeights:
-    m_Data: 
-  m_MeshCompression: 0
-  m_IsReadable: 1
-  m_KeepVertices: 1
-  m_KeepIndices: 1
-  m_IndexFormat: 0
-  m_IndexBuffer: 00000100020000000200030000000400010001000400050006000700080006000800030003000200060009000a000b000b000c000d000b000d0009000e000f0010000e0010001100120013000e0012000e0011001400150016001700180019000a0009001a0012000a001a0018001b0019001c00130012001c0012001a001d001e001f0020001d001f0020001f0013001c0020001300210022001c001a0023002400250021001c001a0024002600260025001c0026001c001a0014002700280014002800290028002a002b0028002b0029002a001d0020002a0020002b0008002c002d001f001e002e0015002f0016001b00180030003100240023001b00300031001b00310023002500260032002500320033003200340035003200350033002f0015003600220021003700360022003700360037002f0014001600170014001700270008002d001f0008001f002e00030008002e0003002e0038003900270017003900170019003900190003000300380039003a003b003c003b003a003d003e003a003c003e003c003f00080007004000080040003f0040003e003f0041004200430041004300440010000f004500100045004600470048003f0047003f0041004700410044004900430042000d000c0049000d00490042004500470044004500440046004a002c00080048004a000800480008003f00
-  m_VertexData:
-    serializedVersion: 3
-    m_VertexCount: 75
-    m_Channels:
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 3
-    - stream: 0
-      offset: 12
-      format: 0
-      dimension: 3
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    m_DataSize: 1800
-    _typelessdata: 48e1864100f0353a15ae1741000000000000803f0000000086eb854100f0353a3e0ad73e000000000000803f00000000d8a3784100f0353a3e0ad73e000000000000803f0000000090c2754100f0353a15ae1741000000000000803f0000000048e1864100f0353a3e0ad73e000000000000803f000000006766864100f0353a9a99993e000000000000803f0000000053b8764100f0353a9a99993e000000000000803f0000000053b8764100f0353a00000000000000000000803f0000000090c2754100f0353a00000000000000000000803f00000000ec51e84000f0353a3e0ad73e000000000000803f00000000a570fd4000f0353a3e0ad73e000000000000803f000000009b99f94000f0353a9a99993e000000000000803f000000009b99f94000f0353a00000000000000000000803f00000000ec51e84000f0353a00000000000000000000803f00000000af47394100f0353a9a99993e000000000000803f00000000af47394100f0353a00000000000000000000803f000000000bd7134100f0353a00000000000000000000803f000000000bd7134100f0353a9a99993e000000000000803f0000000086eb114100f0353a3e0ad73e000000000000803f0000000034333b4100f0353a3e0ad73e000000000000803f0000000067663641c0bdb93d48e1da40000000000000803f000000002085334100f0353a48e1da40000000000000803f00000000713d224100f0353a9a99f940000000000000803f00000000ec51204100f0353aa470fd40000000000000803f000000002a5c074100f0353aa470fd40000000000000803f00000000ec51e84000f0353a15ae1741000000000000803f00000000ec51e84000f0353af6288c40000000000000803f00000000ec51e84000f0353aa470fd40000000000000803f000000002085334100f0353af6288c40000000000000803f0000000034335341c0bdb93df6288c40000000000000803f000000007c14564100f0353af6288c40000000000000803f0000000067664e4100f0353a3e0ad73e000000000000803f0000000067663641c0bdb93df6288c40000000000000803f00000000ec51204100f0353a86eb9140000000000000803f000000009a99314100f0353a86eb9140000000000000803f00000000ec51e84000f0353a86eb9140000000000000803f000000002a5c074100f0353a86eb9140000000000000803f00000000a4701d41804f1a3e86eb9140000000000000803f00000000713d0a41804f1a3e86eb9140000000000000803f0000000034335341c0bdb93d48e1da40000000000000803f00000000af47514130c0573e3e0ad740000000000000803f00000000ec51384130c0573e3e0ad740000000000000803f00000000af47514130c0573e00009040000000000000803f00000000ec51384130c0573e00009040000000000000803f00000000ec51504100f0353a00000000000000000000803f00000000ec51504100f0353a9a99993e000000000000803f000000000100584100f0353a00009040000000000000803f00000000713d224100f0353a48e1da40000000000000803f00000000a470054100f0353a9a99f940000000000000803f00000000a470054100f0353a90c29540000000000000803f00000000f6280c4130c0573e90c29540000000000000803f000000001f851b4130c0573e90c29540000000000000803f00000000f6280c41b43fbc3f48e1da40000000000000803f000000001f851b41b43fbc3f48e1da40000000000000803f000000009a99314100f0353a3e0ad740000000000000803f00000000713d224100f0353a90c29540000000000000803f000000000100584100f0353a3e0ad740000000000000803f000000007c14564100f0353a48e1da40000000000000803f0000000086eb854100f0353afcffbfbf000000000000803f0000000048e1864100f0353afcffbfbf000000000000803f0000000048e1864100f0353accccacc0000000000000803f000000006766864100f0353ad4a3b0bf000000000000803f00000000d8a3784100f0353afcffbfbf000000000000803f0000000090c2754100f0353accccacc0000000000000803f0000000053b8764100f0353ad4a3b0bf000000000000803f00000000ec51e84000f0353accccacc0000000000000803f00000000ec51e84000f0353afcffbfbf000000000000803f00000000a570fd4000f0353afcffbfbf000000000000803f0000000086eb114100f0353afcffbfbf000000000000803f00000000af47394100f0353ad4a3b0bf000000000000803f000000000bd7134100f0353ad4a3b0bf000000000000803f0000000034333b4100f0353afcffbfbf000000000000803f0000000067664e4100f0353afcffbfbf000000000000803f000000009b99f94000f0353ad4a3b0bf000000000000803f00000000ec51504100f0353ad4a3b0bf000000000000803f00000000
-  m_CompressedMesh:
-    m_Vertices:
-      m_NumItems: 0
-      m_Range: 0
-      m_Start: 0
-      m_Data: 
-      m_BitSize: 0
-    m_UV:
-      m_NumItems: 0
-      m_Range: 0
-      m_Start: 0
-      m_Data: 
-      m_BitSize: 0
-    m_Normals:
-      m_NumItems: 0
-      m_Range: 0
-      m_Start: 0
-      m_Data: 
-      m_BitSize: 0
-    m_Tangents:
-      m_NumItems: 0
-      m_Range: 0
-      m_Start: 0
-      m_Data: 
-      m_BitSize: 0
-    m_Weights:
-      m_NumItems: 0
-      m_Data: 
-      m_BitSize: 0
-    m_NormalSigns:
-      m_NumItems: 0
-      m_Data: 
-      m_BitSize: 0
-    m_TangentSigns:
-      m_NumItems: 0
-      m_Data: 
-      m_BitSize: 0
-    m_FloatColors:
-      m_NumItems: 0
-      m_Range: 0
-      m_Start: 0
-      m_Data: 
-      m_BitSize: 0
-    m_BoneIndices:
-      m_NumItems: 0
-      m_Data: 
-      m_BitSize: 0
-    m_Triangles:
-      m_NumItems: 0
-      m_Data: 
-      m_BitSize: 0
-    m_UVInfo: 0
-  m_LocalAABB:
-    m_Center: {x: 12.06, y: 0.73569405, z: 2.0400004}
-    m_Extent: {x: 4.8, y: 0.735, z: 7.44}
-  m_MeshUsageFlags: 0
-  m_CookingOptions: 30
-  m_BakedConvexCollisionMesh: 
-  m_BakedTriangleCollisionMesh: 
-  m_MeshMetrics[0]: 1
-  m_MeshMetrics[1]: 1
-  m_MeshOptimizationFlags: 1
-  m_StreamData:
-    serializedVersion: 2
-    offset: 0
-    size: 0
-    path: 
 --- !u!1 &2024408026
 GameObject:
   m_ObjectHideFlags: 0

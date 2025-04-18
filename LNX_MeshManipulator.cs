@@ -550,8 +550,8 @@ namespace LogansNavigationExtension
 				return;
 			}
 
-			LNX_Triangle tri0 = _LNX_NavMesh.GetTriangle( Edges_currentlySelected[0] );
-			LNX_Triangle tri1 = _LNX_NavMesh.GetTriangle( Edges_currentlySelected[1] );
+			LNX_Triangle tri0 = _LNX_NavMesh.GetTriangle( Edges_currentlySelected[0].MyCoordinate );
+			LNX_Triangle tri1 = _LNX_NavMesh.GetTriangle( Edges_currentlySelected[1].MyCoordinate );
 
 			Debug.Log($"edge0: '{Edges_currentlySelected[0].MyCoordinate}', edge1: '{Edges_currentlySelected[1].MyCoordinate}'");
 

@@ -65,53 +65,14 @@ namespace LogansNavigationExtension
 			}
 		}
 
-
 		[Header("OTHER")]
 		[HideInInspector] public Vector3 v_normal;
 
-
-		public LNX_Triangle( 
-			int parallelIndex, ref List<int> areasList, ref List<Vector3> vrtList, ref List<int> trisList, int lrMask 
-		)
-		{
-			//Debug.Log($"tri ctor. {nameof(parallelIndex)}: '{parallelIndex}' (x3: '{parallelIndex * 3}'). verts start: '{nmTriangulation.indices[(parallelIndex * 3)]}'");
-
-			DbgCalculateTriInfo = string.Empty;
-
-			index_inCollection = parallelIndex;
-			
-			AreaIndex = areasList[parallelIndex];
-
-			Vector3 vrtPos0 = vrtList[ trisList[MeshIndex_trianglesStart] ];
-			Vector3 vrtPos1 = vrtList[ trisList[MeshIndex_trianglesStart + 1] ];
-			Vector3 vrtPos2 = vrtList[ trisList[MeshIndex_trianglesStart + 2] ];
-
-			Verts = new LNX_Vertex[3];
-			Verts[0] = new LNX_Vertex( this, vrtPos0, 0, trisList[MeshIndex_trianglesStart] );
-			Verts[1] = new LNX_Vertex( this, vrtPos1, 1, trisList[MeshIndex_trianglesStart + 1] );
-			Verts[2] = new LNX_Vertex( this, vrtPos2, 2, trisList[MeshIndex_trianglesStart + 2] );
-
-			Edges = new LNX_Edge[3];
-			Edges[0] = new LNX_Edge( this, Verts[1], Verts[2], 0 );
-			Edges[1] = new LNX_Edge( this, Verts[0], Verts[2], 1 );
-			Edges[2] = new LNX_Edge( this, Verts[1], Verts[0], 2 );
-
-			CalculateDerivedInfo();
-
-			TrySampleNormal( lrMask, true );
-		}
-
-		/// <summary>
-		/// This overload is for Triangles added after creation via the LNX_MeshManipulator.
-		/// </summary>
-		/// <param name="parallelIndex">Index where this triangle resides in the Triangles list.</param>
-		/// <param name="meshVisIndex">Index where this triangle starts in the visualization mesh's triangles array</param>
-		/// <param name="areaIndx"></param>
-		/// <param name="vrtPos0"></param>
-		/// <param name="vrtPos1"></param>
-		/// <param name="vrtPos2"></param>
-		/// <param name="lrMask"></param>
-		public LNX_Triangle( int parallelIndex, int meshVisIndex, int areaIndx, Vector3 vrtPos0, Vector3 vrtPos1, Vector3 vrtPos2, int lrMask ) //todo: can possibly get rid of the second parameter (triangulationIndex) and just use the first index instead now that I'm creating a kosher triangulation...
+		public LNX_Triangle( int parallelIndex, int areaIndx, 
+			Vector3 vrtPos0, int vrt0MeshIndx, 
+			Vector3 vrtPos1, int vrt1MeshIndx,
+			Vector3 vrtPos2, int vrt2MeshIndx, 
+			int lrMask )
 		{
 			//Debug.Log($"tri ctor. {nameof(parallelIndex)}: '{parallelIndex}' (x3: '{parallelIndex * 3}'). verts start: '{nmTriangulation.indices[(parallelIndex * 3)]}'");
 
@@ -122,18 +83,18 @@ namespace LogansNavigationExtension
 			AreaIndex = areaIndx;
 
 			Verts = new LNX_Vertex[3];
-			Verts[0] = new LNX_Vertex(this, vrtPos0, 0, meshVisIndex );
-			Verts[1] = new LNX_Vertex(this, vrtPos1, 1, meshVisIndex + 1 );
-			Verts[2] = new LNX_Vertex(this, vrtPos2, 2, meshVisIndex + 2 );
+			Verts[0] = new LNX_Vertex( this, vrtPos0, 0, vrt0MeshIndx );
+			Verts[1] = new LNX_Vertex( this, vrtPos1, 1, vrt1MeshIndx);
+			Verts[2] = new LNX_Vertex( this, vrtPos2, 2, vrt2MeshIndx);
 
 			Edges = new LNX_Edge[3];
-			Edges[0] = new LNX_Edge(this, Verts[1], Verts[2], 0);
-			Edges[1] = new LNX_Edge(this, Verts[0], Verts[2], 1);
-			Edges[2] = new LNX_Edge(this, Verts[1], Verts[0], 2);
+			Edges[0] = new LNX_Edge( this, Verts[1], Verts[2], 0);
+			Edges[1] = new LNX_Edge( this, Verts[0], Verts[2], 1);
+			Edges[2] = new LNX_Edge( this, Verts[1], Verts[0], 2);
 
 			CalculateDerivedInfo();
 
-			TrySampleNormal(lrMask, true);
+			TrySampleNormal( lrMask, true );
 		}
 
 		public LNX_Triangle( LNX_Triangle baseTri, int triIndx )
