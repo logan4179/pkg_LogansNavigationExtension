@@ -66,6 +66,15 @@ namespace LogansNavigationExtension
 				return indices_selectedTris != null && indices_selectedTris.Count > 0;
 			}
 		}
+
+		public bool MeshIsValidForDrawing
+		{
+			get
+			{
+				return drawMeshVisualization && _LNX_NavMesh._Mesh != null && _LNX_NavMesh._Mesh.vertices != null && _LNX_NavMesh._Mesh.vertices.Length > 0;
+
+			}
+		}
 		#endregion
 
 		#region VERTICES ---------------------------
@@ -96,6 +105,8 @@ namespace LogansNavigationExtension
 
 		#region DEBUGGING ----------------------
 		[SerializeField] private bool drawTriLabels = true;
+		[SerializeField] private bool drawMeshVisualization = true;
+		[SerializeField] private Color color_selectedComponent;
 
 		[SerializeField] private bool drawNavMeshLines = true;
 		[SerializeField] private Color color_edgeLines;
@@ -530,14 +541,28 @@ namespace LogansNavigationExtension
 			//Debug.Log( dbgMoveSelected );
 		}
 
-		public void DeleteTriangle()
+		public void DeleteSelectedTriangles()
 		{
+			if( indices_selectedTris == null || indices_selectedTris.Count <= 0 )
+			{
+				Debug.LogWarning("LNX WARNING! Tried to delete, but no triangles are selected.");
+				return;
+			}
 
+			LNX_Triangle[] tris = new LNX_Triangle[indices_selectedTris.Count];
+			for( int i = 0; i < tris.Length; i++ )
+			{
+				tris[i] = _LNX_NavMesh.Triangles[ indices_selectedTris[i] ];
+			}
+
+			DeleteTriangles( tris );
 		}
 
-		public void DeleteTriangles( params LNX_Triangle[] tris )
+		private void DeleteTriangles( params LNX_Triangle[] tris )
 		{
+			_LNX_NavMesh.DeleteTriangles( tris );
 
+			ClearSelection();
 		}
 
 		[ContextMenu("z call TryInsertLoop")]
@@ -566,7 +591,7 @@ namespace LogansNavigationExtension
 			}
 			#endregion
 
-			#region Get the "Bridge" edges ---------------------
+			#region Find the "Bridge" edges ---------------------
 			// Note: these are the edges that will be at the start and end of the bridge
 			LNX_Edge endEdge0 = null;
 			LNX_Edge endEdge1 = null;
@@ -601,6 +626,8 @@ namespace LogansNavigationExtension
 			_LNX_NavMesh.AddTriangle( v_midPoint0, v_midPoint1, endEdge1.StartPosition );
 			_LNX_NavMesh.AddTriangle( v_midPoint0, endEdge1.StartPosition, endEdge1.EndPosition );
 
+			_LNX_NavMesh.ReconstructVisualizationMesh();
+			
 		}
 		#endregion
 
@@ -610,112 +637,126 @@ namespace LogansNavigationExtension
 #if UNITY_EDITOR
 		private void OnDrawGizmos()
 		{
-			if( Application.isPlaying || _LNX_NavMesh == null )
+			if( Application.isPlaying || _LNX_NavMesh == null || _LNX_NavMesh.Triangles == null )
 			{
 				return;
 			}
 
 			#region TRIANGLES ------------------------------------------------
-			if ( _LNX_NavMesh != null && _LNX_NavMesh.Triangles != null )
+			Gizmos.color = _LNX_NavMesh.color_mesh;
+
+			if ( drawMeshVisualization && MeshIsValidForDrawing )
 			{
-				Gizmos.color = _LNX_NavMesh.color_mesh;
 				Gizmos.DrawMesh(_LNX_NavMesh._Mesh);
+			}
 
-				if ( drawNavMeshLines || drawTriLabels || drawEdgeLabels )
+			if ( drawNavMeshLines || drawTriLabels || drawEdgeLabels )
+			{
+				GUIStyle gstl_label = GUIStyle.none;
+				//gstl_nrml.normal.textColor = Color.white;
+
+				for ( int i = 0; i < _LNX_NavMesh.Triangles.Length; i++ )
 				{
-					GUIStyle gstl_label = GUIStyle.none;
-					//gstl_nrml.normal.textColor = Color.white;
+					bool amKosher = _LNX_NavMesh.Triangles[i].v_normal != Vector3.zero;
+					bool useGizmos = true;
 
-					for ( int i = 0; i < _LNX_NavMesh.Triangles.Length; i++ )
+					if( !amKosher )
 					{
-						bool amKosher = _LNX_NavMesh.Triangles[i].v_normal != Vector3.zero;
-
-						if( !amKosher )
+						Handles.color = Color.red;
+						Gizmos.color = Color.red;
+					}
+					else
+					{
+						if( _LNX_NavMesh.Triangles[i].HasBeenModifiedAfterCreation )
 						{
-							Handles.color = Color.red;
-							Gizmos.color = Color.red;
+							Handles.color = color_modifiedTri;
+							Gizmos.color = color_modifiedTri;
+						}
+						else if(indices_selectedTris != null && indices_selectedTris.Contains(i) )
+						{
+							Handles.color = color_selectedComponent;
+							Gizmos.color = color_selectedComponent;
+							useGizmos = false;
 						}
 						else
 						{
-							if( _LNX_NavMesh.Triangles[i].HasBeenModifiedAfterCreation )
-							{
-								Handles.color = color_modifiedTri;
-								Gizmos.color = color_modifiedTri;
-							}
-							else
-							{
-								Handles.color = color_edgeLines;
-								Gizmos.color = color_edgeLines;
-							}
+							Handles.color = color_edgeLines;
+							Gizmos.color = color_edgeLines;
 						}
+					}
 
-						if ( drawTriLabels )
-						{
-							gstl_label.normal.textColor = amKosher ? Color.white : Color.red;
+					if ( drawTriLabels )
+					{
+						gstl_label.normal.textColor = amKosher ? Color.white : Color.red;
 
-							Handles.Label( 
-								_LNX_NavMesh.Triangles[i].V_center, 
-								_LNX_NavMesh.Triangles[i].Index_inCollection.ToString(), gstl_label
-							);
-						}
+						Handles.Label( 
+							_LNX_NavMesh.Triangles[i].V_center, 
+							_LNX_NavMesh.Triangles[i].Index_inCollection.ToString(), gstl_label
+						);
+					}
 
-						if( drawNavMeshLines )
+					if( drawNavMeshLines )
+					{
+						if( useGizmos )
 						{
 							LNX_Utils.DrawTriGizmos( _LNX_NavMesh.Triangles[i] );
-							//LNX_Utils.DrawTriHandles( _LNX_NavMesh.Triangles[i], thickness_edges );
 						}
-
-
-						if ( drawEdgeLabels )
+						else
 						{
-							Handles.Label( 
-								_LNX_NavMesh.Triangles[i].Edges[0].MidPosition + (_LNX_NavMesh.Triangles[i].Edges[0].v_cross * 0.05f), 
-								"e0", gstl_label);
-							Handles.Label(
-								_LNX_NavMesh.Triangles[i].Edges[1].MidPosition + (_LNX_NavMesh.Triangles[i].Edges[1].v_cross * 0.05f), 
-								"e1", gstl_label);
-							Handles.Label(
-								_LNX_NavMesh.Triangles[i].Edges[2].MidPosition + (_LNX_NavMesh.Triangles[i].Edges[2].v_cross * 0.05f), 
-								"e2", gstl_label);
+							LNX_Utils.DrawTriHandles( _LNX_NavMesh.Triangles[i], Size_SelectedComponent );
+
 						}
+					}
+
+					if ( drawEdgeLabels )
+					{
+						Handles.Label( 
+							_LNX_NavMesh.Triangles[i].Edges[0].MidPosition + (_LNX_NavMesh.Triangles[i].Edges[0].v_cross * 0.05f), 
+							"e0", gstl_label);
+						Handles.Label(
+							_LNX_NavMesh.Triangles[i].Edges[1].MidPosition + (_LNX_NavMesh.Triangles[i].Edges[1].v_cross * 0.05f), 
+							"e1", gstl_label);
+						Handles.Label(
+							_LNX_NavMesh.Triangles[i].Edges[2].MidPosition + (_LNX_NavMesh.Triangles[i].Edges[2].v_cross * 0.05f), 
+							"e2", gstl_label);
 					}
 				}
+			}
 
-				if( amLocked )
+			if( amLocked )
+			{
+				//Handles.color = color_lockedTri;
+				Gizmos.color = color_lockedTri;
+
+				for ( int i = 0; i < indices_lockedTris.Count; i++ )
 				{
-					//Handles.color = color_lockedTri;
-					Gizmos.color = color_lockedTri;
+					LNX_Utils.DrawTriGizmos( _LNX_NavMesh.Triangles[indices_lockedTris[i]] );
 
-					for ( int i = 0; i < indices_lockedTris.Count; i++ )
-					{
-						LNX_Utils.DrawTriGizmos( _LNX_NavMesh.Triangles[indices_lockedTris[i]] );
-
-					}
 				}
-				else
+			}
+			else
+			{
+				/*if ( indices_selectedTris != null && indices_selectedTris.Count > 0 )
 				{
-					if ( indices_selectedTris != null && indices_selectedTris.Count > 0 )
-					{
-						Handles.color = Color.white;
+					Handles.color = Color.white;
 
-						for ( int i = 0; i < indices_selectedTris.Count; i++ )
-						{
-							LNX_Utils.DrawTriGizmos( _LNX_NavMesh.Triangles[indices_selectedTris[i]] );
-						}
-					}
-					/*
-					if( Index_TriLastSelected > -1 )
+					for ( int i = 0; i < indices_selectedTris.Count; i++ )
 					{
-						Handles.color = new Color(1f, 0.2f, 0f);
-						DrawTriGizmos( LastSelectedTri, Size_FocusedComponent );
+						LNX_Utils.DrawTriGizmos( _LNX_NavMesh.Triangles[indices_selectedTris[i]] );
 					}
-					*/
-					if ( PointingAtTri != null )
-					{
-						//Handles.color = Color.yellow;
-						Gizmos.color = Color.yellow;
-						LNX_Utils.DrawTriGizmos( PointingAtTri );
-					}
+				}*/
+				/*
+				if( Index_TriLastSelected > -1 )
+				{
+					Handles.color = new Color(1f, 0.2f, 0f);
+					DrawTriGizmos( LastSelectedTri, Size_FocusedComponent );
+				}
+				*/
+				if ( PointingAtTri != null )
+				{
+					//Handles.color = Color.yellow;
+					Gizmos.color = Color.yellow;
+					LNX_Utils.DrawTriGizmos( PointingAtTri );
 				}
 			}
 			#endregion

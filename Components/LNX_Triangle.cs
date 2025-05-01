@@ -153,31 +153,17 @@ namespace LogansNavigationExtension
 			name = $"ind: '{index_inCollection}', ctr: '{V_center}'";
 		}
 
-		private void changeMyIndex( int indx )
+		public void ChangeIndex_action( int newIndex )
 		{
-			index_inCollection = indx;
+			index_inCollection = newIndex;
 
-			Verts[0].MyCoordinate.TrianglesIndex = index_inCollection;
-			Verts[1].MyCoordinate.TrianglesIndex = index_inCollection;
-			Verts[2].MyCoordinate.TrianglesIndex = index_inCollection;
+			Verts[0].TriIndexChanged( newIndex );
+			Verts[1].TriIndexChanged( newIndex );
+			Verts[2].TriIndexChanged( newIndex );
 
-			Edges[0].MyCoordinate.TrianglesIndex = index_inCollection;
-			Edges[1].MyCoordinate.TrianglesIndex = index_inCollection;
-			Edges[2].MyCoordinate.TrianglesIndex = index_inCollection;
-
-			//todo: in the future when I start caching relational info, I might need to refresh it here...
-		}
-
-		public void TriIndexChangedAction( int oldTriIndex, int newTriIndex) //todo: unit test
-		{
-			if( oldTriIndex == index_inCollection )
-			{
-				changeMyIndex( newTriIndex );
-			}
-			else
-			{
-				
-			}
+			Edges[0].TriIndexChanged( newIndex );
+			Edges[1].TriIndexChanged( newIndex );
+			Edges[2].TriIndexChanged( newIndex );
 		}
 
 		public bool VertsEqual( LNX_Triangle otherTri )
@@ -206,7 +192,7 @@ namespace LogansNavigationExtension
 		/// </summary>
 		/// <param name="otherTri"></param>
 		/// <returns></returns>
-		public bool OriginallyMatches( LNX_Triangle otherTri )
+		public bool PositionallyMatches( LNX_Triangle otherTri )
 		{
 			if (
 				otherTri.Verts == null || otherTri.Verts.Length != 3 || Verts == null || Verts.Length != 3
@@ -290,7 +276,7 @@ namespace LogansNavigationExtension
 				$"Prmtr: '{Perimeter}', Area: '{AreaIndex}'\n";
 		}
 
-		public void RefreshTriangle( LNX_NavMesh nm, bool logMessages = true)
+		public void RefreshTriangle( LNX_NavMesh nm, bool logMessages = true) //todo: this needs to be renamed
 		{
 			if ( dirtyFlag_repositionedVert )
 			{

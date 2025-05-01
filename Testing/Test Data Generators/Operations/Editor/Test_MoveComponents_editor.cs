@@ -44,7 +44,7 @@ namespace LogansNavigationExtension
 					{
 						Debug.Log("refreshing from test...");
 						flag_moveHandleIsDirty = false;
-						_targetScript._Lnx_MeshManipulator._LNX_NavMesh.RefeshMesh();
+						_targetScript._Lnx_MeshManipulator._LNX_NavMesh.RefreshAfterMove();
 					}
 				}
 			}

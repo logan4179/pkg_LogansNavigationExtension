@@ -45,6 +45,9 @@ namespace LogansNavigationExtension
 		public TDG_MoveComponents _tdg_moveComponents;
 		public static string filePath_testData_moveComponents = $"{dirPath_testDataFolder}\\tdg_moveComponents_data_A.json";
 
+		public TDG_DeleteTests _tdg_deleteTests;
+		public static string filePath_testData_deleteTests = $"{dirPath_testDataFolder}\\tdg_deleteTests_data_A.json";
+
 		[Header("DEBUG")]
 		public bool AmDebugging = true;
 
@@ -185,6 +188,14 @@ namespace LogansNavigationExtension
 				if ( !_tdg_moveComponents.WriteMeToJson() )
 				{
 					Debug.LogError($"write to json didn't work on {nameof(_tdg_moveComponents)}. Returning early...");
+					return;
+				}
+				#endregion
+
+				#region DELETING ----------------------------------------------------------
+				if ( !_tdg_deleteTests.WriteMeToJson() )
+				{
+					Debug.LogError($"write to json didn't work on {nameof(_tdg_deleteTests)}. Returning early...");
 					return;
 				}
 				#endregion

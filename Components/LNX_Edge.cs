@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace LogansNavigationExtension
@@ -35,7 +36,7 @@ namespace LogansNavigationExtension
 		{
 			CalculateInfo( tri, strtVrt, endVrt );
 
-			MyCoordinate = new LNX_ComponentCoordinate( tri, indx );
+			MyCoordinate = new LNX_ComponentCoordinate( tri.Index_inCollection, indx );
 
 			StartVertCoordinate = strtVrt.MyCoordinate;
 			EndVertCoordinate = endVrt.MyCoordinate;
@@ -105,6 +106,14 @@ namespace LogansNavigationExtension
 			}
 		}
 
+		public void TriIndexChanged( int newIndex )
+		{
+			StartVertCoordinate = new LNX_ComponentCoordinate( newIndex, StartVertCoordinate.ComponentIndex);
+
+			EndVertCoordinate = new LNX_ComponentCoordinate( newIndex, EndVertCoordinate.ComponentIndex);
+		}
+
+		#region API METHODS-----------------------------
 		public Vector3 ClosestPointOnEdge(Vector3 pos)
 		{
 			Vector3 v_vrtToPos = pos - StartPosition;
@@ -162,5 +171,6 @@ namespace LogansNavigationExtension
 
 			return false;
 		}
+		#endregion
 	}
 }

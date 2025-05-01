@@ -7,6 +7,7 @@ using LogansNavigationExtension;
 using UnityEngine.AI;
 using JetBrains.Annotations;
 using System.IO;
+using System.Configuration;
 
 namespace LoganLand.LogansNavmeshExtension.Tests
 {
@@ -25,7 +26,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		[Test]
 		public void a1_SetupObjects()
 		{
-			GameObject go = GameObject.Find( "SerializedNavmesh" );
+			GameObject go = GameObject.Find( LNX_UnitTestUtilities.Name_SerializedNavmeshGameobject );
 
 			_serializedLNXNavmesh = go.GetComponent<LNX_NavMesh>();
 			Assert.NotNull(_serializedLNXNavmesh);
@@ -83,12 +84,220 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 		#region B - Pointing and grabbing components ----------------------------------------------------
 		[Test]
-		public void b1_PointingAtAndGrabbingVerts()
+		public void b1_meshManipulator_changeSelectModeToVerts_and_Clearing()
 		{
-			Debug.Log($"{nameof(b1_PointingAtAndGrabbingVerts)}--------------------------------");
+			Debug.Log( string.Format( LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(b1_meshManipulator_changeSelectModeToVerts_and_Clearing)) );
+
+			#region make sure it starts completely cleared ----------------------------------
+			Debug.Log("Making sure mesh manipulator starts out cleared...");
+			_lnx_meshManipulator.ClearSelection();
+
+			Assert.AreEqual( _lnx_meshManipulator.Verts_currentlySelected.Count, 0 );
+			Assert.IsNull( _lnx_meshManipulator.Vert_LastSelected );
+			Assert.IsNull( _lnx_meshManipulator.Vert_CurrentlyPointingAt );
+
+			Assert.AreEqual( _lnx_meshManipulator.Index_TriPointingAt, -1 );
+			Assert.AreEqual( _lnx_meshManipulator.Index_TriLastSelected, -1 );
+			Assert.AreEqual( _lnx_meshManipulator.indices_selectedTris.Count, 0 );
+
+			Assert.AreEqual( _lnx_meshManipulator.Edges_currentlySelected.Count, 0 ) ;
+			Assert.IsNull( _lnx_meshManipulator.Edge_LastSelected );
+			Assert.IsNull( _lnx_meshManipulator.Edge_CurrentlyPointingAt );
+
+			Debug.Log( string.Format(LNX_UnitTestUtilities.UnitTestSectionEndString, "clear at start") );
+			#endregion
+
+			#region change selection and point/grab --------------------------------
+			Debug.Log("Changing selectmode to vertices...");
+			_lnx_meshManipulator.ChangeSelectMode( LNX_SelectMode.Vertices );
+			Assert.AreEqual( _lnx_meshManipulator.SelectMode, LNX_SelectMode.Vertices );
+
+			Debug.Log($"Selecting first grab vert...");
+			_lnx_meshManipulator.TryPointAtComponentViaDirection(
+				_tdg_MoveComponents.TestMousePositions_vert[0],
+				_tdg_MoveComponents.TestMouseDirections_vert[0]
+			);
+			Assert.NotNull( _lnx_meshManipulator.Vert_CurrentlyPointingAt );
+
+			_lnx_meshManipulator.TryGrab();
+
+			Assert.Greater( _lnx_meshManipulator.Verts_currentlySelected.Count, 0 );
+			Assert.NotNull( _lnx_meshManipulator.Vert_LastSelected );
+
+			Assert.AreEqual(_lnx_meshManipulator.Index_TriPointingAt, -1);
+			Assert.AreEqual(_lnx_meshManipulator.Index_TriLastSelected, -1);
+			Assert.AreEqual(_lnx_meshManipulator.indices_selectedTris.Count, 0);
+
+			Assert.AreEqual(_lnx_meshManipulator.Edges_currentlySelected.Count, 0);
+			Assert.IsNull(_lnx_meshManipulator.Edge_LastSelected);
+			Assert.IsNull(_lnx_meshManipulator.Edge_CurrentlyPointingAt);
+			#endregion
+
+			#region make sure it ends completely cleared ----------------------------------
+			Debug.Log("Making sure mesh manipulator ends cleared...");
+
+			_lnx_meshManipulator.ClearSelection();
+
+			Assert.AreEqual(_lnx_meshManipulator.Verts_currentlySelected.Count, 0);
+			Assert.IsNull(_lnx_meshManipulator.Vert_LastSelected);
+			Assert.IsNull(_lnx_meshManipulator.Vert_CurrentlyPointingAt);
+
+			Assert.AreEqual(_lnx_meshManipulator.Index_TriPointingAt, -1);
+			Assert.AreEqual(_lnx_meshManipulator.Index_TriLastSelected, -1);
+			Assert.AreEqual(_lnx_meshManipulator.indices_selectedTris.Count, 0);
+
+			Assert.AreEqual(_lnx_meshManipulator.Edges_currentlySelected.Count, 0);
+			Assert.IsNull(_lnx_meshManipulator.Edge_LastSelected);
+			Assert.IsNull(_lnx_meshManipulator.Edge_CurrentlyPointingAt);
+			#endregion
+		}
+
+		[Test]
+		public void b2_meshManipulator_changeSelectModeToEdges_and_Clearing()
+		{
+			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(b2_meshManipulator_changeSelectModeToEdges_and_Clearing)));
+
+			#region make sure it starts completely cleared ----------------------------------
+			Debug.Log("Making sure mesh manipulator starts out cleared...");
+			_lnx_meshManipulator.ClearSelection();
+
+			Assert.AreEqual(_lnx_meshManipulator.Verts_currentlySelected.Count, 0);
+			Assert.IsNull(_lnx_meshManipulator.Vert_LastSelected);
+			Assert.IsNull(_lnx_meshManipulator.Vert_CurrentlyPointingAt);
+
+			Assert.AreEqual(_lnx_meshManipulator.Index_TriPointingAt, -1);
+			Assert.AreEqual(_lnx_meshManipulator.Index_TriLastSelected, -1);
+			Assert.AreEqual(_lnx_meshManipulator.indices_selectedTris.Count, 0);
+
+			Assert.AreEqual(_lnx_meshManipulator.Edges_currentlySelected.Count, 0);
+			Assert.IsNull(_lnx_meshManipulator.Edge_LastSelected);
+			Assert.IsNull(_lnx_meshManipulator.Edge_CurrentlyPointingAt);
+
+			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestSectionEndString, "clear at start"));
+			#endregion
+
+			#region change selection and point/grab --------------------------------
+			Debug.Log("Changing selectmode to edges...");
+			_lnx_meshManipulator.ChangeSelectMode( LNX_SelectMode.Edges );
+			Assert.AreEqual( _lnx_meshManipulator.SelectMode, LNX_SelectMode.Edges );
+
+			Debug.Log($"Selecting first grab edge...");
+			_lnx_meshManipulator.TryPointAtComponentViaDirection(
+				_tdg_MoveComponents.TestMousePositions_edge[0],
+				_tdg_MoveComponents.TestMouseDirections_edge[0]
+			);
+			Assert.NotNull( _lnx_meshManipulator.Edge_CurrentlyPointingAt );
+
+			_lnx_meshManipulator.TryGrab();
+
+			Assert.Greater(_lnx_meshManipulator.Edges_currentlySelected.Count, 0);
+			Assert.NotNull(_lnx_meshManipulator.Edge_LastSelected);
+
+			Assert.Greater(_lnx_meshManipulator.Verts_currentlySelected.Count, 0); //even though the select mode is edges, this should still be greater than 0...
+			Assert.IsNull(_lnx_meshManipulator.Vert_LastSelected);
+			Assert.IsNull(_lnx_meshManipulator.Vert_CurrentlyPointingAt);
+
+			Assert.AreEqual(_lnx_meshManipulator.Index_TriPointingAt, -1);
+			Assert.AreEqual(_lnx_meshManipulator.Index_TriLastSelected, -1);
+			Assert.AreEqual(_lnx_meshManipulator.indices_selectedTris.Count, 0);
+			#endregion
+
+
+			#region make sure it ends completely cleared ----------------------------------
+			Debug.Log("Making sure mesh manipulator ends cleared...");
+			_lnx_meshManipulator.ClearSelection();
+
+			Assert.AreEqual(_lnx_meshManipulator.Verts_currentlySelected.Count, 0);
+			Assert.IsNull(_lnx_meshManipulator.Vert_LastSelected);
+			Assert.IsNull(_lnx_meshManipulator.Vert_CurrentlyPointingAt);
+
+			Assert.AreEqual(_lnx_meshManipulator.Index_TriPointingAt, -1);
+			Assert.AreEqual(_lnx_meshManipulator.Index_TriLastSelected, -1);
+			Assert.AreEqual(_lnx_meshManipulator.indices_selectedTris.Count, 0);
+
+			Assert.AreEqual(_lnx_meshManipulator.Edges_currentlySelected.Count, 0);
+			Assert.IsNull(_lnx_meshManipulator.Edge_LastSelected);
+			Assert.IsNull(_lnx_meshManipulator.Edge_CurrentlyPointingAt);
+			#endregion
+		}
+
+		[Test]
+		public void b3_meshManipulator_changeSelectModeToFaces_and_Clearing()
+		{
+			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(b3_meshManipulator_changeSelectModeToFaces_and_Clearing)));
+
+			#region make sure it starts completely cleared ----------------------------------
+			Debug.Log("Making sure mesh manipulator starts out cleared...");
+			_lnx_meshManipulator.ClearSelection();
+
+			Assert.AreEqual(_lnx_meshManipulator.Verts_currentlySelected.Count, 0);
+			Assert.IsNull(_lnx_meshManipulator.Vert_LastSelected);
+			Assert.IsNull(_lnx_meshManipulator.Vert_CurrentlyPointingAt);
+
+			Assert.AreEqual(_lnx_meshManipulator.Index_TriPointingAt, -1);
+			Assert.AreEqual(_lnx_meshManipulator.Index_TriLastSelected, -1);
+			Assert.AreEqual(_lnx_meshManipulator.indices_selectedTris.Count, 0);
+
+			Assert.AreEqual(_lnx_meshManipulator.Edges_currentlySelected.Count, 0);
+			Assert.IsNull(_lnx_meshManipulator.Edge_LastSelected);
+			Assert.IsNull(_lnx_meshManipulator.Edge_CurrentlyPointingAt);
+
+			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestSectionEndString, "clear at start"));
+			#endregion
+
+			#region change selection and point/grab --------------------------------
+			Debug.Log("Changing selectmode to Faces...");
+			_lnx_meshManipulator.ChangeSelectMode( LNX_SelectMode.Faces );
+			Assert.AreEqual( _lnx_meshManipulator.SelectMode, LNX_SelectMode.Faces );
+
+			Debug.Log($"pointing at first grab face...");
+			_lnx_meshManipulator.TryPointAtComponentViaDirection(
+				_tdg_pointingAndGrabbing.TestPositions_face[1],
+				_tdg_pointingAndGrabbing.TestDirections_face[1]
+			);
+			Assert.Greater( _lnx_meshManipulator.Index_TriPointingAt, -1 );
+
+			Debug.Log($"now grabbing first grab face...");
+			_lnx_meshManipulator.TryGrab();
+
+			Assert.Greater( _lnx_meshManipulator.Verts_currentlySelected.Count, 0 ); //even though the select mode is edges, this should still be greater than 0...
+			Assert.IsNull( _lnx_meshManipulator.Vert_LastSelected );
+			Assert.IsNull( _lnx_meshManipulator.Vert_CurrentlyPointingAt );
+
+			Assert.Greater( _lnx_meshManipulator.Index_TriLastSelected, -1 );
+			Assert.AreEqual( _lnx_meshManipulator.indices_selectedTris.Count, 1 );
+
+			Assert.AreEqual(_lnx_meshManipulator.Edges_currentlySelected.Count, 0);
+			Assert.IsNull(_lnx_meshManipulator.Edge_LastSelected);
+			Assert.IsNull(_lnx_meshManipulator.Edge_CurrentlyPointingAt);
+			#endregion
+
+
+			#region make sure it ends completely cleared ----------------------------------
+			Debug.Log("Making sure mesh manipulator ends cleared...");
+			_lnx_meshManipulator.ClearSelection();
+
+			Assert.AreEqual(_lnx_meshManipulator.Verts_currentlySelected.Count, 0);
+			Assert.IsNull(_lnx_meshManipulator.Vert_LastSelected);
+			Assert.IsNull(_lnx_meshManipulator.Vert_CurrentlyPointingAt);
+
+			Assert.AreEqual(_lnx_meshManipulator.Index_TriPointingAt, -1);
+			Assert.AreEqual(_lnx_meshManipulator.Index_TriLastSelected, -1);
+			Assert.AreEqual(_lnx_meshManipulator.indices_selectedTris.Count, 0);
+
+			Assert.AreEqual(_lnx_meshManipulator.Edges_currentlySelected.Count, 0);
+			Assert.IsNull(_lnx_meshManipulator.Edge_LastSelected);
+			Assert.IsNull(_lnx_meshManipulator.Edge_CurrentlyPointingAt);
+			#endregion
+		}
+
+		[Test]
+		public void b4_PointingAtAndGrabbingVerts()
+		{
+			Debug.Log($"{nameof(b4_PointingAtAndGrabbingVerts)}--------------------------------");
 
 			//Debug.Log(_lnx_meshManipulator.SelectMode);
-			_lnx_meshManipulator.SelectMode = LNX_SelectMode.Vertices;
+			_lnx_meshManipulator.ChangeSelectMode( LNX_SelectMode.Vertices );
 			for (int i = 0; i < _tdg_pointingAndGrabbing.TestPositions_vert.Count; i++)
 			{
 				Debug.Log($"{i}...");
@@ -145,9 +354,9 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		}
 
 		[Test]
-		public void b2_PointingAtAndGrabbingEdges()
+		public void b5_PointingAtAndGrabbingEdges()
 		{
-			Debug.Log($"{nameof(b2_PointingAtAndGrabbingEdges)}--------------------------------");
+			Debug.Log($"{nameof(b5_PointingAtAndGrabbingEdges)}--------------------------------");
 
 			Debug.Log($"iterating through '{_tdg_pointingAndGrabbing.TestPositions_edge.Count}' test positions " +
 				$"and '{_tdg_pointingAndGrabbing.CapturedEdgeCenterPositions.Count}' captured positions...");
@@ -218,9 +427,9 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		}
 
 		[Test]
-		public void b3_PointingAtAndGrabbingFaces()
+		public void b6_PointingAtAndGrabbingFaces()
 		{
-			Debug.Log($"{nameof(b3_PointingAtAndGrabbingFaces)}--------------------------------");
+			Debug.Log($"{nameof(b6_PointingAtAndGrabbingFaces)}--------------------------------");
 
 			_lnx_meshManipulator.SelectMode = LNX_SelectMode.Faces;
 			Debug.Log($"running '{_tdg_pointingAndGrabbing.TestPositions_face.Count}' test positions...");
@@ -410,7 +619,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 					Debug.Log($"now moving to '{v_moveTo}'...");
 
 					_lnx_meshManipulator.MoveSelectedVerts( v_moveTo );
-					_lnx_meshManipulator._LNX_NavMesh.RefeshMesh(); //important so that the midpos will get re-calculated.
+					_lnx_meshManipulator._LNX_NavMesh.RefreshAfterMove(); //important so that the midpos will get re-calculated.
 
 					Debug.Log($"after move and refresh, midpos: '{_lnx_meshManipulator.Edge_LastSelected.MidPosition}'.");
 
@@ -428,7 +637,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 					Debug.Log($"now moving '{_lnx_meshManipulator.Edge_LastSelected.MidPosition}' back to '{_tdg_MoveComponents.GrabbedMidPositions_edge[i]}'...");
 
 					_lnx_meshManipulator.MoveSelectedVerts( _tdg_MoveComponents.GrabbedMidPositions_edge[i] );
-					_lnx_meshManipulator._LNX_NavMesh.RefeshMesh(); //important so that the midpos will get re-calculated.
+					_lnx_meshManipulator._LNX_NavMesh.RefreshAfterMove(); //important so that the midpos will get re-calculated.
 
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
 						_tdg_MoveComponents.GrabbedMidPositions_edge[i].x, _lnx_meshManipulator.Edge_LastSelected.MidPosition.x

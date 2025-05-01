@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 using UnityEditor.PackageManager.UI;
+using System.Runtime.InteropServices;
 
 namespace LogansNavigationExtension
 {
@@ -117,7 +118,7 @@ namespace LogansNavigationExtension
 
 			}
 
-			#region HOTKEYS --------------------------
+			#region INPUT --------------------------
 			if( Event.current.isMouse ) //fires continuously when the mouse is both in the scene and moving. Does not fire when mouse is in the scene and still.
 			{
 				flag_mouseDownThisFrame = false;
@@ -136,7 +137,7 @@ namespace LogansNavigationExtension
 					{
 						//Debug.LogWarning( "refreshing..." );
 						flag_moveHandleIsDirty = false;
-						_targetScript._LNX_NavMesh.RefeshMesh();
+						_targetScript._LNX_NavMesh.RefreshAfterMove();
 					}
 				}
 			}
@@ -170,6 +171,11 @@ namespace LogansNavigationExtension
 					else if ( Event.current.keyCode == KeyCode.X )
 					{
 						_targetScript.TryInsertLoop();
+					}
+					else if ( Event.current.keyCode == KeyCode.Delete )
+					{
+						//Debug.Log("doin it");
+						_targetScript.DeleteSelectedTriangles();
 					}
 				}
 				else

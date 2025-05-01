@@ -22,11 +22,11 @@ namespace LogansNavigationExtension
 
 		/// <summary>Index corresponding to the visualization mesh's triangles array that this vertex 
 		/// corresponds to.</summary>
-		public int MeshIndex_triangles;
+		public int Index_VisMesh_triangles;
 
 		/// <summary>Index corresponding to the visualization mesh's vertices array that this vertex 
 		/// corresponds to.</summary>
-		public int MeshIndex_vertices = -1;
+		public int Index_VisMesh_Vertices = -1;
 
 		[Header("CALCULATED/DERIVED")] //---------------------------------------------------------------
 		/// <summary>Inner angle at the triangle point at this vertex.</summary>
@@ -75,15 +75,15 @@ namespace LogansNavigationExtension
 			v_normal = tri.v_normal;
 			DistanceToCenter = Vector3.Distance(tri.V_center, vrtPos);
 
-			MyCoordinate = new LNX_ComponentCoordinate( tri, cmpntIndx );
+			MyCoordinate = new LNX_ComponentCoordinate( tri.Index_inCollection, cmpntIndx );
 
 			Relationships = new LNX_VertexRelationship[0];
 			SiblingRelationships = new LNX_VertexRelationship[2];
 
 			Angle = -1f;
 
-			MeshIndex_triangles = tri.MeshIndex_trianglesStart + cmpntIndx;
-			MeshIndex_vertices = mshVrtIndx;
+			Index_VisMesh_triangles = tri.MeshIndex_trianglesStart + cmpntIndx;
+			Index_VisMesh_Vertices = mshVrtIndx;
 
 			DBG_constructor = $"at tri[{MyCoordinate.TrianglesIndex}], [{MyCoordinate.ComponentIndex}]\n" +
 				$"Pos: '{Position}', orig: '{originalPosition}'\n" +
@@ -107,8 +107,8 @@ namespace LogansNavigationExtension
 
 			Angle = vert.Angle;
 
-			MeshIndex_triangles = vert.MeshIndex_triangles;
-			MeshIndex_vertices = vert.MeshIndex_vertices;
+			Index_VisMesh_triangles = vert.Index_VisMesh_triangles;
+			Index_VisMesh_Vertices = vert.Index_VisMesh_Vertices;
 
 			DBG_constructor = vert.DBG_constructor;
 		}
@@ -131,22 +131,9 @@ namespace LogansNavigationExtension
 			DBG_constructor = vert.DBG_constructor;
 		}
 
-		public void TriIndexChangedAction( int oldTriIndex, int newTriIndex ) //todo: unit test
+		public void TriIndexChanged( int newIndex )
 		{
-			if( MyCoordinate.TrianglesIndex == oldTriIndex )
-			{
-				MyCoordinate.TrianglesIndex = newTriIndex;
-			}
-			else // Update relational stuff...
-			{
-				foreach( LNX_VertexRelationship rel in SiblingRelationships )
-				{
-					if( rel.RelatedVertCoordinate.TrianglesIndex == oldTriIndex )
-					{
-
-					}
-				}
-			}
+			MyCoordinate = new LNX_ComponentCoordinate( newIndex, MyCoordinate.ComponentIndex );
 		}
 
 		/// <summary>
@@ -173,6 +160,7 @@ namespace LogansNavigationExtension
 				$"B: '{SiblingRelationships[1].Angle_centerToDestinationVertex}'";
 		}
 
+		#region API METHODS ------------------------------------------------------------
 		/// <summary>
 		/// Determines if the line from this vertex to the supplied position 
 		/// is within the theoretical "cone" created by the angle of the  sides emenating out from this vertex.
@@ -222,6 +210,7 @@ namespace LogansNavigationExtension
 			return IsInCenterSweep( tri.V_center + Vector3.ProjectOnPlane(pos, v_normal) );
 
 		}
+		#endregion
 
 		public void Ping( LNX_Triangle[] tris )
 		{
