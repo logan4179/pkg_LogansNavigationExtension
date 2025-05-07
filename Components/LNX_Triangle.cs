@@ -1,11 +1,7 @@
-using JetBrains.Annotations;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
-using UnityEngine.AI;
-using UnityEngine.UI;
-using static UnityEditor.PlayerSettings;
+
 
 namespace LogansNavigationExtension
 {
@@ -52,10 +48,9 @@ namespace LogansNavigationExtension
 		/// re-calculate it's derived info when the user stops moving the vert.</summary>
 		[SerializeField, HideInInspector] private bool dirtyFlag_repositionedVert = false;
 
-		[SerializeField][HideInInspector] private bool wasAddedViaMod;
 		/// <summary>Whether this triangle was added by a mesh modification, as opposed to being created 
 		/// as part of the original navmesh triangulation.</summary>
-		public bool WasAddedViaMod => wasAddedViaMod;
+		public bool WasAddedViaMod;
 
 		public bool HasBeenModifiedAfterCreation
 		{
@@ -68,11 +63,7 @@ namespace LogansNavigationExtension
 		[Header("OTHER")]
 		[HideInInspector] public Vector3 v_normal;
 
-		public LNX_Triangle( int parallelIndex, int areaIndx, 
-			Vector3 vrtPos0, int vrt0MeshIndx, 
-			Vector3 vrtPos1, int vrt1MeshIndx,
-			Vector3 vrtPos2, int vrt2MeshIndx, 
-			int lrMask )
+		public LNX_Triangle( int parallelIndex, int areaIndx, Vector3 vrtPos0, Vector3 vrtPos1, Vector3 vrtPos2, int lrMask )
 		{
 			//Debug.Log($"tri ctor. {nameof(parallelIndex)}: '{parallelIndex}' (x3: '{parallelIndex * 3}'). verts start: '{nmTriangulation.indices[(parallelIndex * 3)]}'");
 
@@ -83,9 +74,9 @@ namespace LogansNavigationExtension
 			AreaIndex = areaIndx;
 
 			Verts = new LNX_Vertex[3];
-			Verts[0] = new LNX_Vertex( this, vrtPos0, 0, vrt0MeshIndx );
-			Verts[1] = new LNX_Vertex( this, vrtPos1, 1, vrt1MeshIndx);
-			Verts[2] = new LNX_Vertex( this, vrtPos2, 2, vrt2MeshIndx);
+			Verts[0] = new LNX_Vertex( this, vrtPos0, 0 );
+			Verts[1] = new LNX_Vertex( this, vrtPos1, 1 );
+			Verts[2] = new LNX_Vertex( this, vrtPos2, 2 );
 
 			Edges = new LNX_Edge[3];
 			Edges[0] = new LNX_Edge( this, Verts[1], Verts[2], 0);
@@ -164,6 +155,8 @@ namespace LogansNavigationExtension
 			Edges[0].TriIndexChanged( newIndex );
 			Edges[1].TriIndexChanged( newIndex );
 			Edges[2].TriIndexChanged( newIndex );
+
+			name = $"ind: '{index_inCollection}', ctr: '{V_center}'";
 		}
 
 		public bool VertsEqual( LNX_Triangle otherTri )

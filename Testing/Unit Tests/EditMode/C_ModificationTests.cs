@@ -121,6 +121,12 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		}
 
 		[Test]
+		public void b2_VisMesh_Vert_Position_Has_Moved_To_Position_Of_Moved_LnxVert()
+		{
+
+		}
+
+		[Test]
 		public void b2_RecalculateTriangulationAfterMove()
 		{
 			Debug.Log( string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(b2_RecalculateTriangulationAfterMove)) );

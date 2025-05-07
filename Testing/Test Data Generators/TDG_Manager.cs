@@ -12,9 +12,10 @@ namespace LogansNavigationExtension
 		public string LastWriteTime;
 
 		[Header("REFERENCE")]
-		[SerializeField] private LNX_NavMesh _lnxNavmesh;
+		[SerializeField] private LNX_NavMesh _serializedNavmeshModel;
+		[SerializeField] private LNX_NavMesh _sceneGeneratedNavmeshModel;
 
-
+		public LNX_NavmeshFullDataSaver _sceneGeneratedNavmeshDataSaver;
 
 		[Header("NavMesh Triangulation")]
 		public int[] areas;
@@ -27,6 +28,10 @@ namespace LogansNavigationExtension
 
 		[Header("FILE")]
 		public static string filePath_serializedLnxNavMesh = Path.Combine(dirPath_testDataFolder, "serializedNavmesh_A");
+
+		public static string filePath_sceneGeneratedLnxNavMesh = Path.Combine(dirPath_testDataFolder, "sceneGeneratedNavmesh_A");
+		public static string filePath_sceneGeneratedNavmeshDataModel = Path.Combine(dirPath_testDataFolder, "sceneGeneratedNavmeshData_A");
+
 
 		[Header("TESTERS")]
 
@@ -47,6 +52,9 @@ namespace LogansNavigationExtension
 
 		public TDG_DeleteTests _tdg_deleteTests;
 		public static string filePath_testData_deleteTests = $"{dirPath_testDataFolder}\\tdg_deleteTests_data_A.json";
+
+		public TDG_Cutting _tdg_cuttingTests;
+		public static string filePath_testData_cuttingTests = $"{dirPath_testDataFolder}\\tdg_cuttingTests_data_A.json";
 
 		[Header("DEBUG")]
 		public bool AmDebugging = true;
@@ -82,12 +90,18 @@ namespace LogansNavigationExtension
 			vertices = tringltn.vertices;
 		}
 
-		[ContextMenu("z call WriteLnxMeshToJson()")]
-		public void WriteLnxMeshToJson()
+		[ContextMenu("z call WriteSerializedLnxMeshToJson()")]
+		public void WriteSerializedLnxMeshToJson()
 		{
 			if ( !Directory.Exists(dirPath_testDataFolder) )
 			{
 				Debug.LogWarning($"directory: '{dirPath_testDataFolder}' wasn't found.");
+				return;
+			}
+
+			if ( _serializedNavmeshModel.HaveModifications() )
+			{
+				Debug.LogError($"ERROR! LNX_NavMesh has modifications. Right now I'm not planning on using modifications on the serialized json LNX_Navmesh.");
 				return;
 			}
 
@@ -100,11 +114,71 @@ namespace LogansNavigationExtension
 				Debug.Log($"writing new file at: '{filePath_serializedLnxNavMesh}'");
 			}
 
-			if ( _lnxNavmesh.HaveModifications() )
+			File.WriteAllText( filePath_serializedLnxNavMesh, JsonUtility.ToJson(_serializedNavmeshModel, true) );
+
+			LastWriteTime = System.DateTime.Now.ToString();
+		}
+
+		[ContextMenu("z call WriteSceneGeneratedNavmeshDataToJson()")]
+		public void WriteSceneGeneratedMeshDataToJson()
+		{
+			if (!Directory.Exists(dirPath_testDataFolder))
+			{
+				Debug.LogWarning($"directory: '{dirPath_testDataFolder}' wasn't found.");
+				return;
+			}
+
+			if ( _sceneGeneratedNavmeshDataSaver._Lnx_Navmesh.HaveModifications() )
 			{
 				Debug.LogError($"ERROR! LNX_NavMesh has modifications. Right now I'm not planning on using modifications on the serialized json LNX_Navmesh.");
 				return;
 			}
+
+			_sceneGeneratedNavmeshDataSaver.CacheNonSerializedData();
+
+			if( _sceneGeneratedNavmeshDataSaver._Lnx_Navmesh == null )
+			{
+				Debug.LogError($"ERROR! LNX_NavMesh was null. Returning early...");
+				return;
+			}
+
+			if ( _sceneGeneratedNavmeshDataSaver._Mesh_Vertices == null || _sceneGeneratedNavmeshDataSaver._Mesh_Vertices.Length <= 0 )
+			{
+				Debug.LogError($"ERROR! Mesh vertices array not set. Returning early...");
+				return;
+			}
+
+			if ( _sceneGeneratedNavmeshDataSaver._Mesh_Triangles == null || _sceneGeneratedNavmeshDataSaver._Mesh_Triangles.Length <= 0 )
+			{
+				Debug.LogError($"ERROR! Mesh triangles array not set. Returning early...");
+				return;
+			}
+
+			#region write data saver--------------------------------------------------------------------------------
+			if ( File.Exists(filePath_sceneGeneratedNavmeshDataModel) )
+			{
+				Debug.LogWarning($"overwriting existing file at: '{filePath_sceneGeneratedNavmeshDataModel}'");
+			}
+			else
+			{
+				Debug.Log($"writing new file at: '{filePath_sceneGeneratedNavmeshDataModel}'");
+			}
+
+			File.WriteAllText(filePath_sceneGeneratedNavmeshDataModel, JsonUtility.ToJson(_sceneGeneratedNavmeshDataSaver, true) );
+			#endregion
+
+			#region Write lnx navmesh ---------------------------------------------------------------
+			if ( File.Exists(filePath_sceneGeneratedLnxNavMesh) )
+			{
+				Debug.LogWarning($"overwriting existing file at: '{filePath_sceneGeneratedLnxNavMesh}'");
+			}
+			else
+			{
+				Debug.Log($"writing new file at: '{filePath_sceneGeneratedLnxNavMesh}'");
+			}
+
+			File.WriteAllText(filePath_sceneGeneratedLnxNavMesh, JsonUtility.ToJson(_sceneGeneratedNavmeshDataSaver._Lnx_Navmesh, true));
+			#endregion
 
 			LastWriteTime = System.DateTime.Now.ToString();
 		}
@@ -126,13 +200,14 @@ namespace LogansNavigationExtension
 			}
 			else
 			{
-				if (_lnxNavmesh.HaveModifications())
+				if (_serializedNavmeshModel.HaveModifications())
 				{
 					Debug.LogError($"ERROR! LNX_NavMesh has modifications. Right now I'm not planning on using modifications on the serialized json LNX_Navmesh.");
 					return;
 				}
 
-				WriteLnxMeshToJson();
+				WriteSerializedLnxMeshToJson();
+				WriteSceneGeneratedMeshDataToJson();
 
 				#region SAMPLE POSITION ---------------------------------------------------------------------
 				_tdg_samplePosition.GenerateHItResultCollections();
@@ -200,8 +275,38 @@ namespace LogansNavigationExtension
 				}
 				#endregion
 
+				#region CUTTING ----------------------------------------------------------
+				if ( !_tdg_cuttingTests.WriteMeToJson() )
+				{
+					Debug.LogError($"write to json didn't work on {nameof(_tdg_cuttingTests)}. Returning early...");
+					return;
+				}
+				#endregion
+
 				logWarning = true;
 			}
+		}
+
+		public static bool WriteTestObjectToJson( string filePath, Object testObject )
+		{
+			if ( !Directory.Exists(dirPath_testDataFolder) )
+			{
+				Debug.LogWarning($"directory: '{dirPath_testDataFolder}' wasn't found.");
+				return false;
+			}
+
+			if ( File.Exists(filePath) )
+			{
+				Debug.LogWarning($"overwriting existing file at: '{filePath}'");
+			}
+			else
+			{
+				Debug.Log($"writing new file at: '{filePath}'");
+			}
+
+			File.WriteAllText( filePath, JsonUtility.ToJson(testObject, true) );
+
+			return true;
 		}
 	}
 }

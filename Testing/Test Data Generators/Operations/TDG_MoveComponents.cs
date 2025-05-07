@@ -132,26 +132,15 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call WriteMeToJson()")]
 		public bool WriteMeToJson()
 		{
-			if ( !Directory.Exists(TDG_Manager.dirPath_testDataFolder) )
+			bool rslt = TDG_Manager.WriteTestObjectToJson( TDG_Manager.filePath_testData_moveComponents, this );
+
+			if ( rslt )
 			{
-				Debug.LogWarning($"directory: '{TDG_Manager.dirPath_testDataFolder}' wasn't found.");
-				return false;
+				LastWriteTime = System.DateTime.Now.ToString();
+				return true;
 			}
 
-			if ( File.Exists(TDG_Manager.filePath_testData_moveComponents) )
-			{
-				Debug.LogWarning($"overwriting existing file at: '{TDG_Manager.filePath_testData_moveComponents}'");
-			}
-			else
-			{
-				Debug.Log($"writing new file at: '{TDG_Manager.filePath_testData_moveComponents}'");
-			}
-
-			File.WriteAllText( TDG_Manager.filePath_testData_moveComponents, JsonUtility.ToJson(this, true) );
-
-			LastWriteTime = System.DateTime.Now.ToString();
-
-			return true;
+			return false;
 		}
 
 		[ContextMenu("z call RecreateMeFromJson()")]

@@ -18,6 +18,17 @@ namespace LogansNavigationExtension
 
 		public LNX_OperationMode OperationMode = LNX_OperationMode.Pointing;
 
+		public bool AmMagnetized = false;
+
+		public bool MeshIsValidForDrawing
+		{
+			get
+			{
+				return drawMeshVisualization && _LNX_NavMesh._Mesh != null && _LNX_NavMesh._Mesh.vertices != null && _LNX_NavMesh._Mesh.vertices.Length > 0;
+
+			}
+		}
+
 		#region TRIANGLES ------------------------
 		/// <summary>
 		/// This is the 'primary' or last selected triangle
@@ -64,15 +75,6 @@ namespace LogansNavigationExtension
 			get
 			{
 				return indices_selectedTris != null && indices_selectedTris.Count > 0;
-			}
-		}
-
-		public bool MeshIsValidForDrawing
-		{
-			get
-			{
-				return drawMeshVisualization && _LNX_NavMesh._Mesh != null && _LNX_NavMesh._Mesh.vertices != null && _LNX_NavMesh._Mesh.vertices.Length > 0;
-
 			}
 		}
 		#endregion
@@ -139,8 +141,12 @@ namespace LogansNavigationExtension
 		/// </summary>
 		public bool Flag_AmLocked => amLocked;
 
-		//[Header("OTHER")]
+		#region MESH MANIPULATOR EDITOR SCRIPT STUFF -----------------------------------------------
 		public Vector3 manipulatorPos = Vector3.zero;
+		public Vector3 v_lastSnapPos = Vector3.zero;
+		public bool amSnapped = false;
+
+		#endregion
 
 		#region CLEARING/INITIALIZING ------------------------
 		public void InitState()
@@ -213,8 +219,10 @@ namespace LogansNavigationExtension
 			SelectMode = mode;
 		}
 
+		[TextArea(1, 5)] public string DBG_Magnetized;
+
 		[TextArea(1,5)] public string DBG_locked;
-		[TextArea(1, 15)] public string DbgClass;
+		[TextArea(1, 8)] public string DbgClass;
 
 		public void FlipLocked()
 		{
@@ -236,6 +244,12 @@ namespace LogansNavigationExtension
 			amLocked = newLockState;
 		}
 
+		[ContextMenu("z call SayIfSnapped")]
+		public void SayIfSnapped()
+		{
+			Debug.Log(amSnapped);
+		}
+
 		public void TryPointAtBounds()
 		{
 			//todo: in the future, I need to make something that can detect if I'm pointing at
@@ -245,7 +259,7 @@ namespace LogansNavigationExtension
 		[SerializeField, TextArea(0,10)] private string DebugPointAt;
 		public void TryPointAtComponentViaDirection( Vector3 vPerspective, Vector3 vDirection )
 		{
-			DebugPointAt = $"";
+			DebugPointAt = "";
 
 			Flag_AComponentIsCurrentlyHighlighted = false;
 
@@ -334,10 +348,15 @@ namespace LogansNavigationExtension
 						);
 
 						float alignment = Vector3.Dot( vTo, vDirection );
+						/*
+						if( i_tris == 82 && i_edges == 2 )
+						{
+							DebugPointAt += $"[forced]: alignment: '{alignment}'";
+						}*/
 
 						if ( alignment > runningBestAlignment )
 						{
-							DebugPointAt += $"vert: [{i_tris}][{i_edges}]. alignment: '{alignment}'\n";
+							DebugPointAt += $"edge: [{i_tris}][{i_edges}]. alignment: '{alignment}'\n";
 							runningBestAlignment = alignment;
 
 							runningBestCoordinate = _LNX_NavMesh.Triangles[i_tris].Edges[i_edges].MyCoordinate;
@@ -345,19 +364,23 @@ namespace LogansNavigationExtension
 					}
 				}
 
+				Edge_CurrentlyPointingAt = null;
+
 				if ( runningBestCoordinate != LNX_ComponentCoordinate.None )
 				{
 					Flag_AComponentIsCurrentlyHighlighted = true;
 					Edge_CurrentlyPointingAt = _LNX_NavMesh.GetEdgeAtCoordinate( runningBestCoordinate );
+					//Debug.Log($"running best: '{runningBestCoordinate}', getting edge: '{Edge_CurrentlyPointingAt.MyCoordinate}'");
 				}
 				else
 				{
 					Edge_CurrentlyPointingAt = null;
+					//Debug.Log("null");
 				}
 			}
 		}
 
-		[SerializeField, TextArea(0, 10)] private string DebugSelectedReport;
+		[SerializeField, TextArea(0, 5)] private string DebugSelectedReport;
 		public void TryGrab( bool amHoldingAddInputModifier = false )
 		{
 			DebugSelectedReport = $"Mode: '{SelectMode}', mod: '{amHoldingAddInputModifier}'\n";
@@ -506,7 +529,7 @@ namespace LogansNavigationExtension
 					}
 				}
 			}
-
+			/*
 			if( Verts_currentlySelected.Count == 1 )
 			{
 				Debug.Log($"Have '{Verts_currentlySelected.Count}' verts currently selected at '{Vert_CurrentlyPointingAt.MyCoordinate}'...");
@@ -514,7 +537,7 @@ namespace LogansNavigationExtension
 			else
 			{
 				Debug.Log($"Have '{Verts_currentlySelected.Count}' verts currently selected...");
-			}
+			}*/
 			#endregion
 		}
 
@@ -537,7 +560,7 @@ namespace LogansNavigationExtension
 				}
 			}
 
-			manipulatorPos = endPos;
+			//manipulatorPos = endPos; //This seems to be necessary in order to actually move the manipulator
 			//Debug.Log( dbgMoveSelected );
 		}
 
@@ -548,7 +571,7 @@ namespace LogansNavigationExtension
 				Debug.LogWarning("LNX WARNING! Tried to delete, but no triangles are selected.");
 				return;
 			}
-
+			
 			LNX_Triangle[] tris = new LNX_Triangle[indices_selectedTris.Count];
 			for( int i = 0; i < tris.Length; i++ )
 			{
@@ -565,20 +588,25 @@ namespace LogansNavigationExtension
 			ClearSelection();
 		}
 
+		public Vector3 dbg_edge0_start, dbg_edge0_mid, dbg_edge0_end;
+		public Vector3 dbg_edge1_start, dbg_edge1_mid, dbg_edge1_end;
+
+		public Vector3 dbg_bridgeMid0, dbg_bridgeMid1;
+
 		[ContextMenu("z call TryInsertLoop")]
 		public void TryInsertLoop()
 		{
 			#region check if I even can insert loop with current edge selection---------------------------------------------------------
-			if ( Edges_currentlySelected.Count != 2 )
+			if (Edges_currentlySelected.Count != 2)
 			{
-				Debug.Log("can't");
+				//Debug.Log("can't");
 				return;
 			}
 
-			LNX_Triangle tri0 = _LNX_NavMesh.GetTriangle( Edges_currentlySelected[0].MyCoordinate );
-			LNX_Triangle tri1 = _LNX_NavMesh.GetTriangle( Edges_currentlySelected[1].MyCoordinate );
+			LNX_Triangle tri0 = _LNX_NavMesh.GetTriangle(Edges_currentlySelected[0].MyCoordinate);
+			LNX_Triangle tri1 = _LNX_NavMesh.GetTriangle(Edges_currentlySelected[1].MyCoordinate);
 
-			Debug.Log($"edge0: '{Edges_currentlySelected[0].MyCoordinate}', edge1: '{Edges_currentlySelected[1].MyCoordinate}'");
+			//Debug.Log($"edge0: '{Edges_currentlySelected[0].MyCoordinate}', edge1: '{Edges_currentlySelected[1].MyCoordinate}'");
 
 			if (
 				tri0.Relationships[tri1.Index_inCollection].NumberofSharedVerts != 2 ||
@@ -586,7 +614,7 @@ namespace LogansNavigationExtension
 				Edges_currentlySelected[0].AmTouching(Edges_currentlySelected[1])
 			)
 			{
-				Debug.Log("can't");
+				//Debug.Log("can't");
 				return;
 			}
 			#endregion
@@ -595,38 +623,48 @@ namespace LogansNavigationExtension
 			// Note: these are the edges that will be at the start and end of the bridge
 			LNX_Edge endEdge0 = null;
 			LNX_Edge endEdge1 = null;
-			for ( int i = 0; i < 3; i++ ) 
+			for ( int i_edges = 0; i_edges < 3; i_edges++ )
 			{
-				if( tri0.Edges[i] != Edges_currentlySelected[0] && tri0.Edges[i].SharedEdge.TrianglesIndex != tri1.Index_inCollection )
+				if ( tri0.Edges[i_edges] != Edges_currentlySelected[0] && tri0.Edges[i_edges].SharedEdge.TrianglesIndex != tri1.Index_inCollection )
 				{
-					endEdge0 = new LNX_Edge( _LNX_NavMesh.GetEdgeAtCoordinate(tri0.Edges[i].SharedEdge) );
-					Debug.Log($"Found edge index 1 at '{endEdge0}'");
+					endEdge0 = new LNX_Edge(_LNX_NavMesh.GetEdgeAtCoordinate(tri0.Edges[i_edges].SharedEdge));
+					//Debug.Log($"Found edge index 1 at '{endEdge0}'");
 				}
-				else if ( tri1.Edges[i] != Edges_currentlySelected[1] && tri1.Edges[i].SharedEdge.TrianglesIndex != tri0.Index_inCollection )
+				else if (tri1.Edges[i_edges] != Edges_currentlySelected[1] && tri1.Edges[i_edges].SharedEdge.TrianglesIndex != tri0.Index_inCollection)
 				{
-					endEdge1 = new LNX_Edge( _LNX_NavMesh.GetEdgeAtCoordinate(tri1.Edges[i].SharedEdge) );
-					Debug.Log($"Found edge index 2 at '{endEdge1}'");
+					endEdge1 = new LNX_Edge(_LNX_NavMesh.GetEdgeAtCoordinate(tri1.Edges[i_edges].SharedEdge));
+					//Debug.Log($"Found edge index 2 at '{endEdge1}'");
 				}
 			}
 
-			//Debug.DrawLine(endEdge0.MidPosition, endEdge0.MidPosition + (Vector3.up * 2f), Color.blue, 2f );
-			//Debug.DrawLine(endEdge1.MidPosition, endEdge1.MidPosition + (Vector3.up * 2f), Color.blue, 2f );
+			dbg_edge0_start = endEdge0.StartPosition;
+			dbg_edge0_mid = endEdge0.MidPosition;
+			dbg_edge0_end = endEdge0.EndPosition;
+
+			dbg_edge1_start = endEdge1.StartPosition;
+			dbg_edge1_mid = endEdge1.MidPosition;
+			dbg_edge1_end = endEdge1.EndPosition;
 			#endregion
 
 			Vector3 v_midPoint0 = Edges_currentlySelected[0].MidPosition;
 			Vector3 v_midPoint1 = Edges_currentlySelected[1].MidPosition;
 
+			dbg_bridgeMid0 = v_midPoint0;
+			dbg_bridgeMid1 = v_midPoint1;
+
 			Debug.Log("decided CAN cut. trying...");
 
-			DeleteTriangles( tri0, tri1 );
+			DeleteTriangles(tri0, tri1);
 
-			_LNX_NavMesh.AddTriangle( endEdge0.StartPosition, endEdge0.EndPosition, endEdge0.StartPosition );
-			_LNX_NavMesh.AddTriangle( endEdge1.StartPosition, endEdge1.EndPosition, v_midPoint1 );
+			LNX_Triangle[] trisToAdd = new LNX_Triangle[4]
+			{
+				new LNX_Triangle(_LNX_NavMesh.Triangles.Length, 0, endEdge0.StartPosition, endEdge0.EndPosition, v_midPoint0, _LNX_NavMesh.CachedLayerMask ),
+				new LNX_Triangle(_LNX_NavMesh.Triangles.Length+1, 0, endEdge0.EndPosition, v_midPoint1, v_midPoint0, _LNX_NavMesh.CachedLayerMask ),
+				new LNX_Triangle(_LNX_NavMesh.Triangles.Length+2, 0, v_midPoint0, v_midPoint1, endEdge1.StartPosition, _LNX_NavMesh.CachedLayerMask ),
+				new LNX_Triangle(_LNX_NavMesh.Triangles.Length+3, 0,  endEdge1.StartPosition, v_midPoint1, endEdge1.EndPosition, _LNX_NavMesh.CachedLayerMask ),
+			};
 
-			_LNX_NavMesh.AddTriangle( v_midPoint0, v_midPoint1, endEdge1.StartPosition );
-			_LNX_NavMesh.AddTriangle( v_midPoint0, endEdge1.StartPosition, endEdge1.EndPosition );
-
-			_LNX_NavMesh.ReconstructVisualizationMesh();
+			_LNX_NavMesh.AddTriangles( trisToAdd );
 			
 		}
 		#endregion
@@ -641,6 +679,19 @@ namespace LogansNavigationExtension
 			{
 				return;
 			}
+
+			/*
+			Handles.Label( dbg_edge0_start, "e0 start" );
+			Handles.Label(dbg_edge0_mid, "e0 mid");
+			Handles.Label(dbg_edge0_end, "e0 end");
+
+			Handles.Label(dbg_edge1_start, "e1 start");
+			Handles.Label(dbg_edge1_mid, "e1 mid");
+			Handles.Label(dbg_edge1_end, "e1 end");
+
+			Handles.Label(dbg_bridgeMid0, "brdgMid0");
+			Handles.Label(dbg_bridgeMid1, "brdgMid1");
+			*/
 
 			#region TRIANGLES ------------------------------------------------
 			Gizmos.color = _LNX_NavMesh.color_mesh;

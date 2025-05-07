@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.AI;
 
 namespace LogansNavigationExtension
 {
@@ -65,7 +63,7 @@ namespace LogansNavigationExtension
 		/// <param name="vrtPos"></param>
 		/// <param name="cmpntIndx"></param>
 		/// <param name="nmTriangulation"></param>
-		public LNX_Vertex( LNX_Triangle tri, Vector3 vrtPos, int cmpntIndx, int mshVrtIndx )
+		public LNX_Vertex( LNX_Triangle tri, Vector3 vrtPos, int cmpntIndx )
         {
 			Position = vrtPos;
 
@@ -83,7 +81,7 @@ namespace LogansNavigationExtension
 			Angle = -1f;
 
 			Index_VisMesh_triangles = tri.MeshIndex_trianglesStart + cmpntIndx;
-			Index_VisMesh_Vertices = mshVrtIndx;
+			Index_VisMesh_Vertices = -1;
 
 			DBG_constructor = $"at tri[{MyCoordinate.TrianglesIndex}], [{MyCoordinate.ComponentIndex}]\n" +
 				$"Pos: '{Position}', orig: '{originalPosition}'\n" +

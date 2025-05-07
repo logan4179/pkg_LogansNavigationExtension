@@ -9,7 +9,8 @@ using UnityEngine.Windows;
 
 namespace LogansNavigationExtension
 {
-    public class LNX_NavMesh : MonoBehaviour
+	[System.Serializable]
+	public class LNX_NavMesh : MonoBehaviour
     {
 		public static LNX_NavMesh Instance;
 
@@ -196,17 +197,14 @@ namespace LogansNavigationExtension
 			}
 
 			// Make lists-------------------------
-			List<int> constructedTriangles = new List<int>(); //length should be 3x
 			List<Vector3> constructedVertices_unique = new List<Vector3>();
-			List<int> constructedAreaIndices = new List<int>();
 
 			_Mesh = new Mesh();
 
-			//FetchKosherTriangulation( ref constructedAreaIndices, ref constructedVertices_unique, ref constructedTriangles );
-
 			#region DEAL WITH TRIANGULATION -----------------------------------------------------------------------------
 			NavMeshTriangulation triangulation = NavMesh.CalculateTriangulation();
-			Debug.Log($"inital triangulation has '{triangulation.areas.Length}' areas, '{triangulation.vertices.Length}' vertices, and '{triangulation.indices.Length}' indices.\n");
+			Debug.Log($"inital triangulation has '{triangulation.areas.Length}' areas, '{triangulation.vertices.Length}' " +
+				$"vertices, and '{triangulation.indices.Length}' indices.\n");
 
 			List<LNX_Triangle> newTriCollection = new List<LNX_Triangle>();
 
@@ -217,13 +215,14 @@ namespace LogansNavigationExtension
 				//Debug.Log($"{i} --------------------------////////////////////////////////////\n");
 				if ( !hvMods || !ContainsDeletion(triangulation, i) )
 				{
-					LNX_Triangle tri = AddTriangleToList( ref newTriCollection, 
+					LNX_Triangle tri = new LNX_Triangle( newTriCollection.Count, triangulation.areas[i],
 						triangulation.vertices[triangulation.indices[i * 3]],
 						triangulation.vertices[triangulation.indices[(i * 3) + 1]],
 						triangulation.vertices[triangulation.indices[(i * 3) + 2]],
-						triangulation.areas[i], 
-						ref constructedAreaIndices, ref constructedVertices_unique, ref constructedTriangles
+						cachedLayerMask
 					);
+
+					newTriCollection.Add( tri );
 
 					if( hvMods )
 					{
@@ -410,10 +409,10 @@ namespace LogansNavigationExtension
 			Debug.Log($"{nameof(ReconstructVisualizationMesh)}()");
 
 			/*
-			Note: I used to have a lot of these loops bundled together for more efficiency, but it looked awful, so I 
-			separated them into multiple loops to make them more debuggable. I think this added overhead is okay 
-			because this method is not meant to be called during performance crticial moments. This is only for 
-			occasional, discrete, calls in the editor as needed. This is a slow method, and that's okay.
+			Note: I used to have a lot of the loops in here bundled together for more efficiency, but it looked 
+			awful, so I separated them into multiple loops to make them more debuggable. I think this added overhead 
+			is okay because this method is not meant to be called during performance crticial moments. This is only
+			for occasional, discrete, calls in the editor as needed. This is a slow method, and that's okay.
 			*/
 
 			_Mesh = new Mesh();
@@ -482,7 +481,8 @@ namespace LogansNavigationExtension
 			{
 				for ( int i_Verts = 0; i_Verts < 3; i_Verts++ )
 				{
-					if ( Triangles[i_Triangles].Verts[i_Verts].Position != uniqueVerts[Triangles[i_Triangles].Verts[i_Verts].Index_VisMesh_Vertices] ) //todo: this is where the unit test is failing
+					if (Triangles[i_Triangles].Verts[i_Verts].Index_VisMesh_Vertices < 0 || 
+						Triangles[i_Triangles].Verts[i_Verts].Position != uniqueVerts[Triangles[i_Triangles].Verts[i_Verts].Index_VisMesh_Vertices] ) //todo: this is where the unit test is failing
 					{
 						listIsStillKosher = false;
 						vertPositionsAreConsistentWithMeshVertPositions = false;
@@ -493,7 +493,7 @@ namespace LogansNavigationExtension
 					}
 				}
 
-				if( !vertPositionsAreConsistentWithMeshVertPositions )
+				if( !vertPositionsAreConsistentWithMeshVertPositions ) //This way it doesn't loop through any more triangles...
 				{
 					break;
 				}
@@ -528,7 +528,8 @@ namespace LogansNavigationExtension
 					{
 						for ( int i_Verts = 0; i_Verts < 3; i_Verts++ )
 						{
-							if ( Triangles[i_Triangles].Verts[i_Verts].Position != uniqueVerts[Triangles[i_Triangles].Verts[i_Verts].Index_VisMesh_Vertices] ) //this is going out of range...
+							if (Triangles[i_Triangles].Verts[i_Verts].Index_VisMesh_Vertices < 0 || 
+								Triangles[i_Triangles].Verts[i_Verts].Position != uniqueVerts[Triangles[i_Triangles].Verts[i_Verts].Index_VisMesh_Vertices] ) //this is going out of range...
 							{
 								bool foundUniqueVertMatch = false;
 								for( int i_uniqueVerts = 0; i_uniqueVerts < uniqueVerts.Count; i_uniqueVerts++ )
@@ -598,25 +599,6 @@ namespace LogansNavigationExtension
 
 		#endregion
 
-		[ContextMenu("z call GetGreatest()")]
-		public void GetGreatest()
-		{
-			int greatestIndex = 0;
-
-			for (int i = 0; i < Triangles.Length; i++)
-			{
-				for( int i_verts = 0; i_verts < 2; i_verts++ )
-				{
-					if (Triangles[i].Verts[i_verts].Index_VisMesh_Vertices > greatestIndex)
-					{
-						greatestIndex = Triangles[i].Verts[i_verts].Index_VisMesh_Vertices;
-					}
-				}
-			}
-
-			Debug.Log($"found greatest index; '{greatestIndex}'");
-		}
-
 		#region MODIFICATION-----------------------------------------------------------
 		/// <summary>
 		/// Checks to see if any madifications exist on this LNX_NavMesh. Warning: Relatively slow operation. 
@@ -671,10 +653,10 @@ namespace LogansNavigationExtension
 
 			if( vert.Index_VisMesh_Vertices > -1 && _Mesh != null && _Mesh.vertices != null && _Mesh.vertices.Length > 0 )
 			{
-				Debug.Log($"moving vert '{vert.MyCoordinate.ToString()}' with {nameof(vert.Index_VisMesh_Vertices)}: '{vert.Index_VisMesh_Vertices}'");
+				//Debug.Log($"moving vert '{vert.MyCoordinate.ToString()}' with {nameof(vert.Index_VisMesh_Vertices)}: '{vert.Index_VisMesh_Vertices}'");
 
 				Vector3[] tmpVrts = _Mesh.vertices; //note: I can't get it to update the mesh if I only change the relevant vertex within the mesh object, It seems like I MUST create and assign a whole new array.
-				tmpVrts[vert.Index_VisMesh_Vertices] = vert.Position + pos;
+				tmpVrts[vert.Index_VisMesh_Vertices] = vert.Position;
 				_Mesh.vertices = tmpVrts; //apparently you have to assign to the mesh in this manner in order to make this update (apparently I can't just change one of the existing vertices elements)...
 			}
 		}
@@ -784,139 +766,31 @@ namespace LogansNavigationExtension
 		#endregion
 
 		#region ADDING ---------------------------------------------------------------
-		private LNX_Triangle AddTriangleToList(ref List<LNX_Triangle> triList,
-			Vector3 vrt0Pos, Vector3 vrt1Pos, Vector3 vrt2Pos, int areaIndx,
-			ref List<int> areaList_passed, ref List<Vector3> vrtList_passed, ref List<int> trianglesList_passed)
+		public void AddTriangles( params LNX_Triangle[] tris )
 		{
-			string dbgThis = "";
-			areaList_passed.Add(areaIndx);
+			Debug.Log($"{nameof(AddTriangles)}(). Was passed '{tris.Length}' tris...");
 
-			int[] vertMatchIndices = new int[3] { -1, -1, -1 };
-			dbgThis += ($"checking verts in growing list of '{vrtList_passed.Count}' verts...\n");
-			for (int j = 0; j < vrtList_passed.Count; j++)
-			{
-				if (vrtList_passed[j] == vrt0Pos)
-				{
-					vertMatchIndices[0] = j;
-				}
-				else if (vrtList_passed[j] == vrt1Pos)
-				{
-					vertMatchIndices[1] = j;
-				}
-				else if (vrtList_passed[j] == vrt2Pos)
-				{
-					vertMatchIndices[2] = j;
-				}
-			}
-
-			dbgThis += ($"end. match0: '{vertMatchIndices[0]}', match1: '{vertMatchIndices[1]}', match2: '{vertMatchIndices[2]}'...\n");
-			if (vertMatchIndices[0] == -1)
-			{
-				dbgThis += $"adding new vert/indx for 0...\n";
-				vrtList_passed.Add(vrt0Pos);
-				trianglesList_passed.Add(vrtList_passed.Count - 1);
-				vertMatchIndices[0] = vrtList_passed.Count - 1;
-			}
-			else
-			{
-				trianglesList_passed.Add(vertMatchIndices[0]);
-			}
-
-			if (vertMatchIndices[1] == -1)
-			{
-				dbgThis += $"adding new vert/indx for 1...\n";
-
-				vrtList_passed.Add(vrt1Pos);
-				trianglesList_passed.Add(vrtList_passed.Count - 1);
-				vertMatchIndices[1] = vrtList_passed.Count - 1;
-			}
-			else
-			{
-				trianglesList_passed.Add(vertMatchIndices[1]);
-			}
-
-			if (vertMatchIndices[2] == -1)
-			{
-				dbgThis += $"adding new vert/indx for 2...\n";
-
-				vrtList_passed.Add(vrt2Pos);
-				trianglesList_passed.Add(vrtList_passed.Count - 1);
-				vertMatchIndices[2] = vrtList_passed.Count - 1;
-			}
-			else
-			{
-				trianglesList_passed.Add(vertMatchIndices[2]);
-			}
-
-			LNX_Triangle tri = new LNX_Triangle(
-				triList.Count, areaIndx,
-				vrt0Pos, vertMatchIndices[0], vrt1Pos, vertMatchIndices[1], vrt2Pos, vertMatchIndices[2],
-				cachedLayerMask
-			);
-
-			triList.Add(tri);
-
-			return tri;
-		}
-
-		public void AddTriangle( Vector3 vrt0Pos, Vector3 vrt1Pos, Vector3 vrt2Pos)
-		{
-			List<Vector3> UniqueVerts = new List<Vector3>();
-			List<int> constructedAreas = new List<int>();
-			List<int> constructedTriangles = new List<int>();
 			List<LNX_Triangle> constructedLnxTriangles = Triangles.ToList();
 
-			int uniqueVertCount = 0;
+			for ( int i = 0; i < tris.Length; i++ )
+			{
+				Debug.Log($"i: '{i}'...");
+				//LNX_Triangle tri = new LNX_Triangle( tris[i], constructedLnxTriangles.Count );
+				//tri.WasAddedViaMod = true;
+				tris[i].WasAddedViaMod = true;
+				constructedLnxTriangles.Add( tris[i] );
+			}
 
-			//Debug.Log($"Iterating through '{Triangles.Length}' triangles...");
+			Triangles = constructedLnxTriangles.ToArray();
+
 			for ( int i = 0; i < Triangles.Length; i++ )
 			{
-				//Debug.Log($"i: '{i}'...");
-
-				for ( int j = 0; j < 3; j++ )
-				{
-					constructedTriangles.Add( Triangles[i].Verts[j].Index_VisMesh_Vertices );
-
-					if ( Triangles[i].Verts[j].Index_VisMesh_Vertices > uniqueVertCount )
-					{
-						uniqueVertCount = Triangles[i].Verts[j].Index_VisMesh_Vertices;
-					}
-				}
-			}
-			//Debug.LogWarning($"Logged '{trianglesList.Count}' triangle entries, and decided there were '{uniqueVertCount}' unique verts...");
-			uniqueVertCount++;//need to add 1 because the last index will be the length - 1, but it needs to equal the actual length
-			for ( int i_uniqVrt = 0; i_uniqVrt < uniqueVertCount; i_uniqVrt++ ) //I'm doing it this way to make sure the resulting mesh data will be exactly in the original order
-			{
-				//Debug.Log($"{nameof(i_uniqVrt)}: '{i_uniqVrt}'...");
-				for ( int i_tris = 0; i_tris < Triangles.Length; i_tris++ )
-				{
-					if ( Triangles[i_tris].Verts[0].Index_VisMesh_Vertices == i_uniqVrt )
-					{
-						UniqueVerts[i_uniqVrt] = Triangles[i_tris].Verts[0].OriginalPosition;
-						//Debug.Log($"logging unique vert: '{Triangles[i_tris].Verts[0].MyCoordinate}'");
-						break;
-					}
-					else if ( Triangles[i_tris].Verts[1].Index_VisMesh_Vertices == i_uniqVrt )
-					{
-						UniqueVerts[i_uniqVrt] = Triangles[i_tris].Verts[1].OriginalPosition;
-						//Debug.Log($"logging unique vert: '{Triangles[i_tris].Verts[1].MyCoordinate}'");
-						break;
-					}
-					else if ( Triangles[i_tris].Verts[2].Index_VisMesh_Vertices == i_uniqVrt )
-					{
-						UniqueVerts[i_uniqVrt] = Triangles[i_tris].Verts[2].OriginalPosition;
-						//Debug.Log($"logging unique vert: '{Triangles[i_tris].Verts[2].MyCoordinate}'");
-						break;
-					}
-				}
+				Triangles[i].CreateRelationships(Triangles);
 			}
 
-			AddTriangleToList( ref constructedLnxTriangles,
-			vrt0Pos, vrt1Pos, vrt2Pos, 0,
-			ref constructedAreas, ref UniqueVerts, ref constructedTriangles 
-			);
+			CalculateBounds();
 
-
+			ReconstructVisualizationMesh();
 		}
 		#endregion
 

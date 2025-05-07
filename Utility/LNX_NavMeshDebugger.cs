@@ -84,6 +84,49 @@ namespace LogansNavigationExtension
 
 		//[Header("VERT MANIPULATION")]
 
+		[ContextMenu("z call CalculateAllDerived()")]
+		public void CalculateAllDerived()
+		{
+			Debug.Log($"{nameof(CalculateAllDerived)}");
+
+			for ( int i = 0; i < _mgr.Triangles.Length; i++ )
+			{
+				_mgr.Triangles[i].CalculateDerivedInfo();
+			}
+		}
+
+		[ContextMenu("z call SayFocusedTriInfo()")]
+		public void SayFocusedTriInfo()
+		{
+			Debug.Log($"{nameof(FocusedTri.Index_inCollection)}: '{FocusedTri.Index_inCollection}' \n" +
+				$"{nameof(FocusedTri.MeshIndex_trianglesStart)}: '{FocusedTri.MeshIndex_trianglesStart}\n" +
+				$"{nameof(FocusedTri.V_center)}: '{FocusedTri.V_center}'\n" +
+				$"{nameof(FocusedTri.v_normal)}: '{FocusedTri.v_normal}' \n" +
+				$"");
+
+			Debug.Log($"vismesh normal: '{_mgr._Mesh.normals[_mgr._Mesh.triangles[FocusedTri.MeshIndex_trianglesStart]]}'\n" +
+				$"");
+		}
+
+		[ContextMenu("z call SayVisualMeshInfo()")]
+		public void SayVisualMeshInfo()
+		{
+			string s = $"Vertices '{_mgr._Mesh.vertices.Length}' \n";
+
+			for( int i = 0; i < _mgr._Mesh.vertices.Length; i++ )
+			{
+				s += $"vert pos {i}: '{_mgr._Mesh.vertices[i]}'\n";
+			}
+
+			s += $"\nNormals '{_mgr._Mesh.normals.Length}' \n";
+
+			for (int i = 0; i < _mgr._Mesh.normals.Length; i++)
+			{
+				s += $"normal {i}: '{_mgr._Mesh.normals[i]}'\n";
+			}
+
+			Debug.Log(s);
+		}
 
 		private void OnDrawGizmos()
 		{
@@ -214,10 +257,7 @@ namespace LogansNavigationExtension
 
 			if ( AmAllowingFocus && amFocused && AmAllowingVertFocus )
 			{
-				//Vector3 newTargetPosition = Handles.PositionHandle(tri.Verts[Index_VertFocus].Position, Quaternion.identity );
-
-				//tri.Verts[Index_VertFocus].Position = newTargetPosition;
-				//tri.Verts[Index_VertFocus].Position = V_vertPlacePos;
+				Gizmos.DrawLine(tri.Verts[Index_VertFocus].Position, tri.Verts[Index_VertFocus].Position + (Vector3.up * 1.2f) );
 			}
 		}
 	}
