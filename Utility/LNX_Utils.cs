@@ -350,7 +350,7 @@ namespace LogansNavigationExtension
 			Vector3 avgdMidPt = (primaryEdge.MidPosition + secondaryEdge.MidPosition) * 0.5f;
 			//Debug.DrawLine(avgdMidPt, avgdMidPt + (Vector3.up * 3f), Color.red, 3f);
 
-			LNX_Triangle primaryTri = nm.GetTriangle(primaryEdge);
+			LNX_Triangle primaryTri = nm.GetTriangle( primaryEdge.MyCoordinate );
 			float runningfurthestdist = 0f;
 			int edgIndx = -1;
 			for (int i = 0; i < 3; i++) //find the edge with the furthest away mid position
@@ -452,9 +452,9 @@ namespace LogansNavigationExtension
 			}
 		}
 
-		public LNX_ComponentCoordinate( LNX_Triangle containingTri, int cmptIndx )
+		public LNX_ComponentCoordinate( int triIndx, int cmptIndx )
 		{
-			TrianglesIndex = containingTri.Index_inCollection;
+			TrianglesIndex = triIndx;
 			ComponentIndex = cmptIndx;
 		}
 
@@ -516,7 +516,7 @@ namespace LogansNavigationExtension
 	[System.Serializable]
 	public struct LNX_VertexRelationship
 	{
-		public LNX_ComponentCoordinate PerspectiveVertCoordinate;
+		//public LNX_ComponentCoordinate PerspectiveVertCoordinate; //todo: dws, I don't think I need this
 		public LNX_ComponentCoordinate RelatedVertCoordinate;
 
 		public bool CanSee;
@@ -532,7 +532,7 @@ namespace LogansNavigationExtension
 
 		public LNX_VertexRelationship(LNX_Vertex myVert, LNX_Vertex relatedVert)
 		{
-			PerspectiveVertCoordinate = myVert.MyCoordinate;
+			//PerspectiveVertCoordinate = myVert.MyCoordinate; //todo: dws, I don't think I need this
 			RelatedVertCoordinate = relatedVert.MyCoordinate;
 
 			CanSee = true;

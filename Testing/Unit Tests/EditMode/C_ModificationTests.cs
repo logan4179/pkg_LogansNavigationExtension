@@ -16,7 +16,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		/// The Navmesh that is created by calculating it off the scene geometry as opposed to 
 		/// creating from a saved json object.
 		/// </summary>
-        LNX_NavMesh _generatedNavmesh;
+        LNX_NavMesh _sceneGeneratedNavmesh;
 
 		LNX_MeshManipulator _lnx_meshManipulator;
 
@@ -26,14 +26,14 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		public void a1_SetupObjects()
 		{
 			Debug.Log( string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(a1_SetupObjects)) );
-			GameObject go = GameObject.Find("TestLNX_Navmesh");
+			GameObject go = GameObject.Find( LNX_UnitTestUtilities.Name_GeneratedNavmeshGameobject );
 
-			_generatedNavmesh = go.GetComponent<LNX_NavMesh>();
+			_sceneGeneratedNavmesh = go.GetComponent<LNX_NavMesh>();
 
 			_lnx_meshManipulator = go.AddComponent<LNX_MeshManipulator>();
-			_lnx_meshManipulator._LNX_NavMesh = _generatedNavmesh;
+			_lnx_meshManipulator._LNX_NavMesh = _sceneGeneratedNavmesh;
 
-			Assert.NotNull(_generatedNavmesh);
+			Assert.NotNull(_sceneGeneratedNavmesh);
 		}
 		#endregion
 
@@ -46,20 +46,28 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		{
 			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(b1_MoveVertThenCheckThereAreModifications)));
 
-			vertToMove = new LNX_ComponentCoordinate() { TrianglesIndex = 0, ComponentIndex = 0 };
+			Debug.Log($"Making sure modifications are clear and navmesh is freshly calculated. currently showing " +
+				$"'{_sceneGeneratedNavmesh.HaveModifications()}'. now calling {nameof(_sceneGeneratedNavmesh.ClearModifications)}()...");
+			_sceneGeneratedNavmesh.ClearModifications(); //need to clear mods to be sure...
 
-			Debug.Log($"Making sure modifications are clear and navmesh is freshly calculated. currently showing '{_generatedNavmesh.HaveModifications()}'...");
-			_generatedNavmesh.ClearModifications(); //need to clear mods to be sure...
-			_generatedNavmesh.CalculateTriangulation(); //need to re-calculate to be sure...
+			Debug.Log($"calling {nameof(_sceneGeneratedNavmesh.CalculateTriangulation)}() in order to ensure a fresh creation free of mods...");
+			_sceneGeneratedNavmesh.CalculateTriangulation();
 
-			Assert.False(_generatedNavmesh.HaveModifications());
+			Assert.False( _sceneGeneratedNavmesh.HaveModifications() );
 
+			Debug.Log($"calling {nameof(_lnx_meshManipulator.ClearSelection)}()...");
 			_lnx_meshManipulator.ClearSelection();
+
+			Debug.Log($"changing selectmode to vertices...");
 			_lnx_meshManipulator.ChangeSelectMode( LNX_SelectMode.Vertices );
 			Debug.Log( string.Format(LNX_UnitTestUtilities.UnitTestSectionEndString, "setup") );
+			//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 			Debug.Log($"calculating and caching test values...");
-			moveVert = _generatedNavmesh.GetVertexAtCoordinate( vertToMove );
+
+			vertToMove = new LNX_ComponentCoordinate() { TrianglesIndex = 0, ComponentIndex = 0 }; //just arbitrarily picking the first tri and vert for this...
+
+			moveVert = _sceneGeneratedNavmesh.GetVertexAtCoordinate( vertToMove );
 			v_moveTo = moveVert.Position + (Vector3.up * 0.5f);
 			v_origPos = moveVert.Position;
 
@@ -107,9 +115,15 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 					Debug.Log($"after move, vert current pos: '{moveVert.Position}'. Checking that there are modifications...");
 
-					Assert.True( _generatedNavmesh.HaveModifications() );
+					Assert.True( _sceneGeneratedNavmesh.HaveModifications() );
 				}
 			}
+		}
+
+		[Test]
+		public void b2_VisMesh_Vert_Position_Has_Moved_To_Position_Of_Moved_LnxVert()
+		{
+
 		}
 
 		[Test]
@@ -118,10 +132,10 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			Debug.Log( string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(b2_RecalculateTriangulationAfterMove)) );
 
 			Debug.Log($"Recalculating triangulation....");
-			_generatedNavmesh.CalculateTriangulation();
+			_sceneGeneratedNavmesh.CalculateTriangulation();
 
 			Debug.Log($"Checking if navmesh still considers itself to be modified after recalculating triangulation....");
-			Assert.True( _generatedNavmesh.HaveModifications() );
+			Assert.True( _sceneGeneratedNavmesh.HaveModifications() );
 
 			Debug.Log($"checking that the vert is still in the same moved position...");
 			UnityEngine.Assertions.Assert.AreApproximatelyEqual(
@@ -144,6 +158,29 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			UnityEngine.Assertions.Assert.AreApproximatelyEqual(
 				v_origPos.z, moveVert.OriginalPosition.z
 			);
+		}
+
+		[Test]
+		public void b3_checkThatGreatestVisMeshIndexIsSameAfterMovingVert()
+		{
+			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(b3_checkThatGreatestVisMeshIndexIsSameAfterMovingVert)));
+
+			int lrgst = 0;
+			Debug.Log($"Finding largest mesh vis index for meshes...");
+			for (int i_triangles = 0; i_triangles < _sceneGeneratedNavmesh.Triangles.Length; i_triangles++)
+			{
+				for (int i_verts = 0; i_verts < 3; i_verts++)
+				{
+					if ( _sceneGeneratedNavmesh.Triangles[i_triangles].Verts[i_verts].Index_VisMesh_Vertices > lrgst )
+					{
+						lrgst = _sceneGeneratedNavmesh.Triangles[i_triangles].Verts[i_verts].Index_VisMesh_Vertices;
+					}
+				}
+			}
+
+			Debug.Log($"End of search. largest vis mesh index was: '{lrgst}'. Trying assert...");
+
+			Assert.AreEqual( A_SetUpTests.largestMeshVisIndex_sceneGenerated, lrgst );
 		}
 		#endregion
 	}

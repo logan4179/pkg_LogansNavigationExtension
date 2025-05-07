@@ -6,6 +6,8 @@ using UnityEngine;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 using UnityEditor.PackageManager.UI;
+using System.Runtime.InteropServices;
+using System;
 
 namespace LogansNavigationExtension
 {
@@ -25,6 +27,9 @@ namespace LogansNavigationExtension
 
 			}
 		}
+
+		//public Vector3 v_lastSnapPos = Vector3.zero;
+		//public bool amSnapped = false;
 		#endregion
 
 		[SerializeField] bool flag_translateHandleChangedLastFrame;
@@ -38,10 +43,12 @@ namespace LogansNavigationExtension
 
 		private void OnEnable()
 		{
-			//Debug.Log("was onenabled");
+			Debug.Log("mesh manipulator was onenabled");
 			_targetScript = (LNX_MeshManipulator)target;
 
 			_targetScript.InitState();
+			_targetScript.v_lastSnapPos = _targetScript.manipulatorPos;
+			_targetScript.amSnapped = false;
 		}
 
 		public override VisualElement CreateInspectorGUI()
@@ -103,6 +110,7 @@ namespace LogansNavigationExtension
 			Debug.Log("mde");
 		}
 
+
 		public void OnSceneGUI()
 		{
 			if( _targetScript._LNX_NavMesh == null )
@@ -117,7 +125,7 @@ namespace LogansNavigationExtension
 
 			}
 
-			#region HOTKEYS --------------------------
+			#region INPUT --------------------------
 			if( Event.current.isMouse ) //fires continuously when the mouse is both in the scene and moving. Does not fire when mouse is in the scene and still.
 			{
 				flag_mouseDownThisFrame = false;
@@ -136,7 +144,7 @@ namespace LogansNavigationExtension
 					{
 						//Debug.LogWarning( "refreshing..." );
 						flag_moveHandleIsDirty = false;
-						_targetScript._LNX_NavMesh.RefeshMesh();
+						_targetScript._LNX_NavMesh.RefreshAfterMove();
 					}
 				}
 			}
@@ -171,6 +179,11 @@ namespace LogansNavigationExtension
 					{
 						_targetScript.TryInsertLoop();
 					}
+					else if ( Event.current.keyCode == KeyCode.Delete )
+					{
+						//Debug.Log("doin it");
+						_targetScript.DeleteSelectedTriangles();
+					}
 				}
 				else
 				{
@@ -192,7 +205,10 @@ namespace LogansNavigationExtension
 				_targetScript.ray = mouseRay;
 
 				//using this simple logic for now...
-				_targetScript.TryPointAtComponentViaDirection( SceneView.lastActiveSceneView.camera.transform.position, mouseRay.direction.normalized );
+				if( !_targetScript.HaveVertsSelected )
+				{
+					_targetScript.TryPointAtComponentViaDirection( SceneView.lastActiveSceneView.camera.transform.position, mouseRay.direction.normalized );
+				}
 
 				if ( amAttemptingGrab )
 				{
@@ -201,32 +217,100 @@ namespace LogansNavigationExtension
 
 				if( _targetScript.OperationMode == LNX_OperationMode.Translating && _targetScript.HaveVertsSelected  )
 				{
+					/////////////////////////////////////////////////////////////////////
 					EditorGUI.BeginChangeCheck();
-					Vector3 newTargetPosition = Handles.PositionHandle( _targetScript.manipulatorPos, Quaternion.identity );
-			
-					//Debug.Log($"{_targetScript.manipulatorPos}");
 
-					if ( EditorGUI.EndChangeCheck() ) //happens continuously when manipulator is dragged
+					Vector3 prevFramePos = _targetScript.manipulatorPos;
+
+					Vector3 newHandlePosition = Handles.PositionHandle( _targetScript.manipulatorPos, Quaternion.identity ); //from what I can tell, this doesn't 
+					// actually update the _targetScript.manipulatorPos. So I have to do that later inside the mesh manipulator's move method.
+					//_targetScript.manipulatorPos = newHandlePosition; //for some reason, if I use this here, it won't move the component...
+					Vector3 v_dragDirection = newHandlePosition - prevFramePos;
+					bool componentNeedsMove = false;
+
+					if( v_dragDirection.magnitude > 0 )
 					{
-						_targetScript.MoveSelectedVerts( newTargetPosition );
-						Undo.RecordObject( _targetScript, "Change component Positions" );
+						//Debug.Log($"dragging ({v_dragDirection.magnitude})...");
+						Vector3 v_moveToPos = Vector3.zero;
+						
+						_targetScript.DBG_Magnetized = $"{(_targetScript.amSnapped ? "SNAPPED! " : "")}dragging ({v_dragDirection.magnitude.ToString("#.####")}) towards: '{v_dragDirection}'...\n";
 
-						flag_moveHandleIsDirty = true;
-
-						flag_translateHandleChangedLastFrame = true;
-					}
-					else //happens continuously when manipulator is not being dragged, but mouse is moving
-					{
-						if ( flag_translateHandleChangedLastFrame )
+						if ( _targetScript.AmMagnetized )
 						{
-							//Debug.Log("haasdfsaf");
-							//_targetScript._LNX_NavMesh.RefeshMesh();
+							if( !_targetScript.amSnapped )
+							{
+								RaycastHit magnetHit = new RaycastHit();
+								if ( Physics.Linecast(prevFramePos + (-v_dragDirection.normalized * 0.01f), prevFramePos + (v_dragDirection.normalized * 0.1f), out magnetHit) )
+								{
+									Debug.LogWarning($"Snapped to '{magnetHit.collider.gameObject.name}'...");
+									componentNeedsMove = true;
+									_targetScript.amSnapped = true;
 
-							//if( )
+									_targetScript.v_lastSnapPos = magnetHit.point;
+									v_moveToPos = _targetScript.v_lastSnapPos;								
+
+									_targetScript.DBG_Magnetized += $"snapped to: '{magnetHit.collider.gameObject.name}'";
+								}
+								else
+								{
+									componentNeedsMove = true;
+									v_moveToPos = newHandlePosition;
+								}
+							}
+							else
+							{
+								if( Vector3.Distance(_targetScript.v_lastSnapPos, newHandlePosition) > 0.1f )
+								{
+									Debug.LogWarning($"snap released...");
+									componentNeedsMove = true;
+									v_moveToPos = newHandlePosition;
+									_targetScript.amSnapped = false;
+								}
+							}
+						}
+						else
+						{
+							componentNeedsMove = true;
+							v_moveToPos = newHandlePosition;
+							_targetScript.DBG_Magnetized += $"not magnetized. v_moveToPos now: '{v_moveToPos}'...\n";
+
 						}
 
-						flag_translateHandleChangedLastFrame = false;
+						if ( EditorGUI.EndChangeCheck() ) //happens continuously when manipulator is dragged
+						{
+							if( componentNeedsMove )
+							{
+								_targetScript.MoveSelectedVerts( v_moveToPos );
+								_targetScript.manipulatorPos = newHandlePosition;
+
+								Undo.RecordObject( _targetScript, "Change component Positions" );
+
+								flag_moveHandleIsDirty = true;
+
+								flag_translateHandleChangedLastFrame = true;
+							}
+
+						}
+						else //happens continuously when manipulator is not being dragged, but mouse is moving
+						{
+							if (flag_translateHandleChangedLastFrame)
+							{
+								//Debug.Log("haasdfsaf");
+								//_targetScript._LNX_NavMesh.RefeshMesh();
+
+								//if( )
+							}
+
+							flag_translateHandleChangedLastFrame = false;
+						}
+
+						Debug.Log(_targetScript.DBG_Magnetized);
 					}
+					else
+					{
+						//_targetScript.DBG_Magnetized = "not dragging";
+						
+					}	
 				}
 			}
 

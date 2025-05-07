@@ -1,11 +1,7 @@
-using JetBrains.Annotations;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
-using UnityEngine.AI;
-using UnityEngine.UI;
-using static UnityEditor.PlayerSettings;
+
 
 namespace LogansNavigationExtension
 {
@@ -52,12 +48,11 @@ namespace LogansNavigationExtension
 		/// re-calculate it's derived info when the user stops moving the vert.</summary>
 		[SerializeField, HideInInspector] private bool dirtyFlag_repositionedVert = false;
 
-		[SerializeField][HideInInspector] private bool wasAddedViaMod;
 		/// <summary>Whether this triangle was added by a mesh modification, as opposed to being created 
 		/// as part of the original navmesh triangulation.</summary>
-		public bool WasAddedViaMod => wasAddedViaMod;
+		public bool WasAddedViaMod;
 
-		public bool HasBeenModified
+		public bool HasBeenModifiedAfterCreation
 		{
 			get
 			{
@@ -65,34 +60,28 @@ namespace LogansNavigationExtension
 			}
 		}
 
-
 		[Header("OTHER")]
 		[HideInInspector] public Vector3 v_normal;
 
-
-		public LNX_Triangle( int parallelIndex, int triangulationIndex, NavMeshTriangulation nmTriangulation, int lrMask ) //todo: can possibly get rid of the second parameter (triangulationIndex) and just use the first index instead now that I'm creating a kosher triangulation...
+		public LNX_Triangle( int parallelIndex, int areaIndx, Vector3 vrtPos0, Vector3 vrtPos1, Vector3 vrtPos2, int lrMask )
 		{
 			//Debug.Log($"tri ctor. {nameof(parallelIndex)}: '{parallelIndex}' (x3: '{parallelIndex * 3}'). verts start: '{nmTriangulation.indices[(parallelIndex * 3)]}'");
 
 			DbgCalculateTriInfo = string.Empty;
 
 			index_inCollection = parallelIndex;
-			
-			AreaIndex = nmTriangulation.areas[triangulationIndex];
 
-			Vector3 vrtPos0 = nmTriangulation.vertices[ nmTriangulation.indices[(triangulationIndex * 3)] ];
-			Vector3 vrtPos1 = nmTriangulation.vertices[ nmTriangulation.indices[(triangulationIndex * 3) + 1] ];
-			Vector3 vrtPos2 = nmTriangulation.vertices[ nmTriangulation.indices[(triangulationIndex * 3) + 2] ];
+			AreaIndex = areaIndx;
 
 			Verts = new LNX_Vertex[3];
-			Verts[0] = new LNX_Vertex( this, vrtPos0, 0, nmTriangulation.indices[MeshIndex_trianglesStart] );
-			Verts[1] = new LNX_Vertex( this, vrtPos1, 1, nmTriangulation.indices[MeshIndex_trianglesStart + 1] );
-			Verts[2] = new LNX_Vertex( this, vrtPos2, 2, nmTriangulation.indices[MeshIndex_trianglesStart + 2] );
+			Verts[0] = new LNX_Vertex( this, vrtPos0, 0 );
+			Verts[1] = new LNX_Vertex( this, vrtPos1, 1 );
+			Verts[2] = new LNX_Vertex( this, vrtPos2, 2 );
 
 			Edges = new LNX_Edge[3];
-			Edges[0] = new LNX_Edge( this, Verts[1], Verts[2], 0 );
-			Edges[1] = new LNX_Edge( this, Verts[0], Verts[2], 1 );
-			Edges[2] = new LNX_Edge( this, Verts[1], Verts[0], 2 );
+			Edges[0] = new LNX_Edge( this, Verts[1], Verts[2], 0);
+			Edges[1] = new LNX_Edge( this, Verts[0], Verts[2], 1);
+			Edges[2] = new LNX_Edge( this, Verts[1], Verts[0], 2);
 
 			CalculateDerivedInfo();
 
@@ -155,19 +144,19 @@ namespace LogansNavigationExtension
 			name = $"ind: '{index_inCollection}', ctr: '{V_center}'";
 		}
 
-		public void ChangeIndex( int indx )
+		public void ChangeIndex_action( int newIndex )
 		{
-			index_inCollection = indx;
+			index_inCollection = newIndex;
 
-			Verts[0].MyCoordinate.TrianglesIndex = index_inCollection;
-			Verts[1].MyCoordinate.TrianglesIndex = index_inCollection;
-			Verts[2].MyCoordinate.TrianglesIndex = index_inCollection;
+			Verts[0].TriIndexChanged( newIndex );
+			Verts[1].TriIndexChanged( newIndex );
+			Verts[2].TriIndexChanged( newIndex );
 
-			Edges[0].MyCoordinate.TrianglesIndex = index_inCollection;
-			Edges[1].MyCoordinate.TrianglesIndex = index_inCollection;
-			Edges[2].MyCoordinate.TrianglesIndex = index_inCollection;
+			Edges[0].TriIndexChanged( newIndex );
+			Edges[1].TriIndexChanged( newIndex );
+			Edges[2].TriIndexChanged( newIndex );
 
-			//todo: in the future when I start caching relational info, I might need to refresh it here...
+			name = $"ind: '{index_inCollection}', ctr: '{V_center}'";
 		}
 
 		public bool VertsEqual( LNX_Triangle otherTri )
@@ -196,7 +185,7 @@ namespace LogansNavigationExtension
 		/// </summary>
 		/// <param name="otherTri"></param>
 		/// <returns></returns>
-		public bool OriginallyMatches( LNX_Triangle otherTri )
+		public bool PositionallyMatches( LNX_Triangle otherTri )
 		{
 			if (
 				otherTri.Verts == null || otherTri.Verts.Length != 3 || Verts == null || Verts.Length != 3
@@ -280,7 +269,7 @@ namespace LogansNavigationExtension
 				$"Prmtr: '{Perimeter}', Area: '{AreaIndex}'\n";
 		}
 
-		public void RefreshTriangle( LNX_NavMesh nm, bool logMessages = true)
+		public void RefreshTriangle( LNX_NavMesh nm, bool logMessages = true) //todo: this needs to be renamed
 		{
 			if ( dirtyFlag_repositionedVert )
 			{
@@ -308,6 +297,12 @@ namespace LogansNavigationExtension
 			
 			if( amThorough )
 			{
+				#region Create Vertex sibling relationships....
+				Verts[0].SetSiblingRelationships( Verts[1], Verts[2] );
+				Verts[1].SetSiblingRelationships( Verts[0], Verts[2] );
+				Verts[2].SetSiblingRelationships( Verts[0], Verts[1] );
+				#endregion
+
 				List<int> foundAdjacentTriIndices_temp = new List<int>();
 				List<LNX_ComponentCoordinate> sharedVertCoords0_temp = new List<LNX_ComponentCoordinate>();
 				List<LNX_ComponentCoordinate> sharedVertCoords1_temp = new List<LNX_ComponentCoordinate>();
@@ -568,8 +563,6 @@ namespace LogansNavigationExtension
 		}
 		#endregion
 
-
-
 		#region MODIFICATION ----------------------------------------------------
 		/// <summary>
 		/// Takes in a previously-modified triangle, and gives this triangle the same values. This is 
@@ -676,9 +669,6 @@ namespace LogansNavigationExtension
 
 			return false;
 		}
-
-		
-
 
 		#region GETTERS/IDENTIFIERS -----------------------------------------------------
 		public LNX_Vertex[] GetVertsOnEdge( int edgeIndex )

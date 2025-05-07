@@ -6,6 +6,10 @@ namespace LogansNavigationExtension
 {
     public static class LNX_UnitTestUtilities
     {
+		public static string Name_GeneratedNavmeshGameobject = "SceneGeneratedNavmesh";
+		public static string Name_SerializedNavmeshGameobject = "SerializedNavmesh";
+		public static string Name_ExistingSceneNavmeshGameobject = "[LNX_Navmesh]";
+
 		[Header("Log formatting")]
 		public static string UnitTestMethodBeginString = "//----[START OF TEST '{0}']------------------//////////////////////////////////////////";
 		public static string UnitTestMethodEndString = "//----[END OF TEST '{0}']------------------//////////////////////////////////////////";
