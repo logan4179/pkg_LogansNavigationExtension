@@ -44,16 +44,16 @@ namespace LogansNavigationExtension
 
 
 			//Vector3 v_to = Quaternion.AngleAxis(tri.Verts[0].Angle * 0.5f, -Vector3.Cross(tri.Verts[0].v_normal, tri.Verts[0].v_toCenter)) * tri.Verts[0].v_toCenter;
-			Vector3 v_to = Quaternion.AngleAxis(tri.Verts[0].Angle * 0.5f, -Vector3.Cross(tri.Verts[0].v_normal, tri.Verts[0].v_toCenter)) * tri.Verts[0].v_toCenter;
+			Vector3 v_to = Quaternion.AngleAxis(tri.Verts[0].AngleAtBend * 0.5f, -Vector3.Cross(tri.Verts[0].v_normal, tri.Verts[0].v_toCenter)) * tri.Verts[0].v_toCenter;
 
 			Gizmos.DrawLine(tri.Verts[0].Position, tri.Verts[0].Position + (v_to * tri.Verts[0].DistanceToCenter) );
 
 			//v_to = Quaternion.AngleAxis(tri.Verts[1].Angle * 0.5f, -Vector3.Cross(tri.Verts[1].v_normal, tri.Verts[1].v_toCenter)) * tri.Verts[1].v_toCenter;
-			v_to = Quaternion.AngleAxis(tri.Verts[1].Angle * 0.5f, -Vector3.Cross(tri.Verts[1].v_normal, tri.Verts[1].v_toCenter)) * tri.Verts[1].v_toCenter;
+			v_to = Quaternion.AngleAxis(tri.Verts[1].AngleAtBend * 0.5f, -Vector3.Cross(tri.Verts[1].v_normal, tri.Verts[1].v_toCenter)) * tri.Verts[1].v_toCenter;
 			Gizmos.DrawLine(tri.Verts[1].Position, tri.Verts[1].Position + (v_to * tri.Verts[1].DistanceToCenter));
 
 			//v_to = Quaternion.AngleAxis(tri.Verts[2].Angle * 0.5f, -Vector3.Cross(tri.Verts[2].v_normal, tri.Verts[2].v_toCenter)) * tri.Verts[2].v_toCenter;
-			v_to = Quaternion.AngleAxis(tri.Verts[2].Angle * 0.5f, -Vector3.Cross(tri.Verts[2].v_normal, tri.Verts[2].v_toCenter)) * tri.Verts[2].v_toCenter;
+			v_to = Quaternion.AngleAxis(tri.Verts[2].AngleAtBend * 0.5f, -Vector3.Cross(tri.Verts[2].v_normal, tri.Verts[2].v_toCenter)) * tri.Verts[2].v_toCenter;
 			Gizmos.DrawLine(tri.Verts[2].Position, tri.Verts[2].Position + (v_to * 2f));
             
 		}

@@ -26,9 +26,9 @@ namespace LogansNavigationExtension
 		/// corresponds to.</summary>
 		public int Index_VisMesh_Vertices = -1;
 
-		[Header("CALCULATED/DERIVED")] //---------------------------------------------------------------
-		/// <summary>Inner angle at the triangle point at this vertex.</summary>
-		[HideInInspector] public float Angle;
+		//[Header("CALCULATED/DERIVED")] //---------------------------------------------------------------
+		/// <summary>Aangle at the inner corner of the triangle at this vertex.</summary>
+		[HideInInspector] public float AngleAtBend;
 
 		/// <summary>Vector pointing from this vertex to the center of it's triangle </summary>
 		[HideInInspector] public Vector3 v_toCenter;
@@ -54,15 +54,6 @@ namespace LogansNavigationExtension
 
 		[TextArea(1,5)] public string DBG_constructor;
 
-
-		/// <summary>
-		/// This overload is for original vertices, meaning vertices that are created with a corresponding vertex in the
-		/// founding triangulation.
-		/// </summary>
-		/// <param name="tri"></param>
-		/// <param name="vrtPos"></param>
-		/// <param name="cmpntIndx"></param>
-		/// <param name="nmTriangulation"></param>
 		public LNX_Vertex( LNX_Triangle tri, Vector3 vrtPos, int cmpntIndx )
         {
 			Position = vrtPos;
@@ -78,7 +69,27 @@ namespace LogansNavigationExtension
 			Relationships = new LNX_VertexRelationship[0];
 			SiblingRelationships = new LNX_VertexRelationship[2];
 
-			Angle = -1f;
+			#region Find the angle -----------------------------------
+			Vector3 v_toA = Vector3.zero;
+			Vector3 v_toB = Vector3.zero;
+			if (cmpntIndx == 0)
+			{
+				v_toA = Vector3.Normalize(tri.Verts[1].Position - Position);
+				v_toB = Vector3.Normalize(tri.Verts[2].Position - Position);
+			}
+			else if ( cmpntIndx == 1 )
+			{
+				v_toA = Vector3.Normalize(tri.Verts[0].Position - Position);
+				v_toB = Vector3.Normalize(tri.Verts[2].Position - Position);
+			}
+			else if ( cmpntIndx == 2 )
+			{
+				v_toA = Vector3.Normalize(tri.Verts[0].Position - Position);
+				v_toB = Vector3.Normalize(tri.Verts[1].Position - Position);
+			}
+
+			AngleAtBend = Vector3.Angle(v_toA, v_toB);
+			#endregion
 
 			Index_VisMesh_triangles = tri.MeshIndex_trianglesStart + cmpntIndx;
 			Index_VisMesh_Vertices = -1;
@@ -88,27 +99,6 @@ namespace LogansNavigationExtension
 				$"vToCtr: '{v_toCenter}'\n" +
 				$"nml: '{v_normal}', dstToCtr: '{DistanceToCenter}'\n" +
 				$"";
-		}
-
-		public LNX_Vertex( LNX_Vertex vert )
-		{
-			Position = vert.Position;
-
-			v_toCenter = vert.v_toCenter;
-			v_normal = vert.v_normal;
-			DistanceToCenter = vert.DistanceToCenter;
-			MyCoordinate = vert.MyCoordinate;
-
-			Relationships = vert.Relationships;
-			SiblingRelationships = vert.SiblingRelationships;
-			SharedVertexCoordinates = vert.SharedVertexCoordinates;
-
-			Angle = vert.Angle;
-
-			Index_VisMesh_triangles = vert.Index_VisMesh_triangles;
-			Index_VisMesh_Vertices = vert.Index_VisMesh_Vertices;
-
-			DBG_constructor = vert.DBG_constructor;
 		}
 
 		public void AdoptValues( LNX_Vertex vert )
@@ -124,7 +114,7 @@ namespace LogansNavigationExtension
 			SiblingRelationships = vert.SiblingRelationships;
 			SharedVertexCoordinates = vert.SharedVertexCoordinates;
 
-			Angle = vert.Angle;
+			AngleAtBend = vert.AngleAtBend;
 
 			DBG_constructor = vert.DBG_constructor;
 		}
@@ -146,14 +136,7 @@ namespace LogansNavigationExtension
 			SiblingRelationships[0] = new LNX_VertexRelationship( this, vA );
 			SiblingRelationships[1] = new LNX_VertexRelationship( this, vB );
 
-			Vector3 v_toA = Vector3.Normalize( vA.Position - Position );
-			Vector3 v_toB = Vector3.Normalize( vB.Position - Position );
-			Angle = Vector3.Angle( v_toA, v_toB );
-
-			float semiA = Vector3.Angle(v_toCenter, v_toA);
-			float semiB = Vector3.Angle(v_toCenter, v_toB);
-
-			DBG_constructor += $"\tAngle: '{Angle}'. A: " +
+			DBG_constructor += $"\tAngle: '{AngleAtBend}'. A: " +
 				$"'{SiblingRelationships[0].Angle_centerToDestinationVertex}', " +
 				$"B: '{SiblingRelationships[1].Angle_centerToDestinationVertex}'";
 		}
@@ -169,31 +152,14 @@ namespace LogansNavigationExtension
 		{
 			Vector3 vToPos = Vector3.Normalize( pos - Position );
 
-			if( Vector3.Angle(SiblingRelationships[0].v_to, vToPos) > Angle )
-			{
-				return false;
-			}
-
-			if ( Vector3.Angle(SiblingRelationships[1].v_to, vToPos) > Angle )
+			if( Vector3.Angle(SiblingRelationships[0].v_to, vToPos) > AngleAtBend ||
+				Vector3.Angle(SiblingRelationships[1].v_to, vToPos) > AngleAtBend
+				)
 			{
 				return false;
 			}
 
 			return true;
-
-			/* //note: this was the old way of doing this. I've replaced it with what's above. I haven't thoroughly tested to make sure it hasn't broken something so I'm leaving this here for now...
-			float lrgstAng = Mathf.Max(
-				Vector3.Angle(SiblingRelationships[0].v_to, vToPos),
-				Vector3.Angle(SiblingRelationships[1].v_to, vToPos)
-			);
-
-			if( lrgstAng < Angle )
-			{
-				return true;
-			}
-
-			return false;
-			*/
 		}
 
 		/// <summary>
@@ -206,7 +172,6 @@ namespace LogansNavigationExtension
 		public bool IsInNormalizedCenterSweep( Vector3 pos, LNX_Triangle tri )
 		{
 			return IsInCenterSweep( tri.V_center + Vector3.ProjectOnPlane(pos, v_normal) );
-
 		}
 		#endregion
 

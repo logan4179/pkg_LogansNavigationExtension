@@ -609,7 +609,7 @@ namespace LogansNavigationExtension
 			//Debug.Log($"edge0: '{Edges_currentlySelected[0].MyCoordinate}', edge1: '{Edges_currentlySelected[1].MyCoordinate}'");
 
 			if (
-				tri0.Relationships[tri1.Index_inCollection].NumberofSharedVerts != 2 ||
+				tri0.Relationships[tri1.Index_inCollection].GetNumberOfSharedVerts() != 2 ||
 				!Edges_currentlySelected[0].AmTerminal || !Edges_currentlySelected[1].AmTerminal ||
 				Edges_currentlySelected[0].AmTouching(Edges_currentlySelected[1])
 			)

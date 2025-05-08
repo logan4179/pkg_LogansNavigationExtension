@@ -33,11 +33,11 @@ namespace LogansNavigationExtension
 
 			if( _mgr.SamplePosition(transform.position, out lnxHit, 10f) ) //It needs to do this in order to decide which triangle to use...
 			{
-				DrawTriGizmo( _mgr.Triangles[lnxHit.Index_intersectedTri], Color.yellow );
+				DrawTriGizmo( _mgr.Triangles[lnxHit.Index_hitTriangle], Color.yellow );
 
 				Gizmos.color = Color.red;
 
-				v_result = _mgr.Triangles[lnxHit.Index_intersectedTri].ClosestPointOnPerimeter(transform.position);
+				v_result = _mgr.Triangles[lnxHit.Index_hitTriangle].ClosestPointOnPerimeter(transform.position);
 
 				Gizmos.DrawSphere(
 					v_result, radius_drawSphere );
@@ -61,10 +61,10 @@ namespace LogansNavigationExtension
 
 				if ( _mgr.SamplePosition(testPositions[i], out lnxHit, 10f) )
 				{
-					Vector3 v = _mgr.Triangles[lnxHit.Index_intersectedTri].ClosestPointOnPerimeter( testPositions[i] );
+					Vector3 v = _mgr.Triangles[lnxHit.Index_hitTriangle].ClosestPointOnPerimeter( testPositions[i] );
 
 					hitPositions[i] = v;
-					triCenters[i] = _mgr.Triangles[lnxHit.Index_intersectedTri].V_center;
+					triCenters[i] = _mgr.Triangles[lnxHit.Index_hitTriangle].V_center;
 				}
 			}
 

@@ -60,6 +60,14 @@ namespace LogansNavigationExtension
 			}
 		}
 
+		public bool HasTerminalEdge
+		{
+			get
+			{
+				return Edges[0].AmTerminal || Edges[1].AmTerminal || Edges[2].AmTerminal;
+			}
+		}
+
 		[Header("OTHER")]
 		[HideInInspector] public Vector3 v_normal;
 
@@ -86,35 +94,6 @@ namespace LogansNavigationExtension
 			CalculateDerivedInfo();
 
 			TrySampleNormal( lrMask, true );
-		}
-
-		public LNX_Triangle( LNX_Triangle baseTri, int triIndx )
-		{
-			index_inCollection = triIndx;
-
-			DbgCalculateTriInfo = baseTri.DbgCalculateTriInfo;
-
-			V_center = baseTri.V_center;
-			v_normal = baseTri.v_normal;
-			Perimeter = baseTri.Perimeter;
-			AreaIndex = baseTri.AreaIndex;
-			LongestEdgeLength = baseTri.LongestEdgeLength;
-			ShortestEdgeLength = baseTri.ShortestEdgeLength;
-			Verts = new LNX_Vertex[3];
-			Verts[0] = new LNX_Vertex( baseTri.Verts[0] );
-			Verts[1] = new LNX_Vertex( baseTri.Verts[1] );
-			Verts[2] = new LNX_Vertex( baseTri.Verts[2] );
-
-			Edges = new LNX_Edge[3];
-			Edges[0] = new LNX_Edge( baseTri.Edges[0] );
-			Edges[1] = new LNX_Edge( baseTri.Edges[1] );
-			Edges[2] = new LNX_Edge( baseTri.Edges[2] );
-
-			Relationships = baseTri.Relationships;
-			AdjacentTriIndices = baseTri.AdjacentTriIndices;
-			dirtyFlag_repositionedVert = false;
-
-			name = $"ind: '{index_inCollection}', ctr: '{V_center}'";
 		}
 
 		public void AdoptValues( LNX_Triangle baseTri )
@@ -317,7 +296,7 @@ namespace LogansNavigationExtension
 						continue;
 					}
 
-					if ( Relationships[i_otherTri].NumberofSharedVerts > 0 )
+					if ( Relationships[i_otherTri].GetNumberOfSharedVerts() > 0 )
 					{
 						foundAdjacentTriIndices_temp.Add( i_otherTri );
 
@@ -386,7 +365,7 @@ namespace LogansNavigationExtension
 			}
 		}
 
-		#region SAMPLING METHODS----------------------------------------------------------------------
+		#region MAIN API METHODS----------------------------------------------------------------------
 		/// <summary>
 		/// This version determines if an object is within the "diamond-like" 3 dimensional shape a triangle could theoretically make
 		/// </summary>
@@ -446,7 +425,9 @@ namespace LogansNavigationExtension
 		}
 
 		/// <summary>
-		/// Overload that does the exact same thing, but sets an out Vector to show where the projection hits.
+		/// Determines if a supplied position is within a theoretical sweep (or cast) of the triangle's shape 
+		/// along it's normal direction. 
+		/// This Overload also sets an out Vector to show where the projection hits.
 		/// </summary>
 		/// <param name="pos"></param>
 		/// <param name="projectedPos"></param>
@@ -671,22 +652,11 @@ namespace LogansNavigationExtension
 		}
 
 		#region GETTERS/IDENTIFIERS -----------------------------------------------------
-		public LNX_Vertex[] GetVertsOnEdge( int edgeIndex )
-		{
-			LNX_Vertex[] returnCollection = new LNX_Vertex[2];
-			int count = 0;
-			for (int i = 0; i < 3; i++)
-			{
-				if( Edges[edgeIndex].StartPosition == Verts[i].Position || Edges[edgeIndex].EndPosition == Verts[i].Position )
-				{
-					returnCollection[count] = Verts[i];
-					count++;
-				}
-			}
-
-			return returnCollection;
-		}
-
+		/// <summary>
+		/// Returns any vertices owned by this triangle that exist at the supplied position.
+		/// </summary>
+		/// <param name="pos"></param>
+		/// <returns></returns>
 		public int GetVertIndextAtPosition( Vector3 pos )
 		{
 			if ( Verts[0].Position == pos )
@@ -704,7 +674,12 @@ namespace LogansNavigationExtension
 
 			return -1;
 		}
-
+		/// <summary>
+		/// Returns any vertices owned by this triangle that originally existed at the supplied position before 
+		/// being modified.
+		/// </summary>
+		/// <param name="pos"></param>
+		/// <returns></returns>
 		public int GetVertIndextAtOriginalPosition(Vector3 pos)
 		{
 			if (Verts[0].OriginalPosition == pos)
@@ -724,17 +699,6 @@ namespace LogansNavigationExtension
 		}
 
 		#endregion
-
-		public string DBGcenterSweeps( Vector3 pos )
-		{
-			return
-				$"isWithin()\n" +
-				$"v0: '{Verts[0].IsInCenterSweep(pos)}, nmrSweep: '{Verts[0].IsInNormalizedCenterSweep(pos, this)}'\n" +
-				$"v1: '{Verts[1].IsInCenterSweep(pos)}, nmrSweep: '{Verts[1].IsInNormalizedCenterSweep(pos, this)}'\n" +
-				$"v2: '{Verts[2].IsInCenterSweep(pos)}, nmrSweep: '{Verts[2].IsInNormalizedCenterSweep(pos, this)}'\n" +
-
-				$"";
-		}
 
 		public void Ping( LNX_Triangle[] tris )
 		{

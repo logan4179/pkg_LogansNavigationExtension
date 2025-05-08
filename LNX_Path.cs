@@ -93,32 +93,12 @@ namespace LogansNavigationExtension
 			threshold_cornerDotCheck = path_passed.threshold_cornerDotCheck;
 		}
 
-
-		//TODO: this is called by enemyscript.UpdatePath(), which is called by enemyscript.GenerateNewPatroLPoint() (among other places),
-		//which calls PV_Environment.FetchRandomVectorWithin... The navmesh methods that these methods rely on return booleans indicating success.
-		//It would be ideal if these methods did something with that boolean for cases where these functions are unsuccessful...
-		public bool CalculatePath( Vector3 startPos_passed, Vector3 endPos_passed, float sampleMaxDistance = 0.5f )
-		{
-			dbgCalculatePath = $"CalculatePath(startPos_passed: '{startPos_passed}', endPos_passed: '{endPos_passed}', sampleMaxDistance: '{sampleMaxDistance}' )\n" +
-				$"mask: '{mask_solidEnvironment}'\n";
-			
-
-
-			Index_currentPoint = 0;
-			return true; //todo: returning a boolean is newly added. Make sure this return boolean is being properly used...
-		}
-
-		public void CalculateAirPath(List<Vector3> positions_passed)
-		{
-			dbgCalculatePath = ($"CalculateAirPath(positions_passed.count: '{positions_passed.Count}' )\n");
-
-			PathPoints = new List<LNX_PathPoint>();
-			
-
-			Index_currentPoint = 1;
-		}
-
 		private static float dist_checkIfOffCourseBeyondPrev = 0.4f;
+
+		public void SetPath( List<Vector3> pathPts )
+		{
+			//PathPoints = pathPts;
+		}
 		public bool AmOnCourse( Vector3 pos_passed, float threshold )
 		{
 			if ( Index_currentPoint == 0 )

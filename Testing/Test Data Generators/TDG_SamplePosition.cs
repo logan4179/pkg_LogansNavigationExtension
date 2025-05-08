@@ -31,10 +31,10 @@ namespace LogansNavigationExtension
 
 			if (_mgr.SamplePosition(transform.position, out lnxHit, 10f))
 			{
-				DBG_GetClosestTri += $"found point: '{lnxHit.HitPosition}', on tri: '{lnxHit.Index_intersectedTri}'";
-				_debugger.DrawTriGizmos(_mgr.Triangles[lnxHit.Index_intersectedTri], true);
+				DBG_GetClosestTri += $"found point: '{lnxHit.HitPosition}', on tri: '{lnxHit.Index_hitTriangle}'";
+				_debugger.DrawTriGizmos(_mgr.Triangles[lnxHit.Index_hitTriangle], true);
 
-				Vector3 v_to = transform.position - _mgr.Triangles[lnxHit.Index_intersectedTri].V_center;
+				Vector3 v_to = transform.position - _mgr.Triangles[lnxHit.Index_hitTriangle].V_center;
 				Gizmos.color = Color.red;
 				Gizmos.DrawSphere(lnxHit.HitPosition, radius_drawSphere);
 			}
@@ -59,7 +59,7 @@ namespace LogansNavigationExtension
 				if ( _mgr.SamplePosition(testPositions[i], out lnxHit, 10f) )
 				{
 					hitPositions[i] = lnxHit.HitPosition;
-					triCenters[i] = _mgr.Triangles[lnxHit.Index_intersectedTri].V_center;
+					triCenters[i] = _mgr.Triangles[lnxHit.Index_hitTriangle].V_center;
 				}
 				else
 				{

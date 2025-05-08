@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
@@ -71,7 +72,10 @@ namespace LogansNavigationExtension
 		public List<Vector3> dbgKosher_vertices = new List<Vector3>();
 		//[Header("OTHER")]
 		//public NavMeshTriangulation OriginalTriangulation;
-
+		private void OnEnable()
+		{
+			Debug.Log("lnx_navmesh.onenable()");
+		}
 		private void Awake()
 		{
 			Instance = this;
@@ -281,12 +285,7 @@ namespace LogansNavigationExtension
 
 			//Debug.Log($"for visualization mesh, constructed '{_mesh.triangles.Length}' tris (indices), '{_mesh.vertices.Length}' vertices, and '{_mesh.normals.Length}' normals...");
 
-			for (int i = 0; i < Triangles.Length; i++)
-			{
-				Triangles[i].CreateRelationships(Triangles);
-			}
-
-			CalculateBounds();
+			RecalculateRelational();
 
 			Debug.Log($"End of {nameof(CalculateTriangulation)}(). Created '{Triangles.Length}' triangles, and '{constructedVertices_unique.Count}' unique vertices for the mesh.");
 
@@ -398,13 +397,14 @@ namespace LogansNavigationExtension
 
 		}
 
+		[ContextMenu("z call ReconstructVisualizationMesh()")]
 		/// <summary>
 		/// Re-constructs the visualization mesh for the scene. Use this
 		/// in cases where the Mesh needs to be re-made when the Triangle info can be assumed to be correct/un-changed. IE: When Unity is 
 		/// closed and reopened, and the mesh information needs to be remade because it's not serialized.
 		/// </summary>
 		/// <param name="assumeCollectionChange"> Whether the Triangles colleciton has changed and should be </param>
-		public void ReconstructVisualizationMesh( bool bypassKosherCheck = false )
+		public void ReconstructVisualizationMesh()
 		{
 			Debug.Log($"{nameof(ReconstructVisualizationMesh)}()");
 
@@ -800,7 +800,7 @@ namespace LogansNavigationExtension
 		/// Re-calculates the derived info and re-creates relationships for all triangles. Also 
 		/// re-calculates the bounds. Call this after an edit has been made to the navmesh.
 		/// </summary>
-		[ContextMenu("z call RefeshMesh()")]
+		[ContextMenu("z call RefreshAfterMove()")]
 		public void RefreshAfterMove()
 		{
 			for (int i = 0; i < Triangles.Length; i++)
@@ -811,16 +811,25 @@ namespace LogansNavigationExtension
 			CalculateBounds();
 		}
 
+		public void RecalculateRelational()
+		{
+			for (int i = 0; i < Triangles.Length; i++)
+			{
+				Triangles[i].CreateRelationships(Triangles);
+			}
+
+			CalculateBounds();
+		}
 		#endregion
 
 		#region MAIN API METHODS----------------------------------------------------------------
 		/*[SerializeField]*/
 		private string dbgCalculatePath;
-		public bool CalculatePath( Vector3 startPos_passed, Vector3 endPos_passed, float maxDistance )
+		public bool CalculatePath( Vector3 startPos_passed, Vector3 endPos_passed, float maxSampleDistance, out LNX_Path path )
 		{
 			LNX_ProjectionHit lnxHit = new LNX_ProjectionHit();
 
-			if( SamplePosition(startPos_passed, out lnxHit, maxDistance) )
+			if( SamplePosition(startPos_passed, out lnxHit, maxSampleDistance) )
 			{
 				startPos_passed = lnxHit.HitPosition;
 				dbgCalculatePath += $"SamplePosition() hit startpos\n";
@@ -828,10 +837,11 @@ namespace LogansNavigationExtension
 			else
 			{
 				dbgCalculatePath += $"SamplePosition() did NOT hit startpos.\n";
+				path = null;
 				return false; //todo: returning a boolean is newly added. Make sure this return boolean is being properly used...
 			}
 
-			if ( SamplePosition(endPos_passed, out lnxHit, maxDistance) )
+			if ( SamplePosition(endPos_passed, out lnxHit, maxSampleDistance) )
 			{
 				endPos_passed = lnxHit.HitPosition;
 				dbgCalculatePath += $"SamplePosition() hit endpos\n";
@@ -839,9 +849,12 @@ namespace LogansNavigationExtension
 			else
 			{
 				dbgCalculatePath += $"SamplePosition() did NOT hit endpos.\n";
+				path = null;
 				return false; //todo: returning a boolean is newly added. Make sure this return boolean is being properly used...
 			}
 
+
+			path = null;
 			return true;
 		}
 
@@ -850,16 +863,16 @@ namespace LogansNavigationExtension
 		/// projected along it's normal.
 		/// </summary>
 		/// <param name="pos"></param>
-		/// <param name="closestPt">Closest point to the supplied position on the surface of the Navmesh</param>
+		/// <param name="projectedPoint">Closest point to the supplied position on the surface of the Navmesh</param>
 		/// <returns></returns>
-		public int AmWithinNavMeshProjection( Vector3 pos, out Vector3 closestPt )
+		public int AmWithinNavMeshProjection( Vector3 pos, out Vector3 projectedPoint )
         {
 			DbgSamplePosition = $"Searching through '{Triangles.Length}' tris...\n";
 			int rtrnIndx = -1;
 			float runningClosestDist = float.MaxValue;
 
 			Vector3 currentPt = Vector3.zero;
-			closestPt = Vector3.zero;
+			projectedPoint = Vector3.zero;
 
 			for ( int i = 0; i < Triangles.Length; i++ )
 			{
@@ -877,20 +890,21 @@ namespace LogansNavigationExtension
 
 				    if ( Vector3.Distance(pos, currentPt) < runningClosestDist )
 				    {
-					    closestPt = currentPt;
-					    runningClosestDist = Vector3.Distance( pos, closestPt );
+					    projectedPoint = currentPt;
+					    runningClosestDist = Vector3.Distance( pos, projectedPoint );
 					    rtrnIndx = i;
 				    }
 				}
 			}
 
-			DbgSamplePosition += $"finished. returning: '{rtrnIndx}' with pt: '{closestPt}'\n";
+			DbgSamplePosition += $"finished. returning: '{rtrnIndx}' with pt: '{projectedPoint}'\n";
 			return rtrnIndx;
 		}
 
         [SerializeField, HideInInspector] private string DbgSamplePosition;
 		/// <summary>
-		/// 
+		/// Gets a point on the projection of the navmesh using the supplied position. If the supplied position is not on the 
+		/// projection of the navmesh, it calculates the closest point on the surface of the navmesh.
 		/// </summary>
 		/// <param name="pos"></param>
 		/// <param name="hit"></param>
@@ -910,7 +924,7 @@ namespace LogansNavigationExtension
             float runningClosestDist = float.MaxValue;
             Vector3 currentPt = Vector3.zero;
 			hit.HitPosition = Vector3.zero;
-			hit.Index_intersectedTri = -1;
+			hit.Index_hitTriangle = -1;
 
             for ( int i = 0; i < Triangles.Length; i++ )
             {
@@ -937,11 +951,11 @@ namespace LogansNavigationExtension
 				{
 					hit.HitPosition = currentPt;
 					runningClosestDist = Vector3.Distance( pos, hit.HitPosition );
-					hit.Index_intersectedTri = i;
+					hit.Index_hitTriangle = i;
 				}
             }
 
-            DbgSamplePosition += $"finished. returning: '{hit.Index_intersectedTri}' with pt: '{hit.HitPosition}'\n";
+            DbgSamplePosition += $"finished. returning: '{hit.Index_hitTriangle}' with pt: '{hit.HitPosition}'\n";
 
             if( runningClosestDist <= maxDistance )
 			{
@@ -953,6 +967,40 @@ namespace LogansNavigationExtension
 			}
         }
 
+		/*
+		/// <summary>
+		/// Traces a line between two points on a navmesh.
+		/// </summary>
+		/// <returns>True if the ray is terminated before reaching target position. Otherwise returns false.</returns>
+		public bool Raycast( Vector3 sourcePosition, Vector3 targetPosition, float maxSampleDistance, out LNX_ProjectionHit hit, int areaMask )
+		{
+			hit = LNX_ProjectionHit.None;
+
+			#region GET START AND END POINTS------------------------------------------
+			LNX_ProjectionHit lnxHit = new LNX_ProjectionHit();
+
+			if ( SamplePosition(sourcePosition, out lnxHit, maxSampleDistance) )
+			{
+				sourcePosition = lnxHit.HitPosition;
+				dbgCalculatePath += $"SamplePosition() hit startpos\n";
+			}
+			else
+			{
+				return true;
+			}
+
+			if ( SamplePosition(targetPosition, out lnxHit, maxSampleDistance) )
+			{
+				targetPosition = lnxHit.HitPosition;
+			}
+			else
+			{
+				return true;
+			}
+			#endregion
+
+
+		}*/
 		#endregion
 	}
 }

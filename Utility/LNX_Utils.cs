@@ -492,14 +492,15 @@ namespace LogansNavigationExtension
 
 	public struct LNX_ProjectionHit
 	{
-		public int Index_intersectedTri;
+		/// <summary>Which triangle was hit.</summary>
+		public int Index_hitTriangle;
 		public Vector3 HitPosition;
 
 		private static LNX_ProjectionHit none = new LNX_ProjectionHit(-1, Vector3.zero);
 
 		public LNX_ProjectionHit(int indx, Vector3 pos)
 		{
-			Index_intersectedTri = indx;
+			Index_hitTriangle = indx;
 			HitPosition = pos;
 		}
 
@@ -555,28 +556,29 @@ namespace LogansNavigationExtension
 		/// it will be 0-3.</summary>
 		public int[] IndexMap_OwnedVerts_toShared;
 
-		/// <summary>Conveniency int so you can quickly determine whether the "related" triangle 
-		/// shares vertices with the "perspective" triangle. Otherwise, you'd need to compare the 
-		/// IndexMap_MyVerts_toShared array to see if any entries are not -1.</summary>
-		public int NumberofSharedVerts;
+		public float[] DistMap_Vert0ToRelated;
+		public float[] DistMap_Vert1ToRelated;
+		public float[] DistMap_Vert2ToRelated;
 
-		public bool HasSharedEdge => NumberofSharedVerts == 2;
-
-		//TODO: Probably would like other data like distances, whether each other is visible, etc
-		/*
-		public Vector3 ClosestPoint;
-		public float DistanceToClosestPoint; //distance between closest two points
-		
-		*/
+		public bool AmTouching
+		{
+			get
+			{
+				return GetNumberOfSharedVerts() > 0;
+			}
+		}
 
 		[HideInInspector] public string DbgStruct;
 
 		public LNX_TriangleRelationship(LNX_Triangle selfTri, LNX_Triangle relatedTri)
 		{
 			DbgStruct = string.Empty;
-			NumberofSharedVerts = 0;
 			Index_relatedTriangle = relatedTri.Index_inCollection;
 			IndexMap_OwnedVerts_toShared = new int[3] { -1, -1, -1 };
+
+			DistMap_Vert0ToRelated = new float[3] { -1f, -1f, -1f };
+			DistMap_Vert1ToRelated = new float[3] { -1f, -1f, -1f };
+			DistMap_Vert2ToRelated = new float[3] { -1f, -1f, -1f };
 
 			if (selfTri == relatedTri)
 			{
@@ -587,38 +589,80 @@ namespace LogansNavigationExtension
 				DbgStruct += $"Index_RltdTri: '{Index_relatedTriangle}'\n" +
 					$"relationships:\n";
 
-				for (int i = 0; i < 3; i++)
+				int NumberofSharedVerts = 0;
+				float closestDist = float.MaxValue;
+
+				for (int i_ownedVert = 0; i_ownedVert < 3; i_ownedVert++)
 				{
-					for (int j = 0; j < 3; j++)
+					for (int i_relatedVert = 0; i_relatedVert < 3; i_relatedVert++)
 					{
-						if (selfTri.Verts[i].Position == relatedTri.Verts[j].Position)
+						if (selfTri.Verts[i_ownedVert].Position == relatedTri.Verts[i_relatedVert].Position)
 						{
-							IndexMap_OwnedVerts_toShared[i] = j;
+							IndexMap_OwnedVerts_toShared[i_ownedVert] = i_relatedVert;
 							NumberofSharedVerts++;
+						}
+
+						if( Vector3.Distance(selfTri.Verts[i_ownedVert].Position, relatedTri.Verts[i_relatedVert].Position) < closestDist )
+						{
+
 						}
 					}
 
-					DbgStruct += $"tri{selfTri.Index_inCollection}v[{i}] to tri{relatedTri.Index_inCollection}v: '{IndexMap_OwnedVerts_toShared[i]}'\n";
+					DbgStruct += $"tri{selfTri.Index_inCollection}v[{i_ownedVert}] to tri{relatedTri.Index_inCollection}v: '{IndexMap_OwnedVerts_toShared[i_ownedVert]}'\n";
 				}
 
-				if ( NumberofSharedVerts == 2 )
+				if( NumberofSharedVerts > 0 )
 				{
-					for (int i = 0; i < 3; i++)
+					if ( NumberofSharedVerts == 2 )
 					{
-						for (int j = 0; j < 3; j++)
+						for ( int i = 0; i < 3; i++ )
 						{
-							if (
-								(selfTri.Edges[i].StartPosition == relatedTri.Edges[j].StartPosition || selfTri.Edges[i].StartPosition == relatedTri.Edges[j].EndPosition) &&
-								(selfTri.Edges[i].EndPosition == relatedTri.Edges[j].StartPosition || selfTri.Edges[i].EndPosition == relatedTri.Edges[j].EndPosition)
-							)
+							for ( int j = 0; j < 3; j++ )
 							{
-								selfTri.Edges[i].SharedEdge = relatedTri.Edges[j].MyCoordinate;
+								if (
+									(selfTri.Edges[i].StartPosition == relatedTri.Edges[j].StartPosition || selfTri.Edges[i].StartPosition == relatedTri.Edges[j].EndPosition) &&
+									(selfTri.Edges[i].EndPosition == relatedTri.Edges[j].StartPosition || selfTri.Edges[i].EndPosition == relatedTri.Edges[j].EndPosition)
+								)
+								{
+									selfTri.Edges[i].SharedEdge = relatedTri.Edges[j].MyCoordinate;
+								}
 							}
 						}
-
 					}
 				}
 			}
+		}
+
+		/// <summary>
+		/// How many verts the perspective triangle shares with the related triangle.
+		/// </summary>
+		/// <returns></returns>
+		public int GetNumberOfSharedVerts()
+		{
+			int numbrShared = 0;
+
+			if( IndexMap_OwnedVerts_toShared[0] != -1 )
+			{
+				numbrShared++;
+			}
+			if (IndexMap_OwnedVerts_toShared[1] != -1)
+			{
+				numbrShared++;
+			}
+			if (IndexMap_OwnedVerts_toShared[2] != -1)
+			{
+				numbrShared++;
+			}
+
+			return numbrShared;
+		}
+
+
+		public bool HasSharedEdge()
+		{
+			int rslt = GetNumberOfSharedVerts();
+
+			return (rslt == 2);
 		}
 	}
 	#endregion

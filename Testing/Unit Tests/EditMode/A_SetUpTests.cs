@@ -401,9 +401,9 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				UnityEngine.Assertions.Assert.AreApproximatelyEqual( _test_samplePosition.hitPositions[i].y, hit.HitPosition.y );
 				UnityEngine.Assertions.Assert.AreApproximatelyEqual( _test_samplePosition.hitPositions[i].z, hit.HitPosition.z );
 
-				UnityEngine.Assertions.Assert.AreApproximatelyEqual( _test_samplePosition.triCenters[i].x, _jsonGeneratedLnxNavmesh.Triangles[hit.Index_intersectedTri].V_center.x );
-				UnityEngine.Assertions.Assert.AreApproximatelyEqual( _test_samplePosition.triCenters[i].y, _jsonGeneratedLnxNavmesh.Triangles[hit.Index_intersectedTri].V_center.y );
-				UnityEngine.Assertions.Assert.AreApproximatelyEqual( _test_samplePosition.triCenters[i].z, _jsonGeneratedLnxNavmesh.Triangles[hit.Index_intersectedTri].V_center.z );
+				UnityEngine.Assertions.Assert.AreApproximatelyEqual( _test_samplePosition.triCenters[i].x, _jsonGeneratedLnxNavmesh.Triangles[hit.Index_hitTriangle].V_center.x );
+				UnityEngine.Assertions.Assert.AreApproximatelyEqual( _test_samplePosition.triCenters[i].y, _jsonGeneratedLnxNavmesh.Triangles[hit.Index_hitTriangle].V_center.y );
+				UnityEngine.Assertions.Assert.AreApproximatelyEqual( _test_samplePosition.triCenters[i].z, _jsonGeneratedLnxNavmesh.Triangles[hit.Index_hitTriangle].V_center.z );
 			}
 		}
 
@@ -442,7 +442,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 				if ( _jsonGeneratedLnxNavmesh.SamplePosition(_test_closestOnPerimeter.testPositions[i], out hit, 10f) ) //It needs to do this in order to decide which triangle to use...
 				{
-					Vector3 v_result = _jsonGeneratedLnxNavmesh.Triangles[hit.Index_intersectedTri].ClosestPointOnPerimeter( _test_closestOnPerimeter.testPositions[i] );
+					Vector3 v_result = _jsonGeneratedLnxNavmesh.Triangles[hit.Index_hitTriangle].ClosestPointOnPerimeter( _test_closestOnPerimeter.testPositions[i] );
 
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual( _test_closestOnPerimeter.hitPositions[i].x, v_result.x );
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual( _test_closestOnPerimeter.hitPositions[i].y, v_result.y );
@@ -465,14 +465,14 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 				if ( _jsonGeneratedLnxNavmesh.SamplePosition(_test_closestOnPerimeter.testPositions[i], out hit, 10f)) //It needs to do this in order to decide which triangle to use...
 				{
-					Vector3 v_result = _jsonGeneratedLnxNavmesh.Triangles[hit.Index_intersectedTri].ClosestPointOnPerimeter(_test_closestOnPerimeter.testPositions[i]);
+					Vector3 v_result = _jsonGeneratedLnxNavmesh.Triangles[hit.Index_hitTriangle].ClosestPointOnPerimeter(_test_closestOnPerimeter.testPositions[i]);
 
 					Debug.Log($"{i}. expecting: '{_test_closestOnPerimeter.hitPositions[i]}', ClosestPointOnPerimeter got: '{v_result}'. " +
 						$"close: '{Vector3.Distance(v_result, _test_closestOnPerimeter.hitPositions[i])}'..");
 
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_test_closestOnPerimeter.triCenters[i].x, _jsonGeneratedLnxNavmesh.Triangles[hit.Index_intersectedTri].V_center.x);
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_test_closestOnPerimeter.triCenters[i].y, _jsonGeneratedLnxNavmesh.Triangles[hit.Index_intersectedTri].V_center.y);
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_test_closestOnPerimeter.triCenters[i].z, _jsonGeneratedLnxNavmesh.Triangles[hit.Index_intersectedTri].V_center.z);
+					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_test_closestOnPerimeter.triCenters[i].x, _jsonGeneratedLnxNavmesh.Triangles[hit.Index_hitTriangle].V_center.x);
+					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_test_closestOnPerimeter.triCenters[i].y, _jsonGeneratedLnxNavmesh.Triangles[hit.Index_hitTriangle].V_center.y);
+					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_test_closestOnPerimeter.triCenters[i].z, _jsonGeneratedLnxNavmesh.Triangles[hit.Index_hitTriangle].V_center.z);
 				}
 			}
 
