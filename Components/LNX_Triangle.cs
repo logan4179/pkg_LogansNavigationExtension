@@ -71,7 +71,7 @@ namespace LogansNavigationExtension
 		[Header("OTHER")]
 		[HideInInspector] public Vector3 v_normal;
 
-		public LNX_Triangle( int parallelIndex, int areaIndx, Vector3 vrtPos0, Vector3 vrtPos1, Vector3 vrtPos2, int lrMask )
+		public LNX_Triangle( int parallelIndex, int areaIndx, Vector3 vrtPos0, Vector3 vrtPos1, Vector3 vrtPos2, LNX_NavMesh navMesh )
 		{
 			//Debug.Log($"tri ctor. {nameof(parallelIndex)}: '{parallelIndex}' (x3: '{parallelIndex * 3}'). verts start: '{nmTriangulation.indices[(parallelIndex * 3)]}'");
 
@@ -93,7 +93,7 @@ namespace LogansNavigationExtension
 
 			CalculateDerivedInfo();
 
-			TrySampleNormal( lrMask, true );
+			TrySampleNormal( navMesh.CachedLayerMask, true );
 		}
 
 		public void AdoptValues( LNX_Triangle baseTri )
@@ -491,8 +491,11 @@ namespace LogansNavigationExtension
 			}
 		}
 
-		public Vector3 ProjectThroughToPerimeter( Vector3 innerPos, Vector3 outerPos )
+		public Vector3 ProjectThroughToPerimeter( Vector3 innerPos, Vector3 outerPos, out LNX_Edge outedge, LNX_Direction meshProjectionDir = LNX_Direction.PositiveY )
 		{
+			innerPos = LNX_Utils.FlatVector( innerPos, meshProjectionDir );
+			outerPos = LNX_Utils.FlatVector( outerPos, meshProjectionDir );
+
 			Vector3 v_dir = Vector3.Normalize( outerPos - innerPos );
 			string dbgPerim = string.Empty;
 
@@ -503,21 +506,22 @@ namespace LogansNavigationExtension
 
 			int opposingEdge = 0;
 
-			if( dotProd_edge1 > 0 && Edges[1].IsProjectedPointOnEdge(innerPos, outerPos - innerPos) )
+			if( dotProd_edge1 > 0 && Edges[1].IsProjectedPointOnEdge(innerPos, v_dir) )
 			{
 				dbgPerim += $"if-chose 1\n";
 				opposingEdge = 1;
 			}
-			else if ( dotProd_edge2 > 0 && Edges[2].IsProjectedPointOnEdge(innerPos, outerPos - innerPos) )
+			else if ( dotProd_edge2 > 0 && Edges[2].IsProjectedPointOnEdge(innerPos, v_dir) )
 			{
 				dbgPerim += $"if-chose 2\n";
-
 				opposingEdge = 2;
 			}
 
-			dbgPerim += $"d1: '{dotProd_edge1}' ({Edges[1].IsProjectedPointOnEdge(innerPos, outerPos - innerPos)}), " +
+			outedge = Edges[opposingEdge];
+
+			/*dbgPerim += $"d1: '{dotProd_edge1}' ({Edges[1].IsProjectedPointOnEdge(innerPos, outerPos - innerPos)}), " +
 				$"d2: '{dotProd_edge2}' ({Edges[2].IsProjectedPointOnEdge(innerPos, outerPos - innerPos)}), \n" +
-				$"chose edge: '{opposingEdge}'\n";
+				$"chose edge: '{opposingEdge}'\n";*/
 			#endregion
 
 			float lengthA = Vector3.Distance( innerPos, Edges[opposingEdge].StartPosition );
@@ -530,8 +534,8 @@ namespace LogansNavigationExtension
 
 			float lengthX = Mathf.Sin(Mathf.Deg2Rad * angX) * ( lengthA / Mathf.Sin(Mathf.Deg2Rad * angA) );
 
-			dbgPerim += $"lengthA: '{lengthA}', angA: '{angA}'\n" +
-				$"lengthx: '{lengthX}', angX: '{angX}'";
+			/*dbgPerim += $"lengthA: '{lengthA}', angA: '{angA}'\n" +
+				$"lengthx: '{lengthX}', angX: '{angX}'";*/
 
 			//Debug.Log( dbgPerim );
 

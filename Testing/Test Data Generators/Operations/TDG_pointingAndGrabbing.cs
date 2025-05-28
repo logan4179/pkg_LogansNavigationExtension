@@ -19,10 +19,10 @@ namespace LogansNavigationExtension
 
 		public Ray _Ray;
 
-		public List<Vector3> TestPositions_vert;
-		public List<Vector3> TestDirections_vert;
-		public List<Vector3> CapturedVertPositions;
-		public List<int> CapturedNumberOfSharedVerts;
+		public List<Vector3> TestMousePositions_vert;
+		public List<Vector3> TestMouseDirections_vert;
+		public List<Vector3> PointedAtVertPositions;
+		//public List<int> PointedAtNumberOfSharedVerts;
 		public List<Vector3> GrabbedPositions_vert;
 		public List<Vector3> GrabbedManipulatorPos_vert;
 		[Space(5f)]
@@ -46,10 +46,10 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call ClearCollections()")]
 		public void ClearCollections()
 		{
-			TestPositions_vert = new List<Vector3>();
-			TestDirections_vert = new List<Vector3>();
-			CapturedVertPositions = new List<Vector3>();
-			CapturedNumberOfSharedVerts = new List<int>();
+			TestMousePositions_vert = new List<Vector3>();
+			TestMouseDirections_vert = new List<Vector3>();
+			PointedAtVertPositions = new List<Vector3>();
+			//PointedAtNumberOfSharedVerts = new List<int>();
 			GrabbedPositions_vert = new List<Vector3>();
 			GrabbedManipulatorPos_vert = new List<Vector3>();
 
@@ -74,13 +74,13 @@ namespace LogansNavigationExtension
 		{
 			_Lnx_MeshManipulator.ClearSelection();
 
-			List<Vector3> tempTestPositions_vert = TestPositions_vert;
-			TestPositions_vert = new List<Vector3>();
-			List<Vector3> tempTestDirections_vert = TestDirections_vert;
-			TestDirections_vert = new List<Vector3>();
+			List<Vector3> tempTestPositions_vert = TestMousePositions_vert;
+			TestMousePositions_vert = new List<Vector3>();
+			List<Vector3> tempTestDirections_vert = TestMouseDirections_vert;
+			TestMouseDirections_vert = new List<Vector3>();
 
-			CapturedVertPositions = new List<Vector3>();
-			CapturedNumberOfSharedVerts = new List<int>();
+			PointedAtVertPositions = new List<Vector3>();
+			//PointedAtNumberOfSharedVerts = new List<int>();
 			GrabbedPositions_vert = new List<Vector3>();
 			GrabbedManipulatorPos_vert = new List<Vector3>();
 			_Lnx_MeshManipulator.SelectMode = LNX_SelectMode.Vertices;
@@ -142,23 +142,24 @@ namespace LogansNavigationExtension
 
 			if( _Lnx_MeshManipulator.SelectMode == LNX_SelectMode.Vertices )
 			{
-				TestPositions_vert.Add( pos );
-				TestDirections_vert.Add( dir );
+				TestMousePositions_vert.Add( pos );
+				TestMouseDirections_vert.Add( dir );
 
 				if ( _Lnx_MeshManipulator.Vert_CurrentlyPointingAt == null )
 				{
-					CapturedVertPositions.Add( Vector3.zero );
-					CapturedNumberOfSharedVerts.Add( 0 );
+					PointedAtVertPositions.Add( Vector3.zero );
+					//PointedAtNumberOfSharedVerts.Add( 0 );
+
 					GrabbedPositions_vert.Add( Vector3.zero );
 					GrabbedManipulatorPos_vert.Add( Vector3.zero );
 					Debug.Log("captured null...");
 				}
 				else
 				{
-					CapturedVertPositions.Add( _Lnx_MeshManipulator.Vert_CurrentlyPointingAt.Position );
+					PointedAtVertPositions.Add( _Lnx_MeshManipulator.Vert_CurrentlyPointingAt.Position );
 
 					_Lnx_MeshManipulator.TryGrab();
-					CapturedNumberOfSharedVerts.Add( _Lnx_MeshManipulator.Verts_currentlySelected.Count );
+					//ointedAtNumberOfSharedVerts.Add( _Lnx_MeshManipulator.Verts_currentlySelected.Count );
 					GrabbedPositions_vert.Add( _Lnx_MeshManipulator.Vert_LastSelected.Position );
 					GrabbedManipulatorPos_vert.Add( _Lnx_MeshManipulator.manipulatorPos );
 					Debug.Log($"{_Lnx_MeshManipulator.Verts_currentlySelected.Count}");
@@ -230,49 +231,6 @@ namespace LogansNavigationExtension
 			}
 		}
 
-
-		public int tryIndex = 0;
-		public LNX_SelectMode TrySelectMode;
-		[ContextMenu("z call TryPoint()")]
-		public void TryPoint()
-		{
-			_Lnx_MeshManipulator.SelectMode = TrySelectMode;
-
-			if( TrySelectMode == LNX_SelectMode.Vertices )
-			{
-				_Lnx_MeshManipulator.TryPointAtComponentViaDirection(
-					TestPositions_vert[tryIndex],
-					TestDirections_vert[tryIndex]
-				);
-
-				Debug.Log($"{_Lnx_MeshManipulator.Vert_CurrentlyPointingAt} is null: '{_Lnx_MeshManipulator.Vert_CurrentlyPointingAt == null}'");
-
-				if ( _Lnx_MeshManipulator.Vert_CurrentlyPointingAt != null )
-				{
-					if( CapturedVertPositions[tryIndex] != _Lnx_MeshManipulator.Vert_CurrentlyPointingAt.Position )
-					{
-						Debug.Log("not what I was expecting...");
-					}
-				}
-			}
-			else if ( TrySelectMode == LNX_SelectMode.Edges )
-			{
-				_Lnx_MeshManipulator.TryPointAtComponentViaDirection(
-					TestPositions_edge[tryIndex],
-					TestDirections_edge[tryIndex]
-				);
-
-				Debug.Log($"{_Lnx_MeshManipulator.Edge_CurrentlyPointingAt} is null: '{_Lnx_MeshManipulator.Edge_CurrentlyPointingAt == null}'");
-
-				if ( _Lnx_MeshManipulator.Edge_CurrentlyPointingAt != null )
-				{
-					if ( CapturedEdgeCenterPositions[tryIndex] != _Lnx_MeshManipulator.Edge_CurrentlyPointingAt.MidPosition )
-					{
-						Debug.Log("not what I was expecting...");
-					}
-				}
-			}
-		}
 
 		[ContextMenu("z call WriteMeToJson()")]
 		public bool WriteMeToJson()

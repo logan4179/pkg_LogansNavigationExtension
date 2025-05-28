@@ -174,6 +174,18 @@ namespace LogansNavigationExtension
 			return vCenter / corners.Length;
 		}
 
+		public static Vector3 FlatVector( Vector3 vector, LNX_Direction flattenDir )
+		{
+			Vector3 newVector = vector;
+
+			if (flattenDir == LNX_Direction.PositiveY || flattenDir == LNX_Direction.NegativeY)
+			{
+				newVector = new Vector3(vector.x, 0f, vector.z);
+			}
+
+			return newVector;
+		}
+
 		#region FOR COMPONENT SELECTION ("GRABBING")-------------------------
 		//could put methods in here to shorten constructing the list of vertices grabbed by various components... idk if it's worth it...
 		#endregion
@@ -420,6 +432,17 @@ namespace LogansNavigationExtension
 	{
 		Pointing = 0,
 		Translating = 1,
+	}
+
+	[System.Serializable]
+	public enum LNX_Direction
+	{
+		PositiveY = 0,
+		NegativeY = 1,
+		PositiveX = 2,
+		NegativeX = 3,
+		PositiveZ = 4,
+		NegitiveZ = 0,
 	}
 	#endregion
 

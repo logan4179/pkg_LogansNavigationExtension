@@ -101,7 +101,7 @@ namespace LogansNavigationExtension
 			v_toCenter = Vector3.Normalize(tri.V_center - MidPosition);
 			v_cross = Vector3.Cross(v_startToEnd, tri.v_normal).normalized;
 
-			if (Vector3.Dot(v_cross, v_toCenter) < 0)
+			if ( Vector3.Dot(v_cross, v_toCenter) < 0 )
 			{
 				v_cross = -v_cross;
 			}

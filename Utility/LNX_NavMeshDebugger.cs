@@ -128,6 +128,19 @@ namespace LogansNavigationExtension
 			Debug.Log(s);
 		}
 
+		[ContextMenu("z call SayBounds()")]
+		public void SayBounds()
+		{
+			string s = $"\n";
+
+			s += $"lowX: '{_mgr.Bounds[0]}', highX: '{_mgr.Bounds[1]}'\n" +
+				$"lowY: '{_mgr.Bounds[2]}', highY: '{_mgr.Bounds[3]}'\n" +
+				$"lowZ: '{_mgr.Bounds[4]}', highZ: '{_mgr.Bounds[5]}'\n" +
+				$"V_BoundsSize: '{_mgr.V_BoundsSize}', bounds center: '{_mgr.V_BoundsCenter}'";
+
+			Debug.Log(s);
+		}
+
 		private void OnDrawGizmos()
 		{
 			if ( !AmDebugging )

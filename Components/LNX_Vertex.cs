@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -69,28 +70,6 @@ namespace LogansNavigationExtension
 			Relationships = new LNX_VertexRelationship[0];
 			SiblingRelationships = new LNX_VertexRelationship[2];
 
-			#region Find the angle -----------------------------------
-			Vector3 v_toA = Vector3.zero;
-			Vector3 v_toB = Vector3.zero;
-			if (cmpntIndx == 0)
-			{
-				v_toA = Vector3.Normalize(tri.Verts[1].Position - Position);
-				v_toB = Vector3.Normalize(tri.Verts[2].Position - Position);
-			}
-			else if ( cmpntIndx == 1 )
-			{
-				v_toA = Vector3.Normalize(tri.Verts[0].Position - Position);
-				v_toB = Vector3.Normalize(tri.Verts[2].Position - Position);
-			}
-			else if ( cmpntIndx == 2 )
-			{
-				v_toA = Vector3.Normalize(tri.Verts[0].Position - Position);
-				v_toB = Vector3.Normalize(tri.Verts[1].Position - Position);
-			}
-
-			AngleAtBend = Vector3.Angle(v_toA, v_toB);
-			#endregion
-
 			Index_VisMesh_triangles = tri.MeshIndex_trianglesStart + cmpntIndx;
 			Index_VisMesh_Vertices = -1;
 
@@ -132,6 +111,13 @@ namespace LogansNavigationExtension
 		/// <param name="vB"></param>
 		public void SetSiblingRelationships( LNX_Vertex vA, LNX_Vertex vB ) //todo: unit test
 		{
+			#region Find the angle -----------------------------------
+			Vector3 v_toA = Vector3.Normalize(vA.Position - Position);
+			Vector3 v_toB = Vector3.Normalize(vB.Position - Position);
+
+			AngleAtBend = Vector3.Angle(v_toA, v_toB);
+			#endregion
+
 			SiblingRelationships = new LNX_VertexRelationship[2];
 			SiblingRelationships[0] = new LNX_VertexRelationship( this, vA );
 			SiblingRelationships[1] = new LNX_VertexRelationship( this, vB );

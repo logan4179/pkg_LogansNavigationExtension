@@ -15,6 +15,8 @@ namespace LogansNavigationExtension
     {
 		public static LNX_NavMesh Instance;
 
+		public LNX_Direction ProjectionDirection = LNX_Direction.PositiveY;
+
 		public string LayerMaskName;
 		private int cachedLayerMask;
 		public int CachedLayerMask => cachedLayerMask;
@@ -216,14 +218,14 @@ namespace LogansNavigationExtension
 
 			for ( int i = 0; i < triangulation.areas.Length; i++ )
 			{
-				//Debug.Log($"{i} --------------------------////////////////////////////////////\n");
+				Debug.Log($"{i} --------------------------////////////////////////////////////\n");
 				if ( !hvMods || !ContainsDeletion(triangulation, i) )
 				{
 					LNX_Triangle tri = new LNX_Triangle( newTriCollection.Count, triangulation.areas[i],
 						triangulation.vertices[triangulation.indices[i * 3]],
 						triangulation.vertices[triangulation.indices[(i * 3) + 1]],
 						triangulation.vertices[triangulation.indices[(i * 3) + 2]],
-						cachedLayerMask
+						this
 					);
 
 					newTriCollection.Add( tri );
@@ -664,9 +666,15 @@ namespace LogansNavigationExtension
 		public void ClearModifications()
 		{
 			Debug.Log($"{nameof(ClearModifications)}()");
-			for (int i = 0; i < Triangles.Length; i++)
+			List<LNX_Triangle> newTrianglesList = new List<LNX_Triangle>();
+
+			for ( int i = 0; i < Triangles.Length; i++ )
 			{
-				Triangles[i].ClearModifications();
+				if( !Triangles[i].WasAddedViaMod )
+				{
+					Triangles[i].ClearModifications();
+					newTrianglesList.Add( Triangles[i] );
+				}
 			}
 
 			deletedTriangles = new List<LNX_Triangle>();
@@ -677,7 +685,7 @@ namespace LogansNavigationExtension
 		#endregion
 
 		#region DELETING ---------------------------------------------------------------------------------
-		public void DeleteTriangles( params LNX_Triangle[] deletedTris )
+		public void DeleteTriangles( params LNX_Triangle[] trisToDelete )
 		{
 			if ( Triangles.Length <= 0 )
 			{
@@ -695,12 +703,12 @@ namespace LogansNavigationExtension
 			{
 				bool foundDeletion = false;
 
-				for ( int j = 0; j < deletedTris.Length; j++ )
+				for ( int j = 0; j < trisToDelete.Length; j++ )
 				{
-					if ( Triangles[i].ValueEquals(deletedTris[j]) )
+					if ( Triangles[i].ValueEquals(trisToDelete[j]) )
 					{
 						foundDeletion = true;
-						deletedTriangles.Add( deletedTris[j] );
+						deletedTriangles.Add(Triangles[i]);
 						break;
 					}
 				}
@@ -923,8 +931,7 @@ namespace LogansNavigationExtension
 
             float runningClosestDist = float.MaxValue;
             Vector3 currentPt = Vector3.zero;
-			hit.HitPosition = Vector3.zero;
-			hit.Index_hitTriangle = -1;
+			hit = LNX_ProjectionHit.None;
 
             for ( int i = 0; i < Triangles.Length; i++ )
             {
@@ -967,40 +974,76 @@ namespace LogansNavigationExtension
 			}
         }
 
-		/*
+		public string DBGRaycast;
+		
 		/// <summary>
 		/// Traces a line between two points on a navmesh.
 		/// </summary>
 		/// <returns>True if the ray is terminated before reaching target position. Otherwise returns false.</returns>
-		public bool Raycast( Vector3 sourcePosition, Vector3 targetPosition, float maxSampleDistance, out LNX_ProjectionHit hit, int areaMask )
+		public bool Raycast( Vector3 sourcePosition, Vector3 targetPosition, float maxSampleDistance )
 		{
-			hit = LNX_ProjectionHit.None;
+			DBGRaycast = "";
 
 			#region GET START AND END POINTS------------------------------------------
-			LNX_ProjectionHit lnxHit = new LNX_ProjectionHit();
+			LNX_ProjectionHit lnxStartHit = LNX_ProjectionHit.None;
+			LNX_ProjectionHit lnxEndHit = LNX_ProjectionHit.None;
 
-			if ( SamplePosition(sourcePosition, out lnxHit, maxSampleDistance) )
-			{
-				sourcePosition = lnxHit.HitPosition;
-				dbgCalculatePath += $"SamplePosition() hit startpos\n";
-			}
-			else
+			if ( !SamplePosition(sourcePosition, out lnxStartHit, maxSampleDistance) )
 			{
 				return true;
 			}
 
-			if ( SamplePosition(targetPosition, out lnxHit, maxSampleDistance) )
-			{
-				targetPosition = lnxHit.HitPosition;
-			}
-			else
+			if ( !SamplePosition(targetPosition, out lnxEndHit, maxSampleDistance) )
 			{
 				return true;
 			}
 			#endregion
 
+			if ( lnxStartHit.Index_hitTriangle == lnxEndHit.Index_hitTriangle )
+			{
+				return false;
+			}
+			DBGRaycast += $"Sampled start: '{lnxStartHit.HitPosition}', end: '{lnxEndHit.HitPosition}'\n";
 
-		}*/
+			#region PROJECT THROUGH TO TARGET POSITION -------------------------------------------------
+			Vector3 projectionDir = targetPosition - sourcePosition;
+			DBGRaycast += $"project direction: '{projectionDir}'\n\n";
+			bool amStillProjecting = true;
+			LNX_Triangle currentTri = Triangles[lnxStartHit.Index_hitTriangle];
+			Vector3 currentStartPos = lnxStartHit.HitPosition;
+
+			DBGRaycast += "looping through mesh triangles...\n";
+			while ( amStillProjecting )
+			{
+				DBGRaycast += $"currentTri: '{currentTri.Index_inCollection}', startPt: '{currentStartPos}'\n";
+				LNX_Edge hitEdge = null;
+				currentStartPos = currentTri.ProjectThroughToPerimeter( currentStartPos, lnxEndHit.HitPosition, out hitEdge, ProjectionDirection );
+				DBGRaycast += $"projected to edge: '{hitEdge.MyCoordinate}'\n";
+
+				if( hitEdge.AmTerminal )
+				{
+					DBGRaycast += $"edge is terminal...\n";
+					amStillProjecting = false;
+				}
+				else
+				{
+					currentTri = Triangles[hitEdge.SharedEdge.TrianglesIndex];
+					DBGRaycast += $"edge is NOT terminal, set current tri to: '{currentTri.Index_inCollection}'...\n";
+
+					if ( currentTri.Index_inCollection == lnxEndHit.Index_hitTriangle )
+					{
+						amStillProjecting = false;
+						DBGRaycast += $"currentTri has same index as end hit triangle. Stopping...\n";
+					}
+				}
+			}
+
+			DBGRaycast += $"finally returning: '{currentTri.Index_inCollection != lnxEndHit.Index_hitTriangle}'";
+
+			return currentTri.Index_inCollection != lnxEndHit.Index_hitTriangle;
+
+			#endregion
+		}
 		#endregion
 	}
 }

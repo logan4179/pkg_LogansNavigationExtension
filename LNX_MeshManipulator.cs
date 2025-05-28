@@ -658,10 +658,10 @@ namespace LogansNavigationExtension
 
 			LNX_Triangle[] trisToAdd = new LNX_Triangle[4]
 			{
-				new LNX_Triangle(_LNX_NavMesh.Triangles.Length, 0, endEdge0.StartPosition, endEdge0.EndPosition, v_midPoint0, _LNX_NavMesh.CachedLayerMask ),
-				new LNX_Triangle(_LNX_NavMesh.Triangles.Length+1, 0, endEdge0.EndPosition, v_midPoint1, v_midPoint0, _LNX_NavMesh.CachedLayerMask ),
-				new LNX_Triangle(_LNX_NavMesh.Triangles.Length+2, 0, v_midPoint0, v_midPoint1, endEdge1.StartPosition, _LNX_NavMesh.CachedLayerMask ),
-				new LNX_Triangle(_LNX_NavMesh.Triangles.Length+3, 0,  endEdge1.StartPosition, v_midPoint1, endEdge1.EndPosition, _LNX_NavMesh.CachedLayerMask ),
+				new LNX_Triangle(_LNX_NavMesh.Triangles.Length, 0, endEdge0.StartPosition, endEdge0.EndPosition, v_midPoint0, _LNX_NavMesh ),
+				new LNX_Triangle(_LNX_NavMesh.Triangles.Length+1, 0, endEdge0.EndPosition, v_midPoint1, v_midPoint0, _LNX_NavMesh ),
+				new LNX_Triangle(_LNX_NavMesh.Triangles.Length+2, 0, v_midPoint0, v_midPoint1, endEdge1.StartPosition, _LNX_NavMesh ),
+				new LNX_Triangle(_LNX_NavMesh.Triangles.Length+3, 0,  endEdge1.StartPosition, v_midPoint1, endEdge1.EndPosition, _LNX_NavMesh ),
 			};
 
 			_LNX_NavMesh.AddTriangles( trisToAdd );

@@ -42,7 +42,8 @@ namespace LogansNavigationExtension
 				DBG_ += $"success!!!\n";
 				Gizmos.color = Color.red;
 
-				Vector3 v_project = _mgr.Triangles[startTri].ProjectThroughToPerimeter( v_startProject, v_endProject );
+				LNX_Edge throwawayEdgeVariable = null;
+				Vector3 v_project = _mgr.Triangles[startTri].ProjectThroughToPerimeter( v_startProject, v_endProject, out throwawayEdgeVariable, LNX_Direction.PositiveY );
 
 				Gizmos.DrawSphere( v_project, 0.1f );
 				Gizmos.DrawLine( v_startProject, v_project );
