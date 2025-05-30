@@ -15,6 +15,16 @@ namespace LogansNavigationExtension
 		public static string UnitTestMethodEndString = "//----[END OF TEST '{0}']------------------//////////////////////////////////////////";
 		public static string UnitTestSectionEndString = "//----[END OF section '{0}']-----------------------\n";
 
+		public static void LogTestStart( string testName, string testDescription )
+		{
+			Debug.Log( 
+				"/////////////////////////////////////////////////////////////////////////////\n" + 
+				testName + "\n" + 
+				testDescription +
+				"/////////////////////////////////////////////////////////////////////////////\n\n"
+			);
+		}
+
 		public static string FormattedVectorString( Vector3 vect )
         {
             return $"new Vector3({vect.x}f, {vect.y}f, {vect.z}f)";

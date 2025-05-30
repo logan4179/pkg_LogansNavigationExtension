@@ -332,7 +332,7 @@ namespace LogansNavigationExtension
 			else if ( SelectMode == LNX_SelectMode.Edges )
 			{
 				LNX_ComponentCoordinate runningBestCoordinate = LNX_ComponentCoordinate.None;
-				float runningBestAlignment = 0.9f;
+				float runningBestAlignment = 0.97f;
 
 				for ( int i_tris = 0; i_tris < _LNX_NavMesh.Triangles.Length; i_tris++ )
 				{
@@ -560,7 +560,9 @@ namespace LogansNavigationExtension
 				}
 			}
 
-			//manipulatorPos = endPos; //This seems to be necessary in order to actually move the manipulator
+			manipulatorPos = endPos; //Note: This isn't totally necessary now with the way I'm doing movement inside the 
+			//editor script, but if I take this away, it screws up the movement unit tests.
+
 			//Debug.Log( dbgMoveSelected );
 		}
 

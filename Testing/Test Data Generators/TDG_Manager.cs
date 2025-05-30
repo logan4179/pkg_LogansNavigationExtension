@@ -47,9 +47,6 @@ namespace LogansNavigationExtension
 		public TDG_pointingAndGrabbing _tdg_pointingAndGrabbing;
 		public static string filePath_testData_pointingAndGrabbing = $"{dirPath_testDataFolder}\\tdg_pointingAndGrabbing_data_A.json";
 
-		public TDG_MoveComponents _tdg_moveComponents;
-		public static string filePath_testData_moveComponents = $"{dirPath_testDataFolder}\\tdg_moveComponents_data_A.json";
-
 		public TDG_DeleteTests _tdg_deleteTests;
 		public static string filePath_testData_deleteTests = $"{dirPath_testDataFolder}\\tdg_deleteTests_data_A.json";
 
@@ -255,14 +252,6 @@ namespace LogansNavigationExtension
 				if ( !_tdg_pointingAndGrabbing.WriteMeToJson() )
 				{
 					Debug.LogError( $"write to json didn't work on {nameof(_tdg_pointingAndGrabbing)}. Returning early..." );
-					return;
-				}
-				#endregion
-
-				#region MOVE COMPONENTS ------------------------------------------------------------
-				if ( !_tdg_moveComponents.WriteMeToJson() )
-				{
-					Debug.LogError($"write to json didn't work on {nameof(_tdg_moveComponents)}. Returning early...");
 					return;
 				}
 				#endregion

@@ -21,52 +21,44 @@ namespace LogansNavigationExtension
 
 		public List<Vector3> TestMousePositions_vert;
 		public List<Vector3> TestMouseDirections_vert;
-		public List<Vector3> PointedAtVertPositions;
-		//public List<int> PointedAtNumberOfSharedVerts;
-		public List<Vector3> GrabbedPositions_vert;
-		public List<Vector3> GrabbedManipulatorPos_vert;
+		public List<Vector3> CapturedPointedAtVertPositions;
+		public List<Vector3> CapturedGrabbedPositions_vert;
+		public List<Vector3> CapturedGrabbedManipulatorPos_vert;
 		[Space(5f)]
 
-		public List<Vector3> TestPositions_edge;
-		public List<Vector3> TestDirections_edge;
-		public List<Vector3> CapturedEdgeCenterPositions;
-		public List<int> CapturedNumberOfSharedEdges;
-		public List<int> CapturedNumberOfSharedVerts_edge;
-		public List<Vector3> GrabbedPositions_edge;
-		public List<Vector3> GrabbedManipulatorPos_edge;
+		public List<Vector3> TestMousePositions_edge;
+		public List<Vector3> TestMouseDirections_edge;
+		public List<Vector3> CapturedPointedAtEdgeMidPositions;
+		public List<Vector3> CapturedGrabbedPositions_edge;
+		public List<Vector3> CapturedGrabbedManipulatorPos_edge;
 		[Space(5f)]
 
-		public List<Vector3> TestPositions_face;
-		public List<Vector3> TestDirections_face;
-		public List<Vector3> CapturedFaceCenterPositions;
-		public List<Vector3> GrabbedPositions_face;
-		public List<Vector3> GrabbedManipulatorPos_face;
-		public List<int> CapturedNumberOfSharedVerts_face;
+		public List<Vector3> TestMousePositions_face;
+		public List<Vector3> TestMouseDirections_face;
+		public List<Vector3> CapturedPointedAtFaceCenterPositions;
+		public List<Vector3> CapturedGrabbedPositions_face;
+		public List<Vector3> CapturedGrabbedManipulatorPos_face;
 
 		[ContextMenu("z call ClearCollections()")]
 		public void ClearCollections()
 		{
 			TestMousePositions_vert = new List<Vector3>();
 			TestMouseDirections_vert = new List<Vector3>();
-			PointedAtVertPositions = new List<Vector3>();
-			//PointedAtNumberOfSharedVerts = new List<int>();
-			GrabbedPositions_vert = new List<Vector3>();
-			GrabbedManipulatorPos_vert = new List<Vector3>();
+			CapturedPointedAtVertPositions = new List<Vector3>();
+			CapturedGrabbedPositions_vert = new List<Vector3>();
+			CapturedGrabbedManipulatorPos_vert = new List<Vector3>();
 
-			TestPositions_edge = new List<Vector3>();
-			TestDirections_edge = new List<Vector3>();
-			CapturedEdgeCenterPositions = new List<Vector3>();
-			CapturedNumberOfSharedEdges = new List<int>();
-			GrabbedPositions_edge = new List<Vector3>();
-			GrabbedManipulatorPos_edge = new List<Vector3>();
-			CapturedNumberOfSharedVerts_edge = new List<int>();
+			TestMousePositions_edge = new List<Vector3>();
+			TestMouseDirections_edge = new List<Vector3>();
+			CapturedPointedAtEdgeMidPositions = new List<Vector3>();
+			CapturedGrabbedPositions_edge = new List<Vector3>();
+			CapturedGrabbedManipulatorPos_edge = new List<Vector3>();
 
-			TestPositions_face = new List<Vector3>();
-			TestDirections_face = new List<Vector3>();
-			CapturedFaceCenterPositions = new List<Vector3>();
-			GrabbedPositions_face = new List<Vector3>();
-			GrabbedManipulatorPos_face = new List<Vector3>();
-			CapturedNumberOfSharedVerts_face = new List<int>();
+			TestMousePositions_face = new List<Vector3>();
+			TestMouseDirections_face = new List<Vector3>();
+			CapturedPointedAtFaceCenterPositions = new List<Vector3>();
+			CapturedGrabbedPositions_face = new List<Vector3>();
+			CapturedGrabbedManipulatorPos_face = new List<Vector3>();
 		}
 
 		[ContextMenu("z call GenerateDerivedCollectionData()")]
@@ -79,10 +71,10 @@ namespace LogansNavigationExtension
 			List<Vector3> tempTestDirections_vert = TestMouseDirections_vert;
 			TestMouseDirections_vert = new List<Vector3>();
 
-			PointedAtVertPositions = new List<Vector3>();
+			CapturedPointedAtVertPositions = new List<Vector3>();
 			//PointedAtNumberOfSharedVerts = new List<int>();
-			GrabbedPositions_vert = new List<Vector3>();
-			GrabbedManipulatorPos_vert = new List<Vector3>();
+			CapturedGrabbedPositions_vert = new List<Vector3>();
+			CapturedGrabbedManipulatorPos_vert = new List<Vector3>();
 			_Lnx_MeshManipulator.SelectMode = LNX_SelectMode.Vertices;
 			for ( int i = 0; i < tempTestPositions_vert.Count; i++ )
 			{
@@ -91,16 +83,14 @@ namespace LogansNavigationExtension
 				CaptureMouseInfo( tempTestPositions_vert[i], tempTestDirections_vert[i] );
 			}
 
-			List<Vector3> tempTestPositions_edge = TestPositions_edge;
-			TestPositions_edge = new List<Vector3>();
-			List<Vector3> tempTestDirections_edge = TestDirections_edge;
-			TestDirections_edge = new List<Vector3>();
+			List<Vector3> tempTestPositions_edge = TestMousePositions_edge;
+			TestMousePositions_edge = new List<Vector3>();
+			List<Vector3> tempTestDirections_edge = TestMouseDirections_edge;
+			TestMouseDirections_edge = new List<Vector3>();
 
-			CapturedEdgeCenterPositions = new List<Vector3>();
-			CapturedNumberOfSharedEdges = new List<int>();
-			GrabbedPositions_edge = new List<Vector3>();
-			GrabbedManipulatorPos_edge = new List<Vector3>();
-			CapturedNumberOfSharedVerts_edge = new List<int>();
+			CapturedPointedAtEdgeMidPositions = new List<Vector3>();
+			CapturedGrabbedPositions_edge = new List<Vector3>();
+			CapturedGrabbedManipulatorPos_edge = new List<Vector3>();
 			_Lnx_MeshManipulator.SelectMode = LNX_SelectMode.Edges;
 			
 			for ( int i = 0; i < tempTestPositions_edge.Count; i++ )
@@ -110,15 +100,14 @@ namespace LogansNavigationExtension
 				CaptureMouseInfo( tempTestPositions_edge[i], tempTestDirections_edge[i] );
 			}
 
-			List<Vector3> tempTestPositions_face = TestPositions_face;
-			TestPositions_face = new List<Vector3>();
-			List<Vector3> tempTestDirections_face = TestDirections_face;
-			TestDirections_face = new List<Vector3>();
+			List<Vector3> tempTestPositions_face = TestMousePositions_face;
+			TestMousePositions_face = new List<Vector3>();
+			List<Vector3> tempTestDirections_face = TestMouseDirections_face;
+			TestMouseDirections_face = new List<Vector3>();
 
-			CapturedFaceCenterPositions = new List<Vector3>();
-			GrabbedPositions_face = new List<Vector3>();
-			GrabbedManipulatorPos_face = new List<Vector3>();
-			CapturedNumberOfSharedVerts_face = new List<int>();
+			CapturedPointedAtFaceCenterPositions = new List<Vector3>();
+			CapturedGrabbedPositions_face = new List<Vector3>();
+			CapturedGrabbedManipulatorPos_face = new List<Vector3>();
 			_Lnx_MeshManipulator.SelectMode = LNX_SelectMode.Faces;
 			
 			for ( int i = 0; i < tempTestPositions_face.Count; i++ )
@@ -147,49 +136,45 @@ namespace LogansNavigationExtension
 
 				if ( _Lnx_MeshManipulator.Vert_CurrentlyPointingAt == null )
 				{
-					PointedAtVertPositions.Add( Vector3.zero );
+					CapturedPointedAtVertPositions.Add( Vector3.zero );
 					//PointedAtNumberOfSharedVerts.Add( 0 );
 
-					GrabbedPositions_vert.Add( Vector3.zero );
-					GrabbedManipulatorPos_vert.Add( Vector3.zero );
+					CapturedGrabbedPositions_vert.Add( Vector3.zero );
+					CapturedGrabbedManipulatorPos_vert.Add( Vector3.zero );
 					Debug.Log("captured null...");
 				}
 				else
 				{
-					PointedAtVertPositions.Add( _Lnx_MeshManipulator.Vert_CurrentlyPointingAt.Position );
+					CapturedPointedAtVertPositions.Add( _Lnx_MeshManipulator.Vert_CurrentlyPointingAt.Position );
 
 					_Lnx_MeshManipulator.TryGrab();
 					//ointedAtNumberOfSharedVerts.Add( _Lnx_MeshManipulator.Verts_currentlySelected.Count );
-					GrabbedPositions_vert.Add( _Lnx_MeshManipulator.Vert_LastSelected.Position );
-					GrabbedManipulatorPos_vert.Add( _Lnx_MeshManipulator.manipulatorPos );
+					CapturedGrabbedPositions_vert.Add( _Lnx_MeshManipulator.Vert_LastSelected.Position );
+					CapturedGrabbedManipulatorPos_vert.Add( _Lnx_MeshManipulator.manipulatorPos );
 					Debug.Log($"{_Lnx_MeshManipulator.Verts_currentlySelected.Count}");
 				}
 			}
 			else if( _Lnx_MeshManipulator.SelectMode == LNX_SelectMode.Edges )
 			{
-				TestPositions_edge.Add( pos );
-				TestDirections_edge.Add( dir );
+				TestMousePositions_edge.Add( pos );
+				TestMouseDirections_edge.Add( dir );
 
 				if ( _Lnx_MeshManipulator.Edge_CurrentlyPointingAt == null )
 				{
-					CapturedEdgeCenterPositions.Add( Vector3.zero );
+					CapturedPointedAtEdgeMidPositions.Add( Vector3.zero );
 
-					CapturedNumberOfSharedEdges.Add(0);
-					GrabbedPositions_edge.Add( Vector3.zero );
-					GrabbedManipulatorPos_edge.Add( Vector3.zero );
-					CapturedNumberOfSharedVerts_edge.Add( 0 );
+					CapturedGrabbedPositions_edge.Add( Vector3.zero );
+					CapturedGrabbedManipulatorPos_edge.Add( Vector3.zero );
 
 					Debug.Log("captured null...");
 				}
 				else
 				{
-					CapturedEdgeCenterPositions.Add( _Lnx_MeshManipulator.Edge_CurrentlyPointingAt.MidPosition );
+					CapturedPointedAtEdgeMidPositions.Add( _Lnx_MeshManipulator.Edge_CurrentlyPointingAt.MidPosition );
 
 					_Lnx_MeshManipulator.TryGrab();
-					CapturedNumberOfSharedEdges.Add( _Lnx_MeshManipulator.Edges_currentlySelected.Count );
-					GrabbedPositions_edge.Add( _Lnx_MeshManipulator.Edge_LastSelected.MidPosition );
-					GrabbedManipulatorPos_edge.Add( _Lnx_MeshManipulator.manipulatorPos );
-					CapturedNumberOfSharedVerts_edge.Add( _Lnx_MeshManipulator.Verts_currentlySelected.Count );
+					CapturedGrabbedPositions_edge.Add( _Lnx_MeshManipulator.Edge_LastSelected.MidPosition );
+					CapturedGrabbedManipulatorPos_edge.Add( _Lnx_MeshManipulator.manipulatorPos );
 
 					Debug.Log($"{_Lnx_MeshManipulator.Edges_currentlySelected.Count}");
 
@@ -197,36 +182,34 @@ namespace LogansNavigationExtension
 			}
 			else if( _Lnx_MeshManipulator.SelectMode == LNX_SelectMode.Faces )
 			{
-				TestPositions_face.Add( pos );
-				TestDirections_face.Add( dir );
+				TestMousePositions_face.Add( pos );
+				TestMouseDirections_face.Add( dir );
 
 				Debug.Log(_Lnx_MeshManipulator.Index_TriPointingAt);
 
 				if ( _Lnx_MeshManipulator.Index_TriPointingAt < 0 )
 				{
-					CapturedFaceCenterPositions.Add( Vector3.zero );
+					CapturedPointedAtFaceCenterPositions.Add( Vector3.zero );
 
-					GrabbedPositions_face.Add( Vector3.zero );
-					GrabbedManipulatorPos_face.Add( Vector3.zero );
-					CapturedNumberOfSharedVerts_face.Add( 0 );
+					CapturedGrabbedPositions_face.Add( Vector3.zero );
+					CapturedGrabbedManipulatorPos_face.Add( Vector3.zero );
 					Debug.Log("captured null...");
 				}
 				else
 				{
 					Debug.Log($"index of pointing at tri: '{_Lnx_MeshManipulator.Index_TriPointingAt}'");
 
-					CapturedFaceCenterPositions.Add( 
+					CapturedPointedAtFaceCenterPositions.Add( 
 						_Lnx_MeshManipulator._LNX_NavMesh.Triangles[_Lnx_MeshManipulator.Index_TriPointingAt].V_center 
 					);
 
 					_Lnx_MeshManipulator.TryGrab();
 
 
-					GrabbedPositions_face.Add( 
+					CapturedGrabbedPositions_face.Add( 
 						_Lnx_MeshManipulator._LNX_NavMesh.Triangles[_Lnx_MeshManipulator.Index_TriLastSelected].V_center );
 
-					GrabbedManipulatorPos_face.Add( _Lnx_MeshManipulator.manipulatorPos );
-					CapturedNumberOfSharedVerts_face.Add( _Lnx_MeshManipulator.Verts_currentlySelected.Count );
+					CapturedGrabbedManipulatorPos_face.Add( _Lnx_MeshManipulator.manipulatorPos );
 				}
 			}
 		}

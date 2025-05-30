@@ -1018,6 +1018,9 @@ namespace LogansNavigationExtension
 				DBGRaycast += $"currentTri: '{currentTri.Index_inCollection}', startPt: '{currentStartPos}'\n";
 				LNX_Edge hitEdge = null;
 				currentStartPos = currentTri.ProjectThroughToPerimeter( currentStartPos, lnxEndHit.HitPosition, out hitEdge, ProjectionDirection );
+				DBGRaycast += $"projecting...\n" +
+					$"{currentTri.dbgPerim}\n";
+
 				DBGRaycast += $"projected to edge: '{hitEdge.MyCoordinate}'\n";
 
 				if( hitEdge.AmTerminal )

@@ -20,6 +20,7 @@ namespace LogansNavigationExtension
 		private void OnDrawGizmos()
 		{
 			DebugRaycast = "";
+
 			if( Selection.activeObject == gameObject )
 			{
 				RaycastResult = _Lnx_Navmesh.Raycast( startTrans.position, endTrans.position, 3f );

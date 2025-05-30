@@ -491,13 +491,14 @@ namespace LogansNavigationExtension
 			}
 		}
 
+		public string dbgPerim;
 		public Vector3 ProjectThroughToPerimeter( Vector3 innerPos, Vector3 outerPos, out LNX_Edge outedge, LNX_Direction meshProjectionDir = LNX_Direction.PositiveY )
 		{
 			innerPos = LNX_Utils.FlatVector( innerPos, meshProjectionDir );
 			outerPos = LNX_Utils.FlatVector( outerPos, meshProjectionDir );
 
 			Vector3 v_dir = Vector3.Normalize( outerPos - innerPos );
-			string dbgPerim = string.Empty;
+			dbgPerim = string.Empty;
 
 			#region Find opposing edge...........................
 			//note: the dot product of edge 0 isn't necessary as we can assume it's this one for sure if the other two don't work...
@@ -505,6 +506,9 @@ namespace LogansNavigationExtension
 			float dotProd_edge2 = Vector3.Dot( -Edges[2].v_cross, v_dir );
 
 			int opposingEdge = 0;
+
+			dbgPerim += $"{nameof(dotProd_edge1)}: '{dotProd_edge1}'\n" +
+				$"{nameof(dotProd_edge2)}: '{dotProd_edge2}'\n";
 
 			if( dotProd_edge1 > 0 && Edges[1].IsProjectedPointOnEdge(innerPos, v_dir) )
 			{
@@ -516,8 +520,12 @@ namespace LogansNavigationExtension
 				dbgPerim += $"if-chose 2\n";
 				opposingEdge = 2;
 			}
+			else
+			{
+				dbgPerim += "defaulted to 0\n";
+			}
 
-			outedge = Edges[opposingEdge];
+				outedge = Edges[opposingEdge];
 
 			/*dbgPerim += $"d1: '{dotProd_edge1}' ({Edges[1].IsProjectedPointOnEdge(innerPos, outerPos - innerPos)}), " +
 				$"d2: '{dotProd_edge2}' ({Edges[2].IsProjectedPointOnEdge(innerPos, outerPos - innerPos)}), \n" +

@@ -140,59 +140,11 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		}
 		#endregion
 
-		#region B) CHECK OBJECTS ------------------------------------------------------------------------------------------
+		#region B) CHECK NAVMESH -------------------------------------------------------------------------------------------
 		[Test]
-        public void b1_Make_Sure_NavMesh_Has_Collection_Lengths_Consistent_With_Triangulation()
-        {
-			Debug.Log( string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(b1_Make_Sure_NavMesh_Has_Collection_Lengths_Consistent_With_Triangulation)) );
-			
-            Assert.AreEqual( _nmTriangulation.areas.Length, _sceneGeneratedLnxNavmesh.Triangles.Length );
-		}
-
-		[Test]
-		public void b2_Check_That_Triangle_Indices_Properties_Are_Not_Negative_One()
+		public void b1_Check_That_Bounds_Have_Expected_Values()
 		{
-			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(b2_Check_That_Triangle_Indices_Properties_Are_Not_Negative_One)));
-
-			for ( int i = 0; i < _sceneGeneratedLnxNavmesh.Triangles.Length; i++ )
-			{
-				Debug.Log($"{i}...");
-
-				Debug.Log( $"checking Index_inCollection..." );
-				Assert.Greater( _sceneGeneratedLnxNavmesh.Triangles[i].Index_inCollection, -1 );
-
-				Debug.Log($"checking AreaIndex...");
-				Assert.Greater(_sceneGeneratedLnxNavmesh.Triangles[i].AreaIndex, -1);
-			}
-		}
-
-		[Test]
-		public void b3_Check_That_Vert_Vismesh_Index_Properties_Are_Within_Bounds()
-		{
-			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(b3_Check_That_Vert_Vismesh_Index_Properties_Are_Within_Bounds)));
-
-			for (int i = 0; i < _sceneGeneratedLnxNavmesh.Triangles.Length; i++)
-			{
-				Debug.Log($"{i}...");
-
-				for (int i_verts = 0; i_verts < 3; i_verts++)
-				{
-					Debug.Log($"checking indices of vert[0]...");
-					Debug.Log($"Verts[0].MeshIndex_triangles: '{_sceneGeneratedLnxNavmesh.Triangles[i].Verts[i_verts].Index_VisMesh_triangles}'");
-					Assert.Greater(_sceneGeneratedLnxNavmesh.Triangles[i].Verts[i_verts].Index_VisMesh_triangles, -1);
-					Assert.Less(_sceneGeneratedLnxNavmesh.Triangles[i].Verts[i_verts].Index_VisMesh_triangles, _sceneGeneratedLnxNavmesh._Mesh.triangles.Length);
-
-					Debug.Log($"Verts[0].MeshIndex_vertices: '{_sceneGeneratedLnxNavmesh.Triangles[i].Verts[i_verts].Index_VisMesh_Vertices}'");
-					Assert.Greater(_sceneGeneratedLnxNavmesh.Triangles[i].Verts[i_verts].Index_VisMesh_Vertices, -1);
-					Assert.Less(_sceneGeneratedLnxNavmesh.Triangles[i].Verts[i_verts].Index_VisMesh_Vertices, _sceneGeneratedLnxNavmesh._Mesh.vertices.Length);
-				}
-			}
-		}
-
-		[Test]
-		public void b4_Check_That_Bounds_Have_Expected_Values()
-		{
-			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(b4_Check_That_Bounds_Have_Expected_Values)));
+			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(b1_Check_That_Bounds_Have_Expected_Values)));
 
 			// CENTER-------------------------------------------------------
 			Debug.Log($"Checking bounds center. scene generated navmesh bounds center: '{_sceneGeneratedLnxNavmesh.V_BoundsCenter}'. " +
@@ -213,44 +165,178 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				UnityEngine.Assertions.Assert.AreApproximatelyEqual( _sceneGeneratedLnxNavmesh.V_Bounds[i].z, _jsonGeneratedLnxNavmesh.V_Bounds[i].z );
 			}
 		}
-
-		[Test]
-		public void b5_All_Triangle_Relationships_Array_Lengths_Equal_Master_Triangles_Array_Length()
-		{
-			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(b5_All_Triangle_Relationships_Array_Lengths_Equal_Master_Triangles_Array_Length)));
-
-			Debug.Log($"\nChecking relationships...");
-			Debug.Log($"Running through '{_sceneGeneratedLnxNavmesh.Triangles.Length}' triangles to check relationships..");
-			for ( int i = 0; i < _sceneGeneratedLnxNavmesh.Triangles.Length; i++ )
-			{
-				Debug.Log($"checking tri '{i}'...");
-
-				Assert.AreEqual( _sceneGeneratedLnxNavmesh.Triangles[i].Relationships.Length, _sceneGeneratedLnxNavmesh.Triangles.Length );
-			}
-		}
-
-		[Test]
-		public void b6_All_Triangle_AdjacentTriIndices_Array_Length_Are_Greater_Than_Zero()
-		{
-			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(b6_All_Triangle_AdjacentTriIndices_Array_Length_Are_Greater_Than_Zero)));
-
-			Debug.Log($"\nChecking relationships...");
-			Debug.Log($"Running through '{_sceneGeneratedLnxNavmesh.Triangles.Length}' triangles to check relationships..");
-			for ( int i = 0; i < _sceneGeneratedLnxNavmesh.Triangles.Length; i++ )
-			{
-				Debug.Log($"checking tri '{i}'...");
-				Assert.Greater( _sceneGeneratedLnxNavmesh.Triangles[i].AdjacentTriIndices.Length, 0 );
-			}
-		}
 		#endregion
 
-		#region C) CHECK VISUALIZATION MESH ------------------------------------------------------------------------------------------
+		#region C) CHECK TRIANGLES ------------------------------------------------------------------------------------------
+		[Test]
+        public void C1_Make_Sure_NavMesh_Has_Collection_Lengths_Consistent_With_Triangulation()
+        {
+			Debug.Log( string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(C1_Make_Sure_NavMesh_Has_Collection_Lengths_Consistent_With_Triangulation)) );
+			
+            Assert.AreEqual( _nmTriangulation.areas.Length, _sceneGeneratedLnxNavmesh.Triangles.Length );
+		}
+
+		[Test]
+		public void C2_Check_That_Triangle_Indices_Properties_Are_Not_Negative_One()
+		{
+			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(C2_Check_That_Triangle_Indices_Properties_Are_Not_Negative_One)));
+
+			for ( int i = 0; i < _sceneGeneratedLnxNavmesh.Triangles.Length; i++ )
+			{
+				Debug.Log($"{i}...");
+
+				Debug.Log( $"checking Index_inCollection..." );
+				Assert.Greater( _sceneGeneratedLnxNavmesh.Triangles[i].Index_inCollection, -1 );
+
+				Debug.Log($"checking AreaIndex...");
+				Assert.Greater(_sceneGeneratedLnxNavmesh.Triangles[i].AreaIndex, -1);
+			}
+		}
+
+		[Test]
+		public void C3_All_Triangle_Relationships_Array_Lengths_Equal_Master_Triangles_Array_Length()
+		{
+			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(C3_All_Triangle_Relationships_Array_Lengths_Equal_Master_Triangles_Array_Length)));
+
+			Debug.Log($"\nChecking relationships...");
+			Debug.Log($"Running through '{_sceneGeneratedLnxNavmesh.Triangles.Length}' triangles to check relationships..");
+			for (int i = 0; i < _sceneGeneratedLnxNavmesh.Triangles.Length; i++)
+			{
+				Debug.Log($"checking tri '{i}'...");
+
+				Assert.AreEqual(_sceneGeneratedLnxNavmesh.Triangles[i].Relationships.Length, _sceneGeneratedLnxNavmesh.Triangles.Length);
+			}
+		}
+
+		[Test]
+		public void C4_All_Triangle_AdjacentTriIndices_Array_Length_Are_Greater_Than_Zero()
+		{
+			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(C4_All_Triangle_AdjacentTriIndices_Array_Length_Are_Greater_Than_Zero)));
+
+			Debug.Log($"\nChecking relationships...");
+			Debug.Log($"Running through '{_sceneGeneratedLnxNavmesh.Triangles.Length}' triangles to check relationships..");
+			for (int i = 0; i < _sceneGeneratedLnxNavmesh.Triangles.Length; i++)
+			{
+				Debug.Log($"checking tri '{i}'...");
+				Assert.Greater(_sceneGeneratedLnxNavmesh.Triangles[i].AdjacentTriIndices.Length, 0);
+			}
+		}
+
+		#endregion
+
+		#region D) CHECK VERTICES -----------------------------------------------------------------------------------------
+		[Test]
+		public void D1_Vert_Coordinates_Are_Kosher()
+		{
+			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(D1_Vert_Coordinates_Are_Kosher)));
+
+			Debug.Log($"\nThis Test checks that all vertices have 'MyCoordinate' values that match their actual positions within the collections that " +
+				$"they're stored in. This also inadvertantly ensures that there are no duplicate coordinates, and that the coordinates are unbroken.\n");
+
+			for ( int i_tris = 0; i_tris < _sceneGeneratedLnxNavmesh.Triangles.Length; i_tris++ )
+			{
+				Debug.Log($"iterating tri: '{i_tris}'...");
+
+				for ( int i_verts = 0; i_verts < 3; i_verts++ )
+				{
+					Debug.Log($"iterating vert: '{i_verts}'...");
+
+					Debug.Log($"Asserting that iterated vert with coordinate: '{_sceneGeneratedLnxNavmesh.Triangles[i_tris].Verts[i_verts].MyCoordinate}' " +
+						$"matches position in collection...");
+					Assert.AreEqual( i_tris, _sceneGeneratedLnxNavmesh.Triangles[i_tris].Verts[i_verts].MyCoordinate.TrianglesIndex );
+					Assert.AreEqual( i_verts, _sceneGeneratedLnxNavmesh.Triangles[i_tris].Verts[i_verts].MyCoordinate.ComponentIndex );
+				}
+			}
+		}
+
+		[Test]
+		public void D2_Vert_Vismesh_Index_Properties_Are_Within_Bounds()
+		{
+			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(D2_Vert_Vismesh_Index_Properties_Are_Within_Bounds)));
+
+			for (int i = 0; i < _sceneGeneratedLnxNavmesh.Triangles.Length; i++)
+			{
+				Debug.Log($"{i}...");
+
+				for (int i_verts = 0; i_verts < 3; i_verts++)
+				{
+					Debug.Log($"checking indices of vert[0]...");
+					Debug.Log($"Verts[0].MeshIndex_triangles: '{_sceneGeneratedLnxNavmesh.Triangles[i].Verts[i_verts].Index_VisMesh_triangles}'");
+					Assert.Greater(_sceneGeneratedLnxNavmesh.Triangles[i].Verts[i_verts].Index_VisMesh_triangles, -1);
+					Assert.Less(_sceneGeneratedLnxNavmesh.Triangles[i].Verts[i_verts].Index_VisMesh_triangles, _sceneGeneratedLnxNavmesh._Mesh.triangles.Length);
+
+					Debug.Log($"Verts[0].MeshIndex_vertices: '{_sceneGeneratedLnxNavmesh.Triangles[i].Verts[i_verts].Index_VisMesh_Vertices}'");
+					Assert.Greater(_sceneGeneratedLnxNavmesh.Triangles[i].Verts[i_verts].Index_VisMesh_Vertices, -1);
+					Assert.Less(_sceneGeneratedLnxNavmesh.Triangles[i].Verts[i_verts].Index_VisMesh_Vertices, _sceneGeneratedLnxNavmesh._Mesh.vertices.Length);
+				}
+			}
+		}
+
+		[Test]
+		public void D4_Vert_SharedVertexCoordinates_Collections_Are_Correct()
+		{
+			Debug.Log( string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(D4_Vert_SharedVertexCoordinates_Collections_Are_Correct)) );
+
+			Debug.Log($"\nThis Test ensures that all vertices have a sharedvertexcoordinates arrays that have the correct entries.\n");
+
+			LNX_Vertex currentVert = null;
+			for ( int i_tris = 0; i_tris < _sceneGeneratedLnxNavmesh.Triangles.Length; i_tris++ )
+			{
+				for ( int i_verts = 0; i_verts < 3; i_verts++ )
+				{
+					currentVert = _sceneGeneratedLnxNavmesh.Triangles[i_tris].Verts[i_verts];
+					Debug.Log($"iterating currentVert: '{currentVert}'..................");
+
+					List<LNX_Vertex> locatedSharedSpaceVerts = new List<LNX_Vertex>();
+
+					for ( int i_tris_inner = 0; i_tris_inner < _sceneGeneratedLnxNavmesh.Triangles.Length; i_tris_inner++ )
+					{
+						for ( int i_verts_inner = 0; i_verts_inner < 3; i_verts_inner++ )
+						{
+							LNX_Vertex compareVert = _sceneGeneratedLnxNavmesh.Triangles[i_tris_inner].Verts[i_verts_inner];
+
+							if( compareVert.Position == currentVert.Position && compareVert.MyCoordinate != currentVert.MyCoordinate )
+							{
+								Debug.Log($"Found a shared vert at: '{compareVert.MyCoordinate}'. Adding to list...");
+								locatedSharedSpaceVerts.Add( compareVert );
+							}
+						}
+					}
+
+					Debug.Log($"finally located total of '{locatedSharedSpaceVerts.Count}' sharedspaceverts. Asserting this is equal to what was logged into " +
+						$"current vert's collection...");
+					Assert.AreEqual( currentVert.SharedVertexCoordinates.Length, locatedSharedSpaceVerts.Count );
+
+					Debug.Log($"checking that all the '{currentVert.SharedVertexCoordinates.Length}' sharedverts match those" +
+						$" that were just located...");
+					for ( int i_sharedVertCoords = 0; i_sharedVertCoords < currentVert.SharedVertexCoordinates.Length; i_sharedVertCoords++ )
+					{
+						bool haveLocated = false;
+						for( int i_justLocatedSharedVerts = 0; i_justLocatedSharedVerts < locatedSharedSpaceVerts.Count; i_justLocatedSharedVerts++ )
+						{
+							if( currentVert.SharedVertexCoordinates[i_sharedVertCoords] == locatedSharedSpaceVerts[i_justLocatedSharedVerts].MyCoordinate )
+							{
+								haveLocated = true;
+								break;
+							}
+						}
+
+						Assert.IsTrue( haveLocated );
+					}
+				}
+			}
+		}
+
+
+		#endregion
+
+		#region E) CHECK VISUALIZATION MESH ------------------------------------------------------------------------------------------
 		public static int largestMeshVisIndex_sceneGenerated = 0; //public and static, because I need to cache this and use it in another test file...
 		public static int largestMeshVisINdex_serialized = 0; //public and static, because I need to cache this and use it in another test file...
 		[Test]
-		public void c1_Greatest_VisMeshIndex_Is_Same_As_Mesh_Vertices_Array_Length()
+		public void E1_Greatest_VisMeshIndex_Is_Same_As_Mesh_Vertices_Array_Length()
 		{
-			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(c1_Greatest_VisMeshIndex_Is_Same_As_Mesh_Vertices_Array_Length)));
+			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(E1_Greatest_VisMeshIndex_Is_Same_As_Mesh_Vertices_Array_Length)));
 
 			Debug.Log($"Finding largest mesh vis index for meshes...");
 			for (int i_triangles = 0; i_triangles < _sceneGeneratedLnxNavmesh.Triangles.Length; i_triangles++)
@@ -285,9 +371,9 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		}
 
 		[Test]
-		public void c2_Mesh_Triangles_Array_Is_Expected_Length()
+		public void E2_Mesh_Triangles_Array_Is_Expected_Length()
 		{
-			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(c2_Mesh_Triangles_Array_Is_Expected_Length)));
+			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(E2_Mesh_Triangles_Array_Is_Expected_Length)));
 			Debug.Log($"scene mesh's vismesh triangles collection null: '{_sceneGeneratedLnxNavmesh._Mesh.triangles == null}'");
 			Debug.Log($"data model collection null: '{_sceneGeneratedLnxNavmesh_expectedDataModel._triangulation_areas == null}'");
 
@@ -296,9 +382,9 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		}
 
 		[Test]
-		public void c3_Mesh_Vertices_Array_Is_Expected_Length()
+		public void E3_Mesh_Vertices_Array_Is_Expected_Length()
 		{
-			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(c3_Mesh_Vertices_Array_Is_Expected_Length)));
+			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(E3_Mesh_Vertices_Array_Is_Expected_Length)));
 			Debug.Log($"collection null: '{_sceneGeneratedLnxNavmesh._Mesh.vertices == null}'");
 
 			Assert.AreEqual( _sceneGeneratedLnxNavmesh_expectedDataModel._Mesh_Vertices.Length, _sceneGeneratedLnxNavmesh._Mesh.vertices.Length );
@@ -316,9 +402,9 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		*/
 
 		[Test]
-		public void c4_All_VisMesh_Verts_Have_Counterpart_At_Position()
+		public void E4_All_VisMesh_Verts_Have_Counterpart_At_Position()
 		{
-			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(c4_All_VisMesh_Verts_Have_Counterpart_At_Position)));
+			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(E4_All_VisMesh_Verts_Have_Counterpart_At_Position)));
 
 			for ( int i_uniqueVert = 0; i_uniqueVert < _sceneGeneratedLnxNavmesh._Mesh.vertices.Length; i_uniqueVert++ )
 			{
@@ -364,9 +450,9 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		*/
 
 		//TODO: these following tests need to be in their own separate script
-		#region D - LNX_Navmesh function Tests---------------------------------------------------------------------------
+		#region F) LNX_Navmesh function Tests---------------------------------------------------------------------------
 		[Test]
-        public void d1_SamplePosition_Tests() //todo: I think these need to be ran against the serialized navmesh
+        public void F1_SamplePosition_Tests() //todo: I think these need to be ran against the serialized navmesh
         {
 			Debug.Log($"Creating test object from json...");
 
@@ -408,7 +494,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		}
 
 		[Test]
-		public void d2_Test_ClosestOnPerimeter()
+		public void F2_Test_ClosestOnPerimeter()
 		{
 			Debug.Log($"Creating test object from json...");
 			Debug.Log($"test object path: '{TDG_Manager.filePath_testData_sampleClosestPtOnPerim}'");
@@ -452,9 +538,9 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		}
 
 		[Test]
-		public void d3_Test_ClosestOnPerimeter_triCenters()
+		public void F3_Test_ClosestOnPerimeter_triCenters()
 		{
-			Debug.Log($"{nameof(d3_Test_ClosestOnPerimeter_triCenters)}---------------------------------------------------------");
+			Debug.Log($"{nameof(F3_Test_ClosestOnPerimeter_triCenters)}---------------------------------------------------------");
 			Debug.Log($"Sampling '{_test_closestOnPerimeter.testPositions.Count}' test positions at: '{System.DateTime.Now.ToString()}'");
 
 			for (int i = 0; i < _test_closestOnPerimeter.testPositions.Count; i++)
@@ -476,7 +562,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				}
 			}
 
-			Debug.Log($"end of test: '{nameof(d3_Test_ClosestOnPerimeter_triCenters)}'");
+			Debug.Log($"end of test: '{nameof(F3_Test_ClosestOnPerimeter_triCenters)}'");
 		}
 		#endregion
 
