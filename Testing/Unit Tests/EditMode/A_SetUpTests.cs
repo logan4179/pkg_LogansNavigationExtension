@@ -379,7 +379,11 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 					continue;
 				}
 
-				Assert.
+				for ( int i_edge = 0; i_edge < 3; i_edge++ ) 
+				{
+					Assert.AreNotEqual( Vector3.zero, _sceneGeneratedLnxNavmesh.Triangles[i_tris].Edges[i_edge].v_cross );
+
+				}
 			}
 		}
 		#endregion
