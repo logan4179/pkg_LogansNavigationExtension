@@ -1048,5 +1048,14 @@ namespace LogansNavigationExtension
 			#endregion
 		}
 		#endregion
+
+		[ContextMenu("z call SayCurrentInfo()")]
+		public void SayCurrentInfo()
+		{
+			for (int i = 0; i < Triangles.Length; i++)
+			{
+				Triangles[i].SayCurrentInfo();
+			}
+		}
 	}
 }

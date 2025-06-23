@@ -35,6 +35,8 @@ namespace LogansNavigationExtension
 
 		public LNX_Edge( LNX_Triangle tri, LNX_Vertex strtVrt, LNX_Vertex endVrt, int indx )
 		{
+			Debug.Log($"ctor. edge: '{tri.Index_inCollection},{indx}'");
+
 			CalculateInfo( tri, strtVrt, endVrt );
 
 			MyCoordinate = new LNX_ComponentCoordinate( tri.Index_inCollection, indx );
@@ -105,6 +107,7 @@ namespace LogansNavigationExtension
 			{
 				v_cross = -v_cross;
 			}
+			Debug.Log($"vcross: '{v_cross}'");
 		}
 
 		public void TriIndexChanged( int newIndex )
@@ -114,6 +117,22 @@ namespace LogansNavigationExtension
 			StartVertCoordinate = new LNX_ComponentCoordinate( newIndex, StartVertCoordinate.ComponentIndex);
 
 			EndVertCoordinate = new LNX_ComponentCoordinate( newIndex, EndVertCoordinate.ComponentIndex);
+		}
+
+		public int GetOpposingVertIndex()
+		{
+			int opposingVertIndex = 0;
+
+			if ( StartVertCoordinate.ComponentIndex != 1 && EndVertCoordinate.ComponentIndex != 1)
+			{
+				opposingVertIndex = 1;
+			}
+			else if (StartVertCoordinate.ComponentIndex != 2 && EndVertCoordinate.ComponentIndex != 2)
+			{
+				opposingVertIndex = 2;
+			}
+
+			return opposingVertIndex;
 		}
 
 		#region API METHODS-----------------------------
@@ -136,22 +155,65 @@ namespace LogansNavigationExtension
 			return v_result;
 		}
 
-		public bool IsProjectedPointOnEdge(Vector3 origin, Vector3 direction)
+		public bool IsProjectedPointOnEdge( Vector3 origin, Vector3 destination )
 		{
-			float angBetweenVerts = Vector3.Angle(
-				Vector3.Normalize(StartPosition - origin),
-				Vector3.Normalize(EndPosition - origin)
-			);
+			string dbg = "";
+			Vector3 direction = LNX_Utils.FlatVector( destination - origin);
 
-			float angToStart = Vector3.Angle(direction, StartPosition - origin);
-			float angToEnd = Vector3.Angle(direction, EndPosition - origin);
+			float dotOf_dir_and_edgeStart = Vector3.Dot( 
+				direction, LNX_Utils.FlatVector(StartPosition - origin) );
+			dbg += $"dot(start): '{dotOf_dir_and_edgeStart}'. ";
 
-			if (angToStart > angBetweenVerts || angToEnd > angBetweenVerts)
+			if( dotOf_dir_and_edgeStart < 0f )
 			{
+				Debug.Log(dbg);
 				return false;
 			}
 
+			float dotOf_dir_and_edgeEnd = Vector3.Dot(
+				direction, LNX_Utils.FlatVector(EndPosition - origin) );
+			dbg += $"dot(end): '{dotOf_dir_and_edgeEnd}'\n";
+
+			if( dotOf_dir_and_edgeEnd < 0f )
+			{
+				Debug.Log(dbg);
+
+				return false;
+			}
+
+			Debug.Log(dbg);
+
+
 			return true;
+
+			/////////////////////////////////////////////////////////////////////////////////////
+			/*
+			float ang_originToProjectEdge = Vector3.Angle(
+				Vector3.Normalize(StartPosition - origin),
+				Vector3.Normalize(EndPosition - origin)
+			);
+			dbg += $"{nameof(ang_originToProjectEdge)}: '{ang_originToProjectEdge}'\n";
+
+
+			float angA = Vector3.Angle(
+				direction, LNX_Utils.FlatVector(StartPosition - origin)
+			);
+			float angB = Vector3.Angle(
+				direction, LNX_Utils.FlatVector(EndPosition - origin)
+			);
+
+			dbg += $"angA: '{angA}', angB: '{angB}'\n";
+
+			if (angA > ang_originToProjectEdge || angB > ang_originToProjectEdge)
+			{
+				dbg += "greather than...";
+				Debug.Log(dbg );
+				return false;
+			}
+			Debug.Log(dbg);
+
+			return true;
+			*/
 		}
 
 		/// <summary>
@@ -175,5 +237,14 @@ namespace LogansNavigationExtension
 			return false;
 		}
 		#endregion
+
+		public void SayCurrentInfo()
+		{
+			Debug.Log($"Edge.{nameof(SayCurrentInfo)}()\n" +
+				$"{nameof(MyCoordinate)}: '{MyCoordinate}'\n" +
+				$"{nameof(StartPosition)}: '{StartPosition}'\n" +
+				$"{nameof(v_cross)}: '{v_cross}'\n" +
+				$"");
+		}
 	}
 }

@@ -5,10 +5,9 @@ using UnityEngine;
 using UnityEngine.TestTools;
 using LogansNavigationExtension;
 using UnityEngine.AI;
-using JetBrains.Annotations;
 using System.IO;
-using static UnityEngine.Networking.UnityWebRequest;
-using System.Linq;
+using System.ComponentModel;
+
 
 namespace LoganLand.LogansNavmeshExtension.Tests
 {
@@ -171,7 +170,9 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		[Test]
         public void C1_Make_Sure_NavMesh_Has_Collection_Lengths_Consistent_With_Triangulation()
         {
-			Debug.Log( string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(C1_Make_Sure_NavMesh_Has_Collection_Lengths_Consistent_With_Triangulation)) );
+			LNX_UnitTestUtilities.LogTestStart(nameof(C1_Make_Sure_NavMesh_Has_Collection_Lengths_Consistent_With_Triangulation),
+				"Asserts that NavMeshTriangulation.areas.Length and the length of the scene generated lnxNavmesh.Triangles array are equal"
+			);
 			
             Assert.AreEqual( _nmTriangulation.areas.Length, _sceneGeneratedLnxNavmesh.Triangles.Length );
 		}
@@ -222,6 +223,34 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			}
 		}
 
+
+		[Test]
+		public void C5_Check_Triangle_Normals()
+		{
+			LNX_UnitTestUtilities.LogTestStart(nameof(C5_Check_Triangle_Normals),
+				""
+			);
+
+			//Note: right now I'm kinda using a cheap hack by just checking if there are more than 5 tris without normals. In the future, 
+			//I might want to 
+
+			int numberOfNullNormals = 0;
+
+			Debug.Log($"iterating through triangles to check their normals...");
+			for ( int i = 0; i < _sceneGeneratedLnxNavmesh.Triangles.Length; i++ )
+			{
+				Debug.Log($"i: '{i}'...");
+				if( _sceneGeneratedLnxNavmesh.Triangles[i].v_normal == Vector3.zero )
+				{
+					Debug.Log("found null normal...");
+					numberOfNullNormals++;
+				}
+			}
+
+			Debug.Log($"finished iterating. Found '{numberOfNullNormals}' abberant normals...");
+
+			Assert.Less( numberOfNullNormals, 6 );
+		}
 		#endregion
 
 		#region D) CHECK VERTICES -----------------------------------------------------------------------------------------
@@ -330,13 +359,38 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 		#endregion
 
-		#region E) CHECK VISUALIZATION MESH ------------------------------------------------------------------------------------------
+		#region E) CHECK EDGES -------------------------------------------------------------------------------------------
+
+		[Test]
+		public void E1_Check_vCross_Gets_Calculated_Correctly()
+		{
+			LNX_UnitTestUtilities.LogTestStart(nameof(E1_Check_vCross_Gets_Calculated_Correctly),
+				"Checks that the Edge.V_cross variable gets calculated correctly on instantiation."
+			);
+
+			Debug.Log($"iterating through '{_sceneGeneratedLnxNavmesh.Triangles.Length}' triangles...");
+			for ( int i_tris = 0; i_tris < _sceneGeneratedLnxNavmesh.Triangles.Length; i_tris++ )
+			{
+				Debug.Log($"i: '{i_tris}'...");
+
+				if( _sceneGeneratedLnxNavmesh.Triangles[i_tris].v_normal == Vector3.zero )
+				{
+					Debug.Log($"tri normal was 0. Continuing...");
+					continue;
+				}
+
+				Assert.
+			}
+		}
+		#endregion
+
+		#region F) CHECK VISUALIZATION MESH ------------------------------------------------------------------------------------------
 		public static int largestMeshVisIndex_sceneGenerated = 0; //public and static, because I need to cache this and use it in another test file...
 		public static int largestMeshVisINdex_serialized = 0; //public and static, because I need to cache this and use it in another test file...
 		[Test]
-		public void E1_Greatest_VisMeshIndex_Is_Same_As_Mesh_Vertices_Array_Length()
+		public void F1_Greatest_VisMeshIndex_Is_Same_As_Mesh_Vertices_Array_Length()
 		{
-			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(E1_Greatest_VisMeshIndex_Is_Same_As_Mesh_Vertices_Array_Length)));
+			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(F1_Greatest_VisMeshIndex_Is_Same_As_Mesh_Vertices_Array_Length)));
 
 			Debug.Log($"Finding largest mesh vis index for meshes...");
 			for (int i_triangles = 0; i_triangles < _sceneGeneratedLnxNavmesh.Triangles.Length; i_triangles++)
@@ -371,9 +425,9 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		}
 
 		[Test]
-		public void E2_Mesh_Triangles_Array_Is_Expected_Length()
+		public void F2_Mesh_Triangles_Array_Is_Expected_Length()
 		{
-			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(E2_Mesh_Triangles_Array_Is_Expected_Length)));
+			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(F2_Mesh_Triangles_Array_Is_Expected_Length)));
 			Debug.Log($"scene mesh's vismesh triangles collection null: '{_sceneGeneratedLnxNavmesh._Mesh.triangles == null}'");
 			Debug.Log($"data model collection null: '{_sceneGeneratedLnxNavmesh_expectedDataModel._triangulation_areas == null}'");
 
@@ -382,9 +436,9 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		}
 
 		[Test]
-		public void E3_Mesh_Vertices_Array_Is_Expected_Length()
+		public void F3_Mesh_Vertices_Array_Is_Expected_Length()
 		{
-			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(E3_Mesh_Vertices_Array_Is_Expected_Length)));
+			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(F3_Mesh_Vertices_Array_Is_Expected_Length)));
 			Debug.Log($"collection null: '{_sceneGeneratedLnxNavmesh._Mesh.vertices == null}'");
 
 			Assert.AreEqual( _sceneGeneratedLnxNavmesh_expectedDataModel._Mesh_Vertices.Length, _sceneGeneratedLnxNavmesh._Mesh.vertices.Length );
@@ -402,9 +456,9 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		*/
 
 		[Test]
-		public void E4_All_VisMesh_Verts_Have_Counterpart_At_Position()
+		public void F4_All_VisMesh_Verts_Have_Counterpart_At_Position()
 		{
-			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(E4_All_VisMesh_Verts_Have_Counterpart_At_Position)));
+			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(F4_All_VisMesh_Verts_Have_Counterpart_At_Position)));
 
 			for ( int i_uniqueVert = 0; i_uniqueVert < _sceneGeneratedLnxNavmesh._Mesh.vertices.Length; i_uniqueVert++ )
 			{
@@ -450,9 +504,9 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		*/
 
 		//TODO: these following tests need to be in their own separate script
-		#region F) LNX_Navmesh function Tests---------------------------------------------------------------------------
+		#region G) LNX_Navmesh function Tests---------------------------------------------------------------------------
 		[Test]
-        public void F1_SamplePosition_Tests() //todo: I think these need to be ran against the serialized navmesh
+        public void G1_SamplePosition_Tests() //todo: I think these need to be ran against the serialized navmesh
         {
 			Debug.Log($"Creating test object from json...");
 
@@ -494,7 +548,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		}
 
 		[Test]
-		public void F2_Test_ClosestOnPerimeter()
+		public void G2_Test_ClosestOnPerimeter()
 		{
 			Debug.Log($"Creating test object from json...");
 			Debug.Log($"test object path: '{TDG_Manager.filePath_testData_sampleClosestPtOnPerim}'");
@@ -538,9 +592,9 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		}
 
 		[Test]
-		public void F3_Test_ClosestOnPerimeter_triCenters()
+		public void G3_Test_ClosestOnPerimeter_triCenters()
 		{
-			Debug.Log($"{nameof(F3_Test_ClosestOnPerimeter_triCenters)}---------------------------------------------------------");
+			Debug.Log($"{nameof(G3_Test_ClosestOnPerimeter_triCenters)}---------------------------------------------------------");
 			Debug.Log($"Sampling '{_test_closestOnPerimeter.testPositions.Count}' test positions at: '{System.DateTime.Now.ToString()}'");
 
 			for (int i = 0; i < _test_closestOnPerimeter.testPositions.Count; i++)
@@ -562,7 +616,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				}
 			}
 
-			Debug.Log($"end of test: '{nameof(F3_Test_ClosestOnPerimeter_triCenters)}'");
+			Debug.Log($"end of test: '{nameof(G3_Test_ClosestOnPerimeter_triCenters)}'");
 		}
 		#endregion
 

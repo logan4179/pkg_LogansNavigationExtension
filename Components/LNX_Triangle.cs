@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.SearchService;
 using UnityEngine;
 
 
@@ -94,6 +95,10 @@ namespace LogansNavigationExtension
 			CalculateDerivedInfo();
 
 			TrySampleNormal( navMesh.CachedLayerMask, true );
+
+			DbgCalculateTriInfo += $"nrml: '{v_normal}'\n" +
+				$"edge lengths: '{Edges[0].EdgeLength}', '{Edges[1].EdgeLength}', '{Edges[2].EdgeLength}'\n" +
+				$"Prmtr: '{Perimeter}', Area: '{AreaIndex}'\n";
 		}
 
 		public void AdoptValues( LNX_Triangle baseTri )
@@ -220,8 +225,6 @@ namespace LogansNavigationExtension
 		/// </summary>
 		public void CalculateDerivedInfo( bool logMessages = true )
 		{
-			DbgCalculateTriInfo = string.Empty;
-
 			V_center = (Verts[0].Position + Verts[1].Position + Verts[2].Position) / 3f;
 
 			Edges[0].CalculateInfo( this, Verts[1], Verts[2] );
@@ -242,10 +245,6 @@ namespace LogansNavigationExtension
 			ShortestEdgeLength = Mathf.Min(Edges[0].EdgeLength, Edges[1].EdgeLength, Edges[2].EdgeLength);
 
 			name = $"ind: '{index_inCollection}', ctr: '{V_center}'";
-
-			DbgCalculateTriInfo += $"nrml: '{v_normal}'\n" +
-				$"edge lengths: '{Edges[0].EdgeLength}', '{Edges[1].EdgeLength}', '{Edges[2].EdgeLength}'\n" +
-				$"Prmtr: '{Perimeter}', Area: '{AreaIndex}'\n";
 		}
 
 		public void RefreshTriangle( LNX_NavMesh nm, bool logMessages = true) //todo: this needs to be renamed
@@ -492,13 +491,75 @@ namespace LogansNavigationExtension
 		}
 
 		public string dbgPerim;
+
+		/// <summary>
+		/// Checks if a point (destination) is 
+		/// </summary>
+		/// <param name="origin"></param>
+		/// <param name="destination"></param>
+		/// <param name="edgeIndex"></param>
+		/// <returns></returns>
+		public bool IsProjectedPointOnEdge(Vector3 origin, Vector3 destination, int edgeIndex)
+		{
+			string dbg = "";
+			int opposingVertIndex = Edges[edgeIndex].GetOpposingVertIndex();
+			dbg += $"oppVrt: '{opposingVertIndex}'. vrtA: '{Edges[edgeIndex].StartVertCoordinate.ComponentIndex}', " +
+				$"vrtB: '{Edges[edgeIndex].EndVertCoordinate.ComponentIndex}'\n";
+
+			Vector3 v_project = LNX_Utils.FlatVector( destination - origin );
+
+			Vector3 v_origin_to_VrtA = LNX_Utils.FlatVector(
+				Verts[Edges[edgeIndex].StartVertCoordinate.ComponentIndex].Position - origin
+			);
+			Vector3 v_origin_to_VrtB = LNX_Utils.FlatVector(
+				Verts[Edges[edgeIndex].EndVertCoordinate.ComponentIndex].Position - origin
+			);
+
+			float chevronAngle = Vector3.Angle( v_origin_to_VrtA, v_origin_to_VrtB );
+
+			//Note: Currently this method uses a bit of a hack, but it seems to me like it will always work. The following two angle
+			//calculations don't work in all instances, because they count up to 180, then back down after the threshold is crossed.
+			//They would ideally go from 0 to 360. Later on, a magic number is used to check that the sum of both of these plus 
+			//the magic number are above the chevron angle. This is because, due to rounding, the two angles can add up to slightly 
+			//beyond what they actually are...
+			float angle1 = Vector3.Angle(v_project, v_origin_to_VrtA);
+			float angle2 = Vector3.Angle(v_project, v_origin_to_VrtB);
+
+			// same thing ---------------------------------------------------------------------------
+			/*
+			float angle1 = Quaternion.Angle(
+				Quaternion.FromToRotation(Vector3.forward, v_project),
+				Quaternion.FromToRotation(Vector3.forward, v_origin_to_VrtA)
+			);
+			float angle2 = Quaternion.Angle(
+				Quaternion.FromToRotation(Vector3.forward, v_project),
+				Quaternion.FromToRotation(Vector3.forward, v_origin_to_VrtB)
+			);
+			*/
+
+
+			dbg += $"chev: '{chevronAngle}', 1: '{angle1}', 2: '{angle2}'. added: '{angle1+angle2}'";
+
+			//Debug.Log( dbg );
+
+			// note: the following has a magic number. This is a hack for now. I do this because if I just use '(angle1 + angle2) > chevronAngle', there 
+			// will sometimes be a rounding error that will make the added number a tiny amount larger than chevronAngle when the destination is truly 
+			// projected on the edge
+			if ( angle1 > chevronAngle || angle2 > chevronAngle || ((angle1 + angle2) > (chevronAngle + 0.0001f)) )
+			{
+				return false;
+			}
+
+			return true;
+		}
+
 		public Vector3 ProjectThroughToPerimeter( Vector3 innerPos, Vector3 outerPos, out LNX_Edge outedge, LNX_Direction meshProjectionDir = LNX_Direction.PositiveY )
 		{
 			innerPos = LNX_Utils.FlatVector( innerPos, meshProjectionDir );
 			outerPos = LNX_Utils.FlatVector( outerPos, meshProjectionDir );
 
 			Vector3 v_dir = Vector3.Normalize( outerPos - innerPos );
-			dbgPerim = string.Empty;
+			dbgPerim = $"vc0: '{Edges[0].v_cross}', vc1: '{Edges[1].v_cross}', vc2: '{Edges[2].v_cross}'\n";
 
 			#region Find opposing edge...........................
 			//note: the dot product of edge 0 isn't necessary as we can assume it's this one for sure if the other two don't work...
@@ -510,12 +571,12 @@ namespace LogansNavigationExtension
 			dbgPerim += $"{nameof(dotProd_edge1)}: '{dotProd_edge1}'\n" +
 				$"{nameof(dotProd_edge2)}: '{dotProd_edge2}'\n";
 
-			if( dotProd_edge1 > 0 && Edges[1].IsProjectedPointOnEdge(innerPos, v_dir) )
+			if( dotProd_edge1 > 0 && Edges[1].IsProjectedPointOnEdge(innerPos, outerPos) )
 			{
 				dbgPerim += $"if-chose 1\n";
 				opposingEdge = 1;
 			}
-			else if ( dotProd_edge2 > 0 && Edges[2].IsProjectedPointOnEdge(innerPos, v_dir) )
+			else if ( dotProd_edge2 > 0 && Edges[2].IsProjectedPointOnEdge(innerPos, outerPos) )
 			{
 				dbgPerim += $"if-chose 2\n";
 				opposingEdge = 2;
@@ -547,7 +608,7 @@ namespace LogansNavigationExtension
 
 			//Debug.Log( dbgPerim );
 
-			/*rawLine( innerPos, outerPos );
+			/*DrawLine( innerPos, outerPos );
 
 			Gizmos.color = Color.yellow;
 			Gizmos.DrawLine( Edges[opposingEdge].StartPosition, Edges[opposingEdge].EndPosition );
@@ -717,6 +778,19 @@ namespace LogansNavigationExtension
 			Verts[0].Ping( tris );
 			Verts[1].Ping( tris );
 			Verts[2].Ping( tris );
+		}
+
+		public void SayCurrentInfo()
+		{
+			Debug.Log($"Triangle.{nameof(SayCurrentInfo)}()...\n" +
+				$"{nameof(index_inCollection)}: '{index_inCollection}'\n" +
+				$"{nameof(MeshIndex_trianglesStart)}: '{MeshIndex_trianglesStart}'\n" +
+				$"{nameof(v_normal)}: '{v_normal}'\n" +
+				$"");
+
+			Edges[0].SayCurrentInfo();
+			Edges[1].SayCurrentInfo();
+			Edges[2].SayCurrentInfo();
 		}
 	}
 }

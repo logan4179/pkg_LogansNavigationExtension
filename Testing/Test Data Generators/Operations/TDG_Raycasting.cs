@@ -12,10 +12,23 @@ namespace LogansNavigationExtension
 		public Transform startTrans;
 		public Transform endTrans;
 
+		public List<Vector3> CapturedStartPositions = new List<Vector3>();
+		public List<Vector3> CapturedEndPositions = new List<Vector3>();
+
+
 		public bool RaycastResult = false;
 
 		[TextArea(1,20)]
 		public string DebugRaycast;
+
+		[ContextMenu("z CaptureDataPoint()")]
+		public void CaptureDataPoint()
+		{
+			CapturedStartPositions.Add( startTrans.position );
+			CapturedEndPositions.Add( endTrans.position );
+
+			//Debug.Log($"Logged '{rslt_CurrentProjectedPtOnEdge}'...");
+		}
 
 		private void OnDrawGizmos()
 		{

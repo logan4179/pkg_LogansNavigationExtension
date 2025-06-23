@@ -174,7 +174,7 @@ namespace LogansNavigationExtension
 			return vCenter / corners.Length;
 		}
 
-		public static Vector3 FlatVector( Vector3 vector, LNX_Direction flattenDir )
+		public static Vector3 FlatVector( Vector3 vector, LNX_Direction flattenDir = LNX_Direction.PositiveY )
 		{
 			Vector3 newVector = vector;
 
