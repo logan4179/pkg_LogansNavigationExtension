@@ -38,6 +38,9 @@ namespace LogansNavigationExtension
 		public TDG_SamplePosition _tdg_samplePosition;
 		public static string filePath_testData_SamplePosition = Path.Combine( dirPath_testDataFolder, "tdg_samplePosition_data_B.json" );
 
+		public TDG_VertexOperations _tdg_vertexOperations;
+		public static string filePath_testData_vertexOperations = $"{dirPath_testDataFolder}\\tdg_vertexOperations_data_A.json";
+
 		public TDG_Pathing _tdg_pathing;
 		public static string filePath_testData_pathing = $"{dirPath_testDataFolder}\\tdg_pathing_data_A.json";
 
@@ -208,6 +211,14 @@ namespace LogansNavigationExtension
 
 				WriteSerializedLnxMeshToJson();
 				WriteSceneGeneratedMeshDataToJson();
+
+				#region VERTEX OPERATIONS ----------------------------------------------------------
+				if ( !_tdg_vertexOperations.WriteMeToJson() )
+				{
+					Debug.LogError($"write to json didn't work on {nameof(_tdg_vertexOperations)}. Returning early...");
+					return;
+				}
+				#endregion
 
 				#region SAMPLE POSITION ---------------------------------------------------------------------
 				_tdg_samplePosition.GenerateHItResultCollections();

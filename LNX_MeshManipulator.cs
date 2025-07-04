@@ -271,7 +271,7 @@ namespace LogansNavigationExtension
 
 				for ( int i = 0; i < _LNX_NavMesh.Triangles.Length; i++ )
 				{
-					Vector3 vTo = Vector3.Normalize(_LNX_NavMesh.Triangles[i].V_center - vPerspective);
+					Vector3 vTo = Vector3.Normalize(_LNX_NavMesh.Triangles[i].V_Center - vPerspective);
 					float alignment = Vector3.Dot(vTo, vDirection);
 
 					if ( alignment > runningBestAlignment )
@@ -304,7 +304,7 @@ namespace LogansNavigationExtension
 
 					for ( int j = 0; j < 3; j++ )
 					{
-						Vector3 vTo = Vector3.Normalize( _LNX_NavMesh.GetVertexAtCoordinate(i,j).Position - vPerspective );
+						Vector3 vTo = Vector3.Normalize( _LNX_NavMesh.GetVertexAtCoordinate(i,j).V_Position - vPerspective );
 						float alignment = Vector3.Dot( vTo, vDirection );
 
 						if ( alignment > runningBestAlignment )
@@ -420,7 +420,7 @@ namespace LogansNavigationExtension
 				}
 				#endregion
 
-				manipulatorPos = _LNX_NavMesh.Triangles[Index_TriLastSelected].V_center;
+				manipulatorPos = _LNX_NavMesh.Triangles[Index_TriLastSelected].V_Center;
 			}
 			else if( SelectMode == LNX_SelectMode.Vertices )
 			{
@@ -440,7 +440,7 @@ namespace LogansNavigationExtension
 					Verts_currentlySelected.Add( Vert_CurrentlyPointingAt );
 				}
 
-				manipulatorPos = Vert_LastSelected.Position;
+				manipulatorPos = Vert_LastSelected.V_Position;
 			}
 			else if( SelectMode == LNX_SelectMode.Edges )
 			{
@@ -710,7 +710,7 @@ namespace LogansNavigationExtension
 
 				for ( int i = 0; i < _LNX_NavMesh.Triangles.Length; i++ )
 				{
-					bool amKosher = _LNX_NavMesh.Triangles[i].v_normal != Vector3.zero;
+					bool amKosher = _LNX_NavMesh.Triangles[i].v_sampledNormal != Vector3.zero;
 					bool useGizmos = true;
 
 					if( !amKosher )
@@ -743,7 +743,7 @@ namespace LogansNavigationExtension
 						gstl_label.normal.textColor = amKosher ? Color.white : Color.red;
 
 						Handles.Label( 
-							_LNX_NavMesh.Triangles[i].V_center, 
+							_LNX_NavMesh.Triangles[i].V_Center, 
 							_LNX_NavMesh.Triangles[i].Index_inCollection.ToString(), gstl_label
 						);
 					}
@@ -822,7 +822,7 @@ namespace LogansNavigationExtension
 
 				if( Vert_CurrentlyPointingAt != null )
 				{
-					Gizmos.DrawSphere( Vert_CurrentlyPointingAt.Position, Size_HoveredComponent * 0.020f );
+					Gizmos.DrawSphere( Vert_CurrentlyPointingAt.V_Position, Size_HoveredComponent * 0.020f );
 				}
 
 				if ( Verts_currentlySelected != null && Verts_currentlySelected.Count > 0 )
@@ -832,12 +832,12 @@ namespace LogansNavigationExtension
 						if ( vrt == Vert_LastSelected )
 						{
 							Gizmos.color = Color.yellow;
-							Gizmos.DrawSphere( vrt.Position, Size_HoveredComponent * 0.020f );
+							Gizmos.DrawSphere( vrt.V_Position, Size_HoveredComponent * 0.020f );
 							Gizmos.color = Color.white;
 						}
 						else
 						{
-							Gizmos.DrawSphere( vrt.Position, Size_HoveredComponent * 0.013f );
+							Gizmos.DrawSphere( vrt.V_Position, Size_HoveredComponent * 0.013f );
 						}
 					}
 				}

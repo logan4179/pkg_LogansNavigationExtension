@@ -74,9 +74,27 @@ namespace LogansNavigationExtension
 			gstl_vertLines.normal.textColor = col;
 
 			//Draw borders...
-			Handles.DrawLine( tri.Verts[0].Position, tri.Verts[1].Position );
-			Handles.DrawLine( tri.Verts[1].Position, tri.Verts[2].Position );
-			Handles.DrawLine( tri.Verts[2].Position, tri.Verts[0].Position );
+			Handles.DrawLine( tri.Verts[0].V_Position, tri.Verts[1].V_Position );
+			Handles.DrawLine( tri.Verts[1].V_Position, tri.Verts[2].V_Position );
+			Handles.DrawLine( tri.Verts[2].V_Position, tri.Verts[0].V_Position );
+		}
+
+        public void DrawStandardFocusTriGizmos( LNX_Triangle tri, float raiseAmount, string lblString )
+        {
+            Color oldColor = Gizmos.color;
+
+			Gizmos.color = Color.magenta;
+			//Handles.color = Color.magenta;
+			Vector3 vRaise = Vector3.up * raiseAmount;
+
+			Gizmos.DrawLine( tri.Verts[0].V_Position, tri.V_Center + vRaise );
+			Gizmos.DrawLine( tri.Verts[1].V_Position, tri.V_Center + vRaise );
+			Gizmos.DrawLine( tri.Verts[2].V_Position, tri.V_Center + vRaise );
+
+			Handles.Label( tri.V_Center + vRaise, lblString );
+
+            Gizmos.color = oldColor;
+
 		}
 	}
 }

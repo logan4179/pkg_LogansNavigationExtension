@@ -68,25 +68,25 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			vertToMove = new LNX_ComponentCoordinate() { TrianglesIndex = 0, ComponentIndex = 0 }; //just arbitrarily picking the first tri and vert for this...
 
 			moveVert = _sceneGeneratedNavmesh.GetVertexAtCoordinate( vertToMove );
-			v_moveTo = moveVert.Position + (Vector3.up * 0.5f);
-			v_origPos = moveVert.Position;
+			v_moveTo = moveVert.V_Position + (Vector3.up * 0.5f);
+			v_origPos = moveVert.V_Position;
 
 			Debug.Log($"making sure that currently the .Position and .OriginalPosition on this vert are the same...");
 			UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-				moveVert.OriginalPosition.x, moveVert.Position.x
+				moveVert.OriginalPosition.x, moveVert.V_Position.x
 			);
 			UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-				moveVert.OriginalPosition.y, moveVert.Position.y
+				moveVert.OriginalPosition.y, moveVert.V_Position.y
 			);
 			UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-				moveVert.OriginalPosition.z, moveVert.Position.z
+				moveVert.OriginalPosition.z, moveVert.V_Position.z
 			);
 			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestSectionEndString, "calculating/caching"));
 
 
 			Debug.Log( $"attempting point at vert '{vertToMove.ToString()}'..." );
 			_lnx_meshManipulator.TryPointAtComponentViaDirection(
-				moveVert.Position + (Vector3.up * 3f),
+				moveVert.V_Position + (Vector3.up * 3f),
 				Vector3.down
 			);
 
@@ -109,11 +109,11 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				}
 				else
 				{
-					Debug.Log($"moving vert. vert current pos: '{moveVert.Position}'");
+					Debug.Log($"moving vert. vert current pos: '{moveVert.V_Position}'");
 
 					_lnx_meshManipulator.MoveSelectedVerts( v_moveTo );
 
-					Debug.Log($"after move, vert current pos: '{moveVert.Position}'. Checking that there are modifications...");
+					Debug.Log($"after move, vert current pos: '{moveVert.V_Position}'. Checking that there are modifications...");
 
 					Assert.True( _sceneGeneratedNavmesh.HaveModifications() );
 				}
@@ -139,13 +139,13 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 			Debug.Log($"checking that the vert is still in the same moved position...");
 			UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-				v_moveTo.x, moveVert.Position.x
+				v_moveTo.x, moveVert.V_Position.x
 			);
 			UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-				v_moveTo.y, moveVert.Position.y
+				v_moveTo.y, moveVert.V_Position.y
 			);
 			UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-				v_moveTo.z, moveVert.Position.z
+				v_moveTo.z, moveVert.V_Position.z
 			);
 
 			Debug.Log($"checking that the vert's originalPosition value is maintained...");

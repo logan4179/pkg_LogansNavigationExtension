@@ -86,14 +86,14 @@ namespace LogansNavigationExtension
 				Debug.Log($"index of pointing at tri: '{_Lnx_MeshManipulator.Index_TriPointingAt}'");
 
 				CapturedFaceCenterPositions.Add(
-					_Lnx_MeshManipulator._LNX_NavMesh.Triangles[_Lnx_MeshManipulator.Index_TriPointingAt].V_center
+					_Lnx_MeshManipulator._LNX_NavMesh.Triangles[_Lnx_MeshManipulator.Index_TriPointingAt].V_Center
 				);
 
 				_Lnx_MeshManipulator.TryGrab();
 
 
 				GrabbedPositions_face.Add(
-					_Lnx_MeshManipulator._LNX_NavMesh.Triangles[_Lnx_MeshManipulator.Index_TriLastSelected].V_center);
+					_Lnx_MeshManipulator._LNX_NavMesh.Triangles[_Lnx_MeshManipulator.Index_TriLastSelected].V_Center);
 
 				GrabbedManipulatorPos_face.Add(_Lnx_MeshManipulator.manipulatorPos);
 				CapturedNumberOfSharedVerts_face.Add(_Lnx_MeshManipulator.Verts_currentlySelected.Count);

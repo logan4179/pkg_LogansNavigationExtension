@@ -100,8 +100,8 @@ namespace LogansNavigationExtension
 		{
 			Debug.Log($"{nameof(FocusedTri.Index_inCollection)}: '{FocusedTri.Index_inCollection}' \n" +
 				$"{nameof(FocusedTri.MeshIndex_trianglesStart)}: '{FocusedTri.MeshIndex_trianglesStart}\n" +
-				$"{nameof(FocusedTri.V_center)}: '{FocusedTri.V_center}'\n" +
-				$"{nameof(FocusedTri.v_normal)}: '{FocusedTri.v_normal}' \n" +
+				$"{nameof(FocusedTri.V_Center)}: '{FocusedTri.V_Center}'\n" +
+				$"{nameof(FocusedTri.v_sampledNormal)}: '{FocusedTri.v_sampledNormal}' \n" +
 				$"");
 
 			Debug.Log($"vismesh normal: '{_mgr._Mesh.normals[_mgr._Mesh.triangles[FocusedTri.MeshIndex_trianglesStart]]}'\n" +
@@ -171,7 +171,7 @@ namespace LogansNavigationExtension
 				amFocused = false;
 			}
 
-			bool amKosher = tri.v_normal != Vector3.zero;
+			bool amKosher = tri.v_sampledNormal != Vector3.zero;
 
 			GUIStyle gstl_label = GUIStyle.none;
 			gstl_label.normal.textColor = amKosher ? Color.white : Color.red;
@@ -179,7 +179,7 @@ namespace LogansNavigationExtension
 			if (DrawTriLabels)
 			{
 				//Handles.Label( tri.V_center + (tri.v_normal * length_labels * 1.5f) + (tri.v_normal * 0.05f), tri.Index_parallelWithParentArray.ToString(), gstl_label );
-				Handles.Label(tri.V_center, tri.Index_inCollection.ToString(), gstl_label);
+				Handles.Label(tri.V_Center, tri.Index_inCollection.ToString(), gstl_label);
 			}
 
 			#region EDGES -------------------------------------------------------
@@ -223,13 +223,13 @@ namespace LogansNavigationExtension
 				if( amFocused && AmAllowingVertFocus )
 				{
 					//Gizmos.DrawSphere( tri.Verts[Index_VertFocus].Position, radius_vertSphere * 3f );
-					Handles.DrawWireDisc(tri.Verts[Index_VertFocus].Position, Vector3.up, radius_vertSphere * 4f);
+					Handles.DrawWireDisc(tri.Verts[Index_VertFocus].V_Position, Vector3.up, radius_vertSphere * 4f);
 				}
 				Gizmos.color = color_vertSphere;
 
-				Gizmos.DrawSphere( tri.Verts[0].Position, radius_vertSphere );
-				Gizmos.DrawSphere( tri.Verts[1].Position, radius_vertSphere );
-				Gizmos.DrawSphere( tri.Verts[2].Position, radius_vertSphere );
+				Gizmos.DrawSphere( tri.Verts[0].V_Position, radius_vertSphere );
+				Gizmos.DrawSphere( tri.Verts[1].V_Position, radius_vertSphere );
+				Gizmos.DrawSphere( tri.Verts[2].V_Position, radius_vertSphere );
 			}
 
 			if ( DrawVertLables )
@@ -237,9 +237,9 @@ namespace LogansNavigationExtension
 				Gizmos.color = amKosher ? color_vertSphere : Color.red;
 
 				float calcLength = Length_normalLines * 0.5f;
-				Handles.Label(tri.Verts[0].Position + (tri.Verts[0].v_toCenter.normalized * calcLength), "v0", gstl_label);
-				Handles.Label(tri.Verts[1].Position + (tri.Verts[1].v_toCenter.normalized * calcLength), "v1", gstl_label);
-				Handles.Label(tri.Verts[2].Position + (tri.Verts[2].v_toCenter.normalized * calcLength), "v2", gstl_label);
+				Handles.Label(tri.Verts[0].V_Position + (tri.Verts[0].v_toCenter.normalized * calcLength), "v0", gstl_label);
+				Handles.Label(tri.Verts[1].V_Position + (tri.Verts[1].v_toCenter.normalized * calcLength), "v1", gstl_label);
+				Handles.Label(tri.Verts[2].V_Position + (tri.Verts[2].v_toCenter.normalized * calcLength), "v2", gstl_label);
 			}
 			#endregion
 
@@ -247,11 +247,11 @@ namespace LogansNavigationExtension
 			{
 				Gizmos.color = Color_normalLines;
 
-				Gizmos.DrawLine( tri.V_center, tri.V_center + (tri.v_normal * Length_normalLines) );
+				Gizmos.DrawLine( tri.V_Center, tri.V_Center + (tri.v_sampledNormal * Length_normalLines) );
 				
-				Gizmos.DrawLine(tri.Verts[0].Position, tri.V_center);
-				Gizmos.DrawLine(tri.Verts[1].Position, tri.V_center);
-				Gizmos.DrawLine(tri.Verts[2].Position, tri.V_center);
+				Gizmos.DrawLine(tri.Verts[0].V_Position, tri.V_Center);
+				Gizmos.DrawLine(tri.Verts[1].V_Position, tri.V_Center);
+				Gizmos.DrawLine(tri.Verts[2].V_Position, tri.V_Center);
 
 				Gizmos.DrawLine( tri.Edges[0].MidPosition, tri.Edges[0].MidPosition + (tri.Edges[0].v_cross * len_edgeLables) );
 				Gizmos.DrawLine( tri.Edges[1].MidPosition, tri.Edges[1].MidPosition + (tri.Edges[1].v_cross * len_edgeLables) );
@@ -270,7 +270,7 @@ namespace LogansNavigationExtension
 
 			if ( AmAllowingFocus && amFocused && AmAllowingVertFocus )
 			{
-				Gizmos.DrawLine(tri.Verts[Index_VertFocus].Position, tri.Verts[Index_VertFocus].Position + (Vector3.up * 1.2f) );
+				Gizmos.DrawLine(tri.Verts[Index_VertFocus].V_Position, tri.Verts[Index_VertFocus].V_Position + (Vector3.up * 1.2f) );
 			}
 		}
 	}

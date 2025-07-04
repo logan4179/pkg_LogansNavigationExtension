@@ -247,9 +247,9 @@ namespace LogansNavigationExtension
 
 			Vector3[] vToVerts = new Vector3[3]
 			{
-				Vector3.Normalize(tri.Verts[0].Position - vOrigin),
-				Vector3.Normalize(tri.Verts[1].Position - vOrigin),
-				Vector3.Normalize(tri.Verts[2].Position - vOrigin)
+				Vector3.Normalize(tri.Verts[0].V_Position - vOrigin),
+				Vector3.Normalize(tri.Verts[1].V_Position - vOrigin),
+				Vector3.Normalize(tri.Verts[2].V_Position - vOrigin)
 			};
 
 			float alignment_projWithV0 = Vector3.Dot(v_toProjection, vToVerts[0]);
@@ -381,14 +381,14 @@ namespace LogansNavigationExtension
 			returnVerts.Add(primaryTri.Verts[moveEdge.StartVertCoordinate.ComponentIndex]);
 			returnVerts.Add(primaryTri.Verts[moveEdge.EndVertCoordinate.ComponentIndex]);
 
-			if (nm.GetVertexAtCoordinate(secondaryEdge.StartVertCoordinate).Position == moveEdge.StartPosition ||
-				nm.GetVertexAtCoordinate(secondaryEdge.StartVertCoordinate).Position == moveEdge.EndPosition
+			if (nm.GetVertexAtCoordinate(secondaryEdge.StartVertCoordinate).V_Position == moveEdge.StartPosition ||
+				nm.GetVertexAtCoordinate(secondaryEdge.StartVertCoordinate).V_Position == moveEdge.EndPosition
 			)
 			{
 				returnVerts.Add(nm.GetVertexAtCoordinate(secondaryEdge.StartVertCoordinate));
 			}
-			else if (nm.GetVertexAtCoordinate(secondaryEdge.EndVertCoordinate).Position == moveEdge.StartPosition ||
-				nm.GetVertexAtCoordinate(secondaryEdge.EndVertCoordinate).Position == moveEdge.EndPosition
+			else if (nm.GetVertexAtCoordinate(secondaryEdge.EndVertCoordinate).V_Position == moveEdge.StartPosition ||
+				nm.GetVertexAtCoordinate(secondaryEdge.EndVertCoordinate).V_Position == moveEdge.EndPosition
 			)
 			{
 				returnVerts.Add(nm.GetVertexAtCoordinate(secondaryEdge.EndVertCoordinate));
@@ -402,16 +402,16 @@ namespace LogansNavigationExtension
 		#region GIZMO DRAWING-------------------------------------
 		public static void DrawTriGizmos( LNX_Triangle tri )
 		{
-			Gizmos.DrawLine(tri.Verts[0].Position, tri.Verts[1].Position);
-			Gizmos.DrawLine(tri.Verts[1].Position, tri.Verts[2].Position);
-			Gizmos.DrawLine(tri.Verts[2].Position, tri.Verts[0].Position);
+			Gizmos.DrawLine(tri.Verts[0].V_Position, tri.Verts[1].V_Position);
+			Gizmos.DrawLine(tri.Verts[1].V_Position, tri.Verts[2].V_Position);
+			Gizmos.DrawLine(tri.Verts[2].V_Position, tri.Verts[0].V_Position);
 		}
 
 		public static void DrawTriHandles( LNX_Triangle tri, float thickness )
 		{
-			Handles.DrawLine(tri.Verts[0].Position, tri.Verts[1].Position, thickness );
-			Handles.DrawLine(tri.Verts[1].Position, tri.Verts[2].Position, thickness );
-			Handles.DrawLine(tri.Verts[2].Position, tri.Verts[0].Position, thickness );
+			Handles.DrawLine(tri.Verts[0].V_Position, tri.Verts[1].V_Position, thickness );
+			Handles.DrawLine(tri.Verts[1].V_Position, tri.Verts[2].V_Position, thickness );
+			Handles.DrawLine(tri.Verts[2].V_Position, tri.Verts[0].V_Position, thickness );
 		}
 		#endregion
 #endif
@@ -442,7 +442,7 @@ namespace LogansNavigationExtension
 		PositiveX = 2,
 		NegativeX = 3,
 		PositiveZ = 4,
-		NegitiveZ = 0,
+		NegativeZ = 0,
 	}
 	#endregion
 
@@ -549,6 +549,7 @@ namespace LogansNavigationExtension
 		/// <summary>The shortest possible distance to the destination vertex</summary>
 		public float Distance;
 
+		/// <summary>Vector pointing from perspective/owner vert to the related vert</summary>
 		public Vector3 v_to;
 
 		public float Angle_centerToDestinationVertex;
@@ -561,8 +562,8 @@ namespace LogansNavigationExtension
 
 			CanSee = true;
 			AmOverlapping = false;
-			Distance = Vector3.Distance(myVert.Position, relatedVert.Position);
-			v_to = Vector3.Normalize(relatedVert.Position - myVert.Position);
+			Distance = Vector3.Distance(myVert.V_Position, relatedVert.V_Position);
+			v_to = Vector3.Normalize(relatedVert.V_Position - myVert.V_Position);
 
 			Angle_centerToDestinationVertex = Vector3.Angle(myVert.v_toCenter, v_to);
 		}
@@ -619,13 +620,13 @@ namespace LogansNavigationExtension
 				{
 					for (int i_relatedVert = 0; i_relatedVert < 3; i_relatedVert++)
 					{
-						if (selfTri.Verts[i_ownedVert].Position == relatedTri.Verts[i_relatedVert].Position)
+						if (selfTri.Verts[i_ownedVert].V_Position == relatedTri.Verts[i_relatedVert].V_Position)
 						{
 							IndexMap_OwnedVerts_toShared[i_ownedVert] = i_relatedVert;
 							NumberofSharedVerts++;
 						}
 
-						if( Vector3.Distance(selfTri.Verts[i_ownedVert].Position, relatedTri.Verts[i_relatedVert].Position) < closestDist )
+						if( Vector3.Distance(selfTri.Verts[i_ownedVert].V_Position, relatedTri.Verts[i_relatedVert].V_Position) < closestDist )
 						{
 
 						}

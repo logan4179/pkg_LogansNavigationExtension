@@ -145,11 +145,11 @@ namespace LogansNavigationExtension
 				}
 				else
 				{
-					CapturedPointedAtVertPositions.Add( _Lnx_MeshManipulator.Vert_CurrentlyPointingAt.Position );
+					CapturedPointedAtVertPositions.Add( _Lnx_MeshManipulator.Vert_CurrentlyPointingAt.V_Position );
 
 					_Lnx_MeshManipulator.TryGrab();
 					//ointedAtNumberOfSharedVerts.Add( _Lnx_MeshManipulator.Verts_currentlySelected.Count );
-					CapturedGrabbedPositions_vert.Add( _Lnx_MeshManipulator.Vert_LastSelected.Position );
+					CapturedGrabbedPositions_vert.Add( _Lnx_MeshManipulator.Vert_LastSelected.V_Position );
 					CapturedGrabbedManipulatorPos_vert.Add( _Lnx_MeshManipulator.manipulatorPos );
 					Debug.Log($"{_Lnx_MeshManipulator.Verts_currentlySelected.Count}");
 				}
@@ -200,14 +200,14 @@ namespace LogansNavigationExtension
 					Debug.Log($"index of pointing at tri: '{_Lnx_MeshManipulator.Index_TriPointingAt}'");
 
 					CapturedPointedAtFaceCenterPositions.Add( 
-						_Lnx_MeshManipulator._LNX_NavMesh.Triangles[_Lnx_MeshManipulator.Index_TriPointingAt].V_center 
+						_Lnx_MeshManipulator._LNX_NavMesh.Triangles[_Lnx_MeshManipulator.Index_TriPointingAt].V_Center 
 					);
 
 					_Lnx_MeshManipulator.TryGrab();
 
 
 					CapturedGrabbedPositions_face.Add( 
-						_Lnx_MeshManipulator._LNX_NavMesh.Triangles[_Lnx_MeshManipulator.Index_TriLastSelected].V_center );
+						_Lnx_MeshManipulator._LNX_NavMesh.Triangles[_Lnx_MeshManipulator.Index_TriLastSelected].V_Center );
 
 					CapturedGrabbedManipulatorPos_face.Add( _Lnx_MeshManipulator.manipulatorPos );
 				}

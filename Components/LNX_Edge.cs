@@ -37,8 +37,6 @@ namespace LogansNavigationExtension
 		{
 			Debug.Log($"ctor. edge: '{tri.Index_inCollection},{indx}'");
 
-			CalculateInfo( tri, strtVrt, endVrt );
-
 			MyCoordinate = new LNX_ComponentCoordinate( tri.Index_inCollection, indx );
 
 			StartVertCoordinate = strtVrt.MyCoordinate;
@@ -91,17 +89,17 @@ namespace LogansNavigationExtension
 
 		public void CalculateInfo( LNX_Triangle tri, LNX_Vertex strtVrt, LNX_Vertex endVrt )
 		{
-			StartPosition = strtVrt.Position;
-			EndPosition = endVrt.Position;
+			StartPosition = strtVrt.V_Position;
+			EndPosition = endVrt.V_Position;
 			MidPosition = (StartPosition + EndPosition) / 2f;
 
-			v_startToEnd = Vector3.Normalize( StartPosition - EndPosition );
-			v_endToStart = Vector3.Normalize( EndPosition - StartPosition );
+			v_startToEnd = Vector3.Normalize( EndPosition - StartPosition );
+			v_endToStart = Vector3.Normalize( StartPosition - EndPosition );
 
 			EdgeLength = Vector3.Distance( StartPosition, EndPosition );
 
-			v_toCenter = Vector3.Normalize(tri.V_center - MidPosition);
-			v_cross = Vector3.Cross(v_startToEnd, tri.v_normal).normalized;
+			v_toCenter = Vector3.Normalize(tri.V_Center - MidPosition);
+			v_cross = Vector3.Cross(v_startToEnd, tri.v_sampledNormal).normalized;
 
 			if ( Vector3.Dot(v_cross, v_toCenter) < 0 )
 			{

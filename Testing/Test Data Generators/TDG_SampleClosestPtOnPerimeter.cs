@@ -64,7 +64,7 @@ namespace LogansNavigationExtension
 					Vector3 v = _mgr.Triangles[lnxHit.Index_hitTriangle].ClosestPointOnPerimeter( testPositions[i] );
 
 					hitPositions[i] = v;
-					triCenters[i] = _mgr.Triangles[lnxHit.Index_hitTriangle].V_center;
+					triCenters[i] = _mgr.Triangles[lnxHit.Index_hitTriangle].V_Center;
 				}
 			}
 

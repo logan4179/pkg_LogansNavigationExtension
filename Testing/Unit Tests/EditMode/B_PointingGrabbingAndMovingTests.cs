@@ -170,9 +170,9 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				}
 				else
 				{
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_pointingAndGrabbing.CapturedPointedAtVertPositions[i].x, _lnx_meshManipulator.Vert_CurrentlyPointingAt.Position.x);
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_pointingAndGrabbing.CapturedPointedAtVertPositions[i].y, _lnx_meshManipulator.Vert_CurrentlyPointingAt.Position.y);
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_pointingAndGrabbing.CapturedPointedAtVertPositions[i].z, _lnx_meshManipulator.Vert_CurrentlyPointingAt.Position.z);
+					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_pointingAndGrabbing.CapturedPointedAtVertPositions[i].x, _lnx_meshManipulator.Vert_CurrentlyPointingAt.V_Position.x);
+					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_pointingAndGrabbing.CapturedPointedAtVertPositions[i].y, _lnx_meshManipulator.Vert_CurrentlyPointingAt.V_Position.y);
+					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_pointingAndGrabbing.CapturedPointedAtVertPositions[i].z, _lnx_meshManipulator.Vert_CurrentlyPointingAt.V_Position.z);
 				}
 			}
 		}
@@ -229,13 +229,13 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 					);
 
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_tdg_pointingAndGrabbing.CapturedGrabbedPositions_vert[i].x, _lnx_meshManipulator.Vert_LastSelected.Position.x
+						_tdg_pointingAndGrabbing.CapturedGrabbedPositions_vert[i].x, _lnx_meshManipulator.Vert_LastSelected.V_Position.x
 					);
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_tdg_pointingAndGrabbing.CapturedGrabbedPositions_vert[i].y, _lnx_meshManipulator.Vert_LastSelected.Position.y
+						_tdg_pointingAndGrabbing.CapturedGrabbedPositions_vert[i].y, _lnx_meshManipulator.Vert_LastSelected.V_Position.y
 					);
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_tdg_pointingAndGrabbing.CapturedGrabbedPositions_vert[i].z, _lnx_meshManipulator.Vert_LastSelected.Position.z
+						_tdg_pointingAndGrabbing.CapturedGrabbedPositions_vert[i].z, _lnx_meshManipulator.Vert_LastSelected.V_Position.z
 					);
 
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
@@ -763,11 +763,11 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				else
 				{
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_pointingAndGrabbing.CapturedPointedAtFaceCenterPositions[i].x,
-						_lnx_meshManipulator.PointingAtTri.V_center.x);
+						_lnx_meshManipulator.PointingAtTri.V_Center.x);
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_pointingAndGrabbing.CapturedPointedAtFaceCenterPositions[i].y,
-						_lnx_meshManipulator.PointingAtTri.V_center.y);
+						_lnx_meshManipulator.PointingAtTri.V_Center.y);
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_pointingAndGrabbing.CapturedPointedAtFaceCenterPositions[i].z,
-						_lnx_meshManipulator.PointingAtTri.V_center.z);
+						_lnx_meshManipulator.PointingAtTri.V_Center.z);
 				}
 			}
 		}
@@ -831,13 +831,13 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 					#endregion
 
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_tdg_pointingAndGrabbing.CapturedGrabbedPositions_face[i].x, _lnx_meshManipulator.LastSelectedTri.V_center.x
+						_tdg_pointingAndGrabbing.CapturedGrabbedPositions_face[i].x, _lnx_meshManipulator.LastSelectedTri.V_Center.x
 					);
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_tdg_pointingAndGrabbing.CapturedGrabbedPositions_face[i].y, _lnx_meshManipulator.LastSelectedTri.V_center.y
+						_tdg_pointingAndGrabbing.CapturedGrabbedPositions_face[i].y, _lnx_meshManipulator.LastSelectedTri.V_Center.y
 					);
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_tdg_pointingAndGrabbing.CapturedGrabbedPositions_face[i].z, _lnx_meshManipulator.LastSelectedTri.V_center.z
+						_tdg_pointingAndGrabbing.CapturedGrabbedPositions_face[i].z, _lnx_meshManipulator.LastSelectedTri.V_Center.z
 					);
 
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
@@ -964,55 +964,55 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				);
 
 				Debug.Log($"pointed at vert '{_lnx_meshManipulator.Vert_CurrentlyPointingAt.MyCoordinate}', at " +
-					$"vert pos: '{_lnx_meshManipulator.Vert_CurrentlyPointingAt.Position}'...");
+					$"vert pos: '{_lnx_meshManipulator.Vert_CurrentlyPointingAt.V_Position}'...");
 
 				//Debug.Log("trying grab stuff...");
 				_lnx_meshManipulator.TryGrab();
 
 				Debug.Log($"Grab operation executed. mesh manipulator vert last selected coordinate: " +
-					$"'{_lnx_meshManipulator.Vert_LastSelected.MyCoordinate}'. current pos: '{_lnx_meshManipulator.Vert_LastSelected.Position}'. " +
+					$"'{_lnx_meshManipulator.Vert_LastSelected.MyCoordinate}'. current pos: '{_lnx_meshManipulator.Vert_LastSelected.V_Position}'. " +
 					$"expected position: '{_tdg_pointingAndGrabbing.CapturedGrabbedPositions_vert[i]}'.");
 
 				Vector3 vOffset = new Vector3( 1.5f, 1.5f, 1.5f );
 				Vector3 v_moveTo = _tdg_pointingAndGrabbing.CapturedGrabbedPositions_vert[i] + vOffset;
 
-				Debug.Log($"last selected (before): '{_lnx_meshManipulator.Vert_LastSelected.MyCoordinate}', pos now: '{_lnx_meshManipulator.Vert_LastSelected.Position}'");
+				Debug.Log($"last selected (before): '{_lnx_meshManipulator.Vert_LastSelected.MyCoordinate}', pos now: '{_lnx_meshManipulator.Vert_LastSelected.V_Position}'");
 
 				Debug.Log($"now moving to '{v_moveTo}'...");
 
 				_lnx_meshManipulator.MoveSelectedVerts( v_moveTo );
 
 				UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-					v_moveTo.x, _lnx_meshManipulator.Vert_LastSelected.Position.x
+					v_moveTo.x, _lnx_meshManipulator.Vert_LastSelected.V_Position.x
 				);
 				UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-					v_moveTo.y, _lnx_meshManipulator.Vert_LastSelected.Position.y
+					v_moveTo.y, _lnx_meshManipulator.Vert_LastSelected.V_Position.y
 				);
 				UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-					v_moveTo.z, _lnx_meshManipulator.Vert_LastSelected.Position.z
+					v_moveTo.z, _lnx_meshManipulator.Vert_LastSelected.V_Position.z
 				);
 
-				Debug.Log($"last selected: '{_lnx_meshManipulator.Vert_LastSelected.MyCoordinate}', pos now: '{_lnx_meshManipulator.Vert_LastSelected.Position}'");
+				Debug.Log($"last selected: '{_lnx_meshManipulator.Vert_LastSelected.MyCoordinate}', pos now: '{_lnx_meshManipulator.Vert_LastSelected.V_Position}'");
 
 				#region move back-------------------------------------------------
-				Debug.Log($"now moving '{_lnx_meshManipulator.Vert_LastSelected.Position}' back to '{_tdg_pointingAndGrabbing.CapturedGrabbedPositions_vert[i]}'...");
+				Debug.Log($"now moving '{_lnx_meshManipulator.Vert_LastSelected.V_Position}' back to '{_tdg_pointingAndGrabbing.CapturedGrabbedPositions_vert[i]}'...");
 
 				_lnx_meshManipulator.MoveSelectedVerts(_tdg_pointingAndGrabbing.CapturedGrabbedPositions_vert[i] );
 
-				Debug.Log($"last selected (after): '{_lnx_meshManipulator.Vert_LastSelected.MyCoordinate}', pos now: '{_lnx_meshManipulator.Vert_LastSelected.Position}'");
+				Debug.Log($"last selected (after): '{_lnx_meshManipulator.Vert_LastSelected.MyCoordinate}', pos now: '{_lnx_meshManipulator.Vert_LastSelected.V_Position}'");
 
 
 				UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-					_tdg_pointingAndGrabbing.CapturedGrabbedPositions_vert[i].x, _lnx_meshManipulator.Vert_LastSelected.Position.x
+					_tdg_pointingAndGrabbing.CapturedGrabbedPositions_vert[i].x, _lnx_meshManipulator.Vert_LastSelected.V_Position.x
 				);
 				UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-					_tdg_pointingAndGrabbing.CapturedGrabbedPositions_vert[i].y, _lnx_meshManipulator.Vert_LastSelected.Position.y
+					_tdg_pointingAndGrabbing.CapturedGrabbedPositions_vert[i].y, _lnx_meshManipulator.Vert_LastSelected.V_Position.y
 				);
 				UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-					_tdg_pointingAndGrabbing.CapturedGrabbedPositions_vert[i].z, _lnx_meshManipulator.Vert_LastSelected.Position.z
+					_tdg_pointingAndGrabbing.CapturedGrabbedPositions_vert[i].z, _lnx_meshManipulator.Vert_LastSelected.V_Position.z
 				);
 
-				Debug.Log($"pos now: '{_lnx_meshManipulator.Vert_LastSelected.Position}'");
+				Debug.Log($"pos now: '{_lnx_meshManipulator.Vert_LastSelected.V_Position}'");
 				#endregion
 				
 			}
@@ -1049,13 +1049,13 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				else
 				{
 					Debug.Log($"succesfully pointed at vert '{_lnx_meshManipulator.Vert_CurrentlyPointingAt.MyCoordinate}', at " +
-						$"vert pos: '{_lnx_meshManipulator.Vert_CurrentlyPointingAt.Position}'...");
+						$"vert pos: '{_lnx_meshManipulator.Vert_CurrentlyPointingAt.V_Position}'...");
 
 					//Debug.Log("trying grab stuff...");
 					_lnx_meshManipulator.TryGrab();
 
 					Debug.Log($"Grab operation executed. mesh manipulator vert last selected coordinate: " +
-						$"'{_lnx_meshManipulator.Vert_LastSelected.MyCoordinate}'. current pos: '{_lnx_meshManipulator.Vert_LastSelected.Position}'. " +
+						$"'{_lnx_meshManipulator.Vert_LastSelected.MyCoordinate}'. current pos: '{_lnx_meshManipulator.Vert_LastSelected.V_Position}'. " +
 						$"expected position: '{_tdg_pointingAndGrabbing.CapturedGrabbedPositions_vert[i]}'");
 
 					Vector3 vOffset = new Vector3(1.5f, 1.5f, 1.5f);
@@ -1075,10 +1075,10 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 						v_moveTo.z, _lnx_meshManipulator._LNX_NavMesh._Mesh.vertices[_lnx_meshManipulator.Vert_LastSelected.Index_VisMesh_Vertices].z
 					);
 
-					Debug.Log($"pos now: '{_lnx_meshManipulator.Vert_LastSelected.Position}'");
+					Debug.Log($"pos now: '{_lnx_meshManipulator.Vert_LastSelected.V_Position}'");
 
 					#region move back-------------------------------------------------
-					Debug.Log($"now moving '{_lnx_meshManipulator.Vert_LastSelected.Position}' back to '{_tdg_pointingAndGrabbing.CapturedGrabbedPositions_vert[i]}'...");
+					Debug.Log($"now moving '{_lnx_meshManipulator.Vert_LastSelected.V_Position}' back to '{_tdg_pointingAndGrabbing.CapturedGrabbedPositions_vert[i]}'...");
 
 					_lnx_meshManipulator.MoveSelectedVerts(_tdg_pointingAndGrabbing.CapturedGrabbedPositions_vert[i]);
 
@@ -1092,7 +1092,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 						_tdg_pointingAndGrabbing.CapturedGrabbedPositions_vert[i].z, _lnx_meshManipulator._LNX_NavMesh._Mesh.vertices[_lnx_meshManipulator.Vert_LastSelected.Index_VisMesh_Vertices].z
 					);
 
-					Debug.Log($"pos now: '{_lnx_meshManipulator.Vert_LastSelected.Position}'");
+					Debug.Log($"pos now: '{_lnx_meshManipulator.Vert_LastSelected.V_Position}'");
 					#endregion
 				}
 			}
