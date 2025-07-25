@@ -98,14 +98,7 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call SayFocusedTriInfo()")]
 		public void SayFocusedTriInfo()
 		{
-			Debug.Log($"{nameof(FocusedTri.Index_inCollection)}: '{FocusedTri.Index_inCollection}' \n" +
-				$"{nameof(FocusedTri.MeshIndex_trianglesStart)}: '{FocusedTri.MeshIndex_trianglesStart}\n" +
-				$"{nameof(FocusedTri.V_Center)}: '{FocusedTri.V_Center}'\n" +
-				$"{nameof(FocusedTri.v_sampledNormal)}: '{FocusedTri.v_sampledNormal}' \n" +
-				$"");
-
-			Debug.Log($"vismesh normal: '{_mgr._Mesh.normals[_mgr._Mesh.triangles[FocusedTri.MeshIndex_trianglesStart]]}'\n" +
-				$"");
+			FocusedTri.SayCurrentInfo();
 		}
 
 		[ContextMenu("z call SayVisualMeshInfo()")]

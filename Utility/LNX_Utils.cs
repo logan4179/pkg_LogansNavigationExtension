@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
 using System.Runtime.CompilerServices;
@@ -105,34 +106,9 @@ namespace LogansNavigationExtension
 		{
 			Vector3 resultPt = Vector3.zero;
 
-			/*
-			Vector3 v_starPtTToEndPt = (endPt.V_point - startPt.V_point);
-			Vector3 v_endPtToStartPt = -v_starPtTToEndPt;
-
-			Vector3 v_startPtToEndPt_onPtNormal = Vector3.ProjectOnPlane(v_starPtTToEndPt, startPt.V_normal);
-			Vector3 v_endPtToStartPt_onEndPtNormal = Vector3.ProjectOnPlane(v_endPtToStartPt, endPt.V_normal);
-			Vector3 v_startPtToEndPt_onEndPtNormal = Vector3.ProjectOnPlane(v_starPtTToEndPt, endPt.V_normal);
-
-			//Vector3 v_ptToIntersectedPt_onPtNormal_cross = Vector3.Cross(pt.V_normal, v_ptToIntersectedPt_onPtNormal); //for if I want the cross vector...
-			Vector3 v_try = (startPt.V_point + v_startPtToEndPt_onPtNormal) - endPt.V_point;
-
-			Vector3 vectorParam = v_starPtTToEndPt;
-			Vector3 normalParam = v_startPtToEndPt_onPtNormal;
-
-			Vector3 v_projected = Vector3.ProjectOnPlane(vectorParam, normalParam);
-			Debug.DrawLine(startPt.V_point, startPt.V_point + vectorParam, Color.red, 4f);
-			Debug.DrawLine(startPt.V_point, startPt.V_point + normalParam, Color.green, 4f);
-			Debug.DrawLine(endPt.V_point, endPt.V_point + v_try, Color.blue, 4f);
-
-			float angleA = 90f - Vector3.Angle( startPt.V_normal, v_starPtTToEndPt );
-			float angleB = 90f - Vector3.Angle( endPt.V_normal, v_endPtToStartPt );
-			float unknownAngle = 180f - angleA - angleB;
-			*/
-
-
 			//https://math.libretexts.org/Bookshelves/Algebra/Algebra_and_Trigonometry_1e_(OpenStax)/10%3A_Further_Applications_of_Trigonometry/10.01%3A_Non-right_Triangles_-_Law_of_Sines
 
-			Vector3 v_starPtTToEndPt = (endPt.V_point - startPt.V_point);
+			Vector3 v_starPtTToEndPt = (endPt.V_Point - startPt.V_Point);
 			Vector3 v_endPtToStartPt = -v_starPtTToEndPt;
 			float dist_hypotenuse = v_endPtToStartPt.magnitude;
 			float angleA = 90f - Vector3.Angle(startPt.V_normal, v_starPtTToEndPt.normalized);
@@ -142,22 +118,7 @@ namespace LogansNavigationExtension
 			//note: need to convert to radians in the following, as opposed to degrees...
 			float distA = Mathf.Sin(Mathf.Deg2Rad * angleB) * (dist_hypotenuse / Mathf.Sin(Mathf.Deg2Rad * angle_opposingHypotenuse)); //This is a re-ordered algebraic equation based on trigonometry
 
-			resultPt = startPt.V_point + Vector3.ProjectOnPlane(v_starPtTToEndPt, startPt.V_normal).normalized * distA;
-
-
-
-			/*
-			Debug.Log($"CreateCornerPathPoint()----------\n" +
-				$"{nameof(dist_hypotenuse)}: '{dist_hypotenuse}', {nameof(angleA)}: '{angleA}', {nameof(angleB)}, '{angleB}'\n" +
-				$"{nameof(angle_opposingHypotenuse)}: '{angle_opposingHypotenuse}', {nameof(distA)}: '{distA}\n" +
-				$"" +
-				$"{nameof(resultPt)}: '{resultPt}'");
-
-
-
-			Debug.Log($"math report...\n" + $"angleB: '{angleB}', sin(angleB): '{Mathf.Sin(angleB)}'\n" + 
-				$"angle_opposingHypotenuse: '{angle_opposingHypotenuse}', sin(angle_opposingHypotenuse): '{angle_opposingHypotenuse}'");
-			*/
+			resultPt = startPt.V_Point + Vector3.ProjectOnPlane(v_starPtTToEndPt, startPt.V_normal).normalized * distA;
 
 			return resultPt;
 		}
@@ -176,14 +137,59 @@ namespace LogansNavigationExtension
 
 		public static Vector3 FlatVector( Vector3 vector, LNX_Direction flattenDir = LNX_Direction.PositiveY )
 		{
-			Vector3 newVector = vector;
-
-			if (flattenDir == LNX_Direction.PositiveY || flattenDir == LNX_Direction.NegativeY)
+			Vector3 vNormal = Vector3.zero;
+			if ( flattenDir == LNX_Direction.PositiveY || flattenDir == LNX_Direction.NegativeY )
 			{
-				newVector = new Vector3(vector.x, 0f, vector.z);
+				vNormal = Vector3.up;
+			}
+			else if ( flattenDir == LNX_Direction.PositiveX || flattenDir == LNX_Direction.NegativeX )
+			{
+				vNormal = Vector3.right;
+			}
+			else if ( flattenDir == LNX_Direction.PositiveZ || flattenDir == LNX_Direction.NegativeZ )
+			{
+				vNormal = Vector3.forward;
 			}
 
-			return newVector;
+			return FlatVector( vector, vNormal );
+		}
+
+		public static Vector3 FlatVector( Vector3 vector, Vector3 nrml )
+		{
+			if (nrml == Vector3.up || nrml == Vector3.down)
+			{
+				return new Vector3(vector.x, 0f, vector.z);
+			}
+			else if (nrml == Vector3.right || nrml == Vector3.left)
+			{
+				return new Vector3(0f, vector.y, vector.z);
+			}
+			else if (nrml == Vector3.forward || nrml == Vector3.back)
+			{
+				return new Vector3(vector.x, vector.y, 0f);
+			}
+			else if ( nrml != Vector3.zero )
+			{
+				return Vector3.ProjectOnPlane( vector, nrml );
+			}
+
+			return Vector3.zero;
+		}
+
+		public static Vector3 FlooredVector( Vector3 vector, Vector3 floorBase, Vector3 nrml)
+		{
+			if ( nrml == Vector3.up || nrml == Vector3.down )
+			{
+				return new Vector3( vector.x, floorBase.y, vector.z );
+			}
+			else if ( nrml == Vector3.right || nrml == Vector3.left )
+			{
+				return new Vector3( floorBase.x, vector.y, vector.z );
+			}
+			else //if ( nrml == Vector3.forward || nrml == Vector3.back )
+			{
+				return new Vector3( vector.x, vector.y, floorBase.z );
+			}
 		}
 
 		#region FOR COMPONENT SELECTION ("GRABBING")-------------------------
@@ -515,15 +521,15 @@ namespace LogansNavigationExtension
 
 	public struct LNX_ProjectionHit
 	{
-		/// <summary>Which triangle was hit.</summary>
-		public int Index_hitTriangle;
+		/// <summary>Index of the Triangle or component that was hit, depending on the context.</summary>
+		public int Index_Hit;
 		public Vector3 HitPosition;
 
 		private static LNX_ProjectionHit none = new LNX_ProjectionHit(-1, Vector3.zero);
 
 		public LNX_ProjectionHit(int indx, Vector3 pos)
 		{
-			Index_hitTriangle = indx;
+			Index_Hit = indx;
 			HitPosition = pos;
 		}
 
@@ -534,159 +540,74 @@ namespace LogansNavigationExtension
 				return none;
 			}
 		}
+
+		public override string ToString()
+		{
+			return $"Indx '{Index_Hit}', at '{HitPosition}'";
+		}
 	}
 
 	#region RELATIONSHIPS------------------------------------------------------------------------
 	[System.Serializable]
 	public struct LNX_VertexRelationship
 	{
-		//public LNX_ComponentCoordinate PerspectiveVertCoordinate; //todo: dws, I don't think I need this
 		public LNX_ComponentCoordinate RelatedVertCoordinate;
 
+		public Vector3 RelatedVertPosition;
+
 		public bool CanSee;
-		public bool AmOverlapping;
 
-		/// <summary>The shortest possible distance to the destination vertex</summary>
-		public float Distance;
+		/// <summary>The shortest possible distance to the destination vertex via traveling over the surface of the navmesh</summary>
+		public float FlatDistance => PathTo.Distance;
 
-		/// <summary>Vector pointing from perspective/owner vert to the related vert</summary>
-		public Vector3 v_to;
+		/// <summary>The most direct path from the perspective vert to the related vert </summary>
+		public LNX_Path PathTo;
 
-		public float Angle_centerToDestinationVertex;
-
-
-		public LNX_VertexRelationship(LNX_Vertex myVert, LNX_Vertex relatedVert)
+		public LNX_VertexRelationship( LNX_Vertex myVert, LNX_Vertex relatedVert, LNX_NavMesh nvMsh )
 		{
 			//PerspectiveVertCoordinate = myVert.MyCoordinate; //todo: dws, I don't think I need this
 			RelatedVertCoordinate = relatedVert.MyCoordinate;
 
-			CanSee = true;
-			AmOverlapping = false;
-			Distance = Vector3.Distance(myVert.V_Position, relatedVert.V_Position);
-			v_to = Vector3.Normalize(relatedVert.V_Position - myVert.V_Position);
+			RelatedVertPosition = relatedVert.V_Position;
 
-			Angle_centerToDestinationVertex = Vector3.Angle(myVert.v_toCenter, v_to);
-		}
-	}
+			PathTo = LNX_Path.None;
 
-	[System.Serializable]
-	public struct LNX_TriangleRelationship
-	{
-		public int Index_relatedTriangle;
-
-		/// <summary>An array that maps the verts of the triangle this belongs to to the verts in 
-		/// the related triangle that each vert shares space with. If it doesn't share space, with any 
-		/// vert belonging to the related triangle at a certain index, the value will be -1, otherwise 
-		/// it will be 0-3.</summary>
-		public int[] IndexMap_OwnedVerts_toShared;
-
-		public float[] DistMap_Vert0ToRelated;
-		public float[] DistMap_Vert1ToRelated;
-		public float[] DistMap_Vert2ToRelated;
-
-		public bool AmTouching
-		{
-			get
+			if ( myVert.MyCoordinate.TrianglesIndex == relatedVert.MyCoordinate.TrianglesIndex || 
+				nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].HasVertAtSamePosition(relatedVert)
+			)
 			{
-				return GetNumberOfSharedVerts() > 0;
-			}
-		}
-
-		[HideInInspector] public string DbgStruct;
-
-		public LNX_TriangleRelationship(LNX_Triangle selfTri, LNX_Triangle relatedTri)
-		{
-			DbgStruct = string.Empty;
-			Index_relatedTriangle = relatedTri.Index_inCollection;
-			IndexMap_OwnedVerts_toShared = new int[3] { -1, -1, -1 };
-
-			DistMap_Vert0ToRelated = new float[3] { -1f, -1f, -1f };
-			DistMap_Vert1ToRelated = new float[3] { -1f, -1f, -1f };
-			DistMap_Vert2ToRelated = new float[3] { -1f, -1f, -1f };
-
-			if (selfTri == relatedTri)
-			{
-				DbgStruct = "self";
+				PathTo = new LNX_Path( new List<Vector3>(){ myVert.V_Position, relatedVert.V_Position }, 
+					new List<Vector3>() { nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal,
+					nvMsh.Triangles[relatedVert.MyCoordinate.TrianglesIndex].V_PathingNormal}
+				);
+				CanSee = true;
 			}
 			else
 			{
-				DbgStruct += $"Index_RltdTri: '{Index_relatedTriangle}'\n" +
-					$"relationships:\n";
+				CanSee = !nvMsh.Raycast(myVert.V_Position, relatedVert.V_Position, 1f);
 
-				int NumberofSharedVerts = 0;
-				float closestDist = float.MaxValue;
-
-				for (int i_ownedVert = 0; i_ownedVert < 3; i_ownedVert++)
+				if ( CanSee )
 				{
-					for (int i_relatedVert = 0; i_relatedVert < 3; i_relatedVert++)
+					try
 					{
-						if (selfTri.Verts[i_ownedVert].V_Position == relatedTri.Verts[i_relatedVert].V_Position)
-						{
-							IndexMap_OwnedVerts_toShared[i_ownedVert] = i_relatedVert;
-							NumberofSharedVerts++;
-						}
-
-						if( Vector3.Distance(selfTri.Verts[i_ownedVert].V_Position, relatedTri.Verts[i_relatedVert].V_Position) < closestDist )
-						{
-
-						}
+						nvMsh.CalculatePath( myVert.V_Position, relatedVert.V_Position, 0.3f, out PathTo );
 					}
-
-					DbgStruct += $"tri{selfTri.Index_inCollection}v[{i_ownedVert}] to tri{relatedTri.Index_inCollection}v: '{IndexMap_OwnedVerts_toShared[i_ownedVert]}'\n";
-				}
-
-				if( NumberofSharedVerts > 0 )
-				{
-					if ( NumberofSharedVerts == 2 )
+					catch (System.Exception e)
 					{
-						for ( int i = 0; i < 3; i++ )
-						{
-							for ( int j = 0; j < 3; j++ )
-							{
-								if (
-									(selfTri.Edges[i].StartPosition == relatedTri.Edges[j].StartPosition || selfTri.Edges[i].StartPosition == relatedTri.Edges[j].EndPosition) &&
-									(selfTri.Edges[i].EndPosition == relatedTri.Edges[j].StartPosition || selfTri.Edges[i].EndPosition == relatedTri.Edges[j].EndPosition)
-								)
-								{
-									selfTri.Edges[i].SharedEdge = relatedTri.Edges[j].MyCoordinate;
-								}
-							}
-						}
+						Debug.Log($"caught exception. dumping report...");
+						Debug.Log( nvMsh.dbgCalculatePath );
+						throw;
 					}
 				}
 			}
 		}
 
-		/// <summary>
-		/// How many verts the perspective triangle shares with the related triangle.
-		/// </summary>
-		/// <returns></returns>
-		public int GetNumberOfSharedVerts()
+		public override string ToString()
 		{
-			int numbrShared = 0;
-
-			if( IndexMap_OwnedVerts_toShared[0] != -1 )
-			{
-				numbrShared++;
-			}
-			if (IndexMap_OwnedVerts_toShared[1] != -1)
-			{
-				numbrShared++;
-			}
-			if (IndexMap_OwnedVerts_toShared[2] != -1)
-			{
-				numbrShared++;
-			}
-
-			return numbrShared;
-		}
-
-
-		public bool HasSharedEdge()
-		{
-			int rslt = GetNumberOfSharedVerts();
-
-			return (rslt == 2);
+			return $"Related: '{RelatedVertCoordinate}'\n" +
+				$"{nameof(CanSee)}: '{CanSee}'\n" +
+				$"flatdist: '{FlatDistance}'\n" +
+				$"";
 		}
 	}
 	#endregion

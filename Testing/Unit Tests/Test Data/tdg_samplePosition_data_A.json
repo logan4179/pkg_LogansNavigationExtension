@@ -1,74 +1,103 @@
 {
-    "LastWriteTime": "4/11/2025 10:41:20 AM",
+    "LastWriteTime": "7/9/2025 9:29:45 AM",
     "_mgr": {
-        "instanceID": 28532
+        "instanceID": 30216
     },
     "_debugger": {
-        "instanceID": 28530
+        "instanceID": 30214
     },
     "Index_problemPos": 1,
-    "testPositions": [
+    "problemPositions": [],
+    "testName": "SamplePos",
+    "samplePositions": [
         {
-            "x": 10.006999969482422,
-            "y": 0.7369999885559082,
-            "z": 5.420000076293945
+            "x": 10.215999603271485,
+            "y": 0.3310000002384186,
+            "z": 5.526000022888184
         },
         {
-            "x": 10.185999870300293,
-            "y": 0.4169999957084656,
-            "z": 5.420000076293945
+            "x": 10.144000053405762,
+            "y": 0.3310000002384186,
+            "z": 5.526000022888184
         },
         {
-            "x": 16.7810001373291,
-            "y": 0.06300000101327896,
-            "z": -0.27399998903274538
+            "x": 10.102999687194825,
+            "y": 0.3310000002384186,
+            "z": 5.526000022888184
         },
         {
-            "x": 16.79599952697754,
-            "y": 0.37400001287460329,
-            "z": 0.28299999237060549
+            "x": 10.085000038146973,
+            "y": 0.4269999861717224,
+            "z": 5.526000022888184
         },
         {
-            "x": 17.827999114990236,
-            "y": 0.37400001287460329,
-            "z": -0.14900000393390656
+            "x": 10.07699966430664,
+            "y": 0.4269999861717224,
+            "z": 5.526000022888184
+        },
+        {
+            "x": 10.857999801635743,
+            "y": 0.7839999794960022,
+            "z": 5.526000022888184
+        },
+        {
+            "x": 10.970999717712403,
+            "y": 0.7839999794960022,
+            "z": 5.526000022888184
+        },
+        {
+            "x": 10.991999626159668,
+            "y": 0.7839999794960022,
+            "z": 5.526000022888184
         }
     ],
-    "testName": "SamplePos",
-    "DBG_GetClosestTri": "Searching through '84' tris...\nfound point: '(10.19, 0.00, 5.42)', on tri: '51'",
-    "radius_drawSphere": 0.041999999433755878,
-    "hitPositions": [
+    "capturedHitPositions": [
+        {
+            "x": 10.215999603271485,
+            "y": 0.0006940364837646484,
+            "z": 5.526000022888184
+        },
+        {
+            "x": 10.144000053405762,
+            "y": 0.0006940364837646484,
+            "z": 5.526000022888184
+        },
+        {
+            "x": 10.140000343322754,
+            "y": 0.0006940364837646484,
+            "z": 5.526000022888184
+        },
+        {
+            "x": 10.140000343322754,
+            "y": 0.0006940364837646484,
+            "z": 5.526000022888184
+        },
         {
             "x": 9.720000267028809,
-            "y": 0.666388213634491,
-            "z": 5.461190223693848
+            "y": 0.6338182687759399,
+            "z": 5.405355930328369
         },
         {
-            "x": 10.185999870300293,
+            "x": 10.857999801635743,
             "y": 0.0006940364837646484,
-            "z": 5.420000076293945
+            "z": 5.526000022888184
         },
         {
-            "x": 16.7810001373291,
+            "x": 10.970999717712403,
             "y": 0.0006940364837646484,
-            "z": 0.42000001668930056
+            "z": 5.526000022888184
         },
         {
-            "x": 16.79599952697754,
-            "y": 0.0006940364837646484,
-            "z": 0.42000001668930056
-        },
-        {
-            "x": 16.825998306274415,
-            "y": 0.0006940364837646484,
-            "z": 0.35199570655822756
+            "x": 11.520000457763672,
+            "y": 0.2106940746307373,
+            "z": 5.526000022888184
         }
     ],
-    "triCenters": [
+    "capturedTriCenters": [
         {
-            "x": 9.40000057220459,
-            "y": 0.6306940913200378,
-            "z": 5.400000095367432
+            "x": 10.460000038146973,
+            "y": 0.0006940364837646484,
+            "z": 6.080000400543213
         },
         {
             "x": 10.460000038146973,
@@ -76,19 +105,56 @@
             "z": 6.080000400543213
         },
         {
-            "x": 16.82000160217285,
+            "x": 10.460000038146973,
             "y": 0.0006940364837646484,
-            "z": 3.440000295639038
+            "z": 6.080000400543213
         },
         {
-            "x": 16.82000160217285,
+            "x": 10.460000038146973,
             "y": 0.0006940364837646484,
-            "z": 3.440000295639038
+            "z": 6.080000400543213
         },
         {
-            "x": 16.80000114440918,
+            "x": 9.40000057220459,
+            "y": 0.6306940913200378,
+            "z": 5.400000095367432
+        },
+        {
+            "x": 10.779999732971192,
             "y": 0.0006940364837646484,
-            "z": 0.3800000250339508
+            "z": 5.320000171661377
+        },
+        {
+            "x": 10.779999732971192,
+            "y": 0.0006940364837646484,
+            "z": 5.320000171661377
+        },
+        {
+            "x": 12.040000915527344,
+            "y": 0.2106940746307373,
+            "z": 5.980000019073486
         }
-    ]
+    ],
+    "SamplePositionResult": false,
+    "radius_drawSphere": 0.041999999433755878,
+    "color_success": {
+        "r": 0.0,
+        "g": 1.0,
+        "b": 0.0,
+        "a": 0.7098039388656616
+    },
+    "color_fail": {
+        "r": 1.0,
+        "g": 0.0,
+        "b": 0.0,
+        "a": 0.5921568870544434
+    },
+    "Color_sampleObject": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+    },
+    "size_sampleObject": 0.013000000268220902,
+    "DBG_Class": "samplePosition returned true with: '(11.52, 0.21, 5.53)', on tri: '34'\nreport: \nSamplePosition('(10.99, 0.78, 5.53)'). Searching through '84' tris...\ni: '0'....................\nfound am NOT in shape project...\nnew closest point at: '5.294894'...\ni: '1'....................\nfound am NOT in shape project...\nnew closest point at: '4.51416'...\ni: '2'....................\nfound am NOT in shape project...\ni: '3'....................\nfound am NOT in shape project...\ni: '4'....................\nfound am NOT in shape project...\ni: '5'....................\nfound am NOT in shape project...\nnew closest point at: '4.43768'...\ni: '6'....................\nfound am NOT in shape project...\ni: '7'....................\nfound am NOT in shape project...\ni: '8'....................\nfound am NOT in shape project...\ni: '9'....................\nfound am NOT in shape project...\ni: '10'....................\nfound am NOT in shape project...\ni: '11'....................\nfound am NOT in shape project...\ni: '12'....................\nfound am NOT in shape project...\ni: '13'....................\nfound am NOT in shape project...\ni: '14'....................\nfound am NOT in shape project...\nnew closest point at: '1.539715'...\ni: '15'....................\nfound am NOT in shape project...\ni: '16'....................\nfound am NOT in shape project...\ni: '17'....................\nfound am NOT in shape project...\ni: '18'....................\nfound am NOT in shape project...\ni: '19'....................\nfound am NOT in shape project...\n Triangle.IsInShapeProject report:\nIsInShapeProject((10.99, 0.78, 5.53))\nflat pos: '(10.99, 0.00, 5.53)'\nv_ctrToPos: '(0.31, 0.78, 3.79)'\nvrt0: \nVert0.IsInFlatCenterSweep((10.99, 0.78, 5.53)) report..\nusing vto vector: '(-0.20, 0.00, 0.98)'\nAngleAtBend_flattened: '34.84836'\nang0: '175.659', ang1: '140.8105'\ndiff0: '-140.8106'\ndiff1: '-105.9622'\nreturning false\nvert0 center sweep failed. Returning false...\n\nnew closest point at: '1.406723'...\ni: '20'....................\nfound am NOT in shape project...\nnew closest point at: '1.388122'...\ni: '21'....................\nfound am NOT in shape project...\ni: '22'....................\nfound am NOT in shape project...\ni: '23'....................\nfound am NOT in shape project...\ni: '24'....................\nfound am NOT in shape project...\ni: '25'....................\nfound am NOT in shape project...\nnew closest point at: '1.243673'...\ni: '26'....................\nfound am NOT in shape project...\ni: '27'....................\nfound am NOT in shape project...\ni: '28'....................\nfound am NOT in shape project...\ni: '29'....................\nfound am NOT in shape project...\ni: '30'....................\nfound am NOT in shape project...\ni: '31'....................\nfound am NOT in shape project...\ni: '32'....................\nfound am NOT in shape project...\ni: '33'....................\nfound am NOT in shape project...\nnew closest point at: '1.171733'...\ni: '34'....................\nfound am NOT in shape project...\nnew closest point at: '0.7794001'...\ni: '35'....................\nfound am NOT in shape project...\ni: '36'....................\nfound am NOT in shape project...\ni: '37'....................\nfound am NOT in shape project...\ni: '38'....................\nfound am NOT in shape project...\ni: '39'....................\nfound am NOT in shape project...\ni: '40'....................\nfound am NOT in shape project...\ni: '41'....................\nfound am NOT in shape project...\ni: '42'....................\nfound am NOT in shape project...\ni: '43'....................\nfound am NOT in shape project...\ni: '44'....................\nfound am NOT in shape project...\ni: '45'....................\nfound am NOT in shape project...\ni: '46'....................\nfound am NOT in shape project...\ni: '47'....................\nfound am NOT in shape project...\ni: '48'....................\nfound am NOT in shape project...\ni: '49'....................\nfound am NOT in shape project...\ni: '50'....................\nfound AM in shape project at '(10.99, 0.00, 5.53)'...\ni: '51'....................\nfound am NOT in shape project...\ni: '52'....................\nfound am NOT in shape project...\ni: '53'....................\nfound am NOT in shape project...\ni: '54'....................\nfound am NOT in shape project...\ni: '55'....................\nfound am NOT in shape project...\ni: '56'....................\nfound am NOT in shape project...\ni: '57'....................\nfound am NOT in shape project...\ni: '58'....................\nfound am NOT in shape project...\ni: '59'....................\nfound am NOT in shape project...\ni: '60'....................\nfound am NOT in shape project...\ni: '61'....................\nfound am NOT in shape project...\ni: '62'....................\nfound am NOT in shape project...\ni: '63'....................\nfound am NOT in shape project...\ni: '64'....................\nfound am NOT in shape project...\ni: '65'....................\nfound am NOT in shape project...\ni: '66'....................\nfound am NOT in shape project...\ni: '67'....................\nfound am NOT in shape project...\ni: '68'....................\nfound am NOT in shape project...\ni: '69'....................\nfound am NOT in shape project...\ni: '70'....................\nfound am NOT in shape project...\ni: '71'....................\nfound am NOT in shape project...\ni: '72'....................\nfound am NOT in shape project...\ni: '73'....................\nfound am NOT in shape project...\ni: '74'....................\nfound am NOT in shape project...\ni: '75'....................\nfound am NOT in shape project...\ni: '76'....................\nfound am NOT in shape project...\ni: '77'....................\nfound am NOT in shape project...\ni: '78'....................\nfound am NOT in shape project...\ni: '79'....................\nfound am NOT in shape project...\ni: '80'....................\nfound am NOT in shape project...\ni: '81'....................\nfound am NOT in shape project...\ni: '82'....................\nfound am NOT in shape project...\ni: '83'....................\nfound am NOT in shape project...\nfinished. returning: '34' with pt: '(11.52, 0.21, 5.53)'\n\n"
 }

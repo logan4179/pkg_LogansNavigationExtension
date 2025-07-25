@@ -61,22 +61,28 @@ namespace LogansNavigationExtension
 
 		protected override void OnDrawGizmos()
 		{
+			if ( Selection.activeObject != gameObject )
+			{
+				return;
+			}
+
 			base.OnDrawGizmos();
+
+
 			DBG_class = "";
 			Color decidedMainColor = Color_IfTrue;
 
-			LNX_Triangle focusTri = _mgr.Triangles[Index_FocusTriangle];
+			LNX_Triangle focusTri = _navmesh.Triangles[Index_FocusTriangle];
 			DrawStandardFocusTriGizmos(focusTri, 0.5f, $"tri{focusTri.Index_inCollection}({focusTri.V_Center})");
 
 			Vector3 v_ctrToPos = transform.position - focusTri.V_Center;
 
 			//ProjectedPos = focusTri.V_Center + Vector3.ProjectOnPlane( v_ctrToPos, focusTri.v_derivedNormal ); //dws
-			ProjectedPos = focusTri.V_Center + focusTri.GetFlattenedPosition( v_ctrToPos );
+			//ProjectedPos = focusTri.V_Center + focusTri.GetFlattenedPosition( v_ctrToPos ); //dws
+			ProjectedPos = focusTri.V_Center + LNX_Utils.FlatVector( v_ctrToPos, focusTri.v_projectionNormal );
+
 
 			DBG_class += $"{nameof(ProjectedPos)}: '{ProjectedPos}'\n";
-
-			Gizmos.DrawLine( focusTri.V_Center, focusTri.V_Center + v_ctrToPos);
-
 
 			Gizmos.color = Color_projectedPos;
 			Gizmos.DrawLine(transform.position, ProjectedPos);

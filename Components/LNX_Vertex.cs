@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO.Compression;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace LogansNavigationExtension
 {
@@ -12,37 +14,65 @@ namespace LogansNavigationExtension
 		/// construction of the tri this vertex belongs to.</summary>
 		public Vector3 V_Position;
 
-		private Vector3 V_flattenedPosition;
+		//[SerializeField, HideInInspector] private Vector3 V_flattenedPosition;
 
-		[SerializeField, HideInInspector] Vector3 originalPosition;
+		[SerializeField, HideInInspector] private Vector3 originalPosition;
 		/// <summary>Initial position, in 3d space, of this vertex upon creation of it's owning triangle, 
 		/// before any modifications </summary>
 		public Vector3 OriginalPosition => originalPosition;
 
-		[Header("LOCATION")] //---------------------------------------------------------------
+		[Header("LOCATING")] //---------------------------------------------------------------
 		public LNX_ComponentCoordinate MyCoordinate;
 
 		/// <summary>Index corresponding to the visualization mesh's triangles array that this vertex 
 		/// corresponds to.</summary>
-		public int Index_VisMesh_triangles;
+		public int Index_VisMesh_triangles
+		{
+			get
+			{
+				return (MyCoordinate.TrianglesIndex * 3) + MyCoordinate.ComponentIndex;
+			}
+		}
 
 		/// <summary>Index corresponding to the visualization mesh's vertices array that this vertex 
 		/// corresponds to.</summary>
 		public int Index_VisMesh_Vertices = -1;
 
+
 		//[Header("CALCULATED/DERIVED")] //---------------------------------------------------------------
 		/// <summary>Aangle at the inner corner of the triangle at this vertex.</summary>
-		[HideInInspector] public float AngleAtBend;
+		public float AngleAtBend => Vector3.Angle(V_ToFirstSiblingVert, V_ToSecondSiblingVert);
+
 		/// <summary>Aangle at the inner corner of the triangle at this vertex assuming all verts are flattneed.</summary>
-		[HideInInspector] public float AngleAtBend_flattened;
+		[HideInInspector] public float AngleAtBend_flattened
+		{
+			get
+			{
+				return Vector3.Angle(
+					LNX_Utils.FlatVector(V_ToFirstSiblingVert, v_projectionNormal_cached),
+					LNX_Utils.FlatVector(V_ToSecondSiblingVert, v_projectionNormal_cached)
+				);
+			}
+		}
 
+		/// <summary>Cached center vector for the owning triangle. This is for exposed property calculation </summary>
+		[SerializeField, HideInInspector] private Vector3 v_triCenter_cached;
 
-		/// <summary>Vector pointing from this vertex to the center of it's triangle </summary>
-		[HideInInspector] public Vector3 v_toCenter;
+		/// <summary>Normalized directional vector pointing from this vertex to the center of it's triangle </summary>
+		[HideInInspector] public Vector3 v_toCenter => Vector3.Normalize( v_triCenter_cached - V_Position );
 
-		[HideInInspector] public float DistanceToCenter;
+		[HideInInspector] public float DistanceToCenter => Vector3.Distance( V_Position, v_triCenter_cached );
 
-		[HideInInspector] public Vector3 v_normal;
+		/// <summary>Should be the same as the Surface Orientation setting for the navmesh that this vert's triangle belongs to.</summary>
+		[SerializeField, HideInInspector] private Vector3 v_projectionNormal_cached;
+
+		public Vector3 V_flattenedPosition
+		{
+			get
+			{
+				return LNX_Utils.FlatVector( V_Position, v_projectionNormal_cached );
+			}
+		}
 
 		// TRUTH...........
 		public bool AmModified
@@ -51,11 +81,11 @@ namespace LogansNavigationExtension
 		}
 
 		/// <summary> Returns a localized (0 origin) vector pointing from this vert to it's first sibling vert. </summary>
-		public Vector3 V_ToFirstSiblingVert
+		public Vector3 V_ToFirstSiblingVert //ERRORTRACE 11
 		{
 			get
 			{
-				return SiblingRelationships[0].v_to;
+				return Vector3.Normalize( FirstSiblingRelationship.RelatedVertPosition - V_Position );
 			}
 		}
 		/// <summary> Returns a localized (0 origin) vector pointing from this vert to it's first sibling vert. </summary>
@@ -63,61 +93,71 @@ namespace LogansNavigationExtension
 		{
 			get
 			{
-				return SiblingRelationships[1].v_to;
+				return Vector3.Normalize( SecondSiblingRelationship.RelatedVertPosition - V_Position );
 			}
 		}
 
 		[Header("RELATIONAL")] //---------------------------------------------------------------
-		public LNX_VertexRelationship[] SiblingRelationships;
 		[HideInInspector] public LNX_VertexRelationship[] Relationships;
+		
+		public LNX_VertexRelationship FirstSiblingRelationship
+		{
+			get
+			{
+				return MyCoordinate.ComponentIndex == 0 ?
+					Relationships[(MyCoordinate.TrianglesIndex * 3) + 1] : Relationships[MyCoordinate.TrianglesIndex * 3];
+			}
+		}
+		public LNX_VertexRelationship SecondSiblingRelationship
+		{
+			get
+			{
+				return MyCoordinate.ComponentIndex == 2 ?
+					Relationships[(MyCoordinate.TrianglesIndex * 3) + 1] : Relationships[(MyCoordinate.TrianglesIndex * 3) + 2];
+			}
+		}
 
 		public LNX_ComponentCoordinate[] SharedVertexCoordinates;
 
-		[TextArea(1,10)] public string DBG_constructor;
+		/*[TextArea(1,10)]*/ [HideInInspector] public string DBG_constructor;
 
-		public LNX_Vertex( LNX_Triangle tri, Vector3 vrtPos, int cmpntIndx )
+		public LNX_Vertex( LNX_NavMesh nm, Vector3 vrtPos, int triIndx, int cmpntIndx )
         {
+			DBG_constructor = "Ctor start...\n";
+
 			V_Position = vrtPos;
-
-			V_flattenedPosition = tri.GetFlattenedPosition( V_Position );
-
 			originalPosition = vrtPos;
 
-			v_toCenter = Vector3.Normalize( tri.V_Center - vrtPos );
-			v_normal = tri.v_sampledNormal;
-			DistanceToCenter = Vector3.Distance(tri.V_Center, vrtPos);
+			v_projectionNormal_cached = nm.GetSurfaceNormal();
 
-			MyCoordinate = new LNX_ComponentCoordinate( tri.Index_inCollection, cmpntIndx );
+			v_triCenter_cached = nm.Triangles[triIndx].V_Center;
 
-			Relationships = new LNX_VertexRelationship[0];
-			SiblingRelationships = new LNX_VertexRelationship[2];
+			MyCoordinate = new LNX_ComponentCoordinate( triIndx, cmpntIndx );
 
-			Index_VisMesh_triangles = tri.MeshIndex_trianglesStart + cmpntIndx;
 			Index_VisMesh_Vertices = -1;
+
+			Relationships = new LNX_VertexRelationship[ nm.Triangles.Length * 3 ];
 
 			DBG_constructor = $"Was passed pos: '{vrtPos}' indx: '{cmpntIndx}'\n\n" +
 				$"at tri[{MyCoordinate.TrianglesIndex}], [{MyCoordinate.ComponentIndex}]\n" +
 				$"Pos: '{V_Position}', orig: '{originalPosition}'\n" +
 				$"fltndPos: '{V_flattenedPosition}'\n" +
 				$"vToCtr: '{v_toCenter}'\n" +
-				$"nml: '{v_normal}', dstToCtr: '{DistanceToCenter}'\n" +
+				$"nml: '{v_projectionNormal_cached}', dstToCtr: '{DistanceToCenter}'\n" +
 				$"";
 		}
 
 		public void AdoptValues( LNX_Vertex vert )
 		{
 			V_Position = vert.V_Position;
+			originalPosition = vert.originalPosition;
+			v_projectionNormal_cached = vert.v_projectionNormal_cached;
+			v_triCenter_cached = vert.v_triCenter_cached;
 
-			v_toCenter = vert.v_toCenter;
-			v_normal = vert.v_normal;
-			DistanceToCenter = vert.DistanceToCenter;
 			MyCoordinate = vert.MyCoordinate;
 
 			Relationships = vert.Relationships;
-			SiblingRelationships = vert.SiblingRelationships;
 			SharedVertexCoordinates = vert.SharedVertexCoordinates;
-
-			AngleAtBend = vert.AngleAtBend;
 
 			DBG_constructor = vert.DBG_constructor;
 		}
@@ -127,31 +167,57 @@ namespace LogansNavigationExtension
 			MyCoordinate = new LNX_ComponentCoordinate( newIndex, MyCoordinate.ComponentIndex );
 		}
 
-		/// <summary>
-		/// Creates SiblingRelationship objects for other 2 sibling vertices. Calculates and 
-		/// caches convenience variables for relating this vertex to it's sibling vertices.
-		/// </summary>
-		/// <param name="vA"></param>
-		/// <param name="vB"></param>
-		public void SetSiblingRelationships( LNX_Vertex vA, LNX_Vertex vB ) //todo: unit test
+		public void CreateRelationships( LNX_NavMesh nvmsh ) //todo: unit test
 		{
-			#region Find the angle -----------------------------------
-			Vector3 v_toA = Vector3.Normalize(vA.V_Position - V_Position);
-			Vector3 v_toB = Vector3.Normalize(vB.V_Position - V_Position);
+			DBG_constructor += $"{nameof(CreateRelationships)}() start...\n";
+			Debug.Log( $"{nameof(CreateRelationships)}() for vert: '{MyCoordinate}'..." );
 
-			AngleAtBend = Vector3.Angle(v_toA, v_toB);
+			Relationships = new LNX_VertexRelationship[nvmsh.Triangles.Length * 3];
 
-			AngleAtBend_flattened = Vector3.Angle( GetFlattenedPosition(v_toA), GetFlattenedPosition(v_toB) );
+			DBG_constructor += $"Initialized relationships list with '{Relationships.Length}'" +
+				$" entries. Iterating through...\n";
+
+			//First establish initial relationships sibling relationships. This is important to do 
+			//now so that the rest can raycast without error...
+			#region ESTABLISH SIBLING RELATIONSHIPS FIRST --------------------------------------------------
+			Relationships[MyCoordinate.TrianglesIndex*3] = new LNX_VertexRelationship(
+				this, nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[0], nvmsh
+			);
+			Relationships[(MyCoordinate.TrianglesIndex * 3)+1] = new LNX_VertexRelationship(
+				this, nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[1], nvmsh
+			);
+			Relationships[(MyCoordinate.TrianglesIndex * 3) + 2] = new LNX_VertexRelationship(
+				this, nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[2], nvmsh
+			);
 			#endregion
+			
+			for ( int i = 0; i < nvmsh.Triangles.Length; i++ )
+			{
+				if( i == MyCoordinate.TrianglesIndex )
+				{
+					continue;
+				}
 
-			SiblingRelationships = new LNX_VertexRelationship[2];
-			SiblingRelationships[0] = new LNX_VertexRelationship( this, vA );
-			SiblingRelationships[1] = new LNX_VertexRelationship( this, vB );
+				DBG_constructor += $"making relationships for verts belonging to tri: '{i}'...\n";
+				//Debug.Log($"iterated to verts belonging to tri: '{i}'...");
 
-			DBG_constructor += $"\n{nameof(SetSiblingRelationships)}() report...\n" +
-				$"AngAtBnd: '{AngleAtBend}', fltnd: '{AngleAtBend_flattened}' \n" +
-				$"A: '{SiblingRelationships[0].Angle_centerToDestinationVertex}', " +
-				$"B: '{SiblingRelationships[1].Angle_centerToDestinationVertex}'";
+				Relationships[(i*3)] = new LNX_VertexRelationship( this, nvmsh.Triangles[i].Verts[0], nvmsh ); //ERRORTRACE 5:
+				//Debug.Log($"created vert rel {i*3}\n{Relationships[i*3]}...");
+
+				Relationships[(i*3)+1] = new LNX_VertexRelationship( this, nvmsh.Triangles[i].Verts[1], nvmsh );
+				//Debug.Log($"created vert rel {(i * 3)+1}\n{Relationships[(i * 3)+1]}...");
+
+				Relationships[(i*3)+2] = new LNX_VertexRelationship( this, nvmsh.Triangles[i].Verts[2], nvmsh );
+				//Debug.Log($"created vert rel {(i * 3) + 2}\n{Relationships[(i * 3)+2]}...");
+
+			}
+
+			DBG_constructor += $"\n{nameof(CreateRelationships)}() report...\n" +
+				$"AngAtBnd: '{AngleAtBend}', flatnd: '{AngleAtBend_flattened}' \n" +
+				$"vToFirst: '{V_ToFirstSiblingVert}', vToSecond: '{V_ToSecondSiblingVert}'\n" +
+				//$"'{}' - '{}'\n" +
+				$"{nameof(Index_VisMesh_Vertices)}: '{Index_VisMesh_Vertices}'\n" +
+				$"created '{Relationships.Length}' relationships...";
 		}
 
 		#region API METHODS ------------------------------------------------------------
@@ -182,36 +248,31 @@ namespace LogansNavigationExtension
 				DBG_IsInCenterSweep += "returning false";
 				return false;
 			}
-			/*
-			if ( Vector3.Angle(SiblingRelationships[0].v_to, vToPos) > AngleAtBend ||
-				Vector3.Angle(SiblingRelationships[1].v_to, vToPos) > AngleAtBend
-				)
-			{
-				DBG_IsInCenterSweep += "returning false";
-				return false;
-			}*/
 
 			DBG_IsInCenterSweep += "returning true";
-
 
 			return true;
 		}
 
 		public bool IsInFlatCenterSweep( Vector3 pos )
 		{
-			DBG_IsInCenterSweep = $"{nameof(IsInFlatCenterSweep)}() report..\n";
+			DBG_IsInCenterSweep = $"Vert{MyCoordinate.ComponentIndex}.{nameof(IsInFlatCenterSweep)}({pos}) " +
+				$"report...\n";
 
-			Vector3 vToPos = Vector3.Normalize( GetFlattenedPosition(pos) - V_flattenedPosition );
-			Vector3 v_to0_flat = GetFlattenedPosition(V_ToFirstSiblingVert).normalized;
-			Vector3 v_to1_flat = GetFlattenedPosition(V_ToSecondSiblingVert).normalized;
+			Vector3 vToPos = Vector3.Normalize( LNX_Utils.FlatVector(pos, v_projectionNormal_cached) - V_flattenedPosition );
 
-			DBG_IsInCenterSweep += $"using vector: '{vToPos}'\n" +
+			//Debug.Log($"ERRORSPOT. coord: '{MyCoordinate}'. relLength: '{Relationships.Length}'. 1stSibINdx should be: " +
+				//$"'{(MyCoordinate.ComponentIndex == 0 ?	(MyCoordinate.TrianglesIndex * 3) + 1 : MyCoordinate.TrianglesIndex * 3)}'...");
+			
+			Vector3 v_to0_flat = LNX_Utils.FlatVector(V_ToFirstSiblingVert, v_projectionNormal_cached).normalized; //ERRORTRACE 10 (FINAL)
+			Vector3 v_to1_flat = LNX_Utils.FlatVector(V_ToSecondSiblingVert, v_projectionNormal_cached).normalized;
+
+			DBG_IsInCenterSweep += $"using vto vector: '{vToPos}' and nrml: '{v_projectionNormal_cached}'\n" +
 				$"{nameof(AngleAtBend_flattened)}: '{AngleAtBend_flattened}'\n" +
 				$"ang0: '{Vector3.Angle(v_to0_flat, vToPos)}', " +
 				$"ang1: '{Vector3.Angle(v_to1_flat, vToPos)}'\n" +
 				$"diff0: '{AngleAtBend_flattened - Vector3.Angle(v_to0_flat, vToPos)}'\n" +
 				$"diff1: '{AngleAtBend_flattened - Vector3.Angle(v_to1_flat, vToPos)}'\n";
-
 
 			if ( 
 				Vector3.Angle(v_to0_flat, vToPos) > (AngleAtBend_flattened + 0.001f) ||
@@ -236,9 +297,28 @@ namespace LogansNavigationExtension
 		/// <returns></returns>
 		public bool IsInCenterSweep_Projected( Vector3 pos, LNX_Triangle tri )
 		{
-			return IsInCenterSweep( tri.V_Center + Vector3.ProjectOnPlane(pos, v_normal) );
+			return IsInCenterSweep( tri.V_Center + Vector3.ProjectOnPlane(pos, v_projectionNormal_cached) );
 		}
 		#endregion
+
+		public int GetNumberOfSharedVerts( int triIndex )
+		{
+			if( triIndex == MyCoordinate.TrianglesIndex )
+			{
+				return 0;
+			}
+
+			int sharedCount = 0;
+			for ( int i = 0; i < SharedVertexCoordinates.Length; i++ )
+			{
+				if ( SharedVertexCoordinates[i].TrianglesIndex == triIndex )
+				{
+					sharedCount++;
+				}
+			}
+
+			return sharedCount;
+		}
 
 		public void Ping( LNX_Triangle[] tris )
 		{
@@ -253,22 +333,28 @@ namespace LogansNavigationExtension
 			}
 		}
 
-		private Vector3 GetFlattenedPosition( Vector3 pos )
+		public string GetCurrentInfoString()
 		{
-			if ( V_flattenedPosition.y == 0f )
-			{
-				return new Vector3(pos.x, 0f, pos.z);
-			}
-			else if ( V_flattenedPosition.x == 0f )
-			{
-				return new Vector3(0f, pos.y, pos.z);
-			}
-			else if ( V_flattenedPosition.z == 0f )
-			{
-				return new Vector3(pos.x, pos.y, 0f);
-			}
+			return $"Vert.{nameof(SayCurrentInfo)}()\n" +
+				$"{nameof(MyCoordinate)}: '{MyCoordinate}'\n" +
+				$"{nameof(V_Position)}: '{V_Position}'\n" +
+				$"{nameof(originalPosition)}: '{originalPosition}'\n" +
+				$"{nameof(v_projectionNormal_cached)}: '{v_projectionNormal_cached}'\n" +
+				$"{nameof(Relationships)} count: '{Relationships.Length}\n" +
+				$"{nameof(Index_VisMesh_Vertices)}: '{Index_VisMesh_Vertices}'\n" +
+				$"{nameof(AngleAtBend)}: '{AngleAtBend}'\n" +
+				$"{nameof(AngleAtBend_flattened)}: '{AngleAtBend_flattened}'\n" +
+				$"";
+		}
 
-			return Vector3.zero;
+		public void SayCurrentInfo()
+		{
+			Debug.Log( GetCurrentInfoString() );
+		}
+
+		public override string ToString()
+		{
+			return $"{MyCoordinate.ToString()} {V_Position}";
 		}
 	}
 }

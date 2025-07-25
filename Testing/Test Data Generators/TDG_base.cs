@@ -10,32 +10,33 @@ namespace LogansNavigationExtension
     {
 		public string LastWriteTime;
 
-		[SerializeField] protected LNX_NavMesh _mgr;
+		[SerializeField] protected LNX_NavMesh _navmesh;
         [SerializeField] protected LNX_NavMeshDebugger _debugger;
 
         public int Index_problemPos = 0;
         [SerializeField, Tooltip("These are meant to be positions that I'm currently experimenting with")]
-        public List<Vector3> testPositions;
+        public List<Vector3> problemPositions;
+        public bool DrawProblemPoints = true;
 
 		//[Space(10f)]
 
-		[ContextMenu("z CaptureTestPosition()")]
-        public virtual void CaptureTestPosition()
+		[ContextMenu("z CaptureProblemPosition()")]
+        public virtual void CaptureProblemPosition()
         {
-            if (testPositions == null)
+            if (problemPositions == null)
             {
-                testPositions = new List<Vector3>();
+                problemPositions = new List<Vector3>();
             }
 
-            testPositions.Add( transform.position );
+            problemPositions.Add( transform.position );
         }
 
         [ContextMenu("z SendToProblemPosition()")]
         public void SendToProblemPosition()
         {
-            if ( Index_problemPos > -1 && testPositions != null && testPositions.Count > 0 )
+            if ( Index_problemPos > -1 && problemPositions != null && problemPositions.Count > 0 )
             {
-                transform.position = testPositions[Index_problemPos];
+                transform.position = problemPositions[Index_problemPos];
             }
         }
 
@@ -49,17 +50,17 @@ namespace LogansNavigationExtension
 
 			if ( Selection.activeGameObject == gameObject )
 			{
-			    if ( testPositions != null && testPositions.Count > 0 )
+			    if ( DrawProblemPoints && problemPositions != null && problemPositions.Count > 0 )
                 {
-                    Gizmos.color = Color.red;
+                    Gizmos.color = Color.yellow;
                     gstl = new GUIStyle();
-                    gstl.normal.textColor = Color.red;
-                    float lineHeight = 1.3f;
+                    gstl.normal.textColor = Color.yellow;
+                    float lineHeight = 0.15f;
 
-                    for (int i = 0; i < testPositions.Count; i++)
+                    for (int i = 0; i < problemPositions.Count; i++)
                     {
-                        Gizmos.DrawLine(testPositions[i], testPositions[i] + (Vector3.up * lineHeight));
-                        Handles.Label(testPositions[i] + (Vector3.up * lineHeight) + (Vector3.up * 0.1f), i.ToString(), gstl);
+                        Gizmos.DrawLine(problemPositions[i], problemPositions[i] + (Vector3.up * lineHeight));
+                        Handles.Label(problemPositions[i] + (Vector3.up * lineHeight), $"prob{i}", gstl);
                     }
                 }
 			}

@@ -22,7 +22,7 @@ namespace LogansNavigationExtension
 		public int OperationMode = 0;
 
 		[Header("Focus On")]
-		public LNX_ComponentCoordinate Coord_ProjectPointOnEdge = LNX_ComponentCoordinate.None;
+		public LNX_ComponentCoordinate FocusCoordinate = LNX_ComponentCoordinate.None;
 
 		[Header("Edge Projecting")]
 		// DATA ------------------------------------------------------------------------
@@ -52,21 +52,28 @@ namespace LogansNavigationExtension
 		LNX_ProjectionHit lnxStartHit = LNX_ProjectionHit.None;
 
 		//[Header("TRUTH")]
-		public bool OperationUsesFocusCoordinate
-		{
-			get
-			{
-				return OperationMode == 0;
-			}
-		}
 
 		[Header("DEBUG")]
-		[SerializeField] private string DBG_class;
+		[Range(0f, 0.5f)] public float Radius_TestObject = 0.2f;
+		[Range(0f, 0.25f)] public float size_projectionObject = 0.2f;
+		public Color color_projectionObject;
+
+		public Color Color_IfTrue = Color.white;
+		public Color Color_IfFalse = Color.white;
 
 		[SerializeField] private bool amDebuggingDataPoints = true;
 		[SerializeField] float radius_dataPoints = 0.05f;
 		[SerializeField] Color color_dataPoints = Color.white;
 		public int Index_GoToDataPoint = 0;
+
+		[SerializeField] private string DBG_class;
+		[Space(10)]
+		[SerializeField, TextArea(0,20)] private string DBG_FocusedTri;
+
+		[Header("OTHER")]
+		public LNX_ProjectionHit projectionHit = LNX_ProjectionHit.None;
+
+
 
 		[ContextMenu("z call GoToDataPoint()")]
 		public void GoToDataPoint()
@@ -89,14 +96,14 @@ namespace LogansNavigationExtension
 			//CapturedProjectionPoints_EdgeProjecting = new List<Vector3>();
 			CapturedEdgeMidPoints_EdgePRojecting = new List<Vector3>();
 
-			focusTri = _mgr.Triangles[Coord_ProjectPointOnEdge.TrianglesIndex];
-			focusedEdge = _mgr.GetEdgeAtCoordinate(Coord_ProjectPointOnEdge);
+			focusTri = _navmesh.Triangles[FocusCoordinate.TrianglesIndex];
+			focusedEdge = _navmesh.GetEdgeAtCoordinate(FocusCoordinate);
 
 			for ( int i = 0; i < StartPositions_EdgeProjecting.Count; i++ )
 			{
 				ProjectionReturnResult =
-					focusTri.DoesProjectionIntersectEdge(
-						StartPositions_EdgeProjecting[i], EndPositions_EdgeProjecting[i], Coord_ProjectPointOnEdge.ComponentIndex, out projectionPositionResult
+					focusTri.DoesProjectionIntersectGivenEdge(
+						StartPositions_EdgeProjecting[i], EndPositions_EdgeProjecting[i], FocusCoordinate.ComponentIndex, out projectionPositionResult
 					);
 
 				//CapturedProjectionPoints_EdgeProjecting.Add( projectionResult );
@@ -104,15 +111,16 @@ namespace LogansNavigationExtension
 			}
 		}
 
+		#region DATA CAPTURE -------------------------------------------
 		[ContextMenu("z call CaptureForEdgeProject()")]
 		public void CaptureForEdgeProject()
 		{
 			StartPositions_EdgeProjecting.Add( trans_start.position );
 			EndPositions_EdgeProjecting.Add( transform.position );
-			CapturedTriCenters_EdgeProjecting.Add( _mgr.Triangles[Coord_ProjectPointOnEdge.TrianglesIndex].V_Center );
+			CapturedTriCenters_EdgeProjecting.Add( _navmesh.Triangles[FocusCoordinate.TrianglesIndex].V_Center );
 			CapturedEdgeMidPoints_EdgePRojecting.Add( focusedEdge.MidPosition );
 			CapturedResults_EdgeProjecting.Add( ProjectionReturnResult );
-			CapturedEdgeIndices.Add( Coord_ProjectPointOnEdge.ComponentIndex );
+			CapturedEdgeIndices.Add( FocusCoordinate.ComponentIndex );
 			CapturedProjectionPoints_EdgeProjecting.Add( projectionPositionResult );
 
 			Debug.Log($"Logged '{ProjectionReturnResult}'...");
@@ -125,9 +133,9 @@ namespace LogansNavigationExtension
 			EndPositions_PerimeterProjecting.Add( transform.position );
 			CapturedTriCenters_PerimeterProjecting.Add( focusTri.V_Center );
 			CapturedEdgeMidPoints_PerimeterProjecting.Add( focusedEdge.MidPosition );
-			CapturedProjectionPoints_PerimeterProjecting.Add( projectionPositionResult );
+			CapturedProjectionPoints_PerimeterProjecting.Add( projectionHit.HitPosition );
 
-			Debug.Log($"Logged '{projectionPositionResult}'...");
+			Debug.Log($"Logged '{projectionHit.HitPosition}'...");
 		}
 
 		[ContextMenu("z call CaptureForShapeProject()")]
@@ -141,6 +149,7 @@ namespace LogansNavigationExtension
 
 			Debug.Log($"Logged '{projectionPositionResult}'...");
 		}
+		#endregion
 
 		[ContextMenu("z call WriteMeToJson()")]
 		public bool WriteMeToJson()
@@ -156,7 +165,6 @@ namespace LogansNavigationExtension
 			return false;
 		}
 
-
 		public LNX_Edge focusedEdge = null;
 		public LNX_Triangle focusTri = null;
 		public Vector3 projectionPositionResult = Vector3.zero;
@@ -164,54 +172,39 @@ namespace LogansNavigationExtension
 
 		protected override void OnDrawGizmos()
 		{
-			base.OnDrawGizmos();
-
-			if ( Selection.activeGameObject != gameObject && trans_start != null && Selection.activeGameObject != trans_start.gameObject )
+			if ( Selection.activeGameObject != gameObject  )
 			{
 				return;
 			}
 
+			base.OnDrawGizmos();
+
+
 			DBG_class = "";
 
-			Vector3 v_LblRaise = Vector3.up * 0.05f;
+			Vector3 v_LblRaise = Vector3.up * 0.07f;
 			focusedEdge = null;
 			focusTri = null;
 			projectionPositionResult = Vector3.zero;
 			GUIStyle styl_FocusLettering = new GUIStyle();
 			styl_FocusLettering.normal.textColor = Color.magenta;
 
-			#region HIGHLIGHT FOCUSED TRI AND EDGE---------------------
-			if ( OperationUsesFocusCoordinate ) 
+			if (OperationMode == 0)// IsProjectedPointOnEdge----------------
 			{
-				focusTri = _mgr.Triangles[Coord_ProjectPointOnEdge.TrianglesIndex];
-				focusedEdge = _mgr.GetEdgeAtCoordinate(Coord_ProjectPointOnEdge);
-				DBG_class += $"Determined focused tri to be: '{focusTri.Index_inCollection}'\n" +
-					$"and focusedEdge to be: '{focusedEdge.MyCoordinate}'\n" +
-					$"focusedEdge start vert coord: '{focusedEdge.StartVertCoordinate.ComponentIndex}'\n" +
-					$"focusedEdge endVertCoord: '{focusedEdge.EndVertCoordinate.ComponentIndex}\n" +
-					$"";
+				DBG_class += $"Operation: '{nameof(LNX_Triangle.DoesProjectionIntersectGivenEdge)}()'...\n";
 
+				focusTri = _navmesh.Triangles[FocusCoordinate.TrianglesIndex];
+				focusedEdge = _navmesh.GetEdgeAtCoordinate(FocusCoordinate);
 				Handles.Label(focusedEdge.MidPosition + v_LblRaise, $"FocusEdge({focusedEdge.MyCoordinate.ComponentIndex})", styl_FocusLettering);
 				Gizmos.DrawLine(focusedEdge.StartPosition, focusedEdge.EndPosition);
 				Handles.Label(focusedEdge.StartPosition + v_LblRaise, "start");
 				Handles.Label(focusedEdge.EndPosition + v_LblRaise, "end");
 
-				Gizmos.color = Color.magenta;
-				Handles.color = Color.magenta;
-
-
-				Handles.Label( focusTri.V_Center + v_LblRaise, "FocusTri", styl_FocusLettering);
-			}
-			#endregion
-
-			if (OperationMode == 0)
-			{
-				DBG_class += $"Operation: 'IsProjectedPointOnEdge()'...\n";
 				//rslt_CurrentProjectedPtOnEdge = 
 				//_mgr.GetEdgeAtCoordinate(Coord_ProjectPointOnEdge).IsProjectedPointOnEdge(trans_start.position, transform.position );
 
 				ProjectionReturnResult =
-					focusTri.DoesProjectionIntersectEdge(trans_start.position, transform.position, Coord_ProjectPointOnEdge.ComponentIndex, out projectionPositionResult);
+					focusTri.DoesProjectionIntersectGivenEdge(trans_start.position, transform.position, FocusCoordinate.ComponentIndex, out projectionPositionResult);
 
 				if (ProjectionReturnResult)
 				{
@@ -226,55 +219,34 @@ namespace LogansNavigationExtension
 
 				Gizmos.DrawLine(trans_start.position, transform.position);
 
-				#region Draw the data points....
-				if (amDebuggingDataPoints)
-				{
-					Gizmos.color = color_dataPoints;
-
-					if (StartPositions_EdgeProjecting != null && StartPositions_EdgeProjecting.Count > 0)
-					{
-						for (int i = 0; i < StartPositions_EdgeProjecting.Count; i++)
-						{
-							Gizmos.DrawSphere(StartPositions_EdgeProjecting[i], radius_dataPoints);
-							Gizmos.DrawSphere(EndPositions_EdgeProjecting[i], radius_dataPoints);
-							Gizmos.DrawLine(StartPositions_EdgeProjecting[i], EndPositions_EdgeProjecting[i]);
-						}
-					}
-				}
-				#endregion
-
 				Handles.Label(focusTri.Verts[focusedEdge.StartVertCoordinate.ComponentIndex].V_Position + (v_LblRaise * 1.5f), "startVert");
 			}
-			else if (OperationMode == 1) // PERIMETER PROJECTING----------------
+			else if ( OperationMode == 1 ) // PERIMETER PROJECTING----------------
 			{
 				DBG_class += $"Operation: 'PERIMETER PROJECTING'...\n";
 
+				focusTri = _navmesh.Triangles[FocusCoordinate.TrianglesIndex];
+
+				DBG_class += $"focusTri: '{focusTri.Index_inCollection}'\n" +
+					$"now attempting to sample a position...\n";
+
 				lnxStartHit = LNX_ProjectionHit.None;
 
-				if (_mgr.SamplePosition(trans_start.position, out lnxStartHit, 3f))
+				if ( _navmesh.SamplePosition(trans_start.position, out lnxStartHit, 3f) )
 				{
-					DBG_class += $"sampled start tri: '{lnxStartHit.Index_hitTriangle}' at: '{lnxStartHit.HitPosition}', \n";
+					DBG_class += $"Sampled position at: '{lnxStartHit.HitPosition}'\n" +
+						$"trying ProjectThroughToPerimeter()......\n";
 
-					focusTri = _mgr.Triangles[lnxStartHit.Index_hitTriangle];
+					projectionHit = LNX_ProjectionHit.None;
 
-					projectionPositionResult = focusTri.ProjectThroughToPerimeter(
-						trans_start.position, transform.position, out focusedEdge
-					);
+					projectionHit = focusTri.ProjectThroughToPerimeter(trans_start.position, transform.position);
 
-					if (focusedEdge == null)
+					if( projectionHit.Index_Hit > -1 && projectionHit.Index_Hit < 3 )
 					{
-						Debug.Log("projected edge was null...");
-
-						Gizmos.color = Color.red;
-					}
-					else
-					{
+						focusedEdge = focusTri.Edges[projectionHit.Index_Hit];
 						Gizmos.color = Color.green;
 
-						DBG_class += $"Determined focusedEdge to be: '{focusedEdge.MyCoordinate}'\n" +
-							$"focusedEdge start vert coord: '{focusedEdge.StartVertCoordinate.ComponentIndex}'\n" +
-							$"focusedEdge endVertCoord: '{focusedEdge.EndVertCoordinate.ComponentIndex}\n" +
-							$"";
+						DBG_class += $"Determined focusedEdge to be: '{focusedEdge.MyCoordinate}'\n";
 
 						Handles.Label(focusedEdge.MidPosition + v_LblRaise, $"FocusEdge({focusedEdge.MyCoordinate.ComponentIndex})", styl_FocusLettering);
 						Gizmos.DrawLine(
@@ -289,101 +261,107 @@ namespace LogansNavigationExtension
 						Handles.Label(focusedEdge.EndPosition + v_LblRaise, "end");
 
 						Gizmos.DrawCube(projectionPositionResult, Vector3.one * 0.05f);
-
-					}
-
-					#region Draw the data points....
-					if (amDebuggingDataPoints)
-					{
-						Gizmos.color = color_dataPoints;
-
-						if (StartPositions_PerimeterProjecting != null && StartPositions_PerimeterProjecting.Count > 0)
-						{
-							for (int i = 0; i < StartPositions_PerimeterProjecting.Count; i++)
-							{
-								Gizmos.DrawSphere(StartPositions_PerimeterProjecting[i], radius_dataPoints);
-								Gizmos.DrawSphere(EndPositions_PerimeterProjecting[i], radius_dataPoints);
-								Gizmos.DrawLine(StartPositions_PerimeterProjecting[i], EndPositions_PerimeterProjecting[i]);
-							}
-						}
-					}
-					#endregion
-				}
-				else
-				{
-					Debug.Log($"can't sample at current position");
-				}
-
-				if ( focusedEdge != null )
-				{
-					Gizmos.color = Color.green;
-				}
-				else
-				{
-					Gizmos.color = Color.red;
-				}
-
-				Gizmos.DrawLine(trans_start.position, transform.position);
-
-			}
-			else if ( OperationMode == 2 )
-			{
-				DBG_class += $"Operation: 'SHAPE PROJECTING'...\n";
-				lnxStartHit = LNX_ProjectionHit.None;
-				projectionPositionResult = Vector3.zero;
-
-				if ( _mgr.SamplePosition(transform.position, out lnxStartHit, 1f, false) )
-				{
-					DBG_class += $"sampled start tri: '{lnxStartHit.Index_hitTriangle}' at: '{lnxStartHit.HitPosition}', \n";
-
-					focusTri = _mgr.Triangles[lnxStartHit.Index_hitTriangle];
-
-					DrawStandardFocusTriGizmos(focusTri, 0.5f, $"tri({focusTri.Index_inCollection})");
-					/* dws
-					Gizmos.color = Color.magenta;
-					Handles.color = Color.magenta;
-					Vector3 vRaise = Vector3.up * 0.5f;
-					Gizmos.DrawLine( focusTri.Verts[0].Position, focusTri.V_center + vRaise );
-					Gizmos.DrawLine(focusTri.Verts[1].Position, focusTri.V_center + vRaise);
-					Gizmos.DrawLine(focusTri.Verts[2].Position, focusTri.V_center + vRaise);
-					Handles.Label( focusTri.V_center + vRaise, $"tri({focusTri.Index_inCollection})" );
-					*/
-
-					ProjectionReturnResult = focusTri.IsInShapeProject( 
-						transform.position, out projectionPositionResult
-					);
-
-					DBG_class += $"projection report: \n" +
-						$"{focusTri.DBG_IsInShapeProjectAlongNormal}\n";
-
-					if ( ProjectionReturnResult )
-					{
-						DBG_class += ( $"IsInShapeProject operation returned true!\n" +
-							$"projected position: '{projectionPositionResult}'\n" +
-							$"");
-						Gizmos.color = Color.green;
-
-						Gizmos.DrawCube(projectionPositionResult, Vector3.one * 0.05f);
-
 					}
 					else
 					{
-						Debug.Log("IsInShapeProject operation returned false...");
-
+						DBG_class += $"projection hit index ({projectionHit.Index_Hit}) wasn't in correct bounds. Can't resolve an edge.\n" +
+							$"dumping ProjectThroughToPerimeter report...\n" +
+							$"---------------------------------\n" +
+							$"{focusTri.dbg_prjctThrhToPerim}\n";
 						Gizmos.color = Color.red;
 					}
 				}
 				else
 				{
+					DBG_class += $"Failed to sample a start position. Returning early...\n";
 					Gizmos.color = Color.red;
-
-					Debug.Log($"can't sample at current position");
 				}
 
 				Gizmos.DrawLine(trans_start.position, transform.position);
+				Gizmos.DrawSphere(transform.position, Radius_TestObject);
 
 			}
+			else if ( OperationMode == 2) // SHAPE PROJECTING----------------
+			{
+				DBG_class += $"Operation: 'SHAPE PROJECTING'...\n";
 
+				focusTri = _navmesh.Triangles[FocusCoordinate.TrianglesIndex];
+
+				lnxStartHit = LNX_ProjectionHit.None;
+				projectionPositionResult = Vector3.zero;
+
+				ProjectionReturnResult = focusTri.IsInShapeProject(
+					transform.position, out projectionPositionResult
+				);
+
+				DBG_class += $"IsInShapeProject() report: \n" +
+					$"{focusTri.DBG_IsInShapeProject}\n";
+
+				if ( ProjectionReturnResult )
+				{
+					DBG_class += ($"IsInShapeProject operation returned true!\n" +
+						$"projected position: '{projectionPositionResult}'\n" +
+						$"");
+
+					Gizmos.color = color_projectionObject;
+					Gizmos.DrawLine( transform.position, projectionPositionResult );
+					Gizmos.DrawCube( projectionPositionResult, Vector3.one * size_projectionObject );
+
+					Gizmos.color = Color_IfTrue;
+				}
+				else
+				{
+					Debug.Log("IsInShapeProject operation returned false...");
+
+					Gizmos.color = Color_IfFalse;
+				}
+
+				Gizmos.DrawSphere(transform.position, Radius_TestObject );
+			}
+
+			DrawStandardFocusTriGizmos(focusTri, v_LblRaise.y, $"tri{focusTri.Index_inCollection}");
+
+			if (focusTri == null)
+			{
+				DBG_FocusedTri = "null";
+			}
+			else
+			{
+				DBG_FocusedTri = focusTri.GetCurrentInfoString();
+			}
+
+			#region Draw the data points....
+			if ( amDebuggingDataPoints )
+			{
+				Gizmos.color = color_dataPoints;
+
+				if( OperationMode == 0 )
+				{
+					if (StartPositions_EdgeProjecting != null && StartPositions_EdgeProjecting.Count > 0)
+					{
+						for (int i = 0; i < StartPositions_EdgeProjecting.Count; i++)
+						{
+							Gizmos.DrawSphere(StartPositions_EdgeProjecting[i], radius_dataPoints);
+							Gizmos.DrawSphere(EndPositions_EdgeProjecting[i], radius_dataPoints);
+							Gizmos.DrawLine(StartPositions_EdgeProjecting[i], EndPositions_EdgeProjecting[i]);
+						}
+					}
+				}
+				else if( OperationMode == 1 )
+				{
+					if (StartPositions_PerimeterProjecting != null && StartPositions_PerimeterProjecting.Count > 0)
+					{
+						for (int i = 0; i < StartPositions_PerimeterProjecting.Count; i++)
+						{
+							Gizmos.DrawSphere(StartPositions_PerimeterProjecting[i], radius_dataPoints);
+							Gizmos.DrawSphere(EndPositions_PerimeterProjecting[i], radius_dataPoints);
+							Gizmos.DrawLine(StartPositions_PerimeterProjecting[i], EndPositions_PerimeterProjecting[i]);
+						}
+					}
+				}
+
+			}
+			#endregion
 		}
 	}
 }

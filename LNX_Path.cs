@@ -6,22 +6,16 @@ using UnityEngine.AI;
 namespace LogansNavigationExtension
 {
 	[System.Serializable]
-	public class LNX_Path
+	public struct LNX_Path
 	{
-
-		/// <summary>If the v_toNext.y is greater than this, it will enable turnongravity.</summary>
-		[SerializeField] private float slopeHeight_switchGravity;
-		/// <summary>The distance within which we consider a patrolpoint to be a 'corner' when compared to the </summary>
-		[SerializeField] private float dist_cornerThreshold;
-		/// <summary>Highest number the dot product can be as a condition of considering if this point needs a following corner.</summary>
-		[SerializeField] private float threshold_cornerDotCheck;
-
 		[HideInInspector] public int Index_currentPoint;
 		public List<LNX_PathPoint> PathPoints;
 
-		[HideInInspector] public Vector3 EndGoal => PathPoints[PathPoints.Count - 1].V_point;
+		[HideInInspector] public Vector3 EndGoal => PathPoints[PathPoints.Count - 1].V_Point;
 
-		[SerializeField, HideInInspector] private int mask_solidEnvironment;
+		private float distance;
+		public float Distance => distance;
+
 
 		/// <summary>Tells if this path object has valid data to be used for pathing.</summary>
 		public bool AmValid
@@ -44,7 +38,7 @@ namespace LogansNavigationExtension
 		{
 			get
 			{
-				return PathPoints[Index_currentPoint].V_point; //todo: indexoutofrangeexception here
+				return PathPoints[Index_currentPoint].V_Point; //todo: indexoutofrangeexception here
 			}
 		}
 
@@ -67,30 +61,48 @@ namespace LogansNavigationExtension
 
 		[TextArea(1, 5)] public string dbgAmOnCourse;
 
-		public LNX_Path( int mask_passed )
+		private static LNX_Path none = new LNX_Path();
+
+		public static LNX_Path None
 		{
-			mask_solidEnvironment = mask_passed;
+			get
+			{
+				return none;
+			}
+		}
+
+
+		public LNX_Path( List<Vector3> pts, List<Vector3>nrmls )
+		{
 
 			Index_currentPoint = -1;
 			PathPoints = new List<LNX_PathPoint>();
 			dbgCalculatePath = string.Empty;
 			dbgAmOnCourse = string.Empty;
-			slopeHeight_switchGravity = 0.35f;
-			dist_cornerThreshold = 0.75f;
-			threshold_cornerDotCheck = 0f;
+
+			distance = 0f;
+			if ( pts != null && pts.Count > 1 )
+			{
+				for ( int i = 0; i < pts.Count; i++ )
+				{
+					PathPoints.Add( new LNX_PathPoint(pts[i], nrmls[i]) );
+
+					if( i > 0 )
+					{
+						distance += Vector3.Distance( pts[i - 1], pts[i] );
+					}
+				}
+			}
 		}
 
 		public LNX_Path( LNX_Path path_passed )
 		{
-			mask_solidEnvironment = path_passed.mask_solidEnvironment;
-
 			Index_currentPoint = -1;
 			PathPoints = path_passed.PathPoints;
 			dbgCalculatePath = path_passed.dbgCalculatePath;
 			dbgAmOnCourse = path_passed.dbgAmOnCourse;
-			slopeHeight_switchGravity = path_passed.slopeHeight_switchGravity;
-			dist_cornerThreshold = path_passed.dist_cornerThreshold;
-			threshold_cornerDotCheck = path_passed.threshold_cornerDotCheck;
+
+			distance = path_passed.Distance;
 		}
 
 		private static float dist_checkIfOffCourseBeyondPrev = 0.4f;
@@ -103,7 +115,7 @@ namespace LogansNavigationExtension
 		{
 			if ( Index_currentPoint == 0 )
 			{
-				if ( Vector3.Distance(pos_passed, PathPoints[Index_currentPoint].V_point) <= 0.25f )
+				if ( Vector3.Distance(pos_passed, PathPoints[Index_currentPoint].V_Point) <= 0.25f )
 				{
 					return true;
 				}
@@ -114,8 +126,8 @@ namespace LogansNavigationExtension
 			}
 			else
 			{
-				float distToPrev = Vector3.Distance(pos_passed, PathPoints[Index_currentPoint - 1].V_point);
-				Vector3 v_prevToPos = Vector3.Normalize(pos_passed - PathPoints[Index_currentPoint - 1].V_point);
+				float distToPrev = Vector3.Distance(pos_passed, PathPoints[Index_currentPoint - 1].V_Point);
+				Vector3 v_prevToPos = Vector3.Normalize(pos_passed - PathPoints[Index_currentPoint - 1].V_Point);
 				float myDot = Vector3.Dot(v_prevToPos, PathPoints[Index_currentPoint - 1].V_toNext);
 				dbgAmOnCourse = $"distToPrev: '{distToPrev}', DOT: '{myDot}', v_prevToPos: '{v_prevToPos}', V_toNext: '{CurrentPathPoint.V_toNext}'";
 				
@@ -131,7 +143,7 @@ namespace LogansNavigationExtension
 				myPath = new Vector3[PathPoints.Count];
 				for ( int i = 0; i < PathPoints.Count; i++ )
 				{
-					myPath[i] = PathPoints[i].V_point;
+					myPath[i] = PathPoints[i].V_Point;
 				}
 			}
 

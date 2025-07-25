@@ -7,6 +7,7 @@ using LogansNavigationExtension;
 using UnityEngine.AI;
 using System.IO;
 using System.ComponentModel;
+using UnityEditor.SearchService;
 
 
 namespace LoganLand.LogansNavmeshExtension.Tests
@@ -30,16 +31,18 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		/// serialize (store) certain predictable, saveable, values, like the bounds positions/size, and then compared to the 
 		/// dynamically-constructed lnx navmesh. Therefore, this object should be re-serialized to json anytime I make a change 
 		/// to the scene geometry that makes the navmesh.</summary>
-		LNX_NavMesh _jsonGeneratedLnxNavmesh; //note: originally I was going to use this to save the _mesh and triangulation collection lengths instead of testing a hard-coded value, but those things don't seem to get serialized to JSON. Leaving this here in case I think of something else to do with it...
+		LNX_NavMesh _jsonGeneratedLnxNavmesh; //note: originally I was going to use this to save the _mesh and triangulation
+		// collection lengths instead of testing a hard-coded value, but those things don't seem to get serialized to JSON. 
+		// Leaving this here in case I think of something else to do with it...
 
 		LNX_MeshManipulator _sceneGeneratedMeshManipulator, _serializedMeshManipulator;
 
-        TDG_SamplePosition _test_samplePosition;
+        //TDG_SamplePosition _tdg_samplePosition;
 
-		TDG_SampleClosestPtOnPerimeter _test_closestOnPerimeter;
+		//TDG_SampleClosestPtOnPerimeter _test_closestOnPerimeter;
 
 
-		#region A - Setup Tests---------------------------------------------------------------------------
+		#region A - Setup ---------------------------------------------------------------------------
 		[Test]
 		public void a1_CreateAndSetUpObjectsInTheScene()
         {
@@ -111,6 +114,10 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 			Assert.NotNull( _jsonGeneratedLnxNavmesh );
 
+			Debug.Log($"Created serialized navmesh object from data file. Tris: '{_jsonGeneratedLnxNavmesh.Triangles.Length}'\n" +
+				$"test vert vismesh index: '{_jsonGeneratedLnxNavmesh.Triangles[13].Verts[1].Index_VisMesh_triangles}', " +
+				$"'{_jsonGeneratedLnxNavmesh.Triangles[13].Verts[1].Index_VisMesh_Vertices}'");
+
 			_jsonGeneratedLnxNavmesh.ReconstructVisualizationMesh();
 
 			_serializedMeshManipulator = go_serializedNavmesh.AddComponent<LNX_MeshManipulator>();
@@ -137,13 +144,25 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 			#endregion
 		}
+
+		[Test]
+		public void a2_CreateAndSetUpTestObjectsInTheScene()
+		{
+			LNX_UnitTestUtilities.LogTestStart(nameof(a2_CreateAndSetUpTestObjectsInTheScene),
+				$"Creates test objects, then asserts that they have the correct values"
+			);
+
+
+		}
 		#endregion
 
 		#region B) CHECK NAVMESH -------------------------------------------------------------------------------------------
 		[Test]
 		public void b1_Check_That_Bounds_Have_Expected_Values()
 		{
-			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(b1_Check_That_Bounds_Have_Expected_Values)));
+			LNX_UnitTestUtilities.LogTestStart(nameof(b1_Check_That_Bounds_Have_Expected_Values),
+				$"Asserts that LNX_Navmesh.V_BoundsCenter and V_Bounds[] have the correct values"
+			);
 
 			// CENTER-------------------------------------------------------
 			Debug.Log($"Checking bounds center. scene generated navmesh bounds center: '{_sceneGeneratedLnxNavmesh.V_BoundsCenter}'. " +
@@ -255,9 +274,57 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 		#region D) CHECK VERTICES -----------------------------------------------------------------------------------------
 		[Test]
-		public void D1_Vert_Coordinates_Are_Kosher()
+		public void D1_Vert_Positions_Are_Kosher()
 		{
-			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(D1_Vert_Coordinates_Are_Kosher)));
+			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(D1_Vert_Positions_Are_Kosher)));
+
+			Debug.Log($"\nThis Test checks that all vertices belonging to a given triangle have unique positional values.\n");
+
+			for ( int i_tris = 0; i_tris < _sceneGeneratedLnxNavmesh.Triangles.Length; i_tris++ )
+			{
+				Debug.Log($"iterating tri: '{i_tris}'...");
+
+				bool foundSame = false;
+				if( _sceneGeneratedLnxNavmesh.Triangles[i_tris].Verts[0].V_Position == _sceneGeneratedLnxNavmesh.Triangles[i_tris].Verts[1].V_Position ||
+					_sceneGeneratedLnxNavmesh.Triangles[i_tris].Verts[0].V_Position == _sceneGeneratedLnxNavmesh.Triangles[i_tris].Verts[2].V_Position ||
+					_sceneGeneratedLnxNavmesh.Triangles[i_tris].Verts[1].V_Position == _sceneGeneratedLnxNavmesh.Triangles[i_tris].Verts[2].V_Position
+				)
+				{
+					foundSame = true;
+				}
+
+				Assert.IsFalse( foundSame );
+			}
+		}
+
+		[Test]
+		public void D2_Vert_Angles_Are_Kosher()
+		{
+			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(D2_Vert_Angles_Are_Kosher)));
+
+			Debug.Log($"\nThis Test checks that all vertices have non-zero angle values.\n");
+
+			for ( int i_tris = 0; i_tris < _sceneGeneratedLnxNavmesh.Triangles.Length; i_tris++ )
+			{
+				Debug.Log($"iterating tri: '{i_tris}'...");
+
+				for ( int i_verts = 0; i_verts < 3; i_verts++ )
+				{
+					Debug.Log($"iterating vert: '{i_verts}', at '{_sceneGeneratedLnxNavmesh.Triangles[i_tris].Verts[i_verts].V_Position}', with angle '{_sceneGeneratedLnxNavmesh.Triangles[i_tris].Verts[i_verts].AngleAtBend}'. " +
+						$"flattened: '{_sceneGeneratedLnxNavmesh.Triangles[i_tris].Verts[i_verts].AngleAtBend_flattened}'...");
+
+					Debug.Log($"Asserting that iterated vert has valid angles...");
+
+					Assert.Greater( _sceneGeneratedLnxNavmesh.Triangles[i_tris].Verts[i_verts].AngleAtBend, 0f );
+					Assert.Greater( _sceneGeneratedLnxNavmesh.Triangles[i_tris].Verts[i_verts].AngleAtBend_flattened, 0f);
+				}
+			}
+		}
+
+		[Test]
+		public void D3_Vert_Coordinates_Are_Kosher()
+		{
+			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(D3_Vert_Coordinates_Are_Kosher)));
 
 			Debug.Log($"\nThis Test checks that all vertices have 'MyCoordinate' values that match their actual positions within the collections that " +
 				$"they're stored in. This also inadvertantly ensures that there are no duplicate coordinates, and that the coordinates are unbroken.\n");
@@ -279,9 +346,9 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		}
 
 		[Test]
-		public void D2_Vert_Vismesh_Index_Properties_Are_Within_Bounds()
+		public void D4_Vert_Vismesh_Index_Properties_Are_Within_Bounds()
 		{
-			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(D2_Vert_Vismesh_Index_Properties_Are_Within_Bounds)));
+			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(D4_Vert_Vismesh_Index_Properties_Are_Within_Bounds)));
 
 			for (int i = 0; i < _sceneGeneratedLnxNavmesh.Triangles.Length; i++)
 			{
@@ -289,12 +356,12 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 				for (int i_verts = 0; i_verts < 3; i_verts++)
 				{
-					Debug.Log($"checking indices of vert[0]...");
-					Debug.Log($"Verts[0].MeshIndex_triangles: '{_sceneGeneratedLnxNavmesh.Triangles[i].Verts[i_verts].Index_VisMesh_triangles}'");
+					Debug.Log($"checking indices of vert[{i_verts}]...");
+					Debug.Log($"Verts[{i_verts}].MeshIndex_triangles: '{_sceneGeneratedLnxNavmesh.Triangles[i].Verts[i_verts].Index_VisMesh_triangles}'");
 					Assert.Greater(_sceneGeneratedLnxNavmesh.Triangles[i].Verts[i_verts].Index_VisMesh_triangles, -1);
 					Assert.Less(_sceneGeneratedLnxNavmesh.Triangles[i].Verts[i_verts].Index_VisMesh_triangles, _sceneGeneratedLnxNavmesh._Mesh.triangles.Length);
 
-					Debug.Log($"Verts[0].MeshIndex_vertices: '{_sceneGeneratedLnxNavmesh.Triangles[i].Verts[i_verts].Index_VisMesh_Vertices}'");
+					Debug.Log($"Verts[{i_verts}].MeshIndex_vertices: '{_sceneGeneratedLnxNavmesh.Triangles[i].Verts[i_verts].Index_VisMesh_Vertices}'");
 					Assert.Greater(_sceneGeneratedLnxNavmesh.Triangles[i].Verts[i_verts].Index_VisMesh_Vertices, -1);
 					Assert.Less(_sceneGeneratedLnxNavmesh.Triangles[i].Verts[i_verts].Index_VisMesh_Vertices, _sceneGeneratedLnxNavmesh._Mesh.vertices.Length);
 				}
@@ -302,9 +369,9 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		}
 
 		[Test]
-		public void D4_Vert_SharedVertexCoordinates_Collections_Are_Correct()
+		public void D5_Vert_SharedVertexCoordinates_Collections_Are_Correct()
 		{
-			Debug.Log( string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(D4_Vert_SharedVertexCoordinates_Collections_Are_Correct)) );
+			Debug.Log( string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(D5_Vert_SharedVertexCoordinates_Collections_Are_Correct)) );
 
 			Debug.Log($"\nThis Test ensures that all vertices have a sharedvertexcoordinates arrays that have the correct entries.\n");
 
@@ -488,152 +555,6 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			}
 		}
 		#endregion
-
-		/*
-		[Test]
-		public void aX_AllVertsUnique()
-		{
-			//todo: check that no triangles have verts occupying the same space
-		}
-		*/
-
-		/*
-		[Test]
-		public void aX_SharedVertexCoordinates_Tests()
-		{
-			//TODO: Check that multiple vertices have the expected sharedvertex coordinates...
-			Debug.Log($"\nChecking SharedVertexCoordinates...");
-
-		}
-		*/
-
-		//TODO: these following tests need to be in their own separate script
-		#region G) LNX_Navmesh function Tests---------------------------------------------------------------------------
-		[Test]
-        public void G1_SamplePosition_Tests() //todo: I think these need to be ran against the serialized navmesh
-        {
-			Debug.Log($"Creating test object from json...");
-
-			if ( !File.Exists(TDG_Manager.filePath_testData_SamplePosition) )
-			{
-				Debug.LogError( $"PROBLEM!!!!! file at test path does not exist. Cannot perform test." );
-				return;
-			}
-
-			#region SETUP TEST OBJECT-----------------------------
-			_test_samplePosition = _jsonGeneratedLnxNavmesh.gameObject.AddComponent<TDG_SamplePosition>();
-
-			string jsonString = File.ReadAllText( TDG_Manager.filePath_testData_SamplePosition );
-
-			JsonUtility.FromJsonOverwrite(jsonString, _test_samplePosition);
-
-			Assert.IsNotNull(_test_samplePosition.testPositions);
-			Assert.Greater(_test_samplePosition.testPositions.Count, 0);
-			#endregion
-
-			Debug.Log($"Now sampling '{_test_samplePosition.testPositions.Count}' test positions...");
-			for ( int i = 0; i < _test_samplePosition.testPositions.Count; i++ )
-			{
-				Debug.Log($"{i}...");
-				LNX_ProjectionHit hit = new LNX_ProjectionHit();
-				_jsonGeneratedLnxNavmesh.SamplePosition( _test_samplePosition.testPositions[i], out hit, 10f );
-
-				Debug.Log($"expecting '{_test_samplePosition.hitPositions[i]}', hit: '{hit.HitPosition}'");
-
-				//Assert.AreEqual( _test_samplePosition.hitPositions[i], hit.Position ); //got rounding point issue
-				UnityEngine.Assertions.Assert.AreApproximatelyEqual( _test_samplePosition.hitPositions[i].x, hit.HitPosition.x );
-				UnityEngine.Assertions.Assert.AreApproximatelyEqual( _test_samplePosition.hitPositions[i].y, hit.HitPosition.y );
-				UnityEngine.Assertions.Assert.AreApproximatelyEqual( _test_samplePosition.hitPositions[i].z, hit.HitPosition.z );
-
-				UnityEngine.Assertions.Assert.AreApproximatelyEqual( _test_samplePosition.triCenters[i].x, _jsonGeneratedLnxNavmesh.Triangles[hit.Index_hitTriangle].V_Center.x );
-				UnityEngine.Assertions.Assert.AreApproximatelyEqual( _test_samplePosition.triCenters[i].y, _jsonGeneratedLnxNavmesh.Triangles[hit.Index_hitTriangle].V_Center.y );
-				UnityEngine.Assertions.Assert.AreApproximatelyEqual( _test_samplePosition.triCenters[i].z, _jsonGeneratedLnxNavmesh.Triangles[hit.Index_hitTriangle].V_Center.z );
-			}
-		}
-
-		[Test]
-		public void G2_Test_ClosestOnPerimeter()
-		{
-			Debug.Log($"Creating test object from json...");
-			Debug.Log($"test object path: '{TDG_Manager.filePath_testData_sampleClosestPtOnPerim}'");
-
-			if ( !File.Exists(TDG_Manager.filePath_testData_sampleClosestPtOnPerim) )
-			{
-				Debug.LogError($"PROBLEM!!!!! file at test path does not exist. Cannot perform test.");
-				return;
-			}
-
-			#region SETUP CLOSEST ON PERIMETER TEST -----------------------------
-			//_test_closestOnPerimeter = _sceneGeneratedLnxNavmesh.gameObject.AddComponent<TDG_SampleClosestPtOnPerimeter>();
-			_test_closestOnPerimeter = _jsonGeneratedLnxNavmesh.gameObject.AddComponent<TDG_SampleClosestPtOnPerimeter>();
-
-			//Debug.Log ( File.Exists(filePath_test_closestOnPerimeter) );
-			//Debug.Log( filePath_test_closestOnPerimeter );
-			string jsonString = File.ReadAllText(TDG_Manager.filePath_testData_sampleClosestPtOnPerim);
-
-			JsonUtility.FromJsonOverwrite(jsonString, _test_closestOnPerimeter);
-			//Debug.Log( _test_samplePosition.problemPositions.Count );
-
-			Assert.IsNotNull(_test_closestOnPerimeter.testPositions);
-			Assert.Greater(_test_closestOnPerimeter.testPositions.Count, 0);
-			#endregion
-
-			for ( int i = 0; i < _test_closestOnPerimeter.testPositions.Count; i++ )
-			{
-				Debug.Log($"{i}. expecting: '{_test_closestOnPerimeter.hitPositions[i]}'...");
-
-				LNX_ProjectionHit hit = new LNX_ProjectionHit();
-
-				if ( _jsonGeneratedLnxNavmesh.SamplePosition(_test_closestOnPerimeter.testPositions[i], out hit, 10f) ) //It needs to do this in order to decide which triangle to use...
-				{
-					Vector3 v_result = _jsonGeneratedLnxNavmesh.Triangles[hit.Index_hitTriangle].ClosestPointOnPerimeter( _test_closestOnPerimeter.testPositions[i] );
-
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual( _test_closestOnPerimeter.hitPositions[i].x, v_result.x );
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual( _test_closestOnPerimeter.hitPositions[i].y, v_result.y );
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual( _test_closestOnPerimeter.hitPositions[i].z, v_result.z );
-				}
-			}
-		}
-
-		[Test]
-		public void G3_Test_ClosestOnPerimeter_triCenters()
-		{
-			Debug.Log($"{nameof(G3_Test_ClosestOnPerimeter_triCenters)}---------------------------------------------------------");
-			Debug.Log($"Sampling '{_test_closestOnPerimeter.testPositions.Count}' test positions at: '{System.DateTime.Now.ToString()}'");
-
-			for (int i = 0; i < _test_closestOnPerimeter.testPositions.Count; i++)
-			{
-				Debug.Log($"{i}...");
-
-				LNX_ProjectionHit hit = new LNX_ProjectionHit();
-
-				if ( _jsonGeneratedLnxNavmesh.SamplePosition(_test_closestOnPerimeter.testPositions[i], out hit, 10f)) //It needs to do this in order to decide which triangle to use...
-				{
-					Vector3 v_result = _jsonGeneratedLnxNavmesh.Triangles[hit.Index_hitTriangle].ClosestPointOnPerimeter(_test_closestOnPerimeter.testPositions[i]);
-
-					Debug.Log($"{i}. expecting: '{_test_closestOnPerimeter.hitPositions[i]}', ClosestPointOnPerimeter got: '{v_result}'. " +
-						$"close: '{Vector3.Distance(v_result, _test_closestOnPerimeter.hitPositions[i])}'..");
-
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_test_closestOnPerimeter.triCenters[i].x, _jsonGeneratedLnxNavmesh.Triangles[hit.Index_hitTriangle].V_Center.x);
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_test_closestOnPerimeter.triCenters[i].y, _jsonGeneratedLnxNavmesh.Triangles[hit.Index_hitTriangle].V_Center.y);
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_test_closestOnPerimeter.triCenters[i].z, _jsonGeneratedLnxNavmesh.Triangles[hit.Index_hitTriangle].V_Center.z);
-				}
-			}
-
-			Debug.Log($"end of test: '{nameof(G3_Test_ClosestOnPerimeter_triCenters)}'");
-		}
-		#endregion
-
-
-		/*
-		 * 
-		[Test]
-		public void x_Test_SelectCutEdge()
-		{
-			//make tests showing that I can and cannot cut edges in various scenarios
-		}
-		*/
-
 
 		/*
         // A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use

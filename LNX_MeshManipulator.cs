@@ -424,7 +424,7 @@ namespace LogansNavigationExtension
 			}
 			else if( SelectMode == LNX_SelectMode.Vertices )
 			{
-				DebugSelectedReport += $"pointing at: '{Vert_CurrentlyPointingAt.MyCoordinate}' \n";
+				DebugSelectedReport += $"pointing at: '{Vert_CurrentlyPointingAt.ToString()}' \n";
 				Vert_LastSelected = Vert_CurrentlyPointingAt;
 
 				if ( !amHoldingAddInputModifier )
@@ -447,7 +447,7 @@ namespace LogansNavigationExtension
 				DebugSelectedReport += $"pointing at: '{Edge_CurrentlyPointingAt.ToString()}' \n";
 				Edge_LastSelected = Edge_CurrentlyPointingAt; //note: something's funny with edge selection, particularly when selecting a terminal/border edge...
 				
-				LNX_Edge sharedEdge = amLocked ? null : _LNX_NavMesh.GetEdgeAtCoordinate( Edge_CurrentlyPointingAt.SharedEdge );
+				LNX_Edge sharedEdge = amLocked ? null : _LNX_NavMesh.GetEdgeAtCoordinate( Edge_CurrentlyPointingAt.SharedEdgeCoordinate );
 
 				if ( !amHoldingAddInputModifier )
 				{
@@ -627,14 +627,14 @@ namespace LogansNavigationExtension
 			LNX_Edge endEdge1 = null;
 			for ( int i_edges = 0; i_edges < 3; i_edges++ )
 			{
-				if ( tri0.Edges[i_edges] != Edges_currentlySelected[0] && tri0.Edges[i_edges].SharedEdge.TrianglesIndex != tri1.Index_inCollection )
+				if ( tri0.Edges[i_edges] != Edges_currentlySelected[0] && tri0.Edges[i_edges].SharedEdgeCoordinate.TrianglesIndex != tri1.Index_inCollection )
 				{
-					endEdge0 = new LNX_Edge(_LNX_NavMesh.GetEdgeAtCoordinate(tri0.Edges[i_edges].SharedEdge));
+					endEdge0 = new LNX_Edge(_LNX_NavMesh.GetEdgeAtCoordinate(tri0.Edges[i_edges].SharedEdgeCoordinate));
 					//Debug.Log($"Found edge index 1 at '{endEdge0}'");
 				}
-				else if (tri1.Edges[i_edges] != Edges_currentlySelected[1] && tri1.Edges[i_edges].SharedEdge.TrianglesIndex != tri0.Index_inCollection)
+				else if (tri1.Edges[i_edges] != Edges_currentlySelected[1] && tri1.Edges[i_edges].SharedEdgeCoordinate.TrianglesIndex != tri0.Index_inCollection)
 				{
-					endEdge1 = new LNX_Edge(_LNX_NavMesh.GetEdgeAtCoordinate(tri1.Edges[i_edges].SharedEdge));
+					endEdge1 = new LNX_Edge(_LNX_NavMesh.GetEdgeAtCoordinate(tri1.Edges[i_edges].SharedEdgeCoordinate));
 					//Debug.Log($"Found edge index 2 at '{endEdge1}'");
 				}
 			}

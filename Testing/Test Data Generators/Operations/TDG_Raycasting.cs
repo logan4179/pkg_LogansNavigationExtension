@@ -19,7 +19,9 @@ namespace LogansNavigationExtension
 		public bool RaycastResult = false;
 
 		[TextArea(1,20)]
-		public string DebugRaycast;
+		public string DBG_NavmeshRaycastRprt;
+		[TextArea(1, 20)]
+		public string DBG_NavmeshProjectionRprt;
 
 		[ContextMenu("z CaptureDataPoint()")]
 		public void CaptureDataPoint()
@@ -32,7 +34,7 @@ namespace LogansNavigationExtension
 
 		private void OnDrawGizmos()
 		{
-			DebugRaycast = "";
+			DBG_NavmeshRaycastRprt = "";
 
 			if( Selection.activeObject == gameObject )
 			{
@@ -46,7 +48,8 @@ namespace LogansNavigationExtension
 
 				Gizmos.DrawLine(startTrans.position, endTrans.position);
 
-				DebugRaycast = _Lnx_Navmesh.DBGRaycast;
+				DBG_NavmeshRaycastRprt = _Lnx_Navmesh.DBGRaycast;
+				DBG_NavmeshProjectionRprt = _Lnx_Navmesh.DBG_NavmeshProjection;
 			}
 		}
 	}
