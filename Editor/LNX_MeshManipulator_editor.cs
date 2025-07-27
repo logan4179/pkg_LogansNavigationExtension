@@ -90,7 +90,7 @@ namespace LogansNavigationExtension
 		private void btn_clearModifications_action()
 		{
 			_targetScript._LNX_NavMesh.ClearModifications();
-			_targetScript.manipulatorPos = _targetScript.Vert_LastSelected.Position;
+			_targetScript.manipulatorPos = _targetScript.Vert_LastSelected.V_Position;
 			//_targetScript.ClearSelection(); //because if I don't do this, the vertices referenced in memory by the mesh manipulator will still exist and be selected...
 		}
 

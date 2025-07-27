@@ -7,101 +7,83 @@ namespace LogansNavigationExtension
 	[System.Serializable]
 	public class LNX_Edge
 	{
-		public float EdgeLength;
-
-		public Vector3 StartPosition;
-		public LNX_ComponentCoordinate StartVertCoordinate;
-		public Vector3 MidPosition;
-		public Vector3 EndPosition;
-		public LNX_ComponentCoordinate EndVertCoordinate;
-
-		public Vector3 v_startToEnd;
-		public Vector3 v_endToStart;
-
-		public Vector3 v_toCenter;
-		public Vector3 v_cross;
-
 		public LNX_ComponentCoordinate MyCoordinate;
 
+		//[Header("CACHED")]
+		public Vector3 StartPosition;
+		public LNX_ComponentCoordinate StartVertCoordinate;
+		public Vector3 EndPosition;
+		public LNX_ComponentCoordinate EndVertCoordinate;
 		/// <summary> Currently set in the Triangle relationship constructor</summary>
-		public LNX_ComponentCoordinate SharedEdge;
+		public LNX_ComponentCoordinate SharedEdgeCoordinate;
+		/// <summary>Cached center vector for the owning triangle. This is for exposed property calculation </summary>
+		[SerializeField, HideInInspector] private Vector3 v_triCenter_cached;
+		public Vector3 v_cross;
 
-		public bool AmTerminal => SharedEdge == LNX_ComponentCoordinate.None;
 
-		// TRUTH...........
-		/// <summary>If true, it means that this edge has no shared edge with another triangle, 
-		/// and therefore forms part of the boundary of walkable space.</summary>
-		//public bool AmTerminal;
+		//[Header("PROPERTIES")]
+		public Vector3 MidPosition => (StartPosition + EndPosition) / 2f;
 
-		public LNX_Edge( LNX_Triangle tri, LNX_Vertex strtVrt, LNX_Vertex endVrt, int indx )
+		public Vector3 v_startToEnd => Vector3.Normalize(EndPosition - StartPosition);
+
+		public Vector3 v_endToStart => Vector3.Normalize(StartPosition - EndPosition);
+
+		public Vector3 v_toCenter => Vector3.Normalize( v_triCenter_cached - MidPosition );
+		public float EdgeLength => Vector3.Distance(StartPosition, EndPosition);
+		public bool AmTerminal => SharedEdgeCoordinate == LNX_ComponentCoordinate.None;
+
+
+
+		public LNX_Edge( LNX_NavMesh nm, LNX_Vertex strtVrt, LNX_Vertex endVrt, int triIndx, int cmptIndx )
 		{
-			CalculateInfo( tri, strtVrt, endVrt );
+			//Debug.Log($"ctor. edge: '{tri.Index_inCollection},{indx}'");
 
-			MyCoordinate = new LNX_ComponentCoordinate( tri.Index_inCollection, indx );
+			MyCoordinate = new LNX_ComponentCoordinate( triIndx, cmptIndx );
 
 			StartVertCoordinate = strtVrt.MyCoordinate;
 			EndVertCoordinate = endVrt.MyCoordinate;
 
-			SharedEdge = LNX_ComponentCoordinate.None;
+			v_triCenter_cached = nm.Triangles[triIndx].V_Center;
+
+			SharedEdgeCoordinate = LNX_ComponentCoordinate.None;
 		}
 
 		public LNX_Edge( LNX_Edge edge )
 		{
-			EdgeLength = edge.EdgeLength;
-
 			StartPosition = edge.StartPosition;
 			StartVertCoordinate = edge.StartVertCoordinate;
-			MidPosition = edge.MidPosition;
 			EndPosition = edge.EndPosition;
 			EndVertCoordinate = edge.EndVertCoordinate;
 
-			v_startToEnd = edge.v_startToEnd;
-			v_endToStart = edge.v_endToStart;
-
-			v_toCenter = edge.v_toCenter;
 			v_cross = edge.v_cross;
 
 			MyCoordinate = edge.MyCoordinate;
 
-			SharedEdge = edge.SharedEdge;
+			SharedEdgeCoordinate = edge.SharedEdgeCoordinate;
 		}
 
 		public void AdoptValues(LNX_Edge edge)
 		{
-			EdgeLength = edge.EdgeLength;
-
 			StartPosition = edge.StartPosition;
 			StartVertCoordinate = edge.StartVertCoordinate;
-			MidPosition = edge.MidPosition;
 			EndPosition = edge.EndPosition;
 			EndVertCoordinate = edge.EndVertCoordinate;
 
-			v_startToEnd = edge.v_startToEnd;
-			v_endToStart = edge.v_endToStart;
-
-			v_toCenter = edge.v_toCenter;
 			v_cross = edge.v_cross;
 
 			MyCoordinate = edge.MyCoordinate;
 
-			SharedEdge = edge.SharedEdge;
+			SharedEdgeCoordinate = edge.SharedEdgeCoordinate;
 		}
 
 		public void CalculateInfo( LNX_Triangle tri, LNX_Vertex strtVrt, LNX_Vertex endVrt )
 		{
-			StartPosition = strtVrt.Position;
-			EndPosition = endVrt.Position;
-			MidPosition = (StartPosition + EndPosition) / 2f;
+			StartPosition = strtVrt.V_Position;
+			EndPosition = endVrt.V_Position;
 
-			v_startToEnd = Vector3.Normalize( StartPosition - EndPosition );
-			v_endToStart = Vector3.Normalize( EndPosition - StartPosition );
+			v_cross = Vector3.Cross(v_startToEnd, tri.v_sampledNormal).normalized;
 
-			EdgeLength = Vector3.Distance( StartPosition, EndPosition );
-
-			v_toCenter = Vector3.Normalize(tri.V_center - MidPosition);
-			v_cross = Vector3.Cross(v_startToEnd, tri.v_normal).normalized;
-
-			if (Vector3.Dot(v_cross, v_toCenter) < 0)
+			if ( Vector3.Dot(v_cross, v_toCenter) < 0 )
 			{
 				v_cross = -v_cross;
 			}
@@ -114,6 +96,22 @@ namespace LogansNavigationExtension
 			StartVertCoordinate = new LNX_ComponentCoordinate( newIndex, StartVertCoordinate.ComponentIndex);
 
 			EndVertCoordinate = new LNX_ComponentCoordinate( newIndex, EndVertCoordinate.ComponentIndex);
+		}
+
+		public int GetOpposingVertIndex()
+		{
+			int opposingVertIndex = 0;
+
+			if ( StartVertCoordinate.ComponentIndex != 1 && EndVertCoordinate.ComponentIndex != 1)
+			{
+				opposingVertIndex = 1;
+			}
+			else if (StartVertCoordinate.ComponentIndex != 2 && EndVertCoordinate.ComponentIndex != 2)
+			{
+				opposingVertIndex = 2;
+			}
+
+			return opposingVertIndex;
 		}
 
 		#region API METHODS-----------------------------
@@ -136,22 +134,65 @@ namespace LogansNavigationExtension
 			return v_result;
 		}
 
-		public bool IsProjectedPointOnEdge(Vector3 origin, Vector3 direction)
+		public bool IsProjectedPointOnEdge( Vector3 origin, Vector3 destination )
 		{
-			float angBetweenVerts = Vector3.Angle(
-				Vector3.Normalize(StartPosition - origin),
-				Vector3.Normalize(EndPosition - origin)
-			);
+			string dbg = "";
+			Vector3 direction = LNX_Utils.FlatVector( destination - origin);
 
-			float angToStart = Vector3.Angle(direction, StartPosition - origin);
-			float angToEnd = Vector3.Angle(direction, EndPosition - origin);
+			float dotOf_dir_and_edgeStart = Vector3.Dot( 
+				direction, LNX_Utils.FlatVector(StartPosition - origin) );
+			dbg += $"dot(start): '{dotOf_dir_and_edgeStart}'. ";
 
-			if (angToStart > angBetweenVerts || angToEnd > angBetweenVerts)
+			if( dotOf_dir_and_edgeStart < 0f )
 			{
+				Debug.Log(dbg);
 				return false;
 			}
 
+			float dotOf_dir_and_edgeEnd = Vector3.Dot(
+				direction, LNX_Utils.FlatVector(EndPosition - origin) );
+			dbg += $"dot(end): '{dotOf_dir_and_edgeEnd}'\n";
+
+			if( dotOf_dir_and_edgeEnd < 0f )
+			{
+				Debug.Log(dbg);
+
+				return false;
+			}
+
+			Debug.Log(dbg);
+
+
 			return true;
+
+			/////////////////////////////////////////////////////////////////////////////////////
+			/*
+			float ang_originToProjectEdge = Vector3.Angle(
+				Vector3.Normalize(StartPosition - origin),
+				Vector3.Normalize(EndPosition - origin)
+			);
+			dbg += $"{nameof(ang_originToProjectEdge)}: '{ang_originToProjectEdge}'\n";
+
+
+			float angA = Vector3.Angle(
+				direction, LNX_Utils.FlatVector(StartPosition - origin)
+			);
+			float angB = Vector3.Angle(
+				direction, LNX_Utils.FlatVector(EndPosition - origin)
+			);
+
+			dbg += $"angA: '{angA}', angB: '{angB}'\n";
+
+			if (angA > ang_originToProjectEdge || angB > ang_originToProjectEdge)
+			{
+				dbg += "greather than...";
+				Debug.Log(dbg );
+				return false;
+			}
+			Debug.Log(dbg);
+
+			return true;
+			*/
 		}
 
 		/// <summary>
@@ -175,5 +216,14 @@ namespace LogansNavigationExtension
 			return false;
 		}
 		#endregion
+
+		public void SayCurrentInfo()
+		{
+			Debug.Log($"Edge.{nameof(SayCurrentInfo)}()\n" +
+				$"{nameof(MyCoordinate)}: '{MyCoordinate}'\n" +
+				$"{nameof(StartPosition)}: '{StartPosition}'\n" +
+				$"{nameof(v_cross)}: '{v_cross}'\n" +
+				$"");
+		}
 	}
 }

@@ -13,7 +13,6 @@ namespace LogansNavigationExtension
 
 		[Header("REFERENCE")]
 		[SerializeField] private LNX_NavMesh _serializedNavmeshModel;
-		[SerializeField] private LNX_NavMesh _sceneGeneratedNavmeshModel;
 
 		public LNX_NavmeshFullDataSaver _sceneGeneratedNavmeshDataSaver;
 
@@ -26,7 +25,7 @@ namespace LogansNavigationExtension
 		public static string dirPath_testingFolder = $"{Directory.GetCurrentDirectory()}\\Packages\\LogansNavigationExtension\\Testing";
 		public static string dirPath_testDataFolder = Path.Combine( dirPath_testingFolder, "Unit Tests\\Test Data" );
 
-		[Header("FILE")]
+		[Header("NAVMESH DATA")]
 		public static string filePath_serializedLnxNavMesh = Path.Combine(dirPath_testDataFolder, "serializedNavmesh_A");
 
 		public static string filePath_sceneGeneratedLnxNavMesh = Path.Combine(dirPath_testDataFolder, "sceneGeneratedNavmesh_A");
@@ -36,9 +35,12 @@ namespace LogansNavigationExtension
 		[Header("TESTERS")]
 
 		public TDG_SamplePosition _tdg_samplePosition;
-		public static string filePath_testData_SamplePosition = Path.Combine( dirPath_testDataFolder, "tdg_samplePosition_data_B.json" );
+		public static string filePath_testData_SamplePosition = Path.Combine( dirPath_testDataFolder, "tdg_samplePosition_data_A.json" );
 
-		public TDG_Pathing _tdg_pathing;
+		public TDG_VertexOperations _tdg_vertexOperations;
+		public static string filePath_testData_vertexOperations = $"{dirPath_testDataFolder}\\tdg_vertexOperations_data_A.json";
+
+		public TDG_CalculatePath _tdg_pathing;
 		public static string filePath_testData_pathing = $"{dirPath_testDataFolder}\\tdg_pathing_data_A.json";
 
 		public TDG_SampleClosestPtOnPerimeter _tdg_sampleClosestPtOnPerim;
@@ -47,8 +49,8 @@ namespace LogansNavigationExtension
 		public TDG_pointingAndGrabbing _tdg_pointingAndGrabbing;
 		public static string filePath_testData_pointingAndGrabbing = $"{dirPath_testDataFolder}\\tdg_pointingAndGrabbing_data_A.json";
 
-		public TDG_MoveComponents _tdg_moveComponents;
-		public static string filePath_testData_moveComponents = $"{dirPath_testDataFolder}\\tdg_moveComponents_data_A.json";
+		public TDG_Projecting _tdg_projecting;
+		public static string filePath_testData_projectingTests = $"{dirPath_testDataFolder}\\tdg_projectingTests_data_A.json";
 
 		public TDG_DeleteTests _tdg_deleteTests;
 		public static string filePath_testData_deleteTests = $"{dirPath_testDataFolder}\\tdg_deleteTests_data_A.json";
@@ -186,7 +188,7 @@ namespace LogansNavigationExtension
 		[SerializeField, Tooltip("this flag is ideally set by the script and not through the editor. It triggers a warning prompt when you try to update/write all")] 
 		bool logWarning = true;
 
-		[ContextMenu("z call WriteAll()")]
+		[ContextMenu("z call UpdateAndWriteAll()")]
 		public void UpdateAndWriteAll()
 		{
 			if (logWarning) 
@@ -209,11 +211,19 @@ namespace LogansNavigationExtension
 				WriteSerializedLnxMeshToJson();
 				WriteSceneGeneratedMeshDataToJson();
 
+				#region VERTEX OPERATIONS ----------------------------------------------------------
+				if ( !_tdg_vertexOperations.WriteMeToJson() )
+				{
+					Debug.LogError($"write to json didn't work on {nameof(_tdg_vertexOperations)}. Returning early...");
+					return;
+				}
+				#endregion
+
 				#region SAMPLE POSITION ---------------------------------------------------------------------
 				_tdg_samplePosition.GenerateHItResultCollections();
 
-				if( _tdg_samplePosition.hitPositions == null || _tdg_samplePosition.hitPositions.Length <= 0 || 
-					_tdg_samplePosition.triCenters == null || _tdg_samplePosition.triCenters.Length <= 0 )
+				if( _tdg_samplePosition.capturedHitPositions == null || _tdg_samplePosition.capturedHitPositions.Count <= 0 || 
+					_tdg_samplePosition.capturedTriCenters == null || _tdg_samplePosition.capturedTriCenters.Count <= 0 )
 				{
 					Debug.LogError($"ERROR! Apparently something failed in {nameof(_tdg_samplePosition)}. returning early...");
 					return;
@@ -235,8 +245,8 @@ namespace LogansNavigationExtension
 				#region CLOSEST POINT ON PERIMETER ---------------------------------------------------
 				_tdg_sampleClosestPtOnPerim.GenerateHItResultCollections();
 
-				if (_tdg_sampleClosestPtOnPerim.hitPositions == null || _tdg_sampleClosestPtOnPerim.hitPositions.Length <= 0 ||
-					_tdg_sampleClosestPtOnPerim.triCenters == null || _tdg_sampleClosestPtOnPerim.triCenters.Length <= 0)
+				if (_tdg_sampleClosestPtOnPerim.capturedPerimeterPositions == null || _tdg_sampleClosestPtOnPerim.capturedPerimeterPositions.Count <= 0 ||
+					_tdg_sampleClosestPtOnPerim.capturedTriCenters == null || _tdg_sampleClosestPtOnPerim.capturedTriCenters.Count <= 0)
 				{
 					Debug.LogError($"ERROR! Apparently something failed in {nameof(_tdg_sampleClosestPtOnPerim)}. returning early...");
 					return;
@@ -259,10 +269,10 @@ namespace LogansNavigationExtension
 				}
 				#endregion
 
-				#region MOVE COMPONENTS ------------------------------------------------------------
-				if ( !_tdg_moveComponents.WriteMeToJson() )
+				#region PROJECTING ----------------------------------------------------------
+				if ( !_tdg_projecting.WriteMeToJson() )
 				{
-					Debug.LogError($"write to json didn't work on {nameof(_tdg_moveComponents)}. Returning early...");
+					Debug.LogError($"write to json didn't work on {nameof(_tdg_projecting)}. Returning early...");
 					return;
 				}
 				#endregion

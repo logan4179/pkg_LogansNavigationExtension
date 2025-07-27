@@ -4,17 +4,28 @@ using UnityEditor;
 using UnityEngine;
 using System.IO;
 using System;
+using UnityEngine.Profiling;
 
 namespace LogansNavigationExtension
 {
     public class TDG_SamplePosition : TDG_base
     {
-		[SerializeField] private string DBG_GetClosestTri;
+		public List<Vector3> samplePositions;
+		public List<Vector3> capturedHitPositions;
+		public List<Vector3> capturedTriCenters;
 
+		[Header("For data")]
+		public bool SamplePositionResult;
+		LNX_ProjectionHit lnxHit = new LNX_ProjectionHit();
+
+		[Header("DEBUG")]
 		[SerializeField, Range(0f, 0.3f)] private float radius_drawSphere = 0.1f;
+		public Color color_success;
+		public Color color_fail;
+		public Color Color_sampleObject;
+		[Range(0f,0.2f)] public float size_sampleObject = 0.15f;
+		[SerializeField] private string DBG_Class;
 
-		public Vector3[] hitPositions;
-		public Vector3[] triCenters;
 
 		protected override void OnDrawGizmos()
 		{
@@ -25,23 +36,49 @@ namespace LogansNavigationExtension
 				return;
 			}
 
-			DBG_GetClosestTri = $"Searching through '{_mgr.Triangles.Length}' tris...\n";
+			DBG_Class = $"";
+			SamplePositionResult = false;
+			
+			lnxHit = new LNX_ProjectionHit();
 
-			LNX_ProjectionHit lnxHit = new LNX_ProjectionHit();
-
-			if (_mgr.SamplePosition(transform.position, out lnxHit, 10f))
+			if ( _navmesh.SamplePosition(transform.position, out lnxHit, 10f) )
 			{
-				DBG_GetClosestTri += $"found point: '{lnxHit.HitPosition}', on tri: '{lnxHit.Index_hitTriangle}'";
-				_debugger.DrawTriGizmos(_mgr.Triangles[lnxHit.Index_hitTriangle], true);
+				DBG_Class += $"samplePosition returned true with: '{lnxHit.HitPosition}', on tri: '{lnxHit.Index_Hit}'\n" +
+					$"report: \n" +
+					$"{_navmesh.DBG_SamplePosition}\n";
 
-				Vector3 v_to = transform.position - _mgr.Triangles[lnxHit.Index_hitTriangle].V_center;
-				Gizmos.color = Color.red;
-				Gizmos.DrawSphere(lnxHit.HitPosition, radius_drawSphere);
+				
+				DrawStandardFocusTriGizmos(
+					_navmesh.Triangles[lnxHit.Index_Hit],
+					1f,
+					_navmesh.Triangles[lnxHit.Index_Hit].Index_inCollection.ToString()
+				);
+
+				Gizmos.color = Color_sampleObject;
+				Gizmos.DrawLine( transform.position, lnxHit.HitPosition );
+				Gizmos.DrawCube( lnxHit.HitPosition, Vector3.one * size_sampleObject );
+				Handles.Label( lnxHit.HitPosition + (Vector3.up * 0.015f), lnxHit.HitPosition.ToString() );
+
+				Gizmos.color = color_success;
 			}
 			else
 			{
-				DBG_GetClosestTri += $"found nothing...";
+				DBG_Class += $"samplePosition() returned false. Report:...\n" +
+					$"{_navmesh.DBG_SamplePosition}\n";
+				Gizmos.color = color_fail;
 			}
+
+			Gizmos.DrawSphere( transform.position, radius_drawSphere );
+		}
+
+		[ContextMenu("z call CaptureDataPoint()")]
+		public void CaptureDataPoint()
+		{
+			samplePositions.Add( transform.position );
+			capturedHitPositions.Add( lnxHit.HitPosition );
+			capturedTriCenters.Add( _navmesh.Triangles[lnxHit.Index_Hit].V_Center );
+
+			Debug.Log($"Captured ");
 		}
 
 		[ContextMenu("z call GenerateHItResultCollections()")]
@@ -50,24 +87,28 @@ namespace LogansNavigationExtension
 			Debug.Log($"{nameof(GenerateHItResultCollections)}()...");
 
 			LNX_ProjectionHit lnxHit = new LNX_ProjectionHit();
-			hitPositions = new Vector3[testPositions.Count];
-			triCenters = new Vector3[testPositions.Count];
+			samplePositions = new List<Vector3>();
+			capturedHitPositions = new List<Vector3>();
+			capturedTriCenters = new List<Vector3>();
 
-			for ( int i = 0; i < testPositions.Count; i++ )
+			for ( int i = 0; i < problemPositions.Count; i++ )
 			{
+				samplePositions.Add( problemPositions[i] );
+
 				lnxHit = new LNX_ProjectionHit();
-				if ( _mgr.SamplePosition(testPositions[i], out lnxHit, 10f) )
+				if ( _navmesh.SamplePosition(problemPositions[i], out lnxHit, 10f) )
 				{
-					hitPositions[i] = lnxHit.HitPosition;
-					triCenters[i] = _mgr.Triangles[lnxHit.Index_hitTriangle].V_center;
+					capturedHitPositions.Add( lnxHit.HitPosition );
+					capturedTriCenters.Add( _navmesh.Triangles[lnxHit.Index_Hit].V_Center );
 				}
 				else
 				{
-					DBG_GetClosestTri += $"found nothing...";
+					DBG_Class += $"found nothing...";
 				}
 			}
 
-			Debug.Log($"generated '{hitPositions.Length}' {nameof(hitPositions)}, and '{triCenters.Length}' {nameof(triCenters)}. " +
+			Debug.Log($"generated '{capturedHitPositions.Count}' {nameof(capturedHitPositions)}, and " +
+				$"'{capturedTriCenters.Count}' {nameof(capturedTriCenters)}. " +
 				$"this method does NOT write the test data to json.");
 		}
 
@@ -75,20 +116,20 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call WriteMeToJson()")]
 		public bool WriteMeToJson()
 		{
-			if ( testPositions == null || testPositions.Count == 0 )
+			if ( problemPositions == null || problemPositions.Count == 0 )
 			{
 				Debug.LogWarning($"WARNING! problem positions was null or 0 count.");
 			}
 			else
 			{
-				if ( hitPositions == null || hitPositions.Length == 0 )
+				if ( capturedHitPositions == null || capturedHitPositions.Count == 0 )
 				{
-					Debug.LogWarning($"WARNING! {nameof(hitPositions)} was null or 0 count.");
+					Debug.LogWarning($"WARNING! {nameof(capturedHitPositions)} was null or 0 count.");
 				}
 
-				if ( triCenters == null || triCenters.Length == 0 )
+				if ( capturedTriCenters == null || capturedTriCenters.Count == 0 )
 				{
-					Debug.LogWarning($"WARNING! {nameof(triCenters)} was null or 0 count.");
+					Debug.LogWarning($"WARNING! {nameof(capturedTriCenters)} was null or 0 count.");
 				}
 			}
 
@@ -135,14 +176,14 @@ namespace LogansNavigationExtension
 		public void SayCurrentResult()
 		{
 			LNX_ProjectionHit lnxHit = new LNX_ProjectionHit();
-			if ( _mgr.SamplePosition(transform.position, out lnxHit, 10f) )
+			if ( _navmesh.SamplePosition(transform.position, out lnxHit, 10f) )
 			{
 				Debug.Log($"hit pos: '{lnxHit.HitPosition}'");
 
 			}
 			else
 			{
-				DBG_GetClosestTri += $"found nothing...";
+				DBG_Class += $"found nothing...";
 			}
 		}
 		#endregion

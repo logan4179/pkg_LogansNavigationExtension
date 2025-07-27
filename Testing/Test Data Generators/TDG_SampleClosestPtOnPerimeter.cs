@@ -3,19 +3,34 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace LogansNavigationExtension
 {
     public class TDG_SampleClosestPtOnPerimeter : TDG_base
     {
-		[SerializeField] private string DBG_GetClosest;
 
 		[SerializeField] private Vector3 v_result;
+		LNX_ProjectionHit lnxHit = new LNX_ProjectionHit();
+
 
 		[SerializeField] private float radius_drawSphere = 0.1f;
 
-		public Vector3[] hitPositions;
-		public Vector3[] triCenters;
+		public List<Vector3> SampleFromPositions = new List<Vector3>();
+		public List<Vector3> capturedPerimeterPositions = new List<Vector3>();
+		public List<Vector3> capturedTriCenters = new List<Vector3>();
+
+		[Header("DEBUG")]
+		[Range(0,0.3f)] public float radius_testObject;
+		[Range(0, 0.05f)] public float size_sampleObject;
+
+		public Color Color_IFSuccess = Color.white;
+		public Color Color_IfFailure = Color.white;
+
+		public Color Color_sampleObject = Color.white;
+
+		[SerializeField] private string DBG_Class;
+
 
 		protected override void OnDrawGizmos()
 		{
@@ -26,24 +41,42 @@ namespace LogansNavigationExtension
 				return;
 			}
 
+			DBG_Class = $"Searching through '{_navmesh.Triangles.Length}' tris...\n";
 
-			DBG_GetClosest = $"Searching through '{_mgr.Triangles.Length}' tris...\n";
+			lnxHit = new LNX_ProjectionHit();
 
-			LNX_ProjectionHit lnxHit = new LNX_ProjectionHit();
-
-			if( _mgr.SamplePosition(transform.position, out lnxHit, 10f) ) //It needs to do this in order to decide which triangle to use...
+			if( _navmesh.SamplePosition(transform.position, out lnxHit, 10f) ) //It needs to do this in order to decide which triangle to use...
 			{
-				DrawTriGizmo( _mgr.Triangles[lnxHit.Index_hitTriangle], Color.yellow );
+				DrawStandardFocusTriGizmos( _navmesh.Triangles[lnxHit.Index_Hit], 0.3f, lnxHit.Index_Hit.ToString() );
 
-				Gizmos.color = Color.red;
 
-				v_result = _mgr.Triangles[lnxHit.Index_hitTriangle].ClosestPointOnPerimeter(transform.position);
+				v_result = _navmesh.Triangles[lnxHit.Index_Hit].ClosestPointOnPerimeter(transform.position);
 
-				Gizmos.DrawSphere(
-					v_result, radius_drawSphere );
+				Gizmos.color = Color_sampleObject;
 
+				Gizmos.DrawCube( v_result, Vector3.one * size_sampleObject );
 				Gizmos.DrawLine(transform.position, v_result);
+
+				Gizmos.color = Color_IFSuccess;
 			}
+			else
+			{
+				DBG_Class += $"Couldn't sample position...\n";
+
+				Gizmos.color = Color_IfFailure;
+			}
+
+			Gizmos.DrawSphere( transform.position, radius_testObject );
+		}
+
+		[ContextMenu("z call CaptureDataPoint()")]
+		public void CaptureDataPoint()
+		{
+			SampleFromPositions.Add( transform.position );
+			capturedPerimeterPositions.Add( v_result );
+			capturedTriCenters.Add( _navmesh.Triangles[lnxHit.Index_Hit].V_Center );
+
+			Debug.Log($"captured...");
 		}
 
 		[ContextMenu("z call GenerateHItResultCollections()")]
@@ -52,43 +85,44 @@ namespace LogansNavigationExtension
 			Debug.Log($"{nameof(GenerateHItResultCollections)}()...");
 
 			LNX_ProjectionHit lnxHit = new LNX_ProjectionHit();
-			hitPositions = new Vector3[testPositions.Count];
-			triCenters = new Vector3[testPositions.Count];
+			capturedPerimeterPositions = new List<Vector3>();
+			capturedTriCenters = new List<Vector3>();
 
-			for ( int i = 0; i < testPositions.Count; i++ )
+			for ( int i = 0; i < SampleFromPositions.Count; i++ )
 			{
 				lnxHit = new LNX_ProjectionHit();
 
-				if ( _mgr.SamplePosition(testPositions[i], out lnxHit, 10f) )
+				if ( _navmesh.SamplePosition(SampleFromPositions[i], out lnxHit, 10f) )
 				{
-					Vector3 v = _mgr.Triangles[lnxHit.Index_hitTriangle].ClosestPointOnPerimeter( testPositions[i] );
+					Vector3 v = _navmesh.Triangles[lnxHit.Index_Hit].ClosestPointOnPerimeter( SampleFromPositions[i] );
 
-					hitPositions[i] = v;
-					triCenters[i] = _mgr.Triangles[lnxHit.Index_hitTriangle].V_center;
+					capturedPerimeterPositions[i] = v;
+					capturedTriCenters[i] = _navmesh.Triangles[lnxHit.Index_Hit].V_Center;
 				}
 			}
 
-			Debug.Log($"generated '{hitPositions.Length}' {nameof(hitPositions)}, and '{triCenters.Length}' {nameof(triCenters)}. " +
+			Debug.Log($"generated '{capturedPerimeterPositions.Count}' {nameof(capturedPerimeterPositions)}, and " +
+				$"'{capturedTriCenters.Count}' {nameof(capturedTriCenters)}. " +
 				$"this method does NOT write the test data to json.");
 		}
 
 		[ContextMenu("z call WriteMeToJson()")]
 		public bool WriteMeToJson()
 		{
-			if ( testPositions == null || testPositions.Count == 0 )
+			if ( SampleFromPositions == null || SampleFromPositions.Count == 0 )
 			{
 				Debug.LogWarning($"WARNING! problem positions was null or 0 count.");
 			}
 			else
 			{
-				if ( hitPositions == null || hitPositions.Length == 0 )
+				if ( capturedPerimeterPositions == null || capturedPerimeterPositions.Count == 0 )
 				{
-					Debug.LogWarning($"WARNING! {nameof(hitPositions)} was null or 0 count.");
+					Debug.LogWarning($"WARNING! {nameof(capturedPerimeterPositions)} was null or 0 count.");
 				}
 
-				if (triCenters == null || triCenters.Length == 0)
+				if (capturedTriCenters == null || capturedTriCenters.Count == 0)
 				{
-					Debug.LogWarning($"WARNING! {nameof(triCenters)} was null or 0 count.");
+					Debug.LogWarning($"WARNING! {nameof(capturedTriCenters)} was null or 0 count.");
 				}
 			}
 
