@@ -73,8 +73,12 @@ namespace LogansNavigationExtension
 
 		[HideInInspector] public List<int> dbgKosher_Triangles = new List<int>(); //length should be 3x
 		[HideInInspector] public List<Vector3> dbgKosher_vertices = new List<Vector3>();
-		//[Header("OTHER")]
-		//public NavMeshTriangulation OriginalTriangulation;
+
+		//[Header("ORIGINAL TRIANGULATION")]
+		//public Vector3[] ot_vertices;
+		//public int[] ot_indices;
+		//public int[] ot_areas;
+
 		private void OnEnable()
 		{
 			Debug.Log("lnx_navmesh.onenable()");
@@ -290,6 +294,8 @@ namespace LogansNavigationExtension
 
 			CalculateRelational();
 
+			RefreshMe( true );
+
 			Debug.Log($"End of {nameof(CalculateTriangulation)}(). Created '{Triangles.Length}' triangles, and '{constructedVertices_unique.Count}' unique vertices for the mesh.");
 
 			UnityEditor.EditorUtility.SetDirty( this );
@@ -400,16 +406,14 @@ namespace LogansNavigationExtension
 
 		}
 
-		[ContextMenu("z call ReconstructVisualizationMesh()")]
 		/// <summary>
 		/// Re-constructs the visualization mesh for the scene. Use this
 		/// in cases where the Mesh needs to be re-made when the Triangle info can be assumed to be correct/un-changed. IE: When Unity is 
 		/// closed and reopened, and the mesh information needs to be remade because it's not serialized.
 		/// </summary>
-		/// <param name="assumeCollectionChange"> Whether the Triangles colleciton has changed and should be </param>
 		public void ReconstructVisualizationMesh()
 		{
-			Debug.Log($"{nameof(ReconstructVisualizationMesh)}()");
+			Debug.Log($"ReconstructVisualizationMesh()");
 
 			/*
 			Note: I used to have a lot of the loops in here bundled together for more efficiency, but it looked 
@@ -605,7 +609,7 @@ namespace LogansNavigationExtension
 			dbgMesh_normals = _Mesh.normals;
 			#endregion
 
-			Debug.Log($"end of {nameof(ReconstructVisualizationMesh)}()");
+			Debug.Log($"end of ReconstructVisualizationMesh()");
 		}
 
 		#endregion
@@ -739,7 +743,7 @@ namespace LogansNavigationExtension
 
 			for ( int i = 0; i < Triangles.Length; i++ )
 			{
-				Triangles[i].CreateRelationships( this );
+				Triangles[i].CalculateComponentRelationships( this );
 			}
 
 			CalculateBounds();
@@ -761,20 +765,34 @@ namespace LogansNavigationExtension
 			return false;
 		}
 
-		public bool ContainsDeletion( NavMeshTriangulation nmTriangulation, int areaIndex )
+		public bool ContainsDeletion( NavMeshTriangulation nmTriangulation, int areaIndex ) //todo: definitely unit test this...
 		{
-			string methodReport = $"{nameof(ContainsDeletion)}(). checking vert in list starting at the vert at index: '{nmTriangulation.indices[areaIndex * 3]}', position: '{nmTriangulation.vertices[nmTriangulation.indices[areaIndex * 3]]}'...";
+			string methodReport = $"ContainsDeletion(). checking vert in list starting at the vert at index: '{nmTriangulation.indices[areaIndex * 3]}', position: '{nmTriangulation.vertices[nmTriangulation.indices[areaIndex * 3]]}'...";
 
 			if ( deletedTriangles != null && deletedTriangles.Count > 0 )
 			{
 				for ( int i = 0; i < deletedTriangles.Count; i++ )
 				{
+					if(
+						deletedTriangles[i].HasVertAtOriginalPosition(nmTriangulation.vertices[nmTriangulation.indices[areaIndex * 3]]) &&
+						deletedTriangles[i].HasVertAtOriginalPosition(nmTriangulation.vertices[nmTriangulation.indices[(areaIndex*3) + 1]]) &&
+						deletedTriangles[i].HasVertAtOriginalPosition(nmTriangulation.vertices[nmTriangulation.indices[(areaIndex*3) + 2]])
+					)
+					{
+						methodReport += $"found DO contain deletion. passed index: '{areaIndex}'...";
+						Debug.LogWarning(methodReport);
+						return true;
+					}
+
+					//dws - this old way only checked a single vert...wtf?
+					/*
 					if ( deletedTriangles[i].GetVertIndextAtOriginalPosition(nmTriangulation.vertices[nmTriangulation.indices[areaIndex * 3]]) != -1 )
 					{
 						methodReport += $"found DO contain deletion. passed index: '{areaIndex}'...";
 						Debug.LogWarning( methodReport );
 						return true;
 					}
+					*/
 				}
 			}
 
@@ -802,12 +820,10 @@ namespace LogansNavigationExtension
 
 			for ( int i = 0; i < Triangles.Length; i++ )
 			{
-				Triangles[i].CreateRelationships( this );
+				Triangles[i].CalculateComponentRelationships( this );
 			}
 
-			CalculateBounds();
-
-			ReconstructVisualizationMesh();
+			RefreshMe( true );
 		}
 		#endregion
 
@@ -817,7 +833,7 @@ namespace LogansNavigationExtension
 		/// Re-calculates the derived info and re-creates relationships for all triangles. Also 
 		/// re-calculates the bounds. Call this after an edit has been made to the navmesh.
 		/// </summary>
-		[ContextMenu("z call RefreshAfterMove()")]
+		/*[ContextMenu("z call RefreshAfterMove()")]
 		public void RefreshAfterMove()
 		{
 			for (int i = 0; i < Triangles.Length; i++)
@@ -826,24 +842,65 @@ namespace LogansNavigationExtension
 			}
 
 			CalculateBounds();
+		}*/
+
+		public void RefreshMe( bool meshContinuityHasChanged ) //NEW
+		{
+			for ( int i = 0; i < Triangles.Length; i++ )
+			{
+				if( !meshContinuityHasChanged )
+				{
+					if( Triangles[i].DirtyFlag_RepositionedVert )
+					{
+						Triangles[i].CalculateDerivedInfo();
+					}
+				}
+				else
+				{
+
+				}
+			}
+
+
+
+
+
+
+			//////////////////////////////////////
+			for ( int i = 0; i < Triangles.Length; i++ )
+			{
+				Triangles[i].RefreshTriangle( this, false );
+			}
+
+			CalculateBounds();
+
+			if( meshContinuityHasChanged )
+			{
+				for ( int i = 0; i < Triangles.Length; i++ )
+				{
+					Triangles[i].RefreshMe( this, meshContinuityHasChanged );
+				}
+
+				ReconstructVisualizationMesh();
+			}
 		}
 
 		public void CalculateRelational()
 		{
-			DBG_Relational = $"{nameof(CalculateRelational)}() at '{DateTime.Now.ToString()}'...\n" +
+			DBG_Relational = $"CalculateRelational() at '{DateTime.Now.ToString()}'...\n" +
 				$"iterating through '{Triangles.Length}' triangles and creating their relationships...\n";
 
-			for (int i = 0; i < Triangles.Length; i++)
+			for ( int i = 0; i < Triangles.Length; i++ )
 			{
 				DBG_Relational += $"creating rels for tri: '{i}'...\n";
-				Triangles[i].CreateRelationships( this );
+				Triangles[i].CalculateComponentRelationships( this );
 			}
 
 			DBG_Relational += $"\n\nIterations finished, Now calculating bounds...\n";
 
 			CalculateBounds();
 
-			DBG_Relational += $"End of '{nameof(CalculateRelational)}' reached...";
+			DBG_Relational += $"End of 'CalculateRelational' reached...";
 		}
 		#endregion
 
@@ -939,7 +996,12 @@ namespace LogansNavigationExtension
 					dbgCalculatePath += $"perimHit was good on current tri on edge: '{perimHit.Index_Hit}'\n" +
 						$"sharededgecoordinate: '{currentTri.Edges[perimHit.Index_Hit].SharedEdgeCoordinate}'...\n";
 					pthPts.Add( perimHit.HitPosition );
-					pthNormals.Add( GetTriangle(currentTri.Edges[perimHit.Index_Hit].SharedEdgeCoordinate).V_PathingNormal );
+
+					if(currentTri.Edges[perimHit.Index_Hit].SharedEdgeCoordinate == LNX_ComponentCoordinate.None )
+					{
+						Debug.LogWarning($"hit sharededgecoordinate was none...");
+					}
+					pthNormals.Add( GetTriangle(currentTri.Edges[perimHit.Index_Hit].SharedEdgeCoordinate).V_PathingNormal ); //I think I need an error check that makes sure the edge isn't terminal first...
 
 					// Check if we're touching the last triangle...
 					if ( /*currentTri.Edges[perimHit.Index_Hit].MyCoordinate.TrianglesIndex == endHit.Index_Hit ||*/
@@ -1135,7 +1197,7 @@ namespace LogansNavigationExtension
 			LNX_ProjectionHit lnxStartHit = LNX_ProjectionHit.None;
 			LNX_ProjectionHit lnxEndHit = LNX_ProjectionHit.None;
 
-			if( !AmWithinNavMeshProjection(sourcePosition, out lnxStartHit, maxSampleDistance) ) //ERRORTRACE 7
+			if( !AmWithinNavMeshProjection(sourcePosition, out lnxStartHit, maxSampleDistance) )
 			{
 				DBGRaycast += $"SourcePosition NOT within navmesh projection...\n" +
 					$"\nAmWithinNavMeshProjection report:\n" +
@@ -1158,8 +1220,8 @@ namespace LogansNavigationExtension
 			}
 			else
 			{
-				DBGRaycast += $"sourcePosition was within navmeshprojection!\n" +
-					$"hit: '{lnxStartHit}'\n";
+				DBGRaycast += $"sourcePosition WAS within navmeshprojection!\n" +
+					$"start projection: '{lnxStartHit}' ({LNX_UnitTestUtilities.LongVectorString(lnxStartHit.HitPosition)})\n";
 			}
 
 			if ( !AmWithinNavMeshProjection(targetPosition, out lnxEndHit, maxSampleDistance) )
@@ -1183,19 +1245,17 @@ namespace LogansNavigationExtension
 			}
 			else
 			{
-				DBGRaycast += $"targetPosition was within navmeshprojection!\n" +
-					$"hit: '{lnxEndHit}'\n";
+				DBGRaycast += $"targetPosition WAS within navmeshprojection!\n" +
+					$"end projection: '{lnxEndHit}' ({LNX_UnitTestUtilities.LongVectorString(lnxEndHit.HitPosition)})\n";
 			}
 
 			#endregion
 
-			if (lnxStartHit.Index_Hit == lnxEndHit.Index_Hit)
+			if (lnxStartHit.Index_Hit == lnxEndHit.Index_Hit) //Short-circuit: If start and end hit are on same triangle...
 			{
-				DBGRaycast += $"starthit index and endhit index the same. Returning early...";
+				DBGRaycast += $"starthit index and endhit index the same so both hits should be on the same triangle surface. Returning early...";
 				return false;
 			}
-			DBGRaycast += $"Sampled start: (tri{lnxStartHit.Index_Hit})'{lnxStartHit.HitPosition}', " +
-				$"end: (tri{lnxEndHit.Index_Hit})'{lnxEndHit.HitPosition}'\n";
 
 			#region PROJECT THROUGH TO TARGET POSITION -------------------------------------------------
 			LNX_Triangle currentTri = Triangles[lnxStartHit.Index_Hit];
@@ -1204,44 +1264,69 @@ namespace LogansNavigationExtension
 			int safetyTimeout = 15;
 			int runningWhileIterations = 0;
 
-			DBGRaycast += "looping through mesh triangles...\n";
+			DBGRaycast += "\nlooping through mesh triangles...\n\n";
 			bool amStillProjecting = true;
 			while ( amStillProjecting )
 			{
-				DBGRaycast += "\nwhile...\n" +
-					$"currentTri: '{currentTri.Index_inCollection}', startPt: '{currentStartPos}'\n" +
-					$"projecting...\n";
+				DBGRaycast += $"\nwhile{runningWhileIterations}=============================================== " +
+					$"\n(currentTri: '{currentTri.Index_inCollection}', startPt: '{LNX_UnitTestUtilities.LongVectorString(currentStartPos)}')\n" +
+					$"projectingThroughToPerim...\n";
+				
 
 				LNX_ProjectionHit perimHit = currentTri.ProjectThroughToPerimeter( currentStartPos, lnxEndHit.HitPosition );
+				DBGRaycast += $"tri.prjctThrToPerim report...\n" +
+					$"{currentTri.dbg_prjctThrhToPerim}\n";
 
 				if( perimHit.Index_Hit > -1 && perimHit.Index_Hit < 3 )
 				{
 					LNX_Edge hitEdge = currentTri.Edges[perimHit.Index_Hit];
 					currentStartPos = perimHit.HitPosition;
 
-					DBGRaycast += $"projected to edge: '{hitEdge.MyCoordinate}' at '{perimHit.HitPosition}'\n";
+					DBGRaycast += $"projected to edge: '{hitEdge.MyCoordinate}' at '{LNX_UnitTestUtilities.LongVectorString(perimHit.HitPosition)}'. " +
+						$"Shared edge is: '{hitEdge.SharedEdgeCoordinate}'\n";
 
-					if (hitEdge.AmTerminal)
+					if ( hitEdge.AmTerminal )
 					{
-						DBGRaycast += $"edge is terminal...\n";
+						DBGRaycast += $"hit edge is terminal. Stoping loop...\n";
 						amStillProjecting = false;
 					}
 					else
 					{
-						currentTri = Triangles[hitEdge.SharedEdgeCoordinate.TrianglesIndex];
-						DBGRaycast += $"edge is NOT terminal, set current tri to: '{currentTri.Index_inCollection}'...\n";
+						DBGRaycast += $"edge is NOT terminal. Checking to see if we're at the end...\n";
+						Debug.Log($"current tri adjacent tri indices null: '{currentTri.AdjacentTriIndices == null}'");
 
-						if (currentTri.Index_inCollection == lnxEndHit.Index_Hit)
+						DBGRaycast += $"test1, Triangles[{currentTri.Index_inCollection}].AmAdjacentToTri({lnxEndHit.Index_Hit}): " +
+							$"'{currentTri.AmAdjacentToTri(lnxEndHit.Index_Hit)}'\n" +
+							$"";
+
+						if(
+							hitEdge.SharedEdgeCoordinate.TrianglesIndex == lnxEndHit.Index_Hit ||
+							(
+								currentTri.AmAdjacentToTri(lnxEndHit.Index_Hit) &&
+								currentTri.IsPositionOnAnyEdge(lnxEndHit.HitPosition)
+							)
+						)
 						{
+							currentTri = Triangles[lnxEndHit.Index_Hit];
+
 							amStillProjecting = false;
-							DBGRaycast += $"currentTri has same index as end hit triangle. Stopping...\n";
+							DBGRaycast += $"Decided AM at the end. Stopping...\n";
+						}
+						else
+						{
+							currentTri = Triangles[hitEdge.SharedEdgeCoordinate.TrianglesIndex];
+
+							currentStartPos = perimHit.HitPosition;
+
+							DBGRaycast += $"Decided NOT at the end. Set new current tri to: '{currentTri.Index_inCollection}'...\n";
 						}
 					}
 
+					/*
 					if ( runningWhileIterations == 1 ) //todo: dws
 					{
 						TryTrans.position = currentStartPos;
-					}
+					}*/
 				}
 				else
 				{

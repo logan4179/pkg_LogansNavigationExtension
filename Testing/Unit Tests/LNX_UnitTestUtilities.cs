@@ -44,5 +44,12 @@ namespace LogansNavigationExtension
 
             return returnArray;
 		}
+
+		public static string LongVectorString( Vector3 vect )
+		{
+			return $"{vect.x}, {vect.y}, {vect.z}";
+		}
+
 	}
+
 }

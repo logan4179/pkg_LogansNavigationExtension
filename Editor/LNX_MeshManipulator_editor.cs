@@ -144,7 +144,8 @@ namespace LogansNavigationExtension
 					{
 						//Debug.LogWarning( "refreshing..." );
 						flag_moveHandleIsDirty = false;
-						_targetScript._LNX_NavMesh.RefreshAfterMove();
+						//_targetScript._LNX_NavMesh.RefreshAfterMove(); //todo: dws
+						_targetScript._LNX_NavMesh.RefreshMe( false );
 					}
 				}
 			}

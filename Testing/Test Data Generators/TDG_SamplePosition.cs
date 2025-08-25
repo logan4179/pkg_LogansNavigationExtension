@@ -29,12 +29,12 @@ namespace LogansNavigationExtension
 
 		protected override void OnDrawGizmos()
 		{
-			base.OnDrawGizmos();
-
 			if (Selection.activeGameObject != gameObject)
 			{
 				return;
 			}
+
+			base.OnDrawGizmos();
 
 			DBG_Class = $"";
 			SamplePositionResult = false;

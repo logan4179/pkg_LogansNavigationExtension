@@ -76,12 +76,39 @@ namespace LogansNavigationExtension
 			SharedEdgeCoordinate = edge.SharedEdgeCoordinate;
 		}
 
-		public void CalculateInfo( LNX_Triangle tri, LNX_Vertex strtVrt, LNX_Vertex endVrt )
+		public void CalculateRelational( LNX_NavMesh nvmsh ) //todo: unit test
+		{
+			for ( int i = 0; i < nvmsh.Triangles.Length; i++ )
+			{
+				if ( i == MyCoordinate.TrianglesIndex )
+				{
+					continue;
+				}
+
+				if ( AmOnSharedEdgeSpace(nvmsh.Triangles[i].Edges[0]) )
+				{
+					SharedEdgeCoordinate = nvmsh.Triangles[i].Edges[0].MyCoordinate;
+					break;
+				}
+				else if ( AmOnSharedEdgeSpace(nvmsh.Triangles[i].Edges[1]) )
+				{
+					SharedEdgeCoordinate = nvmsh.Triangles[i].Edges[1].MyCoordinate;
+					break;
+				}
+				else if ( AmOnSharedEdgeSpace(nvmsh.Triangles[i].Edges[2]) )
+				{
+					SharedEdgeCoordinate = nvmsh.Triangles[i].Edges[2].MyCoordinate;
+					break;
+				}
+			}
+		}
+
+		public void CalculateDerivedInfo( LNX_Triangle tri, LNX_Vertex strtVrt, LNX_Vertex endVrt )
 		{
 			StartPosition = strtVrt.V_Position;
 			EndPosition = endVrt.V_Position;
 
-			v_cross = Vector3.Cross(v_startToEnd, tri.v_sampledNormal).normalized;
+			v_cross = Vector3.Cross(v_startToEnd, tri.V_PlaneFaceNormal).normalized;
 
 			if ( Vector3.Dot(v_cross, v_toCenter) < 0 )
 			{
@@ -98,7 +125,11 @@ namespace LogansNavigationExtension
 			EndVertCoordinate = new LNX_ComponentCoordinate( newIndex, EndVertCoordinate.ComponentIndex);
 		}
 
-		public int GetOpposingVertIndex()
+		/// <summary>
+		/// Returns the index of the vertex whose angle is opposite this edge
+		/// </summary>
+		/// <returns></returns>
+		public int GetIndexOfSineVert()
 		{
 			int opposingVertIndex = 0;
 
@@ -134,65 +165,102 @@ namespace LogansNavigationExtension
 			return v_result;
 		}
 
-		public bool IsProjectedPointOnEdge( Vector3 origin, Vector3 destination )
+		/// <summary>
+		/// Returns whether a projection from origin to direction will intersect this edge.
+		/// </summary>
+		/// <param name="origin">Start of projection</param>
+		/// <param name="destination">End of projection</param>
+		/// <param name="flattenDir">Which direction (axis) to exclude. This shold be the direction that the navmesh surface is oriented (facing up)</param>
+		/// <param name="dbgString"></param>
+		/// <param name="outPos"></param>
+		/// <returns></returns>
+		public bool DoesProjectionIntersectEdge( 
+			Vector3 origin, Vector3 destination, Vector3 flattenDir, ref string dbgString, out Vector3 outPos 
+		)
 		{
-			string dbg = "";
-			Vector3 direction = LNX_Utils.FlatVector( destination - origin);
-
-			float dotOf_dir_and_edgeStart = Vector3.Dot( 
-				direction, LNX_Utils.FlatVector(StartPosition - origin) );
-			dbg += $"dot(start): '{dotOf_dir_and_edgeStart}'. ";
-
-			if( dotOf_dir_and_edgeStart < 0f )
-			{
-				Debug.Log(dbg);
-				return false;
-			}
-
-			float dotOf_dir_and_edgeEnd = Vector3.Dot(
-				direction, LNX_Utils.FlatVector(EndPosition - origin) );
-			dbg += $"dot(end): '{dotOf_dir_and_edgeEnd}'\n";
-
-			if( dotOf_dir_and_edgeEnd < 0f )
-			{
-				Debug.Log(dbg);
-
-				return false;
-			}
-
-			Debug.Log(dbg);
-
-
-			return true;
-
-			/////////////////////////////////////////////////////////////////////////////////////
+			Vector3 v_prjct = LNX_Utils.FlatVector( destination - origin, flattenDir ).normalized;
+			Vector3 v_originToStart = LNX_Utils.FlatVector( StartPosition - origin, flattenDir ).normalized;
+			Vector3 v_originToEnd = LNX_Utils.FlatVector( EndPosition - origin ).normalized;
+			////////////////////////////////////////////////////////////////////////////////////////////////////////
+			float ang_prjctTo_orgnToStrt = Vector3.Angle( v_prjct, v_originToStart );
+			float ang_prjctTo_orgnToEnd = Vector3.Angle( v_prjct, v_originToEnd );
+			#region ANGLE SHORT-CIRCUIT TEST-------------------------------------------------------
 			/*
-			float ang_originToProjectEdge = Vector3.Angle(
-				Vector3.Normalize(StartPosition - origin),
-				Vector3.Normalize(EndPosition - origin)
-			);
-			dbg += $"{nameof(ang_originToProjectEdge)}: '{ang_originToProjectEdge}'\n";
+			dbgString += $"trying angle short-circuit with rslts. 1: '{ang_prjctTo_orgnToStrt}', " +
+				$"2: '{ang_prjctTo_orgnToEnd}'...\n";
 
-
-			float angA = Vector3.Angle(
-				direction, LNX_Utils.FlatVector(StartPosition - origin)
-			);
-			float angB = Vector3.Angle(
-				direction, LNX_Utils.FlatVector(EndPosition - origin)
-			);
-
-			dbg += $"angA: '{angA}', angB: '{angB}'\n";
-
-			if (angA > ang_originToProjectEdge || angB > ang_originToProjectEdge)
+			if (
+				ang_prjctTo_orgnToStrt > 90f && ang_prjctTo_orgnToEnd > 90f
+			)
 			{
-				dbg += "greather than...";
-				Debug.Log(dbg );
-				return false;
+				dbgString += $"\nOperation short-circuited bc of dot-prdct check! Returning false...\n";
+				outPos = Vector3.zero;
+				return false; //short-circuit
 			}
-			Debug.Log(dbg);
+			else
+			{
+				dbgString += $"no short-circuit. Method will continue...\n";
+			}
+			*/
+			#endregion
+
+
+			#region NEW DOT PRODUCT SHORT-CIRCUIT TEST-------------------------------------------------------
+			dbgString += $"trying dot shortcircuit with rslts. 1: '{Vector3.Dot(v_prjct, v_originToStart)}', " +
+				$"2: '{Vector3.Dot(v_prjct, LNX_Utils.FlatVector(EndPosition - origin).normalized)}'...\n";
+
+			if (
+				Vector3.Dot(v_prjct, v_originToStart) < 0f &&
+				Vector3.Dot(v_prjct, LNX_Utils.FlatVector(EndPosition - origin).normalized) < 0f
+			)
+			{
+				dbgString += $"\nOperation short-circuited bc of dot-prdct check! Returning false...\n";
+				outPos = Vector3.zero;
+				return false; //short-circuit
+			}
+			else
+			{
+				dbgString += $"no short-circuit. Method will continue...\n";
+			}
+			#endregion
+
+
+
+
+
+			////////////////////////////////////////////////////////////////////////////////////////////////////////
+			#region DOT PRODUCT SHORT-CIRCUIT TEST-------------------------------------------------------
+			/*
+			dbgString += $"trying dot shortcircuit with rslts. 1: '{Vector3.Dot(v_prjct, v_originToStart)}', " +
+				$"2: '{Vector3.Dot(v_prjct, LNX_Utils.FlatVector(EndPosition - origin).normalized)}'...\n";
+
+			if( 
+				Vector3.Dot(v_prjct, v_originToStart) < 0f && 
+				Vector3.Dot(v_prjct, LNX_Utils.FlatVector(EndPosition - origin).normalized) < 0f 
+			)
+			{
+				dbgString += $"\nOperation short-circuited bc of dot-prdct check! Returning false...\n";
+				outPos = Vector3.zero;
+				return false; //short-circuit
+			}
+			else
+			{
+				dbgString += $"no short-circuit. Method will continue...\n";
+			}
+			*/
+			#endregion
+
+			#region CALCULATE OUT POS -----------------------------------------------------------
+
+			#endregion
+			outPos = StartPosition + (v_startToEnd * LNX_Utils.CalculateTriangleEdgeLength
+				(
+					Vector3.Angle(v_prjct, v_originToStart),
+					Vector3.Angle(-v_prjct, -v_startToEnd),
+					Vector3.Distance(origin, StartPosition)
+				)); //Todo: This length isn't actually accurate at this point because we're using flattened positions in here (as well as mixing with unflattened)
 
 			return true;
-			*/
 		}
 
 		/// <summary>
@@ -216,6 +284,19 @@ namespace LogansNavigationExtension
 			return false;
 		}
 		#endregion
+
+		public bool AmOnSharedEdgeSpace( LNX_Edge edj )
+		{
+			if (
+				(edj.StartPosition == StartPosition || edj.EndPosition == StartPosition) &&
+				(edj.StartPosition == EndPosition || edj.EndPosition == EndPosition)
+			)
+			{
+				return true;
+			}
+
+			return false;
+		}
 
 		public void SayCurrentInfo()
 		{

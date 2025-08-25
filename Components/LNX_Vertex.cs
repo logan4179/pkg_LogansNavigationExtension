@@ -80,22 +80,7 @@ namespace LogansNavigationExtension
 			get {  return V_Position != originalPosition; }
 		}
 
-		/// <summary> Returns a localized (0 origin) vector pointing from this vert to it's first sibling vert. </summary>
-		public Vector3 V_ToFirstSiblingVert //ERRORTRACE 11
-		{
-			get
-			{
-				return Vector3.Normalize( FirstSiblingRelationship.RelatedVertPosition - V_Position );
-			}
-		}
-		/// <summary> Returns a localized (0 origin) vector pointing from this vert to it's first sibling vert. </summary>
-		public Vector3 V_ToSecondSiblingVert
-		{
-			get
-			{
-				return Vector3.Normalize( SecondSiblingRelationship.RelatedVertPosition - V_Position );
-			}
-		}
+
 
 		[Header("RELATIONAL")] //---------------------------------------------------------------
 		[HideInInspector] public LNX_VertexRelationship[] Relationships;
@@ -114,6 +99,23 @@ namespace LogansNavigationExtension
 			{
 				return MyCoordinate.ComponentIndex == 2 ?
 					Relationships[(MyCoordinate.TrianglesIndex * 3) + 1] : Relationships[(MyCoordinate.TrianglesIndex * 3) + 2];
+			}
+		}
+
+		/// <summary> Returns a localized (0 origin) vector pointing from this vert to it's first sibling vert. </summary>
+		public Vector3 V_ToFirstSiblingVert
+		{
+			get
+			{
+				return Vector3.Normalize( FirstSiblingRelationship.RelatedVertPosition - V_Position );
+			}
+		}
+		/// <summary> Returns a localized (0 origin) vector pointing from this vert to it's first sibling vert. </summary>
+		public Vector3 V_ToSecondSiblingVert
+		{
+			get
+			{
+				return Vector3.Normalize( SecondSiblingRelationship.RelatedVertPosition - V_Position );
 			}
 		}
 
@@ -173,6 +175,7 @@ namespace LogansNavigationExtension
 			Debug.Log( $"{nameof(CreateRelationships)}() for vert: '{MyCoordinate}'..." );
 
 			Relationships = new LNX_VertexRelationship[nvmsh.Triangles.Length * 3];
+			List<LNX_ComponentCoordinate> temp_sharedVrtCoords = new List<LNX_ComponentCoordinate>();
 
 			DBG_constructor += $"Initialized relationships list with '{Relationships.Length}'" +
 				$" entries. Iterating through...\n";
@@ -201,16 +204,29 @@ namespace LogansNavigationExtension
 				DBG_constructor += $"making relationships for verts belonging to tri: '{i}'...\n";
 				//Debug.Log($"iterated to verts belonging to tri: '{i}'...");
 
-				Relationships[(i*3)] = new LNX_VertexRelationship( this, nvmsh.Triangles[i].Verts[0], nvmsh ); //ERRORTRACE 5:
+				Relationships[(i*3)] = new LNX_VertexRelationship( this, nvmsh.Triangles[i].Verts[0], nvmsh );
 				//Debug.Log($"created vert rel {i*3}\n{Relationships[i*3]}...");
+				if ( nvmsh.Triangles[i].Verts[0].V_Position == V_Position )
+				{
+					temp_sharedVrtCoords.Add( nvmsh.Triangles[i].Verts[0].MyCoordinate );
+				}
 
 				Relationships[(i*3)+1] = new LNX_VertexRelationship( this, nvmsh.Triangles[i].Verts[1], nvmsh );
 				//Debug.Log($"created vert rel {(i * 3)+1}\n{Relationships[(i * 3)+1]}...");
+				if ( nvmsh.Triangles[i].Verts[1].V_Position == V_Position )
+				{
+					temp_sharedVrtCoords.Add( nvmsh.Triangles[i].Verts[1].MyCoordinate );
+				}
 
 				Relationships[(i*3)+2] = new LNX_VertexRelationship( this, nvmsh.Triangles[i].Verts[2], nvmsh );
 				//Debug.Log($"created vert rel {(i * 3) + 2}\n{Relationships[(i * 3)+2]}...");
-
+				if ( nvmsh.Triangles[i].Verts[2].V_Position == V_Position )
+				{
+					temp_sharedVrtCoords.Add(nvmsh.Triangles[i].Verts[2].MyCoordinate);
+				}
 			}
+
+			SharedVertexCoordinates = temp_sharedVrtCoords.ToArray();
 
 			DBG_constructor += $"\n{nameof(CreateRelationships)}() report...\n" +
 				$"AngAtBnd: '{AngleAtBend}', flatnd: '{AngleAtBend_flattened}' \n" +
@@ -318,6 +334,13 @@ namespace LogansNavigationExtension
 			}
 
 			return sharedCount;
+		}
+
+		public bool AreSiblings( LNX_Vertex otherVert )
+		{
+			return MyCoordinate.TrianglesIndex > -1 && 
+				otherVert.MyCoordinate.TrianglesIndex > -1 && 
+				MyCoordinate.TrianglesIndex == otherVert.MyCoordinate.TrianglesIndex;
 		}
 
 		public void Ping( LNX_Triangle[] tris )

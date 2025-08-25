@@ -1149,7 +1149,8 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				Debug.Log($"now moving to '{v_moveTo}'...");
 
 				_lnx_meshManipulator.MoveSelectedVerts( v_moveTo );
-				_lnx_meshManipulator._LNX_NavMesh.RefreshAfterMove(); //important so that the midpos will get re-calculated.
+				//_lnx_meshManipulator._LNX_NavMesh.RefreshAfterMove(); //important so that the midpos will get re-calculated. todo: dws
+				_lnx_meshManipulator._LNX_NavMesh.RefreshMe( false );
 
 				Debug.Log($"after move and refresh, midpos: '{_lnx_meshManipulator.Edge_LastSelected.MidPosition}'.");
 
@@ -1167,7 +1168,8 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				Debug.Log($"now moving '{_lnx_meshManipulator.Edge_LastSelected.MidPosition}' back to '{_tdg_pointingAndGrabbing.CapturedPointedAtEdgeMidPositions[i]}'...");
 
 				_lnx_meshManipulator.MoveSelectedVerts(_tdg_pointingAndGrabbing.CapturedPointedAtEdgeMidPositions[i] );
-				_lnx_meshManipulator._LNX_NavMesh.RefreshAfterMove(); //important so that the midpos will get re-calculated.
+				//_lnx_meshManipulator._LNX_NavMesh.RefreshAfterMove(); //important so that the midpos will get re-calculated. todo: dws
+				_lnx_meshManipulator._LNX_NavMesh.RefreshMe( false );
 
 				UnityEngine.Assertions.Assert.AreApproximatelyEqual(
 					_tdg_pointingAndGrabbing.CapturedPointedAtEdgeMidPositions[i].x, _lnx_meshManipulator.Edge_LastSelected.MidPosition.x

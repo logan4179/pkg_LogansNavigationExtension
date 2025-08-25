@@ -213,7 +213,8 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			}
 		}
 
-		[Test]
+		/*
+		[Test] //todo: took this out because I took away triangle relationshipos. dws
 		public void C3_All_Triangle_Relationships_Array_Lengths_Equal_Master_Triangles_Array_Length()
 		{
 			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(C3_All_Triangle_Relationships_Array_Lengths_Equal_Master_Triangles_Array_Length)));
@@ -227,11 +228,14 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				Assert.AreEqual(_sceneGeneratedLnxNavmesh.Triangles[i].Relationships.Length, _sceneGeneratedLnxNavmesh.Triangles.Length);
 			}
 		}
+		*/
 
 		[Test]
 		public void C4_All_Triangle_AdjacentTriIndices_Array_Length_Are_Greater_Than_Zero()
 		{
-			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(C4_All_Triangle_AdjacentTriIndices_Array_Length_Are_Greater_Than_Zero)));
+			Debug.Log(
+				string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, 
+				nameof(C4_All_Triangle_AdjacentTriIndices_Array_Length_Are_Greater_Than_Zero)));
 
 			Debug.Log($"\nChecking relationships...");
 			Debug.Log($"Running through '{_sceneGeneratedLnxNavmesh.Triangles.Length}' triangles to check relationships..");
@@ -242,6 +246,17 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			}
 		}
 
+		/*
+		[Test]
+		public void CX_Check_That_AdjacentTriIndices_Values_Are_Kosher()
+		{
+			LNX_UnitTestUtilities.LogTestStart(nameof(CX_Check_That_AdjacentTriIndices_Values_Are_Kosher),
+				$"Makes sure LNX_Triangle.AdjacentTriIndices values are all kosher (unique, and not a bad value)"
+			);
+
+			//todo: ...make test
+		}
+		*/
 
 		[Test]
 		public void C5_Check_Triangle_Normals()

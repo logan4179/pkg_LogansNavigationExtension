@@ -79,7 +79,7 @@ namespace LogansNavigationExtension
 
 			//ProjectedPos = focusTri.V_Center + Vector3.ProjectOnPlane( v_ctrToPos, focusTri.v_derivedNormal ); //dws
 			//ProjectedPos = focusTri.V_Center + focusTri.GetFlattenedPosition( v_ctrToPos ); //dws
-			ProjectedPos = focusTri.V_Center + LNX_Utils.FlatVector( v_ctrToPos, focusTri.v_projectionNormal );
+			ProjectedPos = focusTri.V_Center + LNX_Utils.FlatVector( v_ctrToPos, focusTri.v_SurfaceNormal_cached );
 
 
 			DBG_class += $"{nameof(ProjectedPos)}: '{ProjectedPos}'\n";
