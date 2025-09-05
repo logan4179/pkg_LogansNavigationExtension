@@ -192,6 +192,13 @@ namespace LogansNavigationExtension
 			}
 		}
 
+		#region MATH OPERATIONS --------------------------------------
+		public static float CalculateTriangleEdgeLength( float angA, float angB, float lenB )
+		{
+			return Mathf.Sin(angA * Mathf.Deg2Rad) * lenB / Mathf.Sin(angB * Mathf.Deg2Rad);
+		}
+		#endregion
+
 		#region FOR COMPONENT SELECTION ("GRABBING")-------------------------
 		//could put methods in here to shorten constructing the list of vertices grabbed by various components... idk if it's worth it...
 		#endregion
@@ -541,6 +548,22 @@ namespace LogansNavigationExtension
 			}
 		}
 
+		public override bool Equals(object obj)
+		{
+			if ( !(obj is LNX_ProjectionHit) )
+				return false;
+
+			LNX_ProjectionHit hit = (LNX_ProjectionHit)obj;
+			if (hit.Index_Hit != Index_Hit || hit.HitPosition != HitPosition)
+			{
+				return false;
+			}
+			else
+			{
+				return true;
+			}
+		}
+
 		public override string ToString()
 		{
 			return $"Indx '{Index_Hit}', at '{HitPosition}'";
@@ -565,18 +588,18 @@ namespace LogansNavigationExtension
 
 		public LNX_VertexRelationship( LNX_Vertex myVert, LNX_Vertex relatedVert, LNX_NavMesh nvMsh )
 		{
-			//PerspectiveVertCoordinate = myVert.MyCoordinate; //todo: dws, I don't think I need this
 			RelatedVertCoordinate = relatedVert.MyCoordinate;
 
 			RelatedVertPosition = relatedVert.V_Position;
 
 			PathTo = LNX_Path.None;
+			CanSee = false;
 
-			if ( myVert.MyCoordinate.TrianglesIndex == relatedVert.MyCoordinate.TrianglesIndex || 
-				nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].HasVertAtSamePosition(relatedVert)
-			)
+			if ( myVert.AreSiblings(relatedVert) )
 			{
-				PathTo = new LNX_Path( new List<Vector3>(){ myVert.V_Position, relatedVert.V_Position }, 
+				PathTo = new LNX_Path
+				( 
+					new List<Vector3>(){ myVert.V_Position, relatedVert.V_Position }, 
 					new List<Vector3>() { nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal,
 					nvMsh.Triangles[relatedVert.MyCoordinate.TrianglesIndex].V_PathingNormal}
 				);
@@ -584,11 +607,11 @@ namespace LogansNavigationExtension
 			}
 			else
 			{
-				CanSee = !nvMsh.Raycast(myVert.V_Position, relatedVert.V_Position, 1f);
+				//CanSee = !nvMsh.Raycast(myVert.V_Position, relatedVert.V_Position, 1f);
 
 				if ( CanSee )
 				{
-					try
+					/*try
 					{
 						nvMsh.CalculatePath( myVert.V_Position, relatedVert.V_Position, 0.3f, out PathTo );
 					}
@@ -597,7 +620,7 @@ namespace LogansNavigationExtension
 						Debug.Log($"caught exception. dumping report...");
 						Debug.Log( nvMsh.dbgCalculatePath );
 						throw;
-					}
+					}*/
 				}
 			}
 		}

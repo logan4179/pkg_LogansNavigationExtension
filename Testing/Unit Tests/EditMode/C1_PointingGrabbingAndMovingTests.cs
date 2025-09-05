@@ -361,13 +361,13 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 					//Debug.Log($"{_test_pointingAndGrabbing.CapturedVertPositions[i]} || {_lnx_meshManipulator.Vert_CurrentlyPointingAt.Position}");
 
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_pointingAndGrabbing.CapturedPointedAtVertPositions[i].x, 
-						_lnx_meshManipulator._LNX_NavMesh._Mesh.vertices[_lnx_meshManipulator.Vert_CurrentlyPointingAt.Index_VisMesh_Vertices].x );
+						_lnx_meshManipulator._LNX_NavMesh._VisualizationMesh.vertices[_lnx_meshManipulator.Vert_CurrentlyPointingAt.Index_VisMesh_Vertices].x );
 
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_pointingAndGrabbing.CapturedPointedAtVertPositions[i].y,
-						_lnx_meshManipulator._LNX_NavMesh._Mesh.vertices[_lnx_meshManipulator.Vert_CurrentlyPointingAt.Index_VisMesh_Vertices].y);
+						_lnx_meshManipulator._LNX_NavMesh._VisualizationMesh.vertices[_lnx_meshManipulator.Vert_CurrentlyPointingAt.Index_VisMesh_Vertices].y);
 
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_pointingAndGrabbing.CapturedPointedAtVertPositions[i].z,
-						_lnx_meshManipulator._LNX_NavMesh._Mesh.vertices[_lnx_meshManipulator.Vert_CurrentlyPointingAt.Index_VisMesh_Vertices].z);
+						_lnx_meshManipulator._LNX_NavMesh._VisualizationMesh.vertices[_lnx_meshManipulator.Vert_CurrentlyPointingAt.Index_VisMesh_Vertices].z);
 					//Debug.Log("trying grab stuff...");
 					_lnx_meshManipulator.TryGrab();
 
@@ -1066,13 +1066,13 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 					_lnx_meshManipulator.MoveSelectedVerts(v_moveTo);
 
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						v_moveTo.x, _lnx_meshManipulator._LNX_NavMesh._Mesh.vertices[_lnx_meshManipulator.Vert_LastSelected.Index_VisMesh_Vertices].x
+						v_moveTo.x, _lnx_meshManipulator._LNX_NavMesh._VisualizationMesh.vertices[_lnx_meshManipulator.Vert_LastSelected.Index_VisMesh_Vertices].x
 					);
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						v_moveTo.y, _lnx_meshManipulator._LNX_NavMesh._Mesh.vertices[_lnx_meshManipulator.Vert_LastSelected.Index_VisMesh_Vertices].y
+						v_moveTo.y, _lnx_meshManipulator._LNX_NavMesh._VisualizationMesh.vertices[_lnx_meshManipulator.Vert_LastSelected.Index_VisMesh_Vertices].y
 					);
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						v_moveTo.z, _lnx_meshManipulator._LNX_NavMesh._Mesh.vertices[_lnx_meshManipulator.Vert_LastSelected.Index_VisMesh_Vertices].z
+						v_moveTo.z, _lnx_meshManipulator._LNX_NavMesh._VisualizationMesh.vertices[_lnx_meshManipulator.Vert_LastSelected.Index_VisMesh_Vertices].z
 					);
 
 					Debug.Log($"pos now: '{_lnx_meshManipulator.Vert_LastSelected.V_Position}'");
@@ -1083,13 +1083,13 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 					_lnx_meshManipulator.MoveSelectedVerts(_tdg_pointingAndGrabbing.CapturedGrabbedPositions_vert[i]);
 
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_tdg_pointingAndGrabbing.CapturedGrabbedPositions_vert[i].x, _lnx_meshManipulator._LNX_NavMesh._Mesh.vertices[_lnx_meshManipulator.Vert_LastSelected.Index_VisMesh_Vertices].x
+						_tdg_pointingAndGrabbing.CapturedGrabbedPositions_vert[i].x, _lnx_meshManipulator._LNX_NavMesh._VisualizationMesh.vertices[_lnx_meshManipulator.Vert_LastSelected.Index_VisMesh_Vertices].x
 					);
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_tdg_pointingAndGrabbing.CapturedGrabbedPositions_vert[i].y, _lnx_meshManipulator._LNX_NavMesh._Mesh.vertices[_lnx_meshManipulator.Vert_LastSelected.Index_VisMesh_Vertices].y
+						_tdg_pointingAndGrabbing.CapturedGrabbedPositions_vert[i].y, _lnx_meshManipulator._LNX_NavMesh._VisualizationMesh.vertices[_lnx_meshManipulator.Vert_LastSelected.Index_VisMesh_Vertices].y
 					);
 					UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-						_tdg_pointingAndGrabbing.CapturedGrabbedPositions_vert[i].z, _lnx_meshManipulator._LNX_NavMesh._Mesh.vertices[_lnx_meshManipulator.Vert_LastSelected.Index_VisMesh_Vertices].z
+						_tdg_pointingAndGrabbing.CapturedGrabbedPositions_vert[i].z, _lnx_meshManipulator._LNX_NavMesh._VisualizationMesh.vertices[_lnx_meshManipulator.Vert_LastSelected.Index_VisMesh_Vertices].z
 					);
 
 					Debug.Log($"pos now: '{_lnx_meshManipulator.Vert_LastSelected.V_Position}'");
@@ -1149,7 +1149,8 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				Debug.Log($"now moving to '{v_moveTo}'...");
 
 				_lnx_meshManipulator.MoveSelectedVerts( v_moveTo );
-				_lnx_meshManipulator._LNX_NavMesh.RefreshAfterMove(); //important so that the midpos will get re-calculated.
+				//_lnx_meshManipulator._LNX_NavMesh.RefreshAfterMove(); //important so that the midpos will get re-calculated. todo: dws
+				_lnx_meshManipulator._LNX_NavMesh.RefreshMe( false );
 
 				Debug.Log($"after move and refresh, midpos: '{_lnx_meshManipulator.Edge_LastSelected.MidPosition}'.");
 
@@ -1167,7 +1168,8 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				Debug.Log($"now moving '{_lnx_meshManipulator.Edge_LastSelected.MidPosition}' back to '{_tdg_pointingAndGrabbing.CapturedPointedAtEdgeMidPositions[i]}'...");
 
 				_lnx_meshManipulator.MoveSelectedVerts(_tdg_pointingAndGrabbing.CapturedPointedAtEdgeMidPositions[i] );
-				_lnx_meshManipulator._LNX_NavMesh.RefreshAfterMove(); //important so that the midpos will get re-calculated.
+				//_lnx_meshManipulator._LNX_NavMesh.RefreshAfterMove(); //important so that the midpos will get re-calculated. todo: dws
+				_lnx_meshManipulator._LNX_NavMesh.RefreshMe( false );
 
 				UnityEngine.Assertions.Assert.AreApproximatelyEqual(
 					_tdg_pointingAndGrabbing.CapturedPointedAtEdgeMidPositions[i].x, _lnx_meshManipulator.Edge_LastSelected.MidPosition.x

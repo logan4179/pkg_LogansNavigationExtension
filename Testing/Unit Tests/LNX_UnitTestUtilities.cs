@@ -21,7 +21,7 @@ namespace LogansNavigationExtension
 				"/////////////////////////////////////////////////////////////////////////////\n" + 
 				testName + "\n" + 
 				testDescription +
-				"/////////////////////////////////////////////////////////////////////////////\n\n"
+				"\n/////////////////////////////////////////////////////////////////////////////\n\n"
 			);
 		}
 
@@ -44,5 +44,12 @@ namespace LogansNavigationExtension
 
             return returnArray;
 		}
+
+		public static string LongVectorString( Vector3 vect )
+		{
+			return $"{vect.x}, {vect.y}, {vect.z}";
+		}
+
 	}
+
 }

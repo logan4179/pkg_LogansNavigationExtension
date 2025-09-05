@@ -1,138 +1,41 @@
 {
-    "LastWriteTime": "7/9/2025 9:29:45 AM",
-    "_mgr": {
-        "instanceID": 30216
+    "LastWriteTime": "8/29/2025 10:55:46 AM",
+    "_navmesh": {
+        "instanceID": 30052
     },
     "_debugger": {
-        "instanceID": 30214
+        "instanceID": 0
     },
-    "Index_problemPos": 1,
-    "problemPositions": [],
+    "DrawProblemPoints": true,
+    "index_focusProblem": 0,
+    "problemPositions": [
+        {
+            "x": 16.753000259399415,
+            "y": 0.026000000536441804,
+            "z": 0.18700000643730164
+        }
+    ],
+    "problemEndPositions": [],
     "testName": "SamplePos",
     "samplePositions": [
         {
-            "x": 10.215999603271485,
-            "y": 0.3310000002384186,
-            "z": 5.526000022888184
-        },
-        {
-            "x": 10.144000053405762,
-            "y": 0.3310000002384186,
-            "z": 5.526000022888184
-        },
-        {
-            "x": 10.102999687194825,
-            "y": 0.3310000002384186,
-            "z": 5.526000022888184
-        },
-        {
-            "x": 10.085000038146973,
-            "y": 0.4269999861717224,
-            "z": 5.526000022888184
-        },
-        {
-            "x": 10.07699966430664,
-            "y": 0.4269999861717224,
-            "z": 5.526000022888184
-        },
-        {
-            "x": 10.857999801635743,
-            "y": 0.7839999794960022,
-            "z": 5.526000022888184
-        },
-        {
-            "x": 10.970999717712403,
-            "y": 0.7839999794960022,
-            "z": 5.526000022888184
-        },
-        {
-            "x": 10.991999626159668,
-            "y": 0.7839999794960022,
-            "z": 5.526000022888184
+            "x": 16.753000259399415,
+            "y": 0.026000000536441804,
+            "z": 0.18700000643730164
         }
     ],
     "capturedHitPositions": [
         {
-            "x": 10.215999603271485,
+            "x": 16.753000259399415,
             "y": 0.0006940364837646484,
-            "z": 5.526000022888184
-        },
-        {
-            "x": 10.144000053405762,
-            "y": 0.0006940364837646484,
-            "z": 5.526000022888184
-        },
-        {
-            "x": 10.140000343322754,
-            "y": 0.0006940364837646484,
-            "z": 5.526000022888184
-        },
-        {
-            "x": 10.140000343322754,
-            "y": 0.0006940364837646484,
-            "z": 5.526000022888184
-        },
-        {
-            "x": 9.720000267028809,
-            "y": 0.6338182687759399,
-            "z": 5.405355930328369
-        },
-        {
-            "x": 10.857999801635743,
-            "y": 0.0006940364837646484,
-            "z": 5.526000022888184
-        },
-        {
-            "x": 10.970999717712403,
-            "y": 0.0006940364837646484,
-            "z": 5.526000022888184
-        },
-        {
-            "x": 11.520000457763672,
-            "y": 0.2106940746307373,
-            "z": 5.526000022888184
+            "z": 0.42000001668930056
         }
     ],
     "capturedTriCenters": [
         {
-            "x": 10.460000038146973,
+            "x": 16.82000160217285,
             "y": 0.0006940364837646484,
-            "z": 6.080000400543213
-        },
-        {
-            "x": 10.460000038146973,
-            "y": 0.0006940364837646484,
-            "z": 6.080000400543213
-        },
-        {
-            "x": 10.460000038146973,
-            "y": 0.0006940364837646484,
-            "z": 6.080000400543213
-        },
-        {
-            "x": 10.460000038146973,
-            "y": 0.0006940364837646484,
-            "z": 6.080000400543213
-        },
-        {
-            "x": 9.40000057220459,
-            "y": 0.6306940913200378,
-            "z": 5.400000095367432
-        },
-        {
-            "x": 10.779999732971192,
-            "y": 0.0006940364837646484,
-            "z": 5.320000171661377
-        },
-        {
-            "x": 10.779999732971192,
-            "y": 0.0006940364837646484,
-            "z": 5.320000171661377
-        },
-        {
-            "x": 12.040000915527344,
-            "y": 0.2106940746307373,
-            "z": 5.980000019073486
+            "z": 3.440000295639038
         }
     ],
     "SamplePositionResult": false,
@@ -156,5 +59,5 @@
         "a": 1.0
     },
     "size_sampleObject": 0.013000000268220902,
-    "DBG_Class": "samplePosition returned true with: '(11.52, 0.21, 5.53)', on tri: '34'\nreport: \nSamplePosition('(10.99, 0.78, 5.53)'). Searching through '84' tris...\ni: '0'....................\nfound am NOT in shape project...\nnew closest point at: '5.294894'...\ni: '1'....................\nfound am NOT in shape project...\nnew closest point at: '4.51416'...\ni: '2'....................\nfound am NOT in shape project...\ni: '3'....................\nfound am NOT in shape project...\ni: '4'....................\nfound am NOT in shape project...\ni: '5'....................\nfound am NOT in shape project...\nnew closest point at: '4.43768'...\ni: '6'....................\nfound am NOT in shape project...\ni: '7'....................\nfound am NOT in shape project...\ni: '8'....................\nfound am NOT in shape project...\ni: '9'....................\nfound am NOT in shape project...\ni: '10'....................\nfound am NOT in shape project...\ni: '11'....................\nfound am NOT in shape project...\ni: '12'....................\nfound am NOT in shape project...\ni: '13'....................\nfound am NOT in shape project...\ni: '14'....................\nfound am NOT in shape project...\nnew closest point at: '1.539715'...\ni: '15'....................\nfound am NOT in shape project...\ni: '16'....................\nfound am NOT in shape project...\ni: '17'....................\nfound am NOT in shape project...\ni: '18'....................\nfound am NOT in shape project...\ni: '19'....................\nfound am NOT in shape project...\n Triangle.IsInShapeProject report:\nIsInShapeProject((10.99, 0.78, 5.53))\nflat pos: '(10.99, 0.00, 5.53)'\nv_ctrToPos: '(0.31, 0.78, 3.79)'\nvrt0: \nVert0.IsInFlatCenterSweep((10.99, 0.78, 5.53)) report..\nusing vto vector: '(-0.20, 0.00, 0.98)'\nAngleAtBend_flattened: '34.84836'\nang0: '175.659', ang1: '140.8105'\ndiff0: '-140.8106'\ndiff1: '-105.9622'\nreturning false\nvert0 center sweep failed. Returning false...\n\nnew closest point at: '1.406723'...\ni: '20'....................\nfound am NOT in shape project...\nnew closest point at: '1.388122'...\ni: '21'....................\nfound am NOT in shape project...\ni: '22'....................\nfound am NOT in shape project...\ni: '23'....................\nfound am NOT in shape project...\ni: '24'....................\nfound am NOT in shape project...\ni: '25'....................\nfound am NOT in shape project...\nnew closest point at: '1.243673'...\ni: '26'....................\nfound am NOT in shape project...\ni: '27'....................\nfound am NOT in shape project...\ni: '28'....................\nfound am NOT in shape project...\ni: '29'....................\nfound am NOT in shape project...\ni: '30'....................\nfound am NOT in shape project...\ni: '31'....................\nfound am NOT in shape project...\ni: '32'....................\nfound am NOT in shape project...\ni: '33'....................\nfound am NOT in shape project...\nnew closest point at: '1.171733'...\ni: '34'....................\nfound am NOT in shape project...\nnew closest point at: '0.7794001'...\ni: '35'....................\nfound am NOT in shape project...\ni: '36'....................\nfound am NOT in shape project...\ni: '37'....................\nfound am NOT in shape project...\ni: '38'....................\nfound am NOT in shape project...\ni: '39'....................\nfound am NOT in shape project...\ni: '40'....................\nfound am NOT in shape project...\ni: '41'....................\nfound am NOT in shape project...\ni: '42'....................\nfound am NOT in shape project...\ni: '43'....................\nfound am NOT in shape project...\ni: '44'....................\nfound am NOT in shape project...\ni: '45'....................\nfound am NOT in shape project...\ni: '46'....................\nfound am NOT in shape project...\ni: '47'....................\nfound am NOT in shape project...\ni: '48'....................\nfound am NOT in shape project...\ni: '49'....................\nfound am NOT in shape project...\ni: '50'....................\nfound AM in shape project at '(10.99, 0.00, 5.53)'...\ni: '51'....................\nfound am NOT in shape project...\ni: '52'....................\nfound am NOT in shape project...\ni: '53'....................\nfound am NOT in shape project...\ni: '54'....................\nfound am NOT in shape project...\ni: '55'....................\nfound am NOT in shape project...\ni: '56'....................\nfound am NOT in shape project...\ni: '57'....................\nfound am NOT in shape project...\ni: '58'....................\nfound am NOT in shape project...\ni: '59'....................\nfound am NOT in shape project...\ni: '60'....................\nfound am NOT in shape project...\ni: '61'....................\nfound am NOT in shape project...\ni: '62'....................\nfound am NOT in shape project...\ni: '63'....................\nfound am NOT in shape project...\ni: '64'....................\nfound am NOT in shape project...\ni: '65'....................\nfound am NOT in shape project...\ni: '66'....................\nfound am NOT in shape project...\ni: '67'....................\nfound am NOT in shape project...\ni: '68'....................\nfound am NOT in shape project...\ni: '69'....................\nfound am NOT in shape project...\ni: '70'....................\nfound am NOT in shape project...\ni: '71'....................\nfound am NOT in shape project...\ni: '72'....................\nfound am NOT in shape project...\ni: '73'....................\nfound am NOT in shape project...\ni: '74'....................\nfound am NOT in shape project...\ni: '75'....................\nfound am NOT in shape project...\ni: '76'....................\nfound am NOT in shape project...\ni: '77'....................\nfound am NOT in shape project...\ni: '78'....................\nfound am NOT in shape project...\ni: '79'....................\nfound am NOT in shape project...\ni: '80'....................\nfound am NOT in shape project...\ni: '81'....................\nfound am NOT in shape project...\ni: '82'....................\nfound am NOT in shape project...\ni: '83'....................\nfound am NOT in shape project...\nfinished. returning: '34' with pt: '(11.52, 0.21, 5.53)'\n\n"
+    "DBG_Class": "samplePosition returned true with: '(16.38, 0.00, 1.34)', on tri: '77'\n\nreport--------------------------------\nSamplePosition('(16.38, 0.24, 1.34)'). Searching through '84' tris...\ni: '0'....................\nfound am NOT in shape project...\ndist: '9.551105'\n...new closest point at: '9.551105'...\ni: '1'....................\nfound am NOT in shape project...\ndist: '8.92342'\n...new closest point at: '8.92342'...\ni: '2'....................\nfound am NOT in shape project...\ndist: '4.98532'\n...new closest point at: '4.98532'...\ni: '3'....................\nfound am NOT in shape project...\ndist: '5.519464'\n...i: '4'....................\nfound am NOT in shape project...\ndist: '4.496222'\n...new closest point at: '4.496222'...\ni: '5'....................\nfound am NOT in shape project...\ndist: '5.359844'\n...i: '6'....................\nfound am NOT in shape project...\ndist: '5.476861'\n...i: '7'....................\nfound am NOT in shape project...\ndist: '8.92342'\n...i: '8'....................\nfound am NOT in shape project...\ndist: '8.682857'\n...i: '9'....................\nfound am NOT in shape project...\ndist: '9.000171'\n...i: '10'....................\nfound am NOT in shape project...\ndist: '5.476861'\n...i: '11'....................\nfound am NOT in shape project...\ndist: '5.519464'\n...i: '12'....................\nfound am NOT in shape project...\ndist: '3.621798'\n...new closest point at: '3.621798'...\ni: '13'....................\nfound am NOT in shape project...\ndist: '4.327643'\n...i: '14'....................\nfound am NOT in shape project...\ndist: '1.700476'\n...new closest point at: '1.700476'...\ni: '15'....................\nfound am NOT in shape project...\ndist: '2.87639'\n...i: '16'....................\nfound am NOT in shape project...\ndist: '2.87639'\n...i: '17'....................\nfound am NOT in shape project...\ndist: '2.853137'\n...i: '18'....................\nfound am NOT in shape project...\ndist: '2.972813'\n...i: '19'....................\nfound am NOT in shape project...\ndist: '1.665358'\n...new closest point at: '1.665358'...\ni: '20'....................\nfound am NOT in shape project...\ndist: '1.700476'\n...i: '21'....................\nfound am NOT in shape project...\ndist: '2.8956'\n...i: '22'....................\nfound am NOT in shape project...\ndist: '8.508625'\n...i: '23'....................\nfound am NOT in shape project...\ndist: '8.64154'\n...i: '24'....................\nfound am NOT in shape project...\ndist: '8.64154'\n...i: '25'....................\nfound am NOT in shape project...\ndist: '4.913004'\n...i: '26'....................\nfound am NOT in shape project...\ndist: '4.913004'\n...i: '27'....................\nfound am NOT in shape project...\ndist: '4.771299'\n...i: '28'....................\nfound am NOT in shape project...\ndist: '4.913004'\n...i: '29'....................\nfound am NOT in shape project...\ndist: '7.415539'\n...i: '30'....................\nfound am NOT in shape project...\ndist: '9.148808'\n...i: '31'....................\nfound am NOT in shape project...\ndist: '8.508625'\n...i: '32'....................\nfound am NOT in shape project...\ndist: '7.317424'\n...i: '33'....................\nfound am NOT in shape project...\ndist: '10.29378'\n...i: '34'....................\nfound am NOT in shape project...\ndist: '4.758167'\n...i: '35'....................\nfound am NOT in shape project...\ndist: '5.981917'\n...i: '36'....................\nfound am NOT in shape project...\ndist: '3.34732'\n...i: '37'....................\nfound am NOT in shape project...\ndist: '3.402048'\n...i: '38'....................\nfound am NOT in shape project...\ndist: '3.603512'\n...i: '39'....................\nfound am NOT in shape project...\ndist: '4.736827'\n...i: '40'....................\nfound am NOT in shape project...\ndist: '6.18324'\n...i: '41'....................\nfound am NOT in shape project...\ndist: '9.610637'\n...i: '42'....................\nfound am NOT in shape project...\ndist: '7.126911'\n...i: '43'....................\nfound am NOT in shape project...\ndist: '8.547166'\n...i: '44'....................\nfound am NOT in shape project...\ndist: '7.284468'\n...i: '45'....................\nfound am NOT in shape project...\ndist: '5.987916'\n...i: '46'....................\nfound am NOT in shape project...\ndist: '6.349821'\n...i: '47'....................\nfound am NOT in shape project...\ndist: '6.306352'\n...i: '48'....................\nfound am NOT in shape project...\ndist: '4.563396'\n...i: '49'....................\nfound am NOT in shape project...\ndist: '5.787503'\n...i: '50'....................\nfound am NOT in shape project...\ndist: '4.396201'\n...i: '51'....................\nfound am NOT in shape project...\ndist: '4.563396'\n...i: '52'....................\nfound am NOT in shape project...\ndist: '1.700476'\n...i: '53'....................\nfound am NOT in shape project...\ndist: '3.312459'\n...i: '54'....................\nfound am NOT in shape project...\ndist: '7.539813'\n...i: '55'....................\nfound am NOT in shape project...\ndist: '10.29378'\n...i: '56'....................\nfound am NOT in shape project...\ndist: '8.547166'\n...i: '57'....................\nfound am NOT in shape project...\ndist: '10.31076'\n...i: '58'....................\nfound am NOT in shape project...\ndist: '8.703709'\n...i: '59'....................\nfound am NOT in shape project...\ndist: '7.284468'\n...i: '60'....................\nfound am NOT in shape project...\ndist: '7.284468'\n...i: '61'....................\nfound am NOT in shape project...\ndist: '8.313961'\n...i: '62'....................\nfound am NOT in shape project...\ndist: '8.313961'\n...i: '63'....................\nfound am NOT in shape project...\ndist: '7.539813'\n...i: '64'....................\nfound am NOT in shape project...\ndist: '6.18324'\n...i: '65'....................\nfound am NOT in shape project...\ndist: '6.18324'\n...i: '66'....................\nfound am NOT in shape project...\ndist: '7.075912'\n...i: '67'....................\nfound am NOT in shape project...\ndist: '7.415539'\n...i: '68'....................\nfound am NOT in shape project...\ndist: '7.415539'\n...i: '69'....................\nfound am NOT in shape project...\ndist: '1.700476'\n...i: '70'....................\nfound am NOT in shape project...\ndist: '1.470804'\n...new closest point at: '1.470804'...\ni: '71'....................\nfound am NOT in shape project...\ndist: '1.043058'\n...new closest point at: '1.043058'...\ni: '72'....................\nfound am NOT in shape project...\ndist: '4.276683'\n...i: '73'....................\nfound am NOT in shape project...\ndist: '6.264565'\n...i: '74'....................\nfound am NOT in shape project...\ndist: '6.264565'\n...i: '75'....................\nfound am NOT in shape project...\ndist: '6.264565'\n...i: '76'....................\nfound am NOT in shape project...\ndist: '6.10209'\n...i: '77'....................\nfound AM in shape project at '(16.38, 0.00, 1.34)'...\ndist: '0.241'\n...new closest point at: '0.241'...\ni: '78'....................\nfound am NOT in shape project...\ndist: '0.7336748'\n...i: '79'....................\nfound am NOT in shape project...\ndist: '0.4472386'\n...i: '80'....................\nfound am NOT in shape project...\ndist: '1.021226'\n...i: '81'....................\nfound am NOT in shape project...\ndist: '1.43444'\n...i: '82'....................\nfound am NOT in shape project...\ndist: '0.9913613'\n...i: '83'....................\nfound am NOT in shape project...\ndist: '0.8863658'\n...finished. returning: '77' with pt: '(16.38, 0.00, 1.34)'\n\n"
 }

@@ -83,7 +83,7 @@ namespace LogansNavigationExtension
 		public Vector3 V_vertPlacePos;
 
 		//[Header("VERT MANIPULATION")]
-
+		/*
 		[ContextMenu("z call CalculateAllDerived()")]
 		public void CalculateAllDerived()
 		{
@@ -94,6 +94,7 @@ namespace LogansNavigationExtension
 				_mgr.Triangles[i].CalculateDerivedInfo();
 			}
 		}
+		*/
 
 		[ContextMenu("z call SayFocusedTriInfo()")]
 		public void SayFocusedTriInfo()
@@ -104,18 +105,18 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call SayVisualMeshInfo()")]
 		public void SayVisualMeshInfo()
 		{
-			string s = $"Vertices '{_mgr._Mesh.vertices.Length}' \n";
+			string s = $"Vertices '{_mgr._VisualizationMesh.vertices.Length}' \n";
 
-			for( int i = 0; i < _mgr._Mesh.vertices.Length; i++ )
+			for( int i = 0; i < _mgr._VisualizationMesh.vertices.Length; i++ )
 			{
-				s += $"vert pos {i}: '{_mgr._Mesh.vertices[i]}'\n";
+				s += $"vert pos {i}: '{_mgr._VisualizationMesh.vertices[i]}'\n";
 			}
 
-			s += $"\nNormals '{_mgr._Mesh.normals.Length}' \n";
+			s += $"\nNormals '{_mgr._VisualizationMesh.normals.Length}' \n";
 
-			for (int i = 0; i < _mgr._Mesh.normals.Length; i++)
+			for (int i = 0; i < _mgr._VisualizationMesh.normals.Length; i++)
 			{
-				s += $"normal {i}: '{_mgr._Mesh.normals[i]}'\n";
+				s += $"normal {i}: '{_mgr._VisualizationMesh.normals[i]}'\n";
 			}
 
 			Debug.Log(s);
@@ -204,9 +205,9 @@ namespace LogansNavigationExtension
 
 			if ( drawEdgeLabels )
 			{
-				Handles.Label(tri.Edges[0].MidPosition + (tri.Edges[0].v_cross * len_edgeLables), "e0", gstl_label);
-				Handles.Label(tri.Edges[1].MidPosition + (tri.Edges[1].v_cross * len_edgeLables), "e1", gstl_label);
-				Handles.Label(tri.Edges[2].MidPosition + (tri.Edges[2].v_cross * len_edgeLables), "e2", gstl_label);
+				Handles.Label(tri.Edges[0].MidPosition + (tri.Edges[0].v_Cross * len_edgeLables), "e0", gstl_label);
+				Handles.Label(tri.Edges[1].MidPosition + (tri.Edges[1].v_Cross * len_edgeLables), "e1", gstl_label);
+				Handles.Label(tri.Edges[2].MidPosition + (tri.Edges[2].v_Cross * len_edgeLables), "e2", gstl_label);
 			}
 			#endregion
 
@@ -246,9 +247,9 @@ namespace LogansNavigationExtension
 				Gizmos.DrawLine(tri.Verts[1].V_Position, tri.V_Center);
 				Gizmos.DrawLine(tri.Verts[2].V_Position, tri.V_Center);
 
-				Gizmos.DrawLine( tri.Edges[0].MidPosition, tri.Edges[0].MidPosition + (tri.Edges[0].v_cross * len_edgeLables) );
-				Gizmos.DrawLine( tri.Edges[1].MidPosition, tri.Edges[1].MidPosition + (tri.Edges[1].v_cross * len_edgeLables) );
-				Gizmos.DrawLine( tri.Edges[2].MidPosition, tri.Edges[2].MidPosition + (tri.Edges[2].v_cross * len_edgeLables) );
+				Gizmos.DrawLine( tri.Edges[0].MidPosition, tri.Edges[0].MidPosition + (tri.Edges[0].v_Cross * len_edgeLables) );
+				Gizmos.DrawLine( tri.Edges[1].MidPosition, tri.Edges[1].MidPosition + (tri.Edges[1].v_Cross * len_edgeLables) );
+				Gizmos.DrawLine( tri.Edges[2].MidPosition, tri.Edges[2].MidPosition + (tri.Edges[2].v_Cross * len_edgeLables) );
 			}
 
 			if ( amDrawingBounds && _mgr.Bounds != null && _mgr.Bounds.Length == 6 )

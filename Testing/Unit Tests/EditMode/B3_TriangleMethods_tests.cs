@@ -17,7 +17,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		LNX_MeshManipulator _lnx_meshManipulator;
 
 		[Header("TEST OBJECTS")]
-		TDG_Projecting _tdg_projecting;
+		TDG_ProjectThroughToPerimeter _tdg_projectThroughToPerimeter;
 
 		#region A - Setup --------------------------------------------------------------------------------
 		[Test]
@@ -30,7 +30,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 
 			_lnx_meshManipulator = go.GetComponent<LNX_MeshManipulator>();
-			Assert.NotNull(_serializedLNXNavmesh);
+			Assert.NotNull(_lnx_meshManipulator);
 
 		}
 
@@ -40,19 +40,17 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			LNX_UnitTestUtilities.LogTestStart(nameof(a2_CreateTestObjectsFromJson),
 			"Creates the objects necessary for this test suite");
 
-			#region projecting -------------------------------------------------------
-			if ( !File.Exists(TDG_Manager.filePath_testData_projectingTests) )
+			if ( !File.Exists(TDG_Manager.filePath_testData_projectThroughToPerimeter) )
 			{
 				Debug.LogError($"PROBLEM!!!!! file at test path does not exist. Cannot perform test.");
 				return;
 			}
 
-			//CREATE TEST OBJECT -----------------------------
-			_tdg_projecting = _serializedLNXNavmesh.gameObject.AddComponent<TDG_Projecting>();
-			string jsonString = File.ReadAllText( TDG_Manager.filePath_testData_projectingTests );
-			JsonUtility.FromJsonOverwrite( jsonString, _tdg_projecting );
-			Assert.NotNull( _tdg_projecting );
-			#endregion
+			//-----------------------------
+			_tdg_projectThroughToPerimeter = _serializedLNXNavmesh.gameObject.AddComponent<TDG_ProjectThroughToPerimeter>();
+			string jsonString = File.ReadAllText( TDG_Manager.filePath_testData_projectThroughToPerimeter );
+			JsonUtility.FromJsonOverwrite( jsonString, _tdg_projectThroughToPerimeter );
+			Assert.NotNull( _tdg_projectThroughToPerimeter );
 		}
 
 		[Test]
@@ -63,134 +61,60 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				"Ensures that the objects created for testing have adequate/valid values"
 			);
 
-			int commonCount = _tdg_projecting.StartPositions_EdgeProjecting.Count;
+			Debug.Log($"Now checking that {nameof(TDG_ProjectThroughToPerimeter)} object is valid...");
+			Assert.Greater( _tdg_projectThroughToPerimeter.CapturedStartPositions.Count, 0 );
+			int commonCount = _tdg_projectThroughToPerimeter.CapturedStartPositions.Count;
 
-			Assert.Greater( commonCount, 0 );
-			Assert.AreEqual(_tdg_projecting.EndPositions_EdgeProjecting.Count, commonCount );
-			Assert.AreEqual(_tdg_projecting.CapturedTriCenters_EdgeProjecting.Count, commonCount );
-			Assert.AreEqual(_tdg_projecting.CapturedResults_EdgeProjecting.Count, commonCount );
+			Assert.AreEqual( commonCount, _tdg_projectThroughToPerimeter.CapturedEndPositions.Count );
+			Assert.AreEqual(commonCount, _tdg_projectThroughToPerimeter.CapturedTriCenters.Count);
+			Assert.AreEqual(commonCount, _tdg_projectThroughToPerimeter.CapturedEdgeMidPoints.Count);
+			Assert.AreEqual(commonCount, _tdg_projectThroughToPerimeter.CapturedProjectionPoints.Count);
+
 		}
 		#endregion
 
 		#region B - PROJECTING -------------------------------------------------------------------------------
-		[Test]
-		public void b1_Triangle_IsProjectedPointOnEdge()
-		{
-			LNX_UnitTestUtilities.LogTestStart(nameof(b1_Triangle_IsProjectedPointOnEdge),
-				$"Runs through multiple triangles and tests the results of the 'IsProjectedPointOnEdge' method ");
-
-			Debug.Log($"Now iterating through '{_tdg_projecting.StartPositions_EdgeProjecting.Count}' data points...");
-			for ( int i = 0; i < _tdg_projecting.StartPositions_EdgeProjecting.Count; i++ )
-			{
-				Debug.Log($"i: '{i}'. expected result: '{_tdg_projecting.CapturedResults_EdgeProjecting[i]}'. " +
-					$"Expected projectionPoint: '{_tdg_projecting.CapturedProjectionPoints_EdgeProjecting[i]}'...");
-
-				//first find the correct triangle...
-				LNX_Triangle tri = null;
-				for ( int i_tris = 0; i_tris < _serializedLNXNavmesh.Triangles.Length; i_tris++ ) 
-				{
-					if( Vector3.Distance( _serializedLNXNavmesh.Triangles[i_tris].V_Center, _tdg_projecting.CapturedTriCenters_EdgeProjecting[i]) < 0.02f )
-					{
-						tri = _serializedLNXNavmesh.Triangles[i_tris];
-						break;
-					}
-				}
-
-				Debug.Log($"captured edge midpt: '{_tdg_projecting.CapturedEdgeMidPoints_EdgePRojecting[i]}', " +
-					$"assumed edge midpoint: '{tri.Edges[_tdg_projecting.CapturedEdgeIndices[i]].MidPosition}'...");
-
-				Vector3 vProjct = Vector3.zero;
-
-				bool rslt = tri.DoesProjectionIntersectGivenEdge(_tdg_projecting.StartPositions_EdgeProjecting[i],
-					_tdg_projecting.EndPositions_EdgeProjecting[i],
-					_tdg_projecting.CapturedEdgeIndices[i], out vProjct
-				);
-
-				Assert.AreEqual( _tdg_projecting.CapturedResults_EdgeProjecting[i], rslt );
-
-				Debug.Log($"did projection. out vector was: '{vProjct}'. Testing out vector against data...");
-
-				// For some reason, this won't work right...
-				/*
-				UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-					_tdg_projecting.CapturedProjectionPoints_EdgeProjecting[i].x,
-					vProjct.x
-				);
-
-				UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-					_tdg_projecting.CapturedProjectionPoints_EdgeProjecting[i].y,
-					vProjct.y
-				);
-
-				UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-					_tdg_projecting.CapturedProjectionPoints_EdgeProjecting[i].z,
-					vProjct.z
-				);
-				*/
-			}
-		}
 
 		[Test]
-		public void b2_Triangle_ProjectThroughToPerimeter()
+		public void b1_Triangle_ProjectThroughToPerimeter()
 		{
-			LNX_UnitTestUtilities.LogTestStart(nameof(b2_Triangle_ProjectThroughToPerimeter),
+			LNX_UnitTestUtilities.LogTestStart(nameof(b1_Triangle_ProjectThroughToPerimeter),
 				$"Runs through multiple triangles and tests the results of the 'ProjectThroughToPerimeter' method ");
 
-			Debug.Log($"Now iterating through '{_tdg_projecting.StartPositions_PerimeterProjecting.Count}' data points...");
-			for ( int i = 0; i < _tdg_projecting.StartPositions_PerimeterProjecting.Count; i++ )
+			Debug.Log($"Now iterating through '{_tdg_projectThroughToPerimeter.CapturedStartPositions.Count}' data points...");
+
+			for ( int i = 0; i < _tdg_projectThroughToPerimeter.CapturedStartPositions.Count; i++ )
 			{
-				Debug.Log($"i: '{i}'. Expected projectionPoint: '{_tdg_projecting.CapturedProjectionPoints_PerimeterProjecting[i]}'...");
+				Debug.Log($"i: '{i}'...");
+				LNX_Triangle tri = _serializedLNXNavmesh.GetTriangle( _tdg_projectThroughToPerimeter.CapturedTriCenters[i] );
+				LNX_Edge edge = tri.GetEdge( _tdg_projectThroughToPerimeter.CapturedEdgeMidPoints[i] );
+				LNX_ProjectionHit hit = LNX_ProjectionHit.None;
 
-				//first find the correct triangle...
-				LNX_Triangle tri = null;
-				LNX_Edge foundEdge = null;
-				for (int i_tris = 0; i_tris < _serializedLNXNavmesh.Triangles.Length; i_tris++)
-				{
-					if ( Vector3.Distance(_serializedLNXNavmesh.Triangles[i_tris].V_Center, _tdg_projecting.CapturedTriCenters_PerimeterProjecting[i]) < 0.02f)
-					{
-						tri = _serializedLNXNavmesh.Triangles[i_tris];
-
-						for ( int i_edges = 0; i_edges < 3; i_edges++ )
-						{
-							if( _tdg_projecting.CapturedEdgeMidPoints_PerimeterProjecting[i] == tri.Edges[i_edges].MidPosition )
-							{
-								Debug.Log($"found corresponding edge at index: '{i_edges}'");
-								break;
-							}
-						}
-						break;
-					}
-				}
-
-				Debug.Log($"captured edge midpt: '{_tdg_projecting.CapturedEdgeMidPoints_PerimeterProjecting[i]}'");
-
-				LNX_ProjectionHit perimHit = tri.ProjectThroughToPerimeter(
-					_tdg_projecting.StartPositions_PerimeterProjecting[i],
-					_tdg_projecting.EndPositions_PerimeterProjecting[i] 
+				Debug.Log($"projecting through to perimeter...");
+				hit = tri.ProjectThroughToPerimeter(
+					_tdg_projectThroughToPerimeter.CapturedStartPositions[i], 
+					_tdg_projectThroughToPerimeter.CapturedEndPositions[i]
 				);
+				Debug.Log($"projected through. hit position: '{hit.HitPosition}'. Captured hit position is: " +
+					$"'{_tdg_projectThroughToPerimeter.CapturedProjectionPoints[i]}'." +
+					$"Now asserting value is as expected...");
 
-				LNX_Edge projectEdge = tri.Edges[perimHit.Index_Hit];
+				//Assert.AreEqual( _tdg_projectThroughToPerimeter.CapturedProjectionPoints[i], hit.HitPosition );
 
-
-				Debug.Log($"did projection. perimeter hit was at: '{perimHit.HitPosition}'. Testing out vector against data showing '{_tdg_projecting.CapturedProjectionPoints_PerimeterProjecting[i]}'...");
-
-				// For some reason, this won't work right...
-				
 				UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-					_tdg_projecting.CapturedProjectionPoints_PerimeterProjecting[i].x,
-					perimHit.HitPosition.x
+					_tdg_projectThroughToPerimeter.CapturedProjectionPoints[i].x,
+					hit.HitPosition.x
 				);
 
 				UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-					_tdg_projecting.CapturedProjectionPoints_PerimeterProjecting[i].y,
-					perimHit.HitPosition.y
+					_tdg_projectThroughToPerimeter.CapturedProjectionPoints[i].y,
+					hit.HitPosition.y
 				);
 
 				UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-					_tdg_projecting.CapturedProjectionPoints_PerimeterProjecting[i].z,
-					perimHit.HitPosition.z
+					_tdg_projectThroughToPerimeter.CapturedProjectionPoints[i].z,
+					hit.HitPosition.z
 				);
-				
 			}
 		}
 		#endregion

@@ -23,8 +23,8 @@ namespace LogansNavigationExtension
 		//[ContextMenu("z call CacheNonSerializedData()")] //can't do this because it's not a monobehavior
 		public void CacheNonSerializedData()
         {
-            _Mesh_Triangles = _Lnx_Navmesh._Mesh.triangles;
-            _Mesh_Vertices = _Lnx_Navmesh._Mesh.vertices;
+            _Mesh_Triangles = _Lnx_Navmesh._VisualizationMesh.triangles;
+            _Mesh_Vertices = _Lnx_Navmesh._VisualizationMesh.vertices;
 
             NavMeshTriangulation triangulation = NavMesh.CalculateTriangulation();
 			_triangulation_Vertices = triangulation.vertices;

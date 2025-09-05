@@ -16,7 +16,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 		TDG_SamplePosition _tdg_samplePosition;
 
-		TDG_SampleClosestPtOnPerimeter _tdg_closestOnPerimeter;
+		TDG_SampleClosestPtOnPerimeter _tdg_sampleClosestPtOnPerimeter;
 
 		#region A - Setup --------------------------------------------------------------------------------
 		[Test]
@@ -60,6 +60,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 			Debug.Log($"Setting up Sampling tests...");
 			#region SETUP SAMPLE POSITION TEST -----------------------------
+			Debug.Log("1) SAMPLE POSITION SETUP....");
 			if (!File.Exists(TDG_Manager.filePath_testData_SamplePosition))
 			{
 				Debug.LogError($"PROBLEM!!!!! file at test path does not exist. Cannot perform test.");
@@ -94,20 +95,35 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			#endregion
 
 			#region SETUP CLOSEST ON PERIMETER TEST -----------------------------
+			Debug.Log("\n2) SAMPLE CLOSEST POINT ON TRIANGLE PERIMETER SETUP....");
 			if (!File.Exists(TDG_Manager.filePath_testData_sampleClosestPtOnPerim))
 			{
 				Debug.LogError($"PROBLEM!!!!! file at test path does not exist. Cannot perform test.");
 				return;
 			}
-			_tdg_closestOnPerimeter = _serializedLNXNavmesh.gameObject.AddComponent<TDG_SampleClosestPtOnPerimeter>();
+			_tdg_sampleClosestPtOnPerimeter = _serializedLNXNavmesh.gameObject.AddComponent<TDG_SampleClosestPtOnPerimeter>();
 
 			jsonString = File.ReadAllText(TDG_Manager.filePath_testData_sampleClosestPtOnPerim);
 
-			JsonUtility.FromJsonOverwrite(jsonString, _tdg_closestOnPerimeter);
-			Debug.Log($"Created closestOnPerimeter test object. Counts: '{_tdg_closestOnPerimeter.problemPositions.Count}', ");
+			JsonUtility.FromJsonOverwrite(jsonString, _tdg_sampleClosestPtOnPerimeter);
+			Debug.Log($"Created {nameof(_tdg_sampleClosestPtOnPerimeter)} test object. Asserting necessary collections " +
+				$"are not null for testing...");
 
-			Assert.IsNotNull(_tdg_closestOnPerimeter.problemPositions);
-			Assert.Greater(_tdg_closestOnPerimeter.problemPositions.Count, 0);
+			Assert.IsNotNull(_tdg_sampleClosestPtOnPerimeter.SampleFromPositions);
+			Assert.IsNotNull(_tdg_sampleClosestPtOnPerimeter.capturedPerimeterPositions);
+			Assert.IsNotNull(_tdg_sampleClosestPtOnPerimeter.capturedTriCenters);
+
+			Debug.Log( $"Collection Counts: \n" +
+				$"samplefrom: '{_tdg_sampleClosestPtOnPerimeter.SampleFromPositions.Count}'\n" +
+				$"perimPositions: '{_tdg_sampleClosestPtOnPerimeter.capturedPerimeterPositions.Count}'\n" +
+				$"tri centers: '{_tdg_sampleClosestPtOnPerimeter.capturedTriCenters.Count}'\n" +
+				$"");
+
+			Debug.Log("Asserting collection counts are above 0...");
+			Assert.Greater(_tdg_sampleClosestPtOnPerimeter.SampleFromPositions.Count, 0);
+			Assert.Greater(_tdg_sampleClosestPtOnPerimeter.capturedPerimeterPositions.Count, 0);
+			Assert.Greater(_tdg_sampleClosestPtOnPerimeter.capturedTriCenters.Count, 0);
+
 			#endregion
 		}
 		#endregion
@@ -149,19 +165,19 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			LNX_UnitTestUtilities.LogTestStart(nameof(B2_Test_ClosestOnPerimeter),
 			"Checks that the LNX_Navmesh.SamplePosition() method works as expected");
 
-			for (int i = 0; i < _tdg_closestOnPerimeter.problemPositions.Count; i++)
+			for (int i = 0; i < _tdg_sampleClosestPtOnPerimeter.problemPositions.Count; i++)
 			{
-				Debug.Log($"{i}. expecting: '{_tdg_closestOnPerimeter.capturedPerimeterPositions[i]}'...");
+				Debug.Log($"{i}. expecting: '{_tdg_sampleClosestPtOnPerimeter.capturedPerimeterPositions[i]}'...");
 
 				LNX_ProjectionHit hit = new LNX_ProjectionHit();
 
-				if (_serializedLNXNavmesh.SamplePosition(_tdg_closestOnPerimeter.problemPositions[i], out hit, 10f)) //It needs to do this in order to decide which triangle to use...
+				if (_serializedLNXNavmesh.SamplePosition(_tdg_sampleClosestPtOnPerimeter.problemPositions[i], out hit, 10f)) //It needs to do this in order to decide which triangle to use...
 				{
-					Vector3 v_result = _serializedLNXNavmesh.Triangles[hit.Index_Hit].ClosestPointOnPerimeter(_tdg_closestOnPerimeter.problemPositions[i]);
+					Vector3 v_result = _serializedLNXNavmesh.Triangles[hit.Index_Hit].ClosestPointOnPerimeter(_tdg_sampleClosestPtOnPerimeter.problemPositions[i]);
 
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_closestOnPerimeter.capturedPerimeterPositions[i].x, v_result.x);
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_closestOnPerimeter.capturedPerimeterPositions[i].y, v_result.y);
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_closestOnPerimeter.capturedPerimeterPositions[i].z, v_result.z);
+					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_sampleClosestPtOnPerimeter.capturedPerimeterPositions[i].x, v_result.x);
+					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_sampleClosestPtOnPerimeter.capturedPerimeterPositions[i].y, v_result.y);
+					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_sampleClosestPtOnPerimeter.capturedPerimeterPositions[i].z, v_result.z);
 				}
 			}
 		}
@@ -172,22 +188,22 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			LNX_UnitTestUtilities.LogTestStart(nameof(B3_Test_ClosestOnPerimeter_triCenters),
 				"Checks that the LNX_Navmesh.SamplePosition() method works as expected");
 
-			for (int i = 0; i < _tdg_closestOnPerimeter.problemPositions.Count; i++)
+			for (int i = 0; i < _tdg_sampleClosestPtOnPerimeter.problemPositions.Count; i++)
 			{
 				Debug.Log($"{i}...");
 
 				LNX_ProjectionHit hit = new LNX_ProjectionHit();
 
-				if (_serializedLNXNavmesh.SamplePosition(_tdg_closestOnPerimeter.problemPositions[i], out hit, 10f)) //It needs to do this in order to decide which triangle to use...
+				if (_serializedLNXNavmesh.SamplePosition(_tdg_sampleClosestPtOnPerimeter.problemPositions[i], out hit, 10f)) //It needs to do this in order to decide which triangle to use...
 				{
-					Vector3 v_result = _serializedLNXNavmesh.Triangles[hit.Index_Hit].ClosestPointOnPerimeter(_tdg_closestOnPerimeter.problemPositions[i]);
+					Vector3 v_result = _serializedLNXNavmesh.Triangles[hit.Index_Hit].ClosestPointOnPerimeter(_tdg_sampleClosestPtOnPerimeter.problemPositions[i]);
 
-					Debug.Log($"{i}. expecting: '{_tdg_closestOnPerimeter.capturedPerimeterPositions[i]}', ClosestPointOnPerimeter got: '{v_result}'. " +
-						$"close: '{Vector3.Distance(v_result, _tdg_closestOnPerimeter.capturedPerimeterPositions[i])}'..");
+					Debug.Log($"{i}. expecting: '{_tdg_sampleClosestPtOnPerimeter.capturedPerimeterPositions[i]}', ClosestPointOnPerimeter got: '{v_result}'. " +
+						$"close: '{Vector3.Distance(v_result, _tdg_sampleClosestPtOnPerimeter.capturedPerimeterPositions[i])}'..");
 
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_closestOnPerimeter.capturedTriCenters[i].x, _serializedLNXNavmesh.Triangles[hit.Index_Hit].V_Center.x);
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_closestOnPerimeter.capturedTriCenters[i].y, _serializedLNXNavmesh.Triangles[hit.Index_Hit].V_Center.y);
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_closestOnPerimeter.capturedTriCenters[i].z, _serializedLNXNavmesh.Triangles[hit.Index_Hit].V_Center.z);
+					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_sampleClosestPtOnPerimeter.capturedTriCenters[i].x, _serializedLNXNavmesh.Triangles[hit.Index_Hit].V_Center.x);
+					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_sampleClosestPtOnPerimeter.capturedTriCenters[i].y, _serializedLNXNavmesh.Triangles[hit.Index_Hit].V_Center.y);
+					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_sampleClosestPtOnPerimeter.capturedTriCenters[i].z, _serializedLNXNavmesh.Triangles[hit.Index_Hit].V_Center.z);
 				}
 			}
 		}
