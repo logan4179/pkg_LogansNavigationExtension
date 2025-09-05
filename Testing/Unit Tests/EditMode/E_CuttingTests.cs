@@ -94,14 +94,14 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			triCount_before = _lnx_meshManipulator._LNX_NavMesh.Triangles.Length;
 			Debug.Log($"tri collection length before: '{triCount_before}'...");
 
-			visMesh_vertsLength_before = _lnx_meshManipulator._LNX_NavMesh._Mesh.vertices.Length;
+			visMesh_vertsLength_before = _lnx_meshManipulator._LNX_NavMesh._VisualizationMesh.vertices.Length;
 			_lnx_meshManipulator.TryInsertLoop();
 
 			triCount_after = _lnx_meshManipulator._LNX_NavMesh.Triangles.Length;
 
 			Assert.AreEqual( triCount_before + 2, triCount_after);
 
-			visMesh_vertsLength_after = _lnx_meshManipulator._LNX_NavMesh._Mesh.vertices.Length;
+			visMesh_vertsLength_after = _lnx_meshManipulator._LNX_NavMesh._VisualizationMesh.vertices.Length;
 
 			Debug.Log($"End of test. Tri collection length after: '{triCount_after}'");
 		}
@@ -169,9 +169,9 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		{
 			Debug.Log( string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(c1_visMesh_triangles_Length_Is_Correct_After_Cut)) );
 
-			Debug.Log($"VisMesh triangles length: '{_lnx_meshManipulator._LNX_NavMesh._Mesh.triangles.Length}'...");
+			Debug.Log($"VisMesh triangles length: '{_lnx_meshManipulator._LNX_NavMesh._VisualizationMesh.triangles.Length}'...");
 
-			Assert.AreEqual( triCount_after * 3, _lnx_meshManipulator._LNX_NavMesh._Mesh.triangles.Length );
+			Assert.AreEqual( triCount_after * 3, _lnx_meshManipulator._LNX_NavMesh._VisualizationMesh.triangles.Length );
 
 			Debug.Log($"");
 		}
@@ -181,7 +181,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		{
 			Debug.Log( string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(c2_visMesh_Vertices_Length_Is_Correct_After_Cut)) );
 
-			Assert.AreEqual( visMesh_vertsLength_before + 2, _lnx_meshManipulator._LNX_NavMesh._Mesh.vertices.Length );
+			Assert.AreEqual( visMesh_vertsLength_before + 2, _lnx_meshManipulator._LNX_NavMesh._VisualizationMesh.vertices.Length );
 		}
 
 		#endregion

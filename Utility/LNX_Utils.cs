@@ -548,6 +548,22 @@ namespace LogansNavigationExtension
 			}
 		}
 
+		public override bool Equals(object obj)
+		{
+			if ( !(obj is LNX_ProjectionHit) )
+				return false;
+
+			LNX_ProjectionHit hit = (LNX_ProjectionHit)obj;
+			if (hit.Index_Hit != Index_Hit || hit.HitPosition != HitPosition)
+			{
+				return false;
+			}
+			else
+			{
+				return true;
+			}
+		}
+
 		public override string ToString()
 		{
 			return $"Indx '{Index_Hit}', at '{HitPosition}'";
@@ -591,7 +607,7 @@ namespace LogansNavigationExtension
 			}
 			else
 			{
-				CanSee = !nvMsh.Raycast(myVert.V_Position, relatedVert.V_Position, 1f);
+				//CanSee = !nvMsh.Raycast(myVert.V_Position, relatedVert.V_Position, 1f);
 
 				if ( CanSee )
 				{

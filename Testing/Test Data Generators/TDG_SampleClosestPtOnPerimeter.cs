@@ -13,9 +13,7 @@ namespace LogansNavigationExtension
 		[SerializeField] private Vector3 v_result;
 		LNX_ProjectionHit lnxHit = new LNX_ProjectionHit();
 
-
-		[SerializeField] private float radius_drawSphere = 0.1f;
-
+		[Header("DATA CAPTURE")]
 		public List<Vector3> SampleFromPositions = new List<Vector3>();
 		public List<Vector3> capturedPerimeterPositions = new List<Vector3>();
 		public List<Vector3> capturedTriCenters = new List<Vector3>();
@@ -29,8 +27,6 @@ namespace LogansNavigationExtension
 
 		public Color Color_sampleObject = Color.white;
 
-		[SerializeField] private string DBG_Class;
-
 
 		protected override void OnDrawGizmos()
 		{
@@ -41,16 +37,17 @@ namespace LogansNavigationExtension
 
 			base.OnDrawGizmos();
 
-			DBG_Class = $"Searching through '{_navmesh.Triangles.Length}' tris...\n";
+			DBG_Operation = $"Searching through '{_navmesh.Triangles.Length}' tris...\n";
 
 			lnxHit = new LNX_ProjectionHit();
 
 			if( _navmesh.SamplePosition(transform.position, out lnxHit, 10f) ) //It needs to do this in order to decide which triangle to use...
 			{
-				DrawStandardFocusTriGizmos( _navmesh.Triangles[lnxHit.Index_Hit], 0.3f, lnxHit.Index_Hit.ToString() );
+				LNX_Triangle chosenTri = _navmesh.Triangles[lnxHit.Index_Hit];
 
+				DrawStandardFocusTriGizmos( chosenTri, 0.3f, lnxHit.Index_Hit.ToString() );
 
-				v_result = _navmesh.Triangles[lnxHit.Index_Hit].ClosestPointOnPerimeter(transform.position);
+				v_result = chosenTri.ClosestPointOnPerimeter(transform.position);
 
 				Gizmos.color = Color_sampleObject;
 
@@ -61,7 +58,7 @@ namespace LogansNavigationExtension
 			}
 			else
 			{
-				DBG_Class += $"Couldn't sample position...\n";
+				DBG_Operation += $"Couldn't sample position...\n";
 
 				Gizmos.color = Color_IfFailure;
 			}
@@ -94,10 +91,12 @@ namespace LogansNavigationExtension
 
 				if ( _navmesh.SamplePosition(SampleFromPositions[i], out lnxHit, 10f) )
 				{
-					Vector3 v = _navmesh.Triangles[lnxHit.Index_Hit].ClosestPointOnPerimeter( SampleFromPositions[i] );
+					LNX_Triangle chosenTri = _navmesh.Triangles[lnxHit.Index_Hit];
 
-					capturedPerimeterPositions[i] = v;
-					capturedTriCenters[i] = _navmesh.Triangles[lnxHit.Index_Hit].V_Center;
+					Vector3 v = chosenTri.ClosestPointOnPerimeter( SampleFromPositions[i] );
+
+					capturedPerimeterPositions.Add( v );
+					capturedTriCenters.Add( chosenTri.V_Center );
 				}
 			}
 

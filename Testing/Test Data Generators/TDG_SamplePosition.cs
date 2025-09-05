@@ -44,14 +44,15 @@ namespace LogansNavigationExtension
 			if ( _navmesh.SamplePosition(transform.position, out lnxHit, 10f) )
 			{
 				DBG_Class += $"samplePosition returned true with: '{lnxHit.HitPosition}', on tri: '{lnxHit.Index_Hit}'\n" +
-					$"report: \n" +
+					$"\nreport--------------------------------\n" +
 					$"{_navmesh.DBG_SamplePosition}\n";
 
-				
+				LNX_Triangle sampledTri = _navmesh.Triangles[lnxHit.Index_Hit];
+
 				DrawStandardFocusTriGizmos(
-					_navmesh.Triangles[lnxHit.Index_Hit],
+					sampledTri,
 					1f,
-					_navmesh.Triangles[lnxHit.Index_Hit].Index_inCollection.ToString()
+					sampledTri.Index_inCollection.ToString()
 				);
 
 				Gizmos.color = Color_sampleObject;

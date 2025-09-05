@@ -16,11 +16,12 @@ namespace LogansNavigationExtension
 		public bool RaycastResult = false;
 
 		[Header("DEBUG")]
-		[Range(0f,0.1f)] public float Radius_Objects = 0.2f;
-		[TextArea(1,20)]
+		[TextArea(1,15)]
 		public string DBG_NavmeshRaycastRprt;
 		[TextArea(1, 20)]
 		public string DBG_NavmeshProjectionRprt;
+
+		public string DBG_TimeTaken;
 
 		[ContextMenu("z CaptureDataPoint()")]
 		public void CaptureDataPoint()
@@ -78,13 +79,14 @@ namespace LogansNavigationExtension
 
 			Gizmos.DrawLine(startTrans.position, endTrans.position);
 
-			Gizmos.DrawSphere(startTrans.position, Radius_Objects);
+			Gizmos.DrawSphere(startTrans.position, Radius_ObjectDebugSpheres);
 			//Handles.Label(startTrans.position, "strtTrans");
-			Gizmos.DrawSphere(endTrans.position, Radius_Objects);
+			Gizmos.DrawSphere(endTrans.position, Radius_ObjectDebugSpheres);
 			//Handles.Label(startTrans.position, "endTrans");
 
 			DBG_NavmeshRaycastRprt = _navmesh.DBGRaycast;
 			DBG_NavmeshProjectionRprt = _navmesh.DBG_NavmeshProjection;
+			DBG_TimeTaken = _navmesh.DBG_timetaken;
 		}
 	}
 }

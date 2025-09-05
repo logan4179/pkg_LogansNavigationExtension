@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace LogansNavigationExtension
 {
@@ -18,15 +19,15 @@ namespace LogansNavigationExtension
 		public LNX_ComponentCoordinate SharedEdgeCoordinate;
 		/// <summary>Cached center vector for the owning triangle. This is for exposed property calculation </summary>
 		[SerializeField, HideInInspector] private Vector3 v_triCenter_cached;
-		public Vector3 v_cross;
+		public Vector3 v_Cross;
 
 
 		//[Header("PROPERTIES")]
 		public Vector3 MidPosition => (StartPosition + EndPosition) / 2f;
 
-		public Vector3 v_startToEnd => Vector3.Normalize(EndPosition - StartPosition);
+		public Vector3 V_StartToEnd => Vector3.Normalize(EndPosition - StartPosition);
 
-		public Vector3 v_endToStart => Vector3.Normalize(StartPosition - EndPosition);
+		public Vector3 V_EndToStart => Vector3.Normalize(StartPosition - EndPosition);
 
 		public Vector3 v_toCenter => Vector3.Normalize( v_triCenter_cached - MidPosition );
 		public float EdgeLength => Vector3.Distance(StartPosition, EndPosition);
@@ -34,7 +35,7 @@ namespace LogansNavigationExtension
 
 
 
-		public LNX_Edge( LNX_NavMesh nm, LNX_Vertex strtVrt, LNX_Vertex endVrt, int triIndx, int cmptIndx )
+		public LNX_Edge( LNX_Triangle ownerTri, LNX_Vertex strtVrt, LNX_Vertex endVrt, int triIndx, int cmptIndx )
 		{
 			//Debug.Log($"ctor. edge: '{tri.Index_inCollection},{indx}'");
 
@@ -43,7 +44,7 @@ namespace LogansNavigationExtension
 			StartVertCoordinate = strtVrt.MyCoordinate;
 			EndVertCoordinate = endVrt.MyCoordinate;
 
-			v_triCenter_cached = nm.Triangles[triIndx].V_Center;
+			v_triCenter_cached = ownerTri.V_Center;
 
 			SharedEdgeCoordinate = LNX_ComponentCoordinate.None;
 		}
@@ -55,7 +56,7 @@ namespace LogansNavigationExtension
 			EndPosition = edge.EndPosition;
 			EndVertCoordinate = edge.EndVertCoordinate;
 
-			v_cross = edge.v_cross;
+			v_Cross = edge.v_Cross;
 
 			MyCoordinate = edge.MyCoordinate;
 
@@ -69,7 +70,7 @@ namespace LogansNavigationExtension
 			EndPosition = edge.EndPosition;
 			EndVertCoordinate = edge.EndVertCoordinate;
 
-			v_cross = edge.v_cross;
+			v_Cross = edge.v_Cross;
 
 			MyCoordinate = edge.MyCoordinate;
 
@@ -103,16 +104,17 @@ namespace LogansNavigationExtension
 			}
 		}
 
+
 		public void CalculateDerivedInfo( LNX_Triangle tri, LNX_Vertex strtVrt, LNX_Vertex endVrt )
 		{
 			StartPosition = strtVrt.V_Position;
 			EndPosition = endVrt.V_Position;
 
-			v_cross = Vector3.Cross(v_startToEnd, tri.V_PlaneFaceNormal).normalized;
+			v_Cross = Vector3.Cross(V_StartToEnd, tri.V_PlaneFaceNormal).normalized; //why is this value Vector3.zero during the test? Because the planeface normal isnt' ready yet!
 
-			if ( Vector3.Dot(v_cross, v_toCenter) < 0 )
+			if ( Vector3.Dot(v_Cross, v_toCenter) < 0 )
 			{
-				v_cross = -v_cross;
+				v_Cross = -v_Cross;
 			}
 		}
 
@@ -150,7 +152,7 @@ namespace LogansNavigationExtension
 		{
 			Vector3 v_vrtToPos = pos - StartPosition;
 
-			Vector3 v_result = StartPosition + Vector3.Project(v_vrtToPos, v_startToEnd);
+			Vector3 v_result = StartPosition + Vector3.Project(v_vrtToPos, V_StartToEnd);
 
 			float dist_startToRslt = Vector3.Distance(v_result, StartPosition);
 			float dist_endToRslt = Vector3.Distance(v_result, EndPosition);
@@ -163,6 +165,41 @@ namespace LogansNavigationExtension
 			}
 
 			return v_result;
+		}
+
+		public string dbg_doesPositionLieOnEdge;
+		public bool DoesPositionLieOnEdge( Vector3 pos, Vector3 flattenDir )
+		{
+			dbg_doesPositionLieOnEdge = $"{nameof(DoesPositionLieOnEdge)}({pos}, {flattenDir})...\n" +
+				$"condition1: '{pos == StartPosition || pos == EndPosition}\n" +
+				$"condition2: '{LNX_Utils.FlatVector(pos - StartPosition, flattenDir).normalized == LNX_Utils.FlatVector(V_StartToEnd, flattenDir).normalized}\n" +
+				$"condition3: '{Vector3.Distance(StartPosition, pos) <= EdgeLength}\n" +
+				$"condition3: '{LNX_Utils.FlatVector(pos - EndPosition, flattenDir).normalized == -LNX_Utils.FlatVector(V_StartToEnd, flattenDir).normalized}\n" +
+				$"condition3: '{Vector3.Distance(EndPosition, pos) <= EdgeLength}\n" +
+				"";
+
+			if
+			( 
+				pos == StartPosition || pos == EndPosition ||
+				(
+					LNX_Utils.FlatVector(pos - StartPosition, flattenDir).normalized == LNX_Utils.FlatVector(V_StartToEnd, flattenDir).normalized && 
+					Vector3.Distance(StartPosition,pos) <= EdgeLength
+				) ||
+				(
+					LNX_Utils.FlatVector(pos - EndPosition, flattenDir).normalized == -LNX_Utils.FlatVector(V_StartToEnd, flattenDir).normalized && 
+					Vector3.Distance(EndPosition,pos) <= EdgeLength
+				)
+			)
+			{
+				dbg_doesPositionLieOnEdge += "returning true...";
+				return true;
+			}
+			else
+			{
+				dbg_doesPositionLieOnEdge += "returning false...";
+
+				return false;
+			}
 		}
 
 		/// <summary>
@@ -178,40 +215,65 @@ namespace LogansNavigationExtension
 			Vector3 origin, Vector3 destination, Vector3 flattenDir, ref string dbgString, out Vector3 outPos 
 		)
 		{
+			dbgString += $"{nameof(DoesProjectionIntersectEdge)}({MyCoordinate.ComponentIndex})-----\n";
 			Vector3 v_prjct = LNX_Utils.FlatVector( destination - origin, flattenDir ).normalized;
 			Vector3 v_originToStart = LNX_Utils.FlatVector( StartPosition - origin, flattenDir ).normalized;
 			Vector3 v_originToEnd = LNX_Utils.FlatVector( EndPosition - origin ).normalized;
 			////////////////////////////////////////////////////////////////////////////////////////////////////////
 			float ang_prjctTo_orgnToStrt = Vector3.Angle( v_prjct, v_originToStart );
 			float ang_prjctTo_orgnToEnd = Vector3.Angle( v_prjct, v_originToEnd );
-			#region ANGLE SHORT-CIRCUIT TEST-------------------------------------------------------
-			/*
-			dbgString += $"trying angle short-circuit with rslts. 1: '{ang_prjctTo_orgnToStrt}', " +
-				$"2: '{ang_prjctTo_orgnToEnd}'...\n";
+			//float ang_chevron = ang_prjctTo_orgnToStrt + ang_prjctTo_orgnToEnd; //this is cheap, but is it right?
+			float ang_chevron = Vector3.Angle( v_originToStart, v_originToEnd );
 
-			if (
-				ang_prjctTo_orgnToStrt > 90f && ang_prjctTo_orgnToEnd > 90f
-			)
+			float lrgst = Mathf.Max
+			(
+				ang_prjctTo_orgnToStrt,
+				ang_prjctTo_orgnToEnd
+			);
+
+			#region DIRECTIONAL SHORT-CIRCUIT TEST-------------------------------------------------
+			//The following tests if the origin and projection direction allow for the possibilty of edge intersection...
+			Vector3 v_cross_flat = LNX_Utils.FlatVector(v_Cross, flattenDir).normalized;
+			Vector3 v_midPt_toOrigin = LNX_Utils.FlatVector( origin - MidPosition ).normalized;
+
+			dbgString += $"directional short circuit test\n" +
+				$"vcsflt: '{v_cross_flat}', vmdpt2orgn: '{v_midPt_toOrigin}'. " +
+				$"dot: '{Vector3.Dot(v_cross_flat, v_midPt_toOrigin)}'...\n";
+
+			if( Vector3.Dot(v_cross_flat, v_midPt_toOrigin) >= 0f ) //origin should be inside triangle...
 			{
-				dbgString += $"\nOperation short-circuited bc of dot-prdct check! Returning false...\n";
-				outPos = Vector3.zero;
-				return false; //short-circuit
+				dbgString += $"origin is inside\n";
+
+				if( Vector3.Dot(v_prjct, -v_cross_flat) < 0f )
+				{
+					dbgString += $"\nOperation short-circuited bc of containment check! Returning false...\n";
+					outPos = Vector3.zero;
+					return false; //short-circuit
+				}
 			}
-			else
+			else //origin is OUTSIDE triangle...
 			{
-				dbgString += $"no short-circuit. Method will continue...\n";
+				dbgString += $"origin is outside\n";
+
+				if ( Vector3.Dot(v_prjct, v_cross_flat) < 0f )
+				{
+					dbgString += $"\nOperation short-circuited bc of containment check! Returning false...\n";
+					outPos = Vector3.zero;
+					return false; //short-circuit
+				}
 			}
-			*/
 			#endregion
 
-
-			#region NEW DOT PRODUCT SHORT-CIRCUIT TEST-------------------------------------------------------
-			dbgString += $"trying dot shortcircuit with rslts. 1: '{Vector3.Dot(v_prjct, v_originToStart)}', " +
-				$"2: '{Vector3.Dot(v_prjct, LNX_Utils.FlatVector(EndPosition - origin).normalized)}'...\n";
+			#region ANGULAR SHORT-CIRCUIT TEST-------------------------------------------------------
+			dbgString += $"\n" +
+				$"Angular short-circuit test\n" +
+				$"trying angle short-circuit with rslts. 1: '{ang_prjctTo_orgnToStrt}', " +
+				$"2: '{ang_prjctTo_orgnToEnd}'...\n" +
+				$"chev: '{ang_chevron}', lrgst: '{lrgst}'...";
 
 			if (
-				Vector3.Dot(v_prjct, v_originToStart) < 0f &&
-				Vector3.Dot(v_prjct, LNX_Utils.FlatVector(EndPosition - origin).normalized) < 0f
+				(ang_prjctTo_orgnToStrt > 90f && ang_prjctTo_orgnToEnd > 90f) ||
+				lrgst > ang_chevron
 			)
 			{
 				dbgString += $"\nOperation short-circuited bc of dot-prdct check! Returning false...\n";
@@ -222,43 +284,20 @@ namespace LogansNavigationExtension
 			{
 				dbgString += $"no short-circuit. Method will continue...\n";
 			}
-			#endregion
-
-
-
-
-
-			////////////////////////////////////////////////////////////////////////////////////////////////////////
-			#region DOT PRODUCT SHORT-CIRCUIT TEST-------------------------------------------------------
-			/*
-			dbgString += $"trying dot shortcircuit with rslts. 1: '{Vector3.Dot(v_prjct, v_originToStart)}', " +
-				$"2: '{Vector3.Dot(v_prjct, LNX_Utils.FlatVector(EndPosition - origin).normalized)}'...\n";
-
-			if( 
-				Vector3.Dot(v_prjct, v_originToStart) < 0f && 
-				Vector3.Dot(v_prjct, LNX_Utils.FlatVector(EndPosition - origin).normalized) < 0f 
-			)
-			{
-				dbgString += $"\nOperation short-circuited bc of dot-prdct check! Returning false...\n";
-				outPos = Vector3.zero;
-				return false; //short-circuit
-			}
-			else
-			{
-				dbgString += $"no short-circuit. Method will continue...\n";
-			}
-			*/
+			
 			#endregion
 
 			#region CALCULATE OUT POS -----------------------------------------------------------
-
-			#endregion
-			outPos = StartPosition + (v_startToEnd * LNX_Utils.CalculateTriangleEdgeLength
+			outPos = StartPosition + 
+			(
+				V_StartToEnd * LNX_Utils.CalculateTriangleEdgeLength
 				(
 					Vector3.Angle(v_prjct, v_originToStart),
-					Vector3.Angle(-v_prjct, -v_startToEnd),
+					Vector3.Angle(-v_prjct, -V_StartToEnd),
 					Vector3.Distance(origin, StartPosition)
-				)); //Todo: This length isn't actually accurate at this point because we're using flattened positions in here (as well as mixing with unflattened)
+				)
+			); //Todo: This length isn't actually accurate at this point because we're using flattened positions in here (as well as mixing with unflattened)
+			#endregion
 
 			return true;
 		}
@@ -303,7 +342,7 @@ namespace LogansNavigationExtension
 			Debug.Log($"Edge.{nameof(SayCurrentInfo)}()\n" +
 				$"{nameof(MyCoordinate)}: '{MyCoordinate}'\n" +
 				$"{nameof(StartPosition)}: '{StartPosition}'\n" +
-				$"{nameof(v_cross)}: '{v_cross}'\n" +
+				$"{nameof(v_Cross)}: '{v_Cross}'\n" +
 				$"");
 		}
 	}

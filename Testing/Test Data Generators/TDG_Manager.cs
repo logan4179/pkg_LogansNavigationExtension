@@ -33,12 +33,15 @@ namespace LogansNavigationExtension
 
 
 		[Header("TESTERS")]
+		public TDG_DeleteTests _tdg_deleteTests;
+		public static string filePath_testData_deleteTests = $"{dirPath_testDataFolder}\\tdg_deleteTests_data_A.json";
 
+		public TDG_Cutting _tdg_cuttingTests;
+		public static string filePath_testData_cuttingTests = $"{dirPath_testDataFolder}\\tdg_cuttingTests_data_A.json";
+
+		[Header("NAVMESH TESTERS")]
 		public TDG_SamplePosition _tdg_samplePosition;
 		public static string filePath_testData_SamplePosition = Path.Combine( dirPath_testDataFolder, "tdg_samplePosition_data_A.json" );
-
-		public TDG_VertexOperations _tdg_vertexOperations;
-		public static string filePath_testData_vertexOperations = $"{dirPath_testDataFolder}\\tdg_vertexOperations_data_A.json";
 
 		public TDG_CalculatePath _tdg_pathing;
 		public static string filePath_testData_pathing = $"{dirPath_testDataFolder}\\tdg_pathing_data_A.json";
@@ -49,14 +52,23 @@ namespace LogansNavigationExtension
 		public TDG_pointingAndGrabbing _tdg_pointingAndGrabbing;
 		public static string filePath_testData_pointingAndGrabbing = $"{dirPath_testDataFolder}\\tdg_pointingAndGrabbing_data_A.json";
 
-		public TDG_Projecting _tdg_projecting;
-		public static string filePath_testData_projectingTests = $"{dirPath_testDataFolder}\\tdg_projectingTests_data_A.json";
+		[Header("VERTEX TESTERS")]
+		public TDG_IsInCenterSweep _tdg_isInCenterSweep;
+		public static string filePath_testData_isInCenterSweep = $"{dirPath_testDataFolder}\\tdg_isInCenterSweep_data_A.json";
 
-		public TDG_DeleteTests _tdg_deleteTests;
-		public static string filePath_testData_deleteTests = $"{dirPath_testDataFolder}\\tdg_deleteTests_data_A.json";
+		[Header("EDGE TESTERS")]
+		public TDG_DoesPositionLieOnEdge _tdg_doesPositionLieOnEdge;
+		public static string filePath_testData_doesPositionLieOnEdge = $"{dirPath_testDataFolder}\\tdg_doesPositionLieOnEdge_data_A.json";
+		public TDG_DoesProjectionIntersectEdge _tdg_doesProjectionIntersectEdge;
+		public static string filePath_testData_doesProjectionIntersectEdge = $"{dirPath_testDataFolder}\\tdg_doesProjectionIntersectEdge_data_A.json";
 
-		public TDG_Cutting _tdg_cuttingTests;
-		public static string filePath_testData_cuttingTests = $"{dirPath_testDataFolder}\\tdg_cuttingTests_data_A.json";
+		[Header("TRIANGLE TESTERS")]
+		TDG_ProjectThroughToPerimeter _tdg_projectThroughToPerimeter;
+		public static string filePath_testData_projectThroughToPerimeter = $"{dirPath_testDataFolder}\\tdg_projectThroughToPerimeter_data_A.json";
+
+		TDG_IsInShapeProject _tdg_isInShapeProject;
+		public static string filePath_testData_isInShapeProject = $"{dirPath_testDataFolder}\\tdg_isInShapeProject_data_A.json";
+
 
 		[Header("DEBUG")]
 		public bool AmDebugging = true;
@@ -212,9 +224,9 @@ namespace LogansNavigationExtension
 				WriteSceneGeneratedMeshDataToJson();
 
 				#region VERTEX OPERATIONS ----------------------------------------------------------
-				if ( !_tdg_vertexOperations.WriteMeToJson() )
+				if ( !_tdg_isInCenterSweep.WriteMeToJson() )
 				{
-					Debug.LogError($"write to json didn't work on {nameof(_tdg_vertexOperations)}. Returning early...");
+					Debug.LogError($"write to json didn't work on {nameof(_tdg_isInCenterSweep)}. Returning early...");
 					return;
 				}
 				#endregion
@@ -269,14 +281,6 @@ namespace LogansNavigationExtension
 				}
 				#endregion
 
-				#region PROJECTING ----------------------------------------------------------
-				if ( !_tdg_projecting.WriteMeToJson() )
-				{
-					Debug.LogError($"write to json didn't work on {nameof(_tdg_projecting)}. Returning early...");
-					return;
-				}
-				#endregion
-
 				#region DELETING ----------------------------------------------------------
 				if ( !_tdg_deleteTests.WriteMeToJson() )
 				{
@@ -289,6 +293,34 @@ namespace LogansNavigationExtension
 				if ( !_tdg_cuttingTests.WriteMeToJson() )
 				{
 					Debug.LogError($"write to json didn't work on {nameof(_tdg_cuttingTests)}. Returning early...");
+					return;
+				}
+				#endregion
+
+				#region EDGE OPERATIONS ----------------------------------------------------------
+				if (!_tdg_doesPositionLieOnEdge.WriteMeToJson())
+				{
+					Debug.LogError($"write to json didn't work on {nameof(_tdg_doesPositionLieOnEdge)}. Returning early...");
+					return;
+				}
+
+				if ( !_tdg_doesProjectionIntersectEdge.WriteMeToJson() )
+				{
+					Debug.LogError($"write to json didn't work on {nameof(_tdg_doesProjectionIntersectEdge)}. Returning early...");
+					return;
+				}
+				#endregion
+
+				#region TRIANGLE OPERATIONS ----------------------------------------------------------
+				if (!_tdg_projectThroughToPerimeter.WriteMeToJson() )
+				{
+					Debug.LogError($"write to json didn't work on {nameof(_tdg_projectThroughToPerimeter)}. Returning early...");
+					return;
+				}
+
+				if ( !_tdg_isInShapeProject.WriteMeToJson() )
+				{
+					Debug.LogError($"write to json didn't work on {nameof(_tdg_isInShapeProject)}. Returning early...");
 					return;
 				}
 				#endregion

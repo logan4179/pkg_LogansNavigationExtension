@@ -8,6 +8,7 @@ using UnityEngine.UIElements;
 using UnityEditor.PackageManager.UI;
 using System.Runtime.InteropServices;
 using System;
+using System.Text;
 
 namespace LogansNavigationExtension
 {
@@ -32,7 +33,6 @@ namespace LogansNavigationExtension
 		//public bool amSnapped = false;
 		#endregion
 
-		[SerializeField] bool flag_translateHandleChangedLastFrame;
 		[SerializeField] bool flag_moveHandleIsDirty;
 		bool flag_mouseDownThisFrame;
 		bool flag_mouseUpThisFrame;
@@ -118,6 +118,9 @@ namespace LogansNavigationExtension
 				return;
 			}
 
+			DateTime dt_osgStart = DateTime.Now;
+			string diagLag = "";
+
 			if ( !Application.isPlaying && Event.current.type == EventType.MouseMove )
 			{
 				SceneView.RepaintAll(); //This is so that the refreshing is quick for OnDrawGizmos
@@ -144,7 +147,6 @@ namespace LogansNavigationExtension
 					{
 						//Debug.LogWarning( "refreshing..." );
 						flag_moveHandleIsDirty = false;
-						//_targetScript._LNX_NavMesh.RefreshAfterMove(); //todo: dws
 						_targetScript._LNX_NavMesh.RefreshMe( false );
 					}
 				}
@@ -203,7 +205,6 @@ namespace LogansNavigationExtension
 				HandleUtility.AddDefaultControl( GUIUtility.GetControlID(FocusType.Passive) ); //This is necessary to put in onscenegui in order to prevent focus from being taken away when clicking in the scene if I want clicking controls...
 
 				Ray mouseRay = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
-				_targetScript.ray = mouseRay;
 
 				//using this simple logic for now...
 				if( !_targetScript.HaveVertsSelected )
@@ -215,112 +216,105 @@ namespace LogansNavigationExtension
 				{
 					_targetScript.TryGrab( Event.current.shift || Event.current.control );
 				}
+			}
 
-				if( _targetScript.OperationMode == LNX_OperationMode.Translating && _targetScript.HaveVertsSelected  )
+			if (_targetScript.OperationMode == LNX_OperationMode.Translating && _targetScript.HaveVertsSelected)
+			{
+				//note: This block is called continuously when the mouse moves and the above if-check is satisfied...
+				DateTime dt_blockStart = DateTime.Now;
+
+				EditorGUI.BeginChangeCheck();
+
+				Vector3 prevFramePos = _targetScript.manipulatorPos;
+
+				Vector3 newHandlePosition = Handles.PositionHandle(_targetScript.manipulatorPos, Quaternion.identity); //from what I
+				//can tell, this doesn't actually update the _targetScript.manipulatorPos. So I have to do that later inside the mesh
+				//manipulator's move method.
+				//_targetScript.manipulatorPos = newHandlePosition; //for some reason, if I use this here, it won't move the component...
+				Vector3 v_dragDirection = newHandlePosition - prevFramePos;
+				bool handleMovedThisFrame = false;
+
+				if (v_dragDirection.magnitude > 0)
 				{
-					/////////////////////////////////////////////////////////////////////
-					EditorGUI.BeginChangeCheck();
+					//Debug.Log($"dragging ({v_dragDirection.magnitude})...");
+					Vector3 v_moveToPos = Vector3.zero;
 
-					Vector3 prevFramePos = _targetScript.manipulatorPos;
+					_targetScript.DBG_Magnetized = $"{(_targetScript.amSnapped ? "SNAPPED! " : "")}dragging ({v_dragDirection.magnitude.ToString("#.####")}) towards: '{v_dragDirection}'...\n";
 
-					Vector3 newHandlePosition = Handles.PositionHandle( _targetScript.manipulatorPos, Quaternion.identity ); //from what I can tell, this doesn't 
-					// actually update the _targetScript.manipulatorPos. So I have to do that later inside the mesh manipulator's move method.
-					//_targetScript.manipulatorPos = newHandlePosition; //for some reason, if I use this here, it won't move the component...
-					Vector3 v_dragDirection = newHandlePosition - prevFramePos;
-					bool componentNeedsMove = false;
-
-					if( v_dragDirection.magnitude > 0 )
+					if (_targetScript.AmMagnetized)
 					{
-						//Debug.Log($"dragging ({v_dragDirection.magnitude})...");
-						Vector3 v_moveToPos = Vector3.zero;
-						
-						_targetScript.DBG_Magnetized = $"{(_targetScript.amSnapped ? "SNAPPED! " : "")}dragging ({v_dragDirection.magnitude.ToString("#.####")}) towards: '{v_dragDirection}'...\n";
-
-						if ( _targetScript.AmMagnetized )
+						if (!_targetScript.amSnapped)
 						{
-							if( !_targetScript.amSnapped )
+							RaycastHit magnetHit = new RaycastHit();
+							if (Physics.Linecast(prevFramePos + (-v_dragDirection.normalized * 0.01f), prevFramePos + (v_dragDirection.normalized * 0.1f), out magnetHit))
 							{
-								RaycastHit magnetHit = new RaycastHit();
-								if ( Physics.Linecast(prevFramePos + (-v_dragDirection.normalized * 0.01f), prevFramePos + (v_dragDirection.normalized * 0.1f), out magnetHit) )
-								{
-									Debug.LogWarning($"Snapped to '{magnetHit.collider.gameObject.name}'...");
-									componentNeedsMove = true;
-									_targetScript.amSnapped = true;
+								Debug.LogWarning($"Snapped to '{magnetHit.collider.gameObject.name}'...");
+								handleMovedThisFrame = true;
+								_targetScript.amSnapped = true;
 
-									_targetScript.v_lastSnapPos = magnetHit.point;
-									v_moveToPos = _targetScript.v_lastSnapPos;								
+								_targetScript.v_lastSnapPos = magnetHit.point;
+								v_moveToPos = _targetScript.v_lastSnapPos;
 
-									_targetScript.DBG_Magnetized += $"snapped to: '{magnetHit.collider.gameObject.name}'";
-								}
-								else
-								{
-									componentNeedsMove = true;
-									v_moveToPos = newHandlePosition;
-								}
+								_targetScript.DBG_Magnetized += $"snapped to: '{magnetHit.collider.gameObject.name}'";
 							}
 							else
 							{
-								if( Vector3.Distance(_targetScript.v_lastSnapPos, newHandlePosition) > 0.1f )
-								{
-									Debug.LogWarning($"snap released...");
-									componentNeedsMove = true;
-									v_moveToPos = newHandlePosition;
-									_targetScript.amSnapped = false;
-								}
+								handleMovedThisFrame = true;
+								v_moveToPos = newHandlePosition;
 							}
 						}
 						else
 						{
-							componentNeedsMove = true;
-							v_moveToPos = newHandlePosition;
-							_targetScript.DBG_Magnetized += $"not magnetized. v_moveToPos now: '{v_moveToPos}'...\n";
-
-						}
-
-						if ( EditorGUI.EndChangeCheck() ) //happens continuously when manipulator is dragged
-						{
-							if( componentNeedsMove )
+							if (Vector3.Distance(_targetScript.v_lastSnapPos, newHandlePosition) > 0.1f)
 							{
-								_targetScript.MoveSelectedVerts( v_moveToPos );
-								_targetScript.manipulatorPos = newHandlePosition;
-
-								Undo.RecordObject( _targetScript, "Change component Positions" );
-
-								flag_moveHandleIsDirty = true;
-
-								flag_translateHandleChangedLastFrame = true;
+								Debug.LogWarning($"snap released...");
+								handleMovedThisFrame = true;
+								v_moveToPos = newHandlePosition;
+								_targetScript.amSnapped = false;
 							}
-
 						}
-						else //happens continuously when manipulator is not being dragged, but mouse is moving
-						{
-							if (flag_translateHandleChangedLastFrame)
-							{
-								//Debug.Log("haasdfsaf");
-								//_targetScript._LNX_NavMesh.RefeshMesh();
-
-								//if( )
-							}
-
-							flag_translateHandleChangedLastFrame = false;
-						}
-
-						Debug.Log(_targetScript.DBG_Magnetized);
 					}
 					else
 					{
-						//_targetScript.DBG_Magnetized = "not dragging";
-						
-					}	
+						handleMovedThisFrame = true;
+						v_moveToPos = newHandlePosition;
+						_targetScript.DBG_Magnetized += $"not magnetized. v_moveToPos now: '{v_moveToPos}'...\n";
+
+					}
+
+					if (EditorGUI.EndChangeCheck()) //happens continuously when manipulator is dragged
+					{
+						if (handleMovedThisFrame)
+						{
+							DateTime dt_msvStart = DateTime.Now;
+							_targetScript.MoveSelectedVerts(v_moveToPos);
+							diagLag += $"moveselected took '{DateTime.Now.Subtract(dt_msvStart)}'. ";
+							_targetScript.manipulatorPos = newHandlePosition;
+
+							Undo.RecordObject(_targetScript, "Change component Positions");
+
+							flag_moveHandleIsDirty = true;
+						}
+
+					}
+
+					//Debug.Log(_targetScript.DBG_Magnetized);
+				}
+				else
+				{
+					//_targetScript.DBG_Magnetized = "not dragging";
+
 				}
 			}
 
 			if ( GUI.changed )
 			{
-				//Debug.Log("Changed");
+				Debug.Log("GUI Changed");
 				EditorUtility.SetDirty( _targetScript );
 			}
 
+			diagLag += $"osg took: '{DateTime.Now.Subtract(dt_osgStart)}'...";
+			Debug.Log(diagLag);
 		}
 	}
 }

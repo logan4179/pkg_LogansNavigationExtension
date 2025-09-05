@@ -159,22 +159,21 @@ namespace LogansNavigationExtension
 			v_SurfaceNormal_cached = navMesh.GetSurfaceNormal();
 
 			Verts = new LNX_Vertex[3];
-			Verts[0] = new LNX_Vertex( navMesh, vrtPos0, index_inCollection, 0 );
-			Verts[1] = new LNX_Vertex( navMesh, vrtPos1, index_inCollection, 1 );
-			Verts[2] = new LNX_Vertex( navMesh, vrtPos2, index_inCollection, 2 );
+			Verts[0] = new LNX_Vertex( this, vrtPos0, index_inCollection, 0 );
+			Verts[1] = new LNX_Vertex( this, vrtPos1, index_inCollection, 1 );
+			Verts[2] = new LNX_Vertex( this, vrtPos2, index_inCollection, 2 );
 
 			V_Center = (Verts[0].V_Position + Verts[1].V_Position + Verts[2].V_Position) / 3f;
 
 			//v_flattenedCenter = GetFlattenedPosition( V_Center ); //dws
 
 			Edges = new LNX_Edge[3];
-			Edges[0] = new LNX_Edge( navMesh, Verts[1], Verts[2], index_inCollection, 0 );
-			Edges[1] = new LNX_Edge( navMesh, Verts[0], Verts[2], index_inCollection, 1 );
-			Edges[2] = new LNX_Edge( navMesh, Verts[1], Verts[0], index_inCollection, 2 );
-
-			SampleNormal( navMesh ); //needs to happen before calculating derived info
+			Edges[0] = new LNX_Edge( this, Verts[1], Verts[2], index_inCollection, 0 );
+			Edges[1] = new LNX_Edge( this, Verts[0], Verts[2], index_inCollection, 1 );
+			Edges[2] = new LNX_Edge( this, Verts[1], Verts[0], index_inCollection, 2 );
 
 			CalculateDerivedInfo();
+			SampleNormal( navMesh ); 
 
 			DBG_Class += $"\nEnd of ctor(). Report:\n" +
 				$"{nameof(V_Center)}: '{V_Center}'\n" +
@@ -218,9 +217,22 @@ namespace LogansNavigationExtension
 
 		public void RefreshMe( LNX_NavMesh nm, bool meshContinuityHasChanged ) //NEW
 		{
-			CalculateDerivedInfo();
-			SampleNormal( nm ); //note: This kinda seems expensive, but technically it seems necessary bc if the
-								//triangle changes it should probably resample
+			//case 1: a single vert on the mesh has been moved
+			//case 2: A tri has been added
+			//case 3: A tri has been deleted
+
+			if( dirtyFlag_repositionedVert )
+			{
+				CalculateDerivedInfo();
+
+				SampleNormal( nm );
+				//note: Calling SampleNormal() here may seem expensive, but technically
+				//it seems necessary bc if the triangle changes it should probably resample
+			}
+
+			Verts[0].CreateRelationships(nm);
+			Verts[1].CreateRelationships(nm);
+			Verts[2].CreateRelationships(nm);
 
 			if ( meshContinuityHasChanged )
 			{
@@ -249,46 +261,24 @@ namespace LogansNavigationExtension
 
 				AdjacentTriIndices = temp_adjcntTriIndics.ToArray();
 
-				#endregion
-
 				Edges[0].CalculateRelational(nm);
 				Edges[1].CalculateRelational(nm);
 				Edges[2].CalculateRelational(nm);
-
-
+				#endregion
 			}
 		}
 
-		/// <summary>
-		/// Meant to be called after a simple movement of a vertex position
-		/// </summary>
-		/// <param name="nm"></param>
-		/// <param name="logMessages"></param>
-		public void RefreshTriangle( LNX_NavMesh nm, bool logMessages = true )
-		{
-			if ( dirtyFlag_repositionedVert )
-			{
-				CalculateDerivedInfo();
-
-				CalculateComponentRelationships( nm, false );
-
-				dirtyFlag_repositionedVert = false;
-			}
-		}
 
 		/// <summary>
 		/// Calculates/recalculates the information a tri derives about itself using the positions of it's vertices. 
 		/// Use this after you edit a tri's components.
 		/// </summary>
-		public void CalculateDerivedInfo()
+		private void CalculateDerivedInfo()
 		{
 			V_Center = (Verts[0].V_Position + Verts[1].V_Position + Verts[2].V_Position) / 3f;
 
-			Edges[0].CalculateDerivedInfo(this, Verts[1], Verts[2]);
-			Edges[1].CalculateDerivedInfo(this, Verts[0], Verts[2]);
-			Edges[2].CalculateDerivedInfo(this, Verts[1], Verts[0]);
-
 			#region CALCULATE PLANEFACE NORMAL------------------------------
+			//Note: This calculation needs to come before the edges calculate their derived info.
 			V_PlaneFaceNormal = Vector3.Cross(
 				Vector3.Normalize(Verts[0].V_Position - Verts[1].V_Position),
 				Vector3.Normalize(Verts[2].V_Position - Verts[1].V_Position)
@@ -299,70 +289,11 @@ namespace LogansNavigationExtension
 			}
 			#endregion
 
+			Edges[0].CalculateDerivedInfo(this, Verts[1], Verts[2]);
+			Edges[1].CalculateDerivedInfo(this, Verts[0], Verts[2]);
+			Edges[2].CalculateDerivedInfo(this, Verts[1], Verts[0]);
+
 			name = $"ind: '{index_inCollection}', ctr: '{V_Center}'";
-		}
-
-		/// <summary>
-		/// Creates the relationship structures relating this triangle to all other triangles.
-		/// </summary>
-		/// <param name="Tris"></param>
-		/// <param name="meshContinuityHasChanged">If false, bypasses re-processing the sharedvertexcoordinates collections, 
-		/// which is not necessary in some cases. Make this true if there's been an addition or subtraction 
-		/// in navmesh geometry.</param>
-		public void CalculateComponentRelationships( LNX_NavMesh navmsh, bool meshContinuityHasChanged = true )
-		{
-			DBG_Relationships = $"Triangle[{index_inCollection}].{nameof(CalculateComponentRelationships)}(): '{DateTime.Now.ToString()}'...\n";
-			Debug.Log( DBG_Relationships );
-
-			if ( meshContinuityHasChanged )
-			{
-				//The edges need to be done first because the vertex relationships later will rely on them knowing their shared edges...
-				Edges[0].CalculateRelational(navmsh);
-				Edges[1].CalculateRelational(navmsh);
-				Edges[2].CalculateRelational(navmsh);
-			}
-			
-			#region Create Vertex relationships--------------------------------
-			DBG_Relationships += $"Creating first vertex relationship...\n";
-			Verts[0].CreateRelationships( navmsh );
-
-			DBG_Relationships += $"Creating second vertex relationship...\n";
-			Verts[1].CreateRelationships( navmsh );
-
-			DBG_Relationships += $"Creating third vertex relationship...\n";
-			Verts[2].CreateRelationships( navmsh );
-			#endregion
-
-			if( meshContinuityHasChanged )
-			{			
-				#region CALCULATE SHARED TRIANGLE INDICES -------------------
-				List<int> temp_adjcntTriIndics = new List<int>();
-				for ( int i_verts = 0; i_verts < 3; i_verts++ )
-				{
-					for( int i_shrdVrtsCoord = 0; i_shrdVrtsCoord < Verts[i_verts].SharedVertexCoordinates.Length; i_shrdVrtsCoord++ )
-					{
-						bool amAlreadyLogged = false;
-						for ( int i_adjcntTris = 0; i_adjcntTris < temp_adjcntTriIndics.Count; i_adjcntTris++ )
-						{
-							if ( Verts[i_verts].SharedVertexCoordinates[i_shrdVrtsCoord].TrianglesIndex == temp_adjcntTriIndics[i_adjcntTris] )
-							{
-								amAlreadyLogged = true;
-								break;
-							}
-						}
-
-						if ( !amAlreadyLogged )
-						{
-							temp_adjcntTriIndics.Add( Verts[i_verts].SharedVertexCoordinates[i_shrdVrtsCoord].TrianglesIndex );
-						}
-					}
-				}
-
-				AdjacentTriIndices = temp_adjcntTriIndics.ToArray();
-				#endregion
-			}
-
-			DBG_Relationships += $"end of CreateRelationships()\n";
 		}
 
 		public void SampleNormal( LNX_NavMesh nm )
@@ -434,7 +365,7 @@ namespace LogansNavigationExtension
 			//todo: currently, it doesn't set projectedPos to the correct "out" value
 			DBG_IsInShapeProject = $"tri[{index_inCollection}].IsInShapeProject({pos})\n";
 
-			if ( !Verts[0].IsInFlatCenterSweep(pos) )
+			if ( !Verts[0].IsInCenterSweep(pos) )
 			{
 				DBG_IsInShapeProject += $"vrt0: \n" +
 					$"{Verts[0].DBG_IsInCenterSweep}\n";
@@ -448,7 +379,7 @@ namespace LogansNavigationExtension
 			DBG_IsInShapeProject += $"vrt0: \n" +
 				$"{Verts[0].DBG_IsInCenterSweep}\n";
 
-			if ( !Verts[1].IsInFlatCenterSweep(pos) ) //ERRORTRACE 9
+			if ( !Verts[1].IsInCenterSweep(pos) ) //ERRORTRACE 9
 			{
 				DBG_IsInShapeProject += $"vrt1: \n" +
 					$"{Verts[1].DBG_IsInCenterSweep}\n";
@@ -461,7 +392,7 @@ namespace LogansNavigationExtension
 			DBG_IsInShapeProject += $"vrt1: \n" +
 				$"{Verts[1].DBG_IsInCenterSweep}\n";
 
-			if ( !Verts[2].IsInFlatCenterSweep(pos) )
+			if ( !Verts[2].IsInCenterSweep(pos) )
 			{
 				DBG_IsInShapeProject += $"vrt2: \n" +
 					$"{Verts[2].DBG_IsInCenterSweep}\n";
@@ -504,7 +435,7 @@ namespace LogansNavigationExtension
 				//Use the law of sines...
 				// Note: This isn't currently perfect. It seems to create a point slightly below the surface of the triangle.
 				Vector3 edgePrjct = Edges[1].StartPosition + 
-					Vector3.Project(pos - Edges[1].StartPosition, Edges[1].v_startToEnd);//this gets a point on the edge closest to the pos
+					Vector3.Project(pos - Edges[1].StartPosition, Edges[1].V_StartToEnd);//this gets a point on the edge closest to the pos
 				DBG_IsInShapeProject += $"edjprjct: '{edgePrjct.y}'\n";
 				//float lenA = Vector3.Distance(edgePrjct, flatPos); //orig
 				float lenA = Vector3.Distance( LNX_Utils.FlatVector(edgePrjct, v_SurfaceNormal_cached), flatPos );
@@ -554,15 +485,15 @@ namespace LogansNavigationExtension
 				pos = LNX_Utils.FlatVector( pos, v_SurfaceNormal_cached );
 			}
 
-			if( IsPositionOnGivenEdge(pos, 0) )
+			if ( Edges[0].DoesPositionLieOnEdge(pos, v_SurfaceNormal_cached) )
 			{
 				return true;
 			}
-			else if( IsPositionOnGivenEdge(pos, 1) )
+			else if ( Edges[1].DoesPositionLieOnEdge(pos, v_SurfaceNormal_cached) )
 			{
 				return true;
 			}
-			else if ( IsPositionOnGivenEdge(pos, 2) )
+			else if ( Edges[2].DoesPositionLieOnEdge(pos, v_SurfaceNormal_cached) )
 			{
 				return true;
 			}
@@ -570,181 +501,68 @@ namespace LogansNavigationExtension
 			return false;
 		}
 
-		public string DBG_IsPositionOnGivenEdge;
-		public bool IsPositionOnGivenEdge( Vector3 pos, int edgeIndex ) //todo: Should this method be on the edge class?
-		{
-			Vector3 fltndPos = LNX_Utils.FlatVector( pos, v_SurfaceNormal_cached );
-
-			float ang = Vector3.Angle(
-				LNX_Utils.FlatVector(fltndPos - Edges[edgeIndex].StartPosition).normalized,
-				LNX_Utils.FlatVector(Edges[edgeIndex].v_startToEnd, v_SurfaceNormal_cached).normalized
-			);
-
-			DBG_IsPositionOnGivenEdge = $"{nameof(IsPositionOnGivenEdge)}({pos}, {edgeIndex})\n" +
-				$"using flattenedPos: '{fltndPos}\n";
-
-			if ( 
-				fltndPos == LNX_Utils.FlatVector(Edges[edgeIndex].StartPosition, v_SurfaceNormal_cached) ||
-				LNX_Utils.FlatVector(pos - Edges[edgeIndex].StartPosition) == LNX_Utils.FlatVector(Edges[edgeIndex].v_startToEnd) //oldway, maybe better
-				//ang < 0.08f //started using this, but I'm going to try going back to old way one line up...
-			)
-			{
-				DBG_IsPositionOnGivenEdge += $"found IS lying on edge {edgeIndex}...";
-				return true;
-			}
-			else
-			{
-				DBG_IsPositionOnGivenEdge += $"found is NOT lying on edge {edgeIndex}...";
-
-				return false;
-			}
-		}
-
-		string dbg_DoesProjectionIntersectGivenEdge;
-		/// <summary>
-		/// Checks if a line drawn from origin to destination runs through one of this triangle's edges
-		/// </summary>
-		/// <param name="origin"></param>
-		/// <param name="destination"></param>
-		/// <param name="edgeIndex"></param>
-		/// <returns></returns>
-		public bool DoesProjectionIntersectGivenEdge(Vector3 origin, Vector3 destination, int edgeIndex, out Vector3 outPos )
-		{
-			//TODO: I'm currently putting this logic in the edge class. DWS
-
-			dbg_DoesProjectionIntersectGivenEdge = $"{nameof(DoesProjectionIntersectGivenEdge)}(origin:{origin}, dest:{destination}, edge:{edgeIndex})";
-			int opposingVertIndex = Edges[edgeIndex].GetIndexOfSineVert();
-			dbg_DoesProjectionIntersectGivenEdge += $"oppVrt: '{opposingVertIndex}'. vrtA: '{Edges[edgeIndex].StartVertCoordinate.ComponentIndex}', " +
-				$"vrtB: '{Edges[edgeIndex].EndVertCoordinate.ComponentIndex}'\n";
-
-			Vector3 v_project = LNX_Utils.FlatVector( destination - origin, v_SurfaceNormal_cached ).normalized;
-			dbg_DoesProjectionIntersectGivenEdge += $"{nameof(v_project)}: '{v_project}'\n";
-			if( v_project == Vector3.zero )
-			{
-				dbg_DoesProjectionIntersectGivenEdge += $"Directional vector was zero. returning false...";
-				outPos = Vector3.zero;
-				return false; //short-circuit
-			}
-
-			Vector3 v_origin_to_StartVert = LNX_Utils.FlatVector(
-				Edges[edgeIndex].StartPosition - origin,
-				v_SurfaceNormal_cached
-			).normalized;
-
-			Vector3 v_origin_to_endVert = LNX_Utils.FlatVector(
-				Edges[edgeIndex].EndPosition - origin,
-				v_SurfaceNormal_cached
-			).normalized;
-
-			float chevronAngle = Vector3.Angle( v_origin_to_StartVert, v_origin_to_endVert );
-
-			//Note: Currently this method uses a bit of a hack, but it seems to me like it will always work. The following two angle
-			//calculations don't work in all instances, because they count up to 180, then back down after the threshold is crossed.
-			//They would ideally go from 0 to 360. Later on, a magic number is used to check that the sum of both of these plus 
-			//the magic number are above the chevron angle. This is because, due to rounding, the two angles can add up to slightly 
-			//beyond what they actually are...
-			//float ang_prjctToStartVrt = Vector3.Angle( LNX_Utils.FlatVector(v_project).normalized, v_origin_to_StartVert.normalized);
-			//float ang_prjctToEndVrt = Vector3.Angle( LNX_Utils.FlatVector(v_project).normalized, v_origin_to_endVert.normalized );
-			float ang_prjctToStartVrt = Vector3.Angle( v_project, v_origin_to_StartVert );
-			float ang_prjctToEndVrt = Vector3.Angle( v_project, v_origin_to_endVert );
-
-			dbg_DoesProjectionIntersectGivenEdge += $"chev: '{chevronAngle}', 1: '{ang_prjctToStartVrt}', 2: '{ang_prjctToEndVrt}'. " +
-				$"sum: '{ang_prjctToStartVrt+ang_prjctToEndVrt}'\n" +
-				$"diff: '{(ang_prjctToStartVrt + ang_prjctToEndVrt) - chevronAngle}'\n" +
-				$"";
-
-			// note: the following has a magic number. This is a hack for now. I do this because if I just use
-			// '(angle1 + angle2) > chevronAngle', there will sometimes be a rounding error that will make the
-			// added number a tiny amount larger than chevronAngle when the destination is truly projected on
-			// the edge
-			if ( ang_prjctToStartVrt > chevronAngle || 
-				ang_prjctToEndVrt > chevronAngle || 
-				((ang_prjctToStartVrt + ang_prjctToEndVrt) > (chevronAngle + 0.01f)) 
-			)
-			{
-				outPos = Vector3.zero;
-				dbg_DoesProjectionIntersectGivenEdge += $"Failed angle test. Returning false...";
-				//Debug.Log(dbg);
-				return false;
-			}
-
-			dbg_DoesProjectionIntersectGivenEdge += $"Passed angle test. Calculating out position using law of sines...";
-
-
-			#region calculate projection position using the law of sines ------------------------------------------
-			float len_orgnToStrtPos = Vector3.Distance( origin, Edges[edgeIndex].StartPosition );
-			float ang_atEdgeStart = Vector3.Angle( Edges[edgeIndex].v_startToEnd, origin - Edges[edgeIndex].StartPosition );
-			float ang_atOutPos = 180f - (Vector3.Angle(v_project, v_origin_to_StartVert) + ang_atEdgeStart);
-
-			//float lenX = (Mathf.Sin(ang_atEdgeStart) * len_orgnToStrtPos) / Mathf.Sin(ang_atOutPos);
-			float lenX = (len_orgnToStrtPos / Mathf.Sin(ang_atOutPos * Mathf.Deg2Rad)) * Mathf.Sin(ang_atEdgeStart * Mathf.Deg2Rad);
-
-			outPos = origin + (v_project * lenX); //I don't like this. It needs to be projected along the edge's direction in order to put it preciesely on the edge.
-			#endregion
-
-			dbg_DoesProjectionIntersectGivenEdge += $"\n{nameof(ang_atEdgeStart)}: '{ang_atEdgeStart}\n" +
-				$"{nameof(ang_prjctToStartVrt)}: '{ang_prjctToStartVrt}'\n" +
-				$"{nameof(ang_atOutPos)}: '{ang_atOutPos}'\n" +
-				$"{nameof(len_orgnToStrtPos)}: '{len_orgnToStrtPos}'\n" +
-				$"{nameof(lenX)}: '{lenX}'\n" +
-				$"";
-
-			//Debug.Log(dbg );
-			dbg_DoesProjectionIntersectGivenEdge += $"Returning true...";
-
-			return true;
-		}
-
 		[TextArea(1,5)] public string dbg_prjctThrhToPerim;
-		public LNX_ProjectionHit ProjectThroughToPerimeter( Vector3 innerPos, Vector3 outerPos )
+		public LNX_ProjectionHit ProjectThroughToPerimeter( Vector3 innerPos, Vector3 outerPos, int indx_edgeExclude = -1 )
 		{
-			dbg_prjctThrhToPerim = $"ProjectThroughToPerimeter( {innerPos}, {outerPos} )\n";
-
+			dbg_prjctThrhToPerim = $"ProjectThroughToPerimeter( {innerPos}, {outerPos}, {indx_edgeExclude} )\n";
+			
 			Vector3 projectedEdgePosition = Vector3.zero;
 
 			Vector3 ftndInrPos = LNX_Utils.FlatVector( innerPos, v_SurfaceNormal_cached );
 
-			if( ftndInrPos == LNX_Utils.FlatVector(outerPos, v_SurfaceNormal_cached) )
+			if( ftndInrPos == LNX_Utils.FlatVector(outerPos, v_SurfaceNormal_cached) ) //short-circuit
 			{
 				dbg_prjctThrhToPerim += $"Found flattened positions are the same. returning early...";
 				return LNX_ProjectionHit.None;
 			}
 
 			//Note: I call IsPositionOnGivenEdge() to count an edge out if the start position is on it.
-			if ( !IsPositionOnGivenEdge(ftndInrPos, 0) && DoesProjectionIntersectGivenEdge(innerPos, outerPos, 0, out projectedEdgePosition) )
+			if 
+			(
+				(indx_edgeExclude == -1 || indx_edgeExclude != 0) &&
+				!Edges[0].DoesPositionLieOnEdge(ftndInrPos, v_SurfaceNormal_cached) && 
+				Edges[0].DoesProjectionIntersectEdge(innerPos, outerPos, v_SurfaceNormal_cached, ref dbg_prjctThrhToPerim, out projectedEdgePosition) 
+			)
 			{
 				dbg_prjctThrhToPerim += $"method succeeded on edge 0. Here are the reports...\n" +
 					$"rprt----\n" +
-					$"{DBG_IsPositionOnGivenEdge}\n" +
-					$"rprt---\n" +
-					$"{dbg_DoesProjectionIntersectGivenEdge}\n" +
+					$"{Edges[0].dbg_doesPositionLieOnEdge}\n" +
 					$"---end of reports. returning indx: '{0}', pos: '{projectedEdgePosition}'...\n";
 				return new LNX_ProjectionHit( 0, projectedEdgePosition );
 			}
-			else if( !IsPositionOnGivenEdge(ftndInrPos, 1) && DoesProjectionIntersectGivenEdge(innerPos,outerPos, 1, out projectedEdgePosition) )
+			else if
+			(
+				(indx_edgeExclude == -1 || indx_edgeExclude != 1) &&
+				!Edges[1].DoesPositionLieOnEdge(ftndInrPos, v_SurfaceNormal_cached) &&
+				Edges[1].DoesProjectionIntersectEdge(innerPos,outerPos, v_SurfaceNormal_cached, ref dbg_prjctThrhToPerim, out projectedEdgePosition) 
+			)
 			{
 				dbg_prjctThrhToPerim += $"method succeeded on edge 1. Here are the reports...\n" +
 					$"IsPositionOnGivenEdge rprt----\n" +
-					$"{DBG_IsPositionOnGivenEdge}\n" +
-					$"doesProjectionIntersectGivenEdge rprt---\n" +
-					$"{dbg_DoesProjectionIntersectGivenEdge}\n" +
+					$"{Edges[1].dbg_doesPositionLieOnEdge}\n" +
 					$"---end of reports. returning indx: '{1}', pos: '{projectedEdgePosition}'...\n";
 				return new LNX_ProjectionHit( 1, projectedEdgePosition );
 			}
-			else if( !IsPositionOnGivenEdge(ftndInrPos, 2) && DoesProjectionIntersectGivenEdge(innerPos, outerPos, 2, out projectedEdgePosition) )
+			else if
+			(
+				(indx_edgeExclude == -1 || indx_edgeExclude != 2) &&
+				!Edges[2].DoesPositionLieOnEdge(ftndInrPos, v_SurfaceNormal_cached) && 
+				Edges[2].DoesProjectionIntersectEdge(innerPos, outerPos, v_SurfaceNormal_cached, ref dbg_prjctThrhToPerim, out projectedEdgePosition) 
+			)
 			{
 				dbg_prjctThrhToPerim += $"method succeeded on edge 2. Here are the reports...\n" +
 					$"IsPositionOnGivenEdge rprt----\n" +
-					$"{DBG_IsPositionOnGivenEdge}\n" +
-					$"doesProjectionIntersectGivenEdge rprt---\n" +
-					$"{dbg_DoesProjectionIntersectGivenEdge}\n" +
+					$"{Edges[2].dbg_doesPositionLieOnEdge}\n" +
 					$"---end of reports. returning indx: '{2}', pos: '{projectedEdgePosition}'...\n";
 				return new LNX_ProjectionHit( 2, projectedEdgePosition );
 			}
 			else
 			{
 				dbg_prjctThrhToPerim += $"NONE succeeded.\n" +
-					$"onEdge0: '{IsPositionOnGivenEdge(ftndInrPos, 0)}', onEdge1: '{IsPositionOnGivenEdge(ftndInrPos, 1)}', onEdge2: '{IsPositionOnGivenEdge(ftndInrPos, 2)}'\n" +
+					//$"onEdge0: '{IsPositionOnGivenEdge(ftndInrPos, 0)}', onEdge1: '{IsPositionOnGivenEdge(ftndInrPos, 1)}', onEdge2: '{IsPositionOnGivenEdge(ftndInrPos, 2)}'\n" +
+					$"onEdge0: '{Edges[0].DoesPositionLieOnEdge(ftndInrPos, v_SurfaceNormal_cached)}', " +
+					$"onEdge1: '{Edges[1].DoesPositionLieOnEdge(ftndInrPos, v_SurfaceNormal_cached)}', " +
+					$"onEdge2: '{Edges[2].DoesPositionLieOnEdge(ftndInrPos, v_SurfaceNormal_cached)}'\n" +
 					$" returning null...";
 				return LNX_ProjectionHit.None;
 			}
@@ -905,6 +723,19 @@ namespace LogansNavigationExtension
 
 			return true;
 		}
+
+		public LNX_Vertex GetVertexAtOriginalPosition( Vector3 pos, bool includeFlattened = true )
+		{
+			int indx = GetVertIndextAtOriginalPosition(pos);
+
+			if( indx > -1 )
+			{
+				return Verts[indx];
+			}
+
+			return null;
+		}
+
 		/// <summary>
 		/// Returns any vertices owned by this triangle that exist at the supplied position.
 		/// </summary>
@@ -1006,6 +837,23 @@ namespace LogansNavigationExtension
 			}
 		}
 
+		public LNX_Edge GetEdge( Vector3 midPt )
+		{
+			if( Edges[0].MidPosition == midPt )
+			{
+				return Edges[0];
+			}
+			if ( Edges[1].MidPosition == midPt )
+			{
+				return Edges[1];
+			}
+			if ( Edges[2].MidPosition == midPt )
+			{
+				return Edges[2];
+			}
+
+			return null;
+		}
 
 		/// <summary>
 		/// Returns a point that describes the "lowest" point on the triangle with respect to the SurfaceOrientation of the navmesh.

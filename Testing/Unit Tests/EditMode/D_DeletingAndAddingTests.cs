@@ -93,8 +93,8 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			#endregion
 
 			mainListCount_before = _serializedLNXNavmesh.Triangles.Length;
-			meshTrianglesCount_before = _serializedLNXNavmesh._Mesh.triangles.Length;
-			meshVerticesCount_before = _serializedLNXNavmesh._Mesh.vertices.Length;
+			meshTrianglesCount_before = _serializedLNXNavmesh._VisualizationMesh.triangles.Length;
+			meshVerticesCount_before = _serializedLNXNavmesh._VisualizationMesh.vertices.Length;
 			Debug.Log( $"Triangles.Length before: '{mainListCount_before}', mesh triangles count before: '{meshTrianglesCount_before}', " +
 				$"mesh vertices count before: '{meshVerticesCount_before}'" );
 
@@ -105,8 +105,8 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			_serializedLNXNavmesh.ReconstructVisualizationMesh();
 
 			Debug.Log( $"Triangles.Length after: '{_serializedLNXNavmesh.Triangles.Length}, mesh " +
-				$"triangles count after: '{_serializedLNXNavmesh._Mesh.triangles.Length}', " +
-				$"mesh vertices count after: '{_serializedLNXNavmesh._Mesh.vertices.Length}'");
+				$"triangles count after: '{_serializedLNXNavmesh._VisualizationMesh.triangles.Length}', " +
+				$"mesh vertices count after: '{_serializedLNXNavmesh._VisualizationMesh.vertices.Length}'");
 
 			Assert.AreEqual( mainListCount_before - 1, _serializedLNXNavmesh.Triangles.Length );
 
@@ -117,8 +117,8 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		{
 			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(b2_VisMeshVertsAndTrisAreCorrectCountAfterDeletion)));
 
-			Assert.AreEqual( _serializedLNXNavmesh._Mesh.triangles.Length, meshTrianglesCount_before - 3 );
-			Assert.AreEqual( _serializedLNXNavmesh._Mesh.vertices.Length, meshVerticesCount_before );
+			Assert.AreEqual( _serializedLNXNavmesh._VisualizationMesh.triangles.Length, meshTrianglesCount_before - 3 );
+			Assert.AreEqual( _serializedLNXNavmesh._VisualizationMesh.vertices.Length, meshVerticesCount_before );
 		}
 
 		[Test]

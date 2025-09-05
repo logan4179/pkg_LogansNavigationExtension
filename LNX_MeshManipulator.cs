@@ -24,7 +24,7 @@ namespace LogansNavigationExtension
 		{
 			get
 			{
-				return drawMeshVisualization && _LNX_NavMesh._Mesh != null && _LNX_NavMesh._Mesh.vertices != null && _LNX_NavMesh._Mesh.vertices.Length > 0;
+				return drawMeshVisualization && _LNX_NavMesh._VisualizationMesh != null && _LNX_NavMesh._VisualizationMesh.vertices != null && _LNX_NavMesh._VisualizationMesh.vertices.Length > 0;
 
 			}
 		}
@@ -369,7 +369,7 @@ namespace LogansNavigationExtension
 				if ( runningBestCoordinate != LNX_ComponentCoordinate.None )
 				{
 					Flag_AComponentIsCurrentlyHighlighted = true;
-					Edge_CurrentlyPointingAt = _LNX_NavMesh.GetEdgeAtCoordinate( runningBestCoordinate );
+					Edge_CurrentlyPointingAt = _LNX_NavMesh.GetEdge( runningBestCoordinate );
 					//Debug.Log($"running best: '{runningBestCoordinate}', getting edge: '{Edge_CurrentlyPointingAt.MyCoordinate}'");
 				}
 				else
@@ -385,7 +385,7 @@ namespace LogansNavigationExtension
 		{
 			DebugSelectedReport = $"Mode: '{SelectMode}', mod: '{amHoldingAddInputModifier}'\n";
 
-			if ( !Flag_AComponentIsCurrentlyHighlighted )
+			if ( !Flag_AComponentIsCurrentlyHighlighted ) //If grab was attempted while nothing was pointed at, clear me...
 			{
 				ClearSelection();
 				return;
@@ -447,7 +447,7 @@ namespace LogansNavigationExtension
 				DebugSelectedReport += $"pointing at: '{Edge_CurrentlyPointingAt.ToString()}' \n";
 				Edge_LastSelected = Edge_CurrentlyPointingAt; //note: something's funny with edge selection, particularly when selecting a terminal/border edge...
 				
-				LNX_Edge sharedEdge = amLocked ? null : _LNX_NavMesh.GetEdgeAtCoordinate( Edge_CurrentlyPointingAt.SharedEdgeCoordinate );
+				LNX_Edge sharedEdge = amLocked ? null : _LNX_NavMesh.GetEdge( Edge_CurrentlyPointingAt.SharedEdgeCoordinate );
 
 				if ( !amHoldingAddInputModifier )
 				{
@@ -544,24 +544,28 @@ namespace LogansNavigationExtension
 		#region MESH MANIPULATION -----------------------------------------------------
 		public void MoveSelectedVerts( Vector3 endPos )
 		{
-			string dbgMoveSelected = $"{nameof(MoveSelectedVerts)}('{endPos}') on '{Verts_currentlySelected.Count}' verts...\n";
+			//DateTime dt_mthdStrt = DateTime.Now;
+
+			//string dbgMoveSelected = $"{nameof(MoveSelectedVerts)}('{endPos}') on '{Verts_currentlySelected.Count}' verts...\n";
 			Vector3 vDiff = endPos - manipulatorPos;
-			dbgMoveSelected += $"vdiff: '{vDiff}', manip pos: '{manipulatorPos}'\n";
+			//dbgMoveSelected += $"vdiff: '{vDiff}', manip pos: '{manipulatorPos}'\n";
 
 			if ( Verts_currentlySelected != null && Verts_currentlySelected.Count > 0 )
 			{
+				/*
 				foreach ( LNX_Vertex vrt in Verts_currentlySelected )
 				{
 					_LNX_NavMesh.MoveVert_managed( vrt, vDiff );
-
-					/*_LNX_NavMesh.Triangles[vrt.MyCoordinate.TriIndex].MoveVert_managed(
-						_LNX_NavMesh, vrt.MyCoordinate.ComponentIndex, vDiff
-					);*/
 				}
+				*/
+
+				_LNX_NavMesh.MoveSelectedVerts( Verts_currentlySelected, vDiff);
 			}
 
 			manipulatorPos = endPos; //Note: This isn't totally necessary now with the way I'm doing movement inside the 
-			//editor script, but if I take this away, it screws up the movement unit tests.
+									 //editor script, but if I take this away, it screws up the movement unit tests.
+
+			//dbgMoveSelected += $"end of MeshManipulator.MoveSelectedVerts. Operation took '{DateTime.Now.Subtract(dt_mthdStrt).ToString()}'...";
 
 			//Debug.Log( dbgMoveSelected );
 		}
@@ -629,12 +633,12 @@ namespace LogansNavigationExtension
 			{
 				if ( tri0.Edges[i_edges] != Edges_currentlySelected[0] && tri0.Edges[i_edges].SharedEdgeCoordinate.TrianglesIndex != tri1.Index_inCollection )
 				{
-					endEdge0 = new LNX_Edge(_LNX_NavMesh.GetEdgeAtCoordinate(tri0.Edges[i_edges].SharedEdgeCoordinate));
+					endEdge0 = new LNX_Edge(_LNX_NavMesh.GetEdge(tri0.Edges[i_edges].SharedEdgeCoordinate));
 					//Debug.Log($"Found edge index 1 at '{endEdge0}'");
 				}
 				else if (tri1.Edges[i_edges] != Edges_currentlySelected[1] && tri1.Edges[i_edges].SharedEdgeCoordinate.TrianglesIndex != tri0.Index_inCollection)
 				{
-					endEdge1 = new LNX_Edge(_LNX_NavMesh.GetEdgeAtCoordinate(tri1.Edges[i_edges].SharedEdgeCoordinate));
+					endEdge1 = new LNX_Edge(_LNX_NavMesh.GetEdge(tri1.Edges[i_edges].SharedEdgeCoordinate));
 					//Debug.Log($"Found edge index 2 at '{endEdge1}'");
 				}
 			}
@@ -671,7 +675,6 @@ namespace LogansNavigationExtension
 		}
 		#endregion
 
-		public Ray ray;
 		public bool AmPointingATBounds = false;
 
 #if UNITY_EDITOR
@@ -700,7 +703,7 @@ namespace LogansNavigationExtension
 
 			if ( drawMeshVisualization && MeshIsValidForDrawing )
 			{
-				Gizmos.DrawMesh(_LNX_NavMesh._Mesh);
+				Gizmos.DrawMesh(_LNX_NavMesh._VisualizationMesh);
 			}
 
 			if ( drawNavMeshLines || drawTriLabels || drawEdgeLabels )
@@ -764,13 +767,13 @@ namespace LogansNavigationExtension
 					if ( drawEdgeLabels )
 					{
 						Handles.Label( 
-							_LNX_NavMesh.Triangles[i].Edges[0].MidPosition + (_LNX_NavMesh.Triangles[i].Edges[0].v_cross * 0.05f), 
+							_LNX_NavMesh.Triangles[i].Edges[0].MidPosition + (_LNX_NavMesh.Triangles[i].Edges[0].v_Cross * 0.05f), 
 							"e0", gstl_label);
 						Handles.Label(
-							_LNX_NavMesh.Triangles[i].Edges[1].MidPosition + (_LNX_NavMesh.Triangles[i].Edges[1].v_cross * 0.05f), 
+							_LNX_NavMesh.Triangles[i].Edges[1].MidPosition + (_LNX_NavMesh.Triangles[i].Edges[1].v_Cross * 0.05f), 
 							"e1", gstl_label);
 						Handles.Label(
-							_LNX_NavMesh.Triangles[i].Edges[2].MidPosition + (_LNX_NavMesh.Triangles[i].Edges[2].v_cross * 0.05f), 
+							_LNX_NavMesh.Triangles[i].Edges[2].MidPosition + (_LNX_NavMesh.Triangles[i].Edges[2].v_Cross * 0.05f), 
 							"e2", gstl_label);
 					}
 				}

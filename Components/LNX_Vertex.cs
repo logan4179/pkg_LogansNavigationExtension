@@ -49,8 +49,8 @@ namespace LogansNavigationExtension
 			get
 			{
 				return Vector3.Angle(
-					LNX_Utils.FlatVector(V_ToFirstSiblingVert, v_projectionNormal_cached),
-					LNX_Utils.FlatVector(V_ToSecondSiblingVert, v_projectionNormal_cached)
+					LNX_Utils.FlatVector(V_ToFirstSiblingVert, v_surfaceNormal_cached),
+					LNX_Utils.FlatVector(V_ToSecondSiblingVert, v_surfaceNormal_cached)
 				);
 			}
 		}
@@ -64,13 +64,13 @@ namespace LogansNavigationExtension
 		[HideInInspector] public float DistanceToCenter => Vector3.Distance( V_Position, v_triCenter_cached );
 
 		/// <summary>Should be the same as the Surface Orientation setting for the navmesh that this vert's triangle belongs to.</summary>
-		[SerializeField, HideInInspector] private Vector3 v_projectionNormal_cached;
+		[SerializeField, HideInInspector] private Vector3 v_surfaceNormal_cached;
 
 		public Vector3 V_flattenedPosition
 		{
 			get
 			{
-				return LNX_Utils.FlatVector( V_Position, v_projectionNormal_cached );
+				return LNX_Utils.FlatVector( V_Position, v_surfaceNormal_cached );
 			}
 		}
 
@@ -123,29 +123,27 @@ namespace LogansNavigationExtension
 
 		/*[TextArea(1,10)]*/ [HideInInspector] public string DBG_constructor;
 
-		public LNX_Vertex( LNX_NavMesh nm, Vector3 vrtPos, int triIndx, int cmpntIndx )
+		public LNX_Vertex( LNX_Triangle ownerTri, Vector3 vrtPos, int triIndx, int cmpntIndx )
         {
 			DBG_constructor = "Ctor start...\n";
 
 			V_Position = vrtPos;
 			originalPosition = vrtPos;
 
-			v_projectionNormal_cached = nm.GetSurfaceNormal();
+			v_surfaceNormal_cached = ownerTri.v_SurfaceNormal_cached;
 
-			v_triCenter_cached = nm.Triangles[triIndx].V_Center;
+			v_triCenter_cached = ownerTri.V_Center; //prob! triangles list not ready yet...
 
 			MyCoordinate = new LNX_ComponentCoordinate( triIndx, cmpntIndx );
 
 			Index_VisMesh_Vertices = -1;
-
-			Relationships = new LNX_VertexRelationship[ nm.Triangles.Length * 3 ];
 
 			DBG_constructor = $"Was passed pos: '{vrtPos}' indx: '{cmpntIndx}'\n\n" +
 				$"at tri[{MyCoordinate.TrianglesIndex}], [{MyCoordinate.ComponentIndex}]\n" +
 				$"Pos: '{V_Position}', orig: '{originalPosition}'\n" +
 				$"fltndPos: '{V_flattenedPosition}'\n" +
 				$"vToCtr: '{v_toCenter}'\n" +
-				$"nml: '{v_projectionNormal_cached}', dstToCtr: '{DistanceToCenter}'\n" +
+				$"nml: '{v_surfaceNormal_cached}', dstToCtr: '{DistanceToCenter}'\n" +
 				$"";
 		}
 
@@ -153,7 +151,7 @@ namespace LogansNavigationExtension
 		{
 			V_Position = vert.V_Position;
 			originalPosition = vert.originalPosition;
-			v_projectionNormal_cached = vert.v_projectionNormal_cached;
+			v_surfaceNormal_cached = vert.v_surfaceNormal_cached;
 			v_triCenter_cached = vert.v_triCenter_cached;
 
 			MyCoordinate = vert.MyCoordinate;
@@ -172,7 +170,7 @@ namespace LogansNavigationExtension
 		public void CreateRelationships( LNX_NavMesh nvmsh ) //todo: unit test
 		{
 			DBG_constructor += $"{nameof(CreateRelationships)}() start...\n";
-			Debug.Log( $"{nameof(CreateRelationships)}() for vert: '{MyCoordinate}'..." );
+			//Debug.Log( $"{nameof(CreateRelationships)}() for vert: '{MyCoordinate}'..." );
 
 			Relationships = new LNX_VertexRelationship[nvmsh.Triangles.Length * 3];
 			List<LNX_ComponentCoordinate> temp_sharedVrtCoords = new List<LNX_ComponentCoordinate>();
@@ -238,52 +236,21 @@ namespace LogansNavigationExtension
 
 		#region API METHODS ------------------------------------------------------------
 		public string DBG_IsInCenterSweep;
-		/// <summary>
-		/// Determines if the line from this vertex to the supplied position 
-		/// is within the theoretical "cone" created by the angle of the  sides emenating out from this vertex.
-		/// </summary>
-		/// <param name="pos"></param>
-		/// <returns></returns>
+
 		public bool IsInCenterSweep( Vector3 pos )
 		{
-			DBG_IsInCenterSweep = "";
-			
-			Vector3 vToPos = Vector3.Normalize( pos - V_Position );
-
-			DBG_IsInCenterSweep += $"{nameof(AngleAtBend)}: '{AngleAtBend}'\n" +
-				$"ang0: '{Vector3.Angle(V_ToFirstSiblingVert, vToPos)}', " +
-				$"ang1: '{Vector3.Angle(V_ToSecondSiblingVert, vToPos)}'\n" +
-				$"diff0: '{AngleAtBend - Vector3.Angle(V_ToFirstSiblingVert, vToPos)}'\n" +
-				$"diff1: '{AngleAtBend - Vector3.Angle(V_ToSecondSiblingVert, vToPos)}'\n";
-
-
-			if (Vector3.Angle(V_ToFirstSiblingVert, vToPos) > (AngleAtBend + 0.01f) ||
-				Vector3.Angle(V_ToSecondSiblingVert, vToPos) > (AngleAtBend + 0.01f)
-				)
-			{
-				DBG_IsInCenterSweep += "returning false";
-				return false;
-			}
-
-			DBG_IsInCenterSweep += "returning true";
-
-			return true;
-		}
-
-		public bool IsInFlatCenterSweep( Vector3 pos )
-		{
-			DBG_IsInCenterSweep = $"Vert{MyCoordinate.ComponentIndex}.{nameof(IsInFlatCenterSweep)}({pos}) " +
+			DBG_IsInCenterSweep = $"Vert{MyCoordinate.ComponentIndex}.{nameof(IsInCenterSweep)}({pos}) " +
 				$"report...\n";
 
-			Vector3 vToPos = Vector3.Normalize( LNX_Utils.FlatVector(pos, v_projectionNormal_cached) - V_flattenedPosition );
+			Vector3 vToPos = Vector3.Normalize( LNX_Utils.FlatVector(pos, v_surfaceNormal_cached) - V_flattenedPosition );
 
 			//Debug.Log($"ERRORSPOT. coord: '{MyCoordinate}'. relLength: '{Relationships.Length}'. 1stSibINdx should be: " +
 				//$"'{(MyCoordinate.ComponentIndex == 0 ?	(MyCoordinate.TrianglesIndex * 3) + 1 : MyCoordinate.TrianglesIndex * 3)}'...");
 			
-			Vector3 v_to0_flat = LNX_Utils.FlatVector(V_ToFirstSiblingVert, v_projectionNormal_cached).normalized; //ERRORTRACE 10 (FINAL)
-			Vector3 v_to1_flat = LNX_Utils.FlatVector(V_ToSecondSiblingVert, v_projectionNormal_cached).normalized;
+			Vector3 v_to0_flat = LNX_Utils.FlatVector(V_ToFirstSiblingVert, v_surfaceNormal_cached).normalized; //ERRORTRACE 10 (FINAL)
+			Vector3 v_to1_flat = LNX_Utils.FlatVector(V_ToSecondSiblingVert, v_surfaceNormal_cached).normalized;
 
-			DBG_IsInCenterSweep += $"using vto vector: '{vToPos}' and nrml: '{v_projectionNormal_cached}'\n" +
+			DBG_IsInCenterSweep += $"using vto vector: '{vToPos}' and nrml: '{v_surfaceNormal_cached}'\n" +
 				$"{nameof(AngleAtBend_flattened)}: '{AngleAtBend_flattened}'\n" +
 				$"ang0: '{Vector3.Angle(v_to0_flat, vToPos)}', " +
 				$"ang1: '{Vector3.Angle(v_to1_flat, vToPos)}'\n" +
@@ -302,18 +269,6 @@ namespace LogansNavigationExtension
 			DBG_IsInCenterSweep += "returning true";
 
 			return true;
-		}
-
-		/// <summary>
-		/// Determines if a supplied position is towards the normalized center from this vertex. Doing this 
-		/// on the 3 vertices of a triangle will determine if a position is in the "normal sweep" of a triangle 
-		/// (IE: within the normalized plane of a triangle).
-		/// </summary>
-		/// <param name="pos"></param>
-		/// <returns></returns>
-		public bool IsInCenterSweep_Projected( Vector3 pos, LNX_Triangle tri )
-		{
-			return IsInCenterSweep( tri.V_Center + Vector3.ProjectOnPlane(pos, v_projectionNormal_cached) );
 		}
 		#endregion
 
@@ -362,7 +317,7 @@ namespace LogansNavigationExtension
 				$"{nameof(MyCoordinate)}: '{MyCoordinate}'\n" +
 				$"{nameof(V_Position)}: '{V_Position}'\n" +
 				$"{nameof(originalPosition)}: '{originalPosition}'\n" +
-				$"{nameof(v_projectionNormal_cached)}: '{v_projectionNormal_cached}'\n" +
+				$"{nameof(v_surfaceNormal_cached)}: '{v_surfaceNormal_cached}'\n" +
 				$"{nameof(Relationships)} count: '{Relationships.Length}\n" +
 				$"{nameof(Index_VisMesh_Vertices)}: '{Index_VisMesh_Vertices}'\n" +
 				$"{nameof(AngleAtBend)}: '{AngleAtBend}'\n" +
