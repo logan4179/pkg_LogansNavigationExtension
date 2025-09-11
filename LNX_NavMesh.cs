@@ -1,43 +1,36 @@
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.Windows;
+
 
 namespace LogansNavigationExtension
 {
 	[System.Serializable]
 	public class LNX_NavMesh : MonoBehaviour
-    {
-		public static LNX_NavMesh Instance;
-
+	{
 		public LNX_Direction SurfaceOrientation = LNX_Direction.PositiveY;
 
 		public string LayerMaskName;
 		private int cachedLayerMask;
 		public int CachedLayerMask => cachedLayerMask;
 
-		public LNX_Triangle[] Triangles;
+		/*[HideInInspector]*/ public LNX_Triangle[] Triangles;
 
-		public Vector3[] Vertices;
+		[HideInInspector] public Vector3[] Vertices;
 
-		[SerializeField] private List<LNX_Triangle> deletedTriangles;
-		/// <summary>
-		/// Which triangles in the Triangles array were added by modification as opposed to made 
-		/// via the original triangulation.
-		/// </summary>
-		//[SerializeField] private List<int> addedTriangles;
+		//[SerializeField] private List<LNX_Triangle> deletedTriangles;
+		[SerializeField, HideInInspector] private List<LNX_AtomicTriangle> deletedTriangles;
 
-		private int addedTrianglesStartIndex = -1;
+		private int addedTrianglesStartIndex = -1; //todo: what is this? Need to comment what it is
 
 		[HideInInspector] public Mesh _VisualizationMesh;
 
 		[Header("BOUNDS")]
-		/*[SerializeField]*/ private string dbg_Bounds;
 		/// <summary>Stores the largest/smallest X, Y, and Z value of the navmesh. Elements 0 and 1 are lowest and 
 		/// hightest X, elements 2 and 3 are lowest and highest Y, and elements 4 and 5 are lowest and highest z.</summary>
 		[HideInInspector] public float[] Bounds;
@@ -48,50 +41,46 @@ namespace LogansNavigationExtension
 		[HideInInspector] public Vector3[] V_Bounds;
 
 		[HideInInspector] public Vector3 V_BoundsCenter;
-		[HideInInspector] public Vector3 V_BoundsSize;
+
+		[HideInInspector] public Vector3 V_BoundsSize
+		{
+			get
+			{
+				return new Vector3(
+					Mathf.Abs(Bounds[0] - Bounds[1]),
+					Mathf.Abs(Bounds[2] - Bounds[3]),
+					Mathf.Abs(Bounds[4] - Bounds[5])
+				);
+			}
+		}
+
 		/// <summary>
 		/// Longest distance from the bounds center to any corner on the bounding box. This is used as an efficiency value 
 		/// in order to short-circuit (return early) from certain methods that don't need to run further logic based on the 
 		/// value of this threshold..
 		/// </summary>
-		[HideInInspector] public float BoundsContainmentDistanceThreshold = -1;
+		[HideInInspector] public float BoundsContainmentDistanceThreshold
+		{
+			get
+			{
+				return Mathf.Max
+				(
+					Vector3.Distance(V_BoundsCenter, V_Bounds[0]),
+					Vector3.Distance(V_BoundsCenter, V_Bounds[4])
+				);
+			}
+		}
+
 
 		//[Header("flags")]
 
 		[Header("VISUAL/DEBUG")]
 		public Color color_mesh;
-		[HideInInspector] public Vector3[] dbgMesh_vertices;
-		[HideInInspector] public Vector3[] dbgMesh_normals;
-		[HideInInspector] public int[] dbgMesh_triangles;
-		[Space(10)]
-
-		[HideInInspector] public int[] dbgTriangulation_Areas;
-		[HideInInspector] public Vector3[] dbgTriangulation_Vertices;
-		[HideInInspector] public int[] dbgTriangulation_Indices;
-		[TextArea(0,10), NonSerialized] public string DBG_Relational;
-		[Space(10)]
-
-		[HideInInspector] public List<int> dbgKosher_Triangles = new List<int>(); //length should be 3x
-		[HideInInspector] public List<Vector3> dbgKosher_vertices = new List<Vector3>();
-
-		//[Header("ORIGINAL TRIANGULATION")]
-		//public Vector3[] ot_vertices;
-		//public int[] ot_indices;
-		//public int[] ot_areas;
 
 		private void OnEnable()
 		{
 			Debug.Log("lnx_navmesh.onenable()");
 		}
-		private void Awake()
-		{
-			Instance = this;
-		}
-
-		void Start()
-        {
-			Debug.Log("mgr start");
-        }
 
 		#region Triangle fetchers ------------------------------------------------------
 		public LNX_Triangle[] GetAdjacentTriangles( LNX_Triangle tri )
@@ -368,23 +357,6 @@ namespace LogansNavigationExtension
 
 			return false;
 		} //Todo: remember to unit test this
-		
-		//I'm replacing this method with the one after it because that one seems more efficient. I'm leaving it in 
-		//because frustratingly, I haven't been able to quantify how much more efficient it is because of the datetime/timespan 
-		//thing not working like I'm expecting...
-		public void MoveVert_managed( LNX_Vertex vert, Vector3 pos ) 
-		{
-			GetTriangle(vert).MoveVert_managed( this, vert.MyCoordinate.ComponentIndex, pos );
-
-			if( vert.Index_VisMesh_Vertices > -1 && _VisualizationMesh != null && _VisualizationMesh.vertices != null && _VisualizationMesh.vertices.Length > 0 )
-			{
-				//Debug.Log($"moving vert '{vert.MyCoordinate.ToString()}' with {nameof(vert.Index_VisMesh_Vertices)}: '{vert.Index_VisMesh_Vertices}'");
-
-				Vector3[] tmpVrts = _VisualizationMesh.vertices; //note: I can't get it to update the mesh if I only change the relevant vertex within the mesh object, It seems like I MUST create and assign a whole new array.
-				tmpVrts[vert.Index_VisMesh_Vertices] = vert.V_Position;
-				_VisualizationMesh.vertices = tmpVrts; //apparently you have to assign to the mesh in this manner in order to make this update (apparently I can't just change one of the existing vertices elements)...
-			}
-		}
 
 		public void MoveSelectedVerts( List<LNX_Vertex> verts, Vector3 endPos )
 		{
@@ -422,8 +394,8 @@ namespace LogansNavigationExtension
 				}
 			}
 
-			deletedTriangles = new List<LNX_Triangle>();
-			//addedTriangles = new List<int>(); //todo: dws
+			//deletedTriangles = new List<LNX_Triangle>(); todo: dws
+			deletedTriangles = new List<LNX_AtomicTriangle>();
 
 			UnityEditor.EditorUtility.SetDirty(this);
 		}
@@ -453,7 +425,8 @@ namespace LogansNavigationExtension
 					if ( Triangles[i].ValueEquals(trisToDelete[j]) )
 					{
 						foundDeletion = true;
-						deletedTriangles.Add(Triangles[i]);
+						//deletedTriangles.Add(Triangles[i]); //todo: dws
+						deletedTriangles.Add( new LNX_AtomicTriangle(Triangles[i]) );
 						break;
 					}
 				}
@@ -474,22 +447,6 @@ namespace LogansNavigationExtension
 			Triangles = newTriangles.ToArray();
 
 			RefreshMe( true );
-		}
-
-		public bool ContainsDeletion( LNX_Triangle tri )
-		{
-			if( deletedTriangles != null && deletedTriangles.Count > 0 )
-			{
-				for ( int i = 0; i < deletedTriangles.Count; i++ )
-				{
-					if( deletedTriangles[i].PositionallyMatches(tri) )
-					{
-						return true;
-					}
-				}
-			}
-
-			return false;
 		}
 
 		public bool ContainsDeletion( NavMeshTriangulation nmTriangulation, int areaIndex ) //todo: definitely unit test this...
@@ -585,8 +542,6 @@ namespace LogansNavigationExtension
 
 		public void CalculateBounds()
 		{
-			dbg_Bounds = string.Empty;
-
 			Bounds = new float[6]
 			{
 				float.MaxValue, float.MinValue,
@@ -627,17 +582,6 @@ namespace LogansNavigationExtension
 				}
 			}
 
-			if (Bounds.Length > 0)
-			{
-				dbg_Bounds = $"{nameof(Bounds)}[{0}]: '{Bounds[0]}'\n" +
-				$"{nameof(Bounds)}[{1}]: '{Bounds[1]}'\n" +
-				$"{nameof(Bounds)}[{2}]: '{Bounds[2]}'\n" +
-				$"{nameof(Bounds)}[{3}]: '{Bounds[3]}'\n" +
-				$"{nameof(Bounds)}[{4}]: '{Bounds[4]}'\n" +
-				$"{nameof(Bounds)}[{5}]: '{Bounds[5]}'\n\n";
-			}
-
-
 			V_Bounds = new Vector3[8]
 			{
 				new Vector3(Bounds[0], Bounds[2], Bounds[4]), //most negative point
@@ -650,42 +594,11 @@ namespace LogansNavigationExtension
 				new Vector3(Bounds[0], Bounds[3], Bounds[5]),
 			};
 
-			if (V_Bounds.Length > 0)
-			{
-				dbg_Bounds = $"{nameof(V_Bounds)}[{0}]: '{V_Bounds[0]}'\n" +
-				$"{nameof(V_Bounds)}[{1}]: '{V_Bounds[1]}'\n" +
-				$"{nameof(V_Bounds)}[{2}]: '{V_Bounds[2]}'\n" +
-				$"{nameof(V_Bounds)}[{3}]: '{V_Bounds[3]}'\n" +
-				$"{nameof(V_Bounds)}[{4}]: '{V_Bounds[4]}'\n" +
-				$"{nameof(V_Bounds)}[{5}]: '{V_Bounds[5]}'\n" +
-				$"{nameof(V_Bounds)}[{6}]: '{V_Bounds[6]}'\n" +
-				$"{nameof(V_Bounds)}[{7}]: '{V_Bounds[7]}'\n\n";
-			}
-
-			V_BoundsCenter = (
+			V_BoundsCenter = 
+			(
 				V_Bounds[0] + V_Bounds[1] + V_Bounds[2] + V_Bounds[3] +
 				V_Bounds[4] + V_Bounds[5] + V_Bounds[6] + V_Bounds[7]
-
-			) / 8;
-
-			dbg_Bounds += $"{nameof(V_BoundsCenter)}: '{V_BoundsCenter}'\n\n";
-
-			V_BoundsSize = new Vector3(
-				Mathf.Abs(Bounds[0] - Bounds[1]),
-				Mathf.Abs(Bounds[2] - Bounds[3]),
-				Mathf.Abs(Bounds[4] - Bounds[5])
-			);
-
-			dbg_Bounds += $"{nameof(V_BoundsSize)}: '{V_BoundsSize}'\n\n";
-
-			BoundsContainmentDistanceThreshold = Mathf.Max
-			(
-				Vector3.Distance(V_BoundsCenter, V_Bounds[0]),
-				Vector3.Distance(V_BoundsCenter, V_Bounds[4])
-			);
-
-			dbg_Bounds += $"{nameof(BoundsContainmentDistanceThreshold)}: '{BoundsContainmentDistanceThreshold}'\n\n";
-
+			) / 8f;
 		}
 
 		/// <summary>
@@ -900,10 +813,6 @@ namespace LogansNavigationExtension
 			_VisualizationMesh.normals = nrmls;
 
 			_VisualizationMesh.triangles = mesh_triangles.ToArray(); //apparently this MUST come AFTER setting the vertices or will throw error
-
-			dbgMesh_triangles = _VisualizationMesh.triangles;
-			dbgMesh_vertices = _VisualizationMesh.vertices;
-			dbgMesh_normals = _VisualizationMesh.normals;
 			#endregion
 
 			if (dbgMethod) Debug.Log($"end of ReconstructVisualizationMesh()");
@@ -912,7 +821,7 @@ namespace LogansNavigationExtension
 
 		#region MAIN API METHODS----------------------------------------------------------------
 		/*[SerializeField]*/
-		[HideInInspector] public string dbgCalculatePath;
+		[NonSerialized] public string dbgCalculatePath;
 
 		/// <summary>
 		/// Returns a Vector3 representing the surface normal dictated by the SurfaceOrientation variable.
@@ -951,6 +860,7 @@ namespace LogansNavigationExtension
 
 		public bool CalculatePath( Vector3 startPos_passed, Vector3 endPos_passed, float maxSampleDistance, out LNX_Path outPath, bool considerOffPerimeter = true)
 		{
+			#region CALCULATE START AND END POINT -------------------------------------------
 			LNX_ProjectionHit startHit = new LNX_ProjectionHit();
 			LNX_ProjectionHit endHit = new LNX_ProjectionHit();
 			outPath = LNX_Path.None;
@@ -979,9 +889,25 @@ namespace LogansNavigationExtension
 				dbgCalculatePath += $"SamplePosition() did NOT hit endpos.\n";
 				return false; //todo: returning a boolean is newly added. Make sure this return boolean is being properly used...
 			}
+			#endregion
 
 			#region CONSTRUCT PATH -------------------------------------
 			dbgCalculatePath += $"now trying to construct path...\n";
+
+			if ( !Raycast(startPos_passed, endPos_passed, maxSampleDistance, out outPath, considerOffPerimeter) )
+			{
+				return true;
+			}
+
+
+
+
+
+
+
+
+
+			/* ///////////////////////////////////////////////////////////////////////////////
 			LNX_Triangle currentTri = Triangles[startHit.Index_Hit];
 
 			List<Vector3> pthPts = new List<Vector3>() { startHit.HitPosition };
@@ -1010,7 +936,7 @@ namespace LogansNavigationExtension
 					pthNormals.Add( GetTriangle(currentTri.Edges[perimHit.Index_Hit].SharedEdgeCoordinate).V_PathingNormal ); //I think I need an error check that makes sure the edge isn't terminal first...
 
 					// Check if we're touching the last triangle...
-					if ( /*currentTri.Edges[perimHit.Index_Hit].MyCoordinate.TrianglesIndex == endHit.Index_Hit ||*/
+					if (
 						currentTri.Edges[perimHit.Index_Hit].SharedEdgeCoordinate.TrianglesIndex == endHit.Index_Hit
 					)
 					{
@@ -1039,12 +965,13 @@ namespace LogansNavigationExtension
 					return false;
 				}
 			}
+			*/
 			#endregion
 
 			return true;
 		}
 
-		[HideInInspector] public string DBG_NavmeshProjection;
+		[NonSerialized] public string DBG_NavmeshProjection;
 		/// <summary>
 		/// Returns true if the supplied position is within the projection of any triangle on the navmesh, 
 		/// projected along it's normal.
@@ -1052,23 +979,22 @@ namespace LogansNavigationExtension
 		/// <param name="pos"></param>
 		/// <param name="projectedPoint">Closest point to the supplied position on the surface of the Navmesh</param>
 		/// <returns></returns>
-		public bool AmWithinSurfaceProjection( Vector3 pos, out LNX_ProjectionHit hit, float maxDistance ) //todo: unit test this method
+		public bool AmWithinSurfaceProjection( Vector3 pos, out LNX_ProjectionHit hit ) //todo: unit test this method
         {
 			DBG_NavmeshProjection = $"Searching through '{Triangles.Length}' tris...\n";
-			int rtrnIndx = -1;
-			float runningClosestDist = maxDistance;
 
 			hit = LNX_ProjectionHit.None;
 
-			Vector3 currentPt = Vector3.zero;
+			int runningBestIndex = -1;
+			float runningClosestDist = float.MaxValue;
 			Vector3 runningBestPt = Vector3.zero;
 
 			for ( int i = 0; i < Triangles.Length; i++ )
 			{
 				DBG_NavmeshProjection += $"i: '{i}'....................\n";
-				LNX_Triangle tri = Triangles[i];
+				Vector3 currentPt = Vector3.zero;
 
-				if ( tri.IsInShapeProject(pos, out currentPt) ) //ERRORTRACE 8
+				if (Triangles[i].IsInShapeProject(pos, out currentPt) )
 				{
 					DBG_NavmeshProjection += $"found AM in shape project at '{currentPt}'...\n";
 					//note: The reason I'm not immediately returning this tri here is because concievably
@@ -1081,16 +1007,16 @@ namespace LogansNavigationExtension
 				    {
 						runningBestPt = currentPt;
 					    runningClosestDist = Vector3.Distance( pos, runningBestPt);
-					    rtrnIndx = i;
+					    runningBestIndex = i;
 				    }
 				}
 			}
 
-			if( rtrnIndx > -1 )
+			if( runningBestIndex > -1 )
 			{
-				DBG_NavmeshProjection += $"finished. returning: '{rtrnIndx}' with pt: '{runningBestPt}'\n";
+				DBG_NavmeshProjection += $"finished. returning: '{runningBestIndex}' with pt: '{runningBestPt}'\n";
 
-				hit = new LNX_ProjectionHit( rtrnIndx, runningBestPt );
+				hit = new LNX_ProjectionHit( runningBestIndex, runningBestPt, pos );
 				return true;
 			}
 			else
@@ -1101,7 +1027,7 @@ namespace LogansNavigationExtension
 			}
 		}
 
-		[HideInInspector] public string DBG_SamplePosition;
+		[NonSerialized] public string DBG_SamplePosition;
 
 		/// <summary>
 		/// Gets a point on the projection of the navmesh using the supplied position. If the supplied position is not on the 
@@ -1114,26 +1040,25 @@ namespace LogansNavigationExtension
 		public bool SamplePosition( Vector3 pos, out LNX_ProjectionHit hit, float maxDistance, bool considerOffPerimeter = true )
         {
 			DBG_SamplePosition = $"SamplePosition('{pos}'). Searching through '{Triangles.Length}' tris...\n";
+			hit = LNX_ProjectionHit.None;
 
 			if( Vector3.Distance(V_BoundsCenter, pos) > (maxDistance + BoundsContainmentDistanceThreshold) )
 			{
 				DBG_SamplePosition += $"distance threshold short circuit";
-				hit = LNX_ProjectionHit.None;
 				return false;
 			}
 
             float runningClosestDist = float.MaxValue;
-			float currentDist = float.MaxValue;
-
-			Vector3 currentPt = Vector3.zero;
-			hit = LNX_ProjectionHit.None;
+			int runningBestIndex = -1;
+			Vector3 runningBestPt = Vector3.zero;
 
             for ( int i = 0; i < Triangles.Length; i++ )
             {
 				DBG_SamplePosition += $"i: '{i}'....................\n";
-                LNX_Triangle tri = Triangles[i];
+				Vector3 currentPt = Vector3.zero;
+				float currentDist = float.MaxValue;
 
-				if ( tri.IsInShapeProject(pos, out currentPt) )
+				if ( Triangles[i].IsInShapeProject(pos, out currentPt) )
 				{
 					DBG_SamplePosition += $"found AM in shape project at '{currentPt}'...\n";
 					//note: The reason I'm not immediately returning this tri here is because concievably
@@ -1147,20 +1072,10 @@ namespace LogansNavigationExtension
                 {
 					DBG_SamplePosition += $"found am NOT in shape project...\n";
 
-					/*if( i == 3 ) //use this to specify a certain tri to report. This is so that I can restrict the length of this report
-					{
-						DBG_SamplePosition += $" Triangle.IsInShapeProject report:\n" +
-							$"{tri.DBG_IsInShapeProjectAlongNormal}\n\n";
-					}*/
-
 					if ( considerOffPerimeter )
 					{
-						currentPt = tri.ClosestPointOnPerimeter( pos );
+						currentPt = Triangles[i].ClosestPointOnPerimeter( pos );
 						currentDist = Vector3.Distance(pos, currentPt);
-					}
-					else
-					{
-						currentDist = float.MaxValue;
 					}
 				}
 
@@ -1169,11 +1084,13 @@ namespace LogansNavigationExtension
 				if ( currentDist < runningClosestDist )
 				{
 					DBG_SamplePosition += $"new closest point at: '{currentDist}'...\n";
-					hit.HitPosition = currentPt;
+					runningBestPt = currentPt;
 					runningClosestDist = currentDist;
-					hit.Index_Hit = i;
+					runningBestIndex = i;
 				}
             }
+
+			hit = new LNX_ProjectionHit(runningBestIndex, runningBestPt, pos);
 
 			DBG_SamplePosition += $"finished. returning: '{hit.Index_Hit}' with pt: '{hit.HitPosition}'\n";
 
@@ -1187,32 +1104,33 @@ namespace LogansNavigationExtension
 			}
         }
 
-		public string DBGRaycast;
-		public string DBG_timetaken;
+		[NonSerialized] public string DBGRaycast;
 
-		public Transform TryTrans;
 		/// <summary>
 		/// Traces a line between two points on a navmesh.
 		/// </summary>
 		/// <returns>True if the ray is terminated before reaching target position. Otherwise returns false.</returns>
 		public bool Raycast( Vector3 sourcePosition, Vector3 targetPosition, float maxSampleDistance, 
-			bool onlySampleWithinNormalProject = true )
+			bool onlySampleWithinSurfaceProject = true ) //todo: Unit test!!!
 		{
-			DateTime dt_methodStart = DateTime.Now;
 			DBGRaycast = "";
-			DBG_timetaken = "";
 
 			#region GET START AND END POINTS------------------------------------------
 			LNX_ProjectionHit lnxStartHit = LNX_ProjectionHit.None;
 			LNX_ProjectionHit lnxEndHit = LNX_ProjectionHit.None;
 
-			if( !AmWithinSurfaceProjection(sourcePosition, out lnxStartHit, maxSampleDistance) )
+			if ( AmWithinSurfaceProjection(sourcePosition, out lnxStartHit) && lnxStartHit.DistanceAway <= maxSampleDistance )
 			{
-				DBGRaycast += $"SourcePosition NOT within navmesh projection...\n" +
-					$"\nAmWithinNavMeshProjection report:\n" +
+				DBGRaycast += $"{nameof(AmWithinSurfaceProjection)}() for sourcePosition was succesful\n" +
+					$"start projection: '{lnxStartHit}'\n";
+			}
+			else
+			{
+				DBGRaycast += $"SourcePosition NOT within navmesh projection...\n\n" +
+					$"{nameof(AmWithinSurfaceProjection)} report:\n" +
 					$"{DBG_NavmeshProjection}\n";
 
-				if ( onlySampleWithinNormalProject )
+				if (onlySampleWithinSurfaceProject)
 				{
 					DBGRaycast += $"not instructed to try samplePosition. Returning early...";
 					return true;
@@ -1227,37 +1145,33 @@ namespace LogansNavigationExtension
 					}
 				}
 			}
+
+			if ( AmWithinSurfaceProjection(targetPosition, out lnxEndHit) && lnxEndHit.DistanceAway <= maxSampleDistance )
+			{
+				DBGRaycast += $"{nameof(AmWithinSurfaceProjection)}() for endPosition was succesful\n" +
+					$"end projection: '{lnxEndHit}'\n";
+			}
 			else
 			{
-				DBGRaycast += $"sourcePosition WAS within navmeshprojection!\n" +
-					$"start projection: '{lnxStartHit}' ({LNX_UnitTestUtilities.LongVectorString(lnxStartHit.HitPosition)})\n";
-			}
+				DBGRaycast += $"targetPosition NOT within navmesh projection...\n\n" +
+					$"{nameof(AmWithinSurfaceProjection)} report:\n" +
+					$"{DBG_NavmeshProjection}\n";
 
-			if ( !AmWithinSurfaceProjection(targetPosition, out lnxEndHit, maxSampleDistance) )
-			{
-				DBGRaycast += $"targetPosition NOT within navmesh projection...\n";
-
-				if (onlySampleWithinNormalProject)
+				if ( onlySampleWithinSurfaceProject )
 				{
-					DBGRaycast += $"not instructed to try samplePosition. Returning early...";
+					DBGRaycast += $"not instructed to try targetPosition. Returning early...";
 					return true;
 				}
 				else
 				{
 					DBGRaycast += $"trying samplePosition...\n";
-					if (!SamplePosition(targetPosition, out lnxEndHit, maxSampleDistance))
+					if ( !SamplePosition(targetPosition, out lnxEndHit, maxSampleDistance) )
 					{
 						DBGRaycast += $"tried samplePosition. Still didn't work. Returning early...\n";
 						return true;
 					}
 				}
 			}
-			else
-			{
-				DBGRaycast += $"targetPosition WAS within navmeshprojection!\n" +
-					$"end projection: '{lnxEndHit}' ({LNX_UnitTestUtilities.LongVectorString(lnxEndHit.HitPosition)})\n";
-			}
-
 			#endregion
 
 			if (lnxStartHit.Index_Hit == lnxEndHit.Index_Hit) //Short-circuit: If start and end hit are on same triangle...
@@ -1271,7 +1185,7 @@ namespace LogansNavigationExtension
 			Vector3 currentStartPos = lnxStartHit.HitPosition;
 			int currentEdgeIndex = -1;
 
-			int safetyTimeout = 20;
+			int safetyTimeout = Triangles.Count();
 			int runningWhileIterations = 0;
 
 			DBGRaycast += "\nlooping through mesh triangles...\n\n";
@@ -1280,7 +1194,7 @@ namespace LogansNavigationExtension
 			{
 				DBGRaycast += $"\nwhile{runningWhileIterations}=============================================== " +
 					$"\n(currentTri: '{currentTri.Index_inCollection}', startPt: '{LNX_UnitTestUtilities.LongVectorString(currentStartPos)}')\n" +
-					$"projectingThroughToPerim...\n";
+					$"projecting through triangle...\n";
 
 				LNX_ProjectionHit perimHit = currentTri.ProjectThroughToPerimeter( currentStartPos, lnxEndHit.HitPosition, currentEdgeIndex );
 				DBGRaycast += $"tri.prjctThrToPerim report----------------\n" +
@@ -1289,9 +1203,7 @@ namespace LogansNavigationExtension
 
 				if ( perimHit.Index_Hit < 0 || perimHit.Index_Hit > 2 )
 				{
-					DBGRaycast += $"after project, hit object has bad index of '{perimHit.Index_Hit}'. Dumping triangle report...\n" +
-					$"{currentTri.dbg_prjctThrhToPerim}.\n" +
-					$"now returning...";
+					DBGRaycast += $"after project, hit object has bad index of '{perimHit.Index_Hit}'. now returning...";
 					return true;
 				}
 
@@ -1349,13 +1261,176 @@ namespace LogansNavigationExtension
 			#endregion
 
 			DBGRaycast += $"finally returning: '{currentTri.Index_inCollection != lnxEndHit.Index_Hit}'\n";
-			DBG_timetaken += $"time: '{DateTime.Now.Subtract(dt_methodStart)}'";
+
+			return currentTri.Index_inCollection != lnxEndHit.Index_Hit;
+
+		}
+
+		public bool Raycast(Vector3 sourcePosition, Vector3 targetPosition, float maxSampleDistance, out LNX_Path outPath,
+	bool onlySampleWithinSurfaceProject = true) //todo: Unit test!!!
+		{
+			DBGRaycast = "";
+			outPath = new LNX_Path();
+
+			#region GET START AND END POINTS------------------------------------------
+			LNX_ProjectionHit lnxStartHit = LNX_ProjectionHit.None;
+			LNX_ProjectionHit lnxEndHit = LNX_ProjectionHit.None;
+
+			if (AmWithinSurfaceProjection(sourcePosition, out lnxStartHit) && lnxStartHit.DistanceAway <= maxSampleDistance)
+			{
+				DBGRaycast += $"{nameof(AmWithinSurfaceProjection)}() for sourcePosition was succesful\n" +
+					$"start projection: '{lnxStartHit}'\n";
+			}
+			else
+			{
+				DBGRaycast += $"SourcePosition NOT within navmesh projection...\n\n" +
+					$"{nameof(AmWithinSurfaceProjection)} report:\n" +
+					$"{DBG_NavmeshProjection}\n";
+
+				if (onlySampleWithinSurfaceProject)
+				{
+					DBGRaycast += $"not instructed to try samplePosition. Returning early...";
+					return true;
+				}
+				else
+				{
+					DBGRaycast += $"trying samplePosition...\n";
+					if (!SamplePosition(sourcePosition, out lnxStartHit, maxSampleDistance))
+					{
+						DBGRaycast += $"tried samplePosition. Still didn't work. Returning early...\n";
+						return true;
+					}
+				}
+			}
+
+			if (AmWithinSurfaceProjection(targetPosition, out lnxEndHit) && lnxEndHit.DistanceAway <= maxSampleDistance)
+			{
+				DBGRaycast += $"{nameof(AmWithinSurfaceProjection)}() for endPosition was succesful\n" +
+					$"end projection: '{lnxEndHit}'\n";
+			}
+			else
+			{
+				DBGRaycast += $"targetPosition NOT within navmesh projection...\n\n" +
+					$"{nameof(AmWithinSurfaceProjection)} report:\n" +
+					$"{DBG_NavmeshProjection}\n";
+
+				if (onlySampleWithinSurfaceProject)
+				{
+					DBGRaycast += $"not instructed to try targetPosition. Returning early...";
+					return true;
+				}
+				else
+				{
+					DBGRaycast += $"trying samplePosition...\n";
+					if (!SamplePosition(targetPosition, out lnxEndHit, maxSampleDistance))
+					{
+						DBGRaycast += $"tried samplePosition. Still didn't work. Returning early...\n";
+						return true;
+					}
+				}
+			}
+			#endregion
+
+			outPath.AddPoint( lnxStartHit, this );
+
+			if (lnxStartHit.Index_Hit == lnxEndHit.Index_Hit) //Short-circuit: If start and end hit are on same triangle...
+			{
+				DBGRaycast += $"Short-circuiting. Start and end hits are on the same triangle surface...";
+				outPath.AddPoint( lnxEndHit, this );
+				return false;
+			}
+
+			#region PROJECT THROUGH TO TARGET POSITION -------------------------------------------------
+			LNX_Triangle currentTri = Triangles[lnxStartHit.Index_Hit];
+			Vector3 currentStartPos = lnxStartHit.HitPosition;
+			int currentEdgeIndex = -1;
+
+			int safetyTimeout = Triangles.Count();
+			int runningWhileIterations = 0;
+
+			DBGRaycast += "\nlooping through mesh triangles...\n\n";
+			bool amStillProjecting = true;
+			while (amStillProjecting)
+			{
+				DBGRaycast += $"\nwhile{runningWhileIterations}=============================================== " +
+					$"\n(currentTri: '{currentTri.Index_inCollection}', startPt: '{LNX_UnitTestUtilities.LongVectorString(currentStartPos)}')\n" +
+					$"projecting through triangle...\n";
+
+				LNX_ProjectionHit edgePerimHit = currentTri.ProjectThroughToPerimeter(currentStartPos, lnxEndHit.HitPosition, currentEdgeIndex);
+				outPath.AddPoint( new LNX_ProjectionHit(currentTri.Index_inCollection, edgePerimHit.HitPosition), this );
+
+				DBGRaycast += $"tri.prjctThrToPerim report----------------\n" +
+					$"{currentTri.dbg_prjctThrhToPerim}" +
+					$"end rprt------------\n";
+
+				if (edgePerimHit.Index_Hit < 0 || edgePerimHit.Index_Hit > 2)
+				{
+					DBGRaycast += $"after project, hit object has bad index of '{edgePerimHit.Index_Hit}'. now returning...";
+					return true;
+				}
+
+				LNX_Edge hitEdge = currentTri.Edges[edgePerimHit.Index_Hit];
+				currentEdgeIndex = edgePerimHit.Index_Hit;
+				currentStartPos = edgePerimHit.HitPosition;
+
+				DBGRaycast += $"projected to edge: '{hitEdge.MyCoordinate}' at '{LNX_UnitTestUtilities.LongVectorString(edgePerimHit.HitPosition)}'. " +
+					$"Shared edge is: '{hitEdge.SharedEdgeCoordinate}'\n";
+
+				if (hitEdge.AmTerminal)
+				{
+					DBGRaycast += $"hit edge is terminal. Stoping loop...\n";
+					amStillProjecting = false;
+				}
+				else
+				{
+					DBGRaycast += $"edge is NOT terminal. Checking to see if we're at the end...\n";
+					DBGRaycast += $"test1, Triangles[{currentTri.Index_inCollection}].AmAdjacentToTri({lnxEndHit.Index_Hit}): " +
+						$"'{currentTri.AmAdjacentToTri(lnxEndHit.Index_Hit)}'\n" +
+						$"";
+
+					if (
+						hitEdge.SharedEdgeCoordinate.TrianglesIndex == lnxEndHit.Index_Hit ||
+						(
+							currentTri.AmAdjacentToTri(lnxEndHit.Index_Hit) &&
+							currentTri.IsPositionOnAnyEdge(lnxEndHit.HitPosition)
+						)
+					)
+					{
+						currentTri = Triangles[lnxEndHit.Index_Hit];
+						outPath.AddPoint( lnxEndHit, this );
+						amStillProjecting = false;
+						DBGRaycast += $"Decided AM at the end. Stopping...\n";
+					}
+					else
+					{
+						currentTri = Triangles[hitEdge.SharedEdgeCoordinate.TrianglesIndex];
+						currentEdgeIndex = hitEdge.SharedEdgeCoordinate.ComponentIndex;
+						currentStartPos = edgePerimHit.HitPosition;
+
+						DBGRaycast += $"Decided NOT at the end. Set new current tri to: '{currentTri.Index_inCollection}'...\n";
+					}
+				}
+
+
+				runningWhileIterations++;
+				if (runningWhileIterations > safetyTimeout)
+				{
+					Debug.LogError($"while loop went for more than '{safetyTimeout}' iterations. dbg string says: \n{DBGRaycast}\nBreaking early...");
+					amStillProjecting = false;
+
+					return true;
+				}
+			}
+			#endregion
+
+			DBGRaycast += $"finally returning: '{currentTri.Index_inCollection != lnxEndHit.Index_Hit}'\n";
 
 			return currentTri.Index_inCollection != lnxEndHit.Index_Hit;
 
 		}
 		#endregion // (END) MAIN API METHODS---------------------
 
+		#region HELPERS --------------------------------------------------
 		[ContextMenu("z call SayCurrentInfo()")]
 		public void SayCurrentInfo()
 		{
@@ -1364,5 +1439,48 @@ namespace LogansNavigationExtension
 				Triangles[i].SayCurrentInfo();
 			}
 		}
+
+		[ContextMenu("z call ReportAbnormalities")]
+		public void ReportAbnormalities()
+		{
+			StringBuilder sb_anomolies = new StringBuilder();
+			bool anomolyFound = false;
+
+			for ( int i = 0; i < Triangles.Length; i++ )
+			{
+				sb_anomolies.AppendLine( $"Triangle[{i}]---" );
+
+				string s = Triangles[i].GetAnomolyString();
+
+				if ( !string.IsNullOrWhiteSpace(s) )
+				{
+					anomolyFound = true;
+					sb_anomolies.AppendLine( s );
+				}
+			}
+
+			if ( anomolyFound )
+			{
+				Debug.LogWarning($"Anomoly found!");
+			}
+			else
+			{
+				Debug.Log("no anomolies found");
+			}
+
+			Debug.Log(sb_anomolies);
+		}
+
+		[ContextMenu("z call SayRelational()")]
+		public void SayRelational()
+		{
+
+			for (int i = 0; i < Triangles.Length; i++)
+			{
+				Debug.Log( Triangles[i].GetRelationalString() );
+			}
+		}
+
+		#endregion
 	}
 }

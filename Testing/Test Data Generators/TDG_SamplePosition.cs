@@ -19,7 +19,6 @@ namespace LogansNavigationExtension
 		LNX_ProjectionHit lnxHit = new LNX_ProjectionHit();
 
 		[Header("DEBUG")]
-		[SerializeField, Range(0f, 0.3f)] private float radius_drawSphere = 0.1f;
 		public Color color_success;
 		public Color color_fail;
 		public Color Color_sampleObject;
@@ -43,6 +42,8 @@ namespace LogansNavigationExtension
 
 			if ( _navmesh.SamplePosition(transform.position, out lnxHit, 10f) )
 			{
+				DBG_Operation = _navmesh.DBG_SamplePosition;
+
 				DBG_Class += $"samplePosition returned true with: '{lnxHit.HitPosition}', on tri: '{lnxHit.Index_Hit}'\n" +
 					$"\nreport--------------------------------\n" +
 					$"{_navmesh.DBG_SamplePosition}\n";
@@ -68,8 +69,10 @@ namespace LogansNavigationExtension
 					$"{_navmesh.DBG_SamplePosition}\n";
 				Gizmos.color = color_fail;
 			}
+			DBG_Operation = _navmesh.DBG_SamplePosition;
 
-			Gizmos.DrawSphere( transform.position, radius_drawSphere );
+
+			Gizmos.DrawSphere( transform.position, Radius_ObjectDebugSpheres );
 		}
 
 		[ContextMenu("z call CaptureDataPoint()")]

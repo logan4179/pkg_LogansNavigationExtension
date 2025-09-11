@@ -1,0 +1,228 @@
+{
+    "LastWriteTime": "",
+    "_navmesh": {
+        "instanceID": 27188
+    },
+    "_debugger": {
+        "instanceID": 27338
+    },
+    "DrawProblemPoints": false,
+    "index_focusProblem": 5,
+    "problemPositions": [
+        {
+            "x": 7.769999980926514,
+            "y": 0.0,
+            "z": 1.0
+        },
+        {
+            "x": 12.881999969482422,
+            "y": 0.007000000216066837,
+            "z": 0.7080000042915344
+        },
+        {
+            "x": 15.318599700927735,
+            "y": 0.007000000216066837,
+            "z": 0.07986968010663986
+        },
+        {
+            "x": 14.782999992370606,
+            "y": 0.007000000216066837,
+            "z": 1.059000015258789
+        }
+    ],
+    "problemEndPositions": [
+        {
+            "x": 12.034000396728516,
+            "y": 0.0,
+            "z": 3.640000104904175
+        },
+        {
+            "x": 9.479999542236329,
+            "y": 0.019999999552965165,
+            "z": 0.12999999523162843
+        },
+        {
+            "x": 15.359999656677246,
+            "y": 0.0,
+            "z": 0.0
+        },
+        {
+            "x": 15.359999656677246,
+            "y": 0.0,
+            "z": 0.0
+        }
+    ],
+    "Radius_ObjectDebugSpheres": 0.09300000220537186,
+    "Radius_ProjectPos": 0.10000000149011612,
+    "DBG_Operation": "",
+    "testName": "Raycasting",
+    "startTrans": {
+        "instanceID": 27226
+    },
+    "endTrans": {
+        "instanceID": 27130
+    },
+    "CapturedStartPositions": [
+        {
+            "x": 7.769999980926514,
+            "y": 0.0,
+            "z": 1.0
+        },
+        {
+            "x": 15.318599700927735,
+            "y": 0.007000000216066837,
+            "z": 0.07986968010663986
+        },
+        {
+            "x": 14.782999992370606,
+            "y": 0.007000000216066837,
+            "z": 1.059000015258789
+        },
+        {
+            "x": 14.782999992370606,
+            "y": 0.007000000216066837,
+            "z": 1.059000015258789
+        },
+        {
+            "x": 14.782999992370606,
+            "y": 0.007000000216066837,
+            "z": 1.059000015258789
+        },
+        {
+            "x": 14.782999992370606,
+            "y": 0.007000000216066837,
+            "z": 1.059000015258789
+        },
+        {
+            "x": 15.318599700927735,
+            "y": 0.007000000216066837,
+            "z": 0.07986968010663986
+        },
+        {
+            "x": 14.782999992370606,
+            "y": 0.007000000216066837,
+            "z": 1.059000015258789
+        },
+        {
+            "x": 14.782999992370606,
+            "y": 0.007000000216066837,
+            "z": 1.059000015258789
+        },
+        {
+            "x": 14.782999992370606,
+            "y": 0.007000000216066837,
+            "z": 1.059000015258789
+        },
+        {
+            "x": 14.782999992370606,
+            "y": 0.007000000216066837,
+            "z": 1.059000015258789
+        },
+        {
+            "x": 14.782999992370606,
+            "y": 0.007000000216066837,
+            "z": 1.059000015258789
+        },
+        {
+            "x": 14.782999992370606,
+            "y": 0.007000000216066837,
+            "z": 1.059000015258789
+        },
+        {
+            "x": 14.782999992370606,
+            "y": 0.007000000216066837,
+            "z": 1.059000015258789
+        }
+    ],
+    "CapturedEndPositions": [
+        {
+            "x": 12.020000457763672,
+            "y": 0.0,
+            "z": 3.5899999141693117
+        },
+        {
+            "x": 15.360000610351563,
+            "y": 0.0,
+            "z": 4.76837158203125e-7
+        },
+        {
+            "x": 15.360000610351563,
+            "y": 0.0,
+            "z": 4.76837158203125e-7
+        },
+        {
+            "x": 15.316699981689454,
+            "y": 0.0,
+            "z": 0.17599999904632569
+        },
+        {
+            "x": 8.866999626159668,
+            "y": 0.2460000067949295,
+            "z": 4.739999771118164
+        },
+        {
+            "x": 9.645999908447266,
+            "y": 0.019999999552965165,
+            "z": 0.13899999856948853
+        },
+        {
+            "x": 15.360000610351563,
+            "y": 0.0,
+            "z": 4.76837158203125e-7
+        },
+        {
+            "x": 9.645999908447266,
+            "y": 0.019999999552965165,
+            "z": 0.0020000000949949028
+        },
+        {
+            "x": 9.645999908447266,
+            "y": 0.019999999552965165,
+            "z": 0.0
+        },
+        {
+            "x": 9.645999908447266,
+            "y": 0.019999999552965165,
+            "z": -0.008999999612569809
+        },
+        {
+            "x": 9.555000305175782,
+            "y": 0.019999999552965165,
+            "z": -0.5809999704360962
+        },
+        {
+            "x": 11.26200008392334,
+            "y": 0.019999999552965165,
+            "z": -3.1040000915527345
+        },
+        {
+            "x": 11.970000267028809,
+            "y": 0.019999999552965165,
+            "z": -2.822999954223633
+        },
+        {
+            "x": 11.986000061035157,
+            "y": 0.019999999552965165,
+            "z": -2.822999954223633
+        }
+    ],
+    "CapturedRaycastResults": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false
+    ],
+    "RaycastResult": false,
+    "DBG_NavmeshRaycastRprt": "AmWithinSurfaceProjection() for sourcePosition was succesful\nstart projection: 'Indx '70', at '(14.78, 0.00, 1.06)''\nAmWithinSurfaceProjection() for endPosition was succesful\nend projection: 'Indx '5', at '(11.99, 0.00, -2.82)''\n\nlooping through mesh triangles...\n\n\nwhile0=============================================== \n(currentTri: '70', startPt: '14.783, 0, 1.059')\nprojecting through triangle...\ntri.prjctThrToPerim report----------------\nProjectThroughToPerimeter( (14.78, 0.00, 1.06), (11.99, 0.00, -2.82), -1 )\nmethod succeeded on edge 2. Here are the reports...\nend rprt------------\nprojected to edge: '[70][2]' at '14.16677, 0.0006940365, 0.2037226'. Shared edge is: '[69][1]'\nedge is NOT terminal. Checking to see if we're at the end...\ntest1, Triangles[70].AmAdjacentToTri(5): 'False'\nDecided NOT at the end. Set new current tri to: '69'...\n\nwhile1=============================================== \n(currentTri: '69', startPt: '14.16677, 0.0006940365, 0.2037226')\nprojecting through triangle...\ntri.prjctThrToPerim report----------------\nProjectThroughToPerimeter( (14.17, 0.00, 0.20), (11.99, 0.00, -2.82), 1 )\nmethod succeeded on edge 2. Here are the reports...\nend rprt------------\nprojected to edge: '[69][2]' at '14.1333, 0.0006940365, 0.1572694'. Shared edge is: '[52][1]'\nedge is NOT terminal. Checking to see if we're at the end...\ntest1, Triangles[69].AmAdjacentToTri(5): 'False'\nDecided NOT at the end. Set new current tri to: '52'...\n\nwhile2=============================================== \n(currentTri: '52', startPt: '14.1333, 0.0006940365, 0.1572694')\nprojecting through triangle...\ntri.prjctThrToPerim report----------------\nProjectThroughToPerimeter( (14.13, 0.00, 0.16), (11.99, 0.00, -2.82), 1 )\nmethod succeeded on edge 2. Here are the reports...\nend rprt------------\nprojected to edge: '[52][2]' at '14.01999, 0.0006940365, 0'. Shared edge is: '[12][0]'\nedge is NOT terminal. Checking to see if we're at the end...\ntest1, Triangles[52].AmAdjacentToTri(5): 'False'\nDecided NOT at the end. Set new current tri to: '12'...\n\nwhile3=============================================== \n(currentTri: '12', startPt: '14.01999, 0.0006940365, 0')\nprojecting through triangle...\ntri.prjctThrToPerim report----------------\nProjectThroughToPerimeter( (14.02, 0.00, 0.00), (11.99, 0.00, -2.82), 0 )\nmethod succeeded on edge 1. Here are the reports...\nend rprt------------\nprojected to edge: '[12][1]' at '13.02985, 0.0006940365, -1.374191'. Shared edge is: '[13][0]'\nedge is NOT terminal. Checking to see if we're at the end...\ntest1, Triangles[12].AmAdjacentToTri(5): 'False'\nDecided NOT at the end. Set new current tri to: '13'...\n\nwhile4=============================================== \n(currentTri: '13', startPt: '13.02985, 0.0006940365, -1.374191')\nprojecting through triangle...\ntri.prjctThrToPerim report----------------\nProjectThroughToPerimeter( (13.03, 0.00, -1.37), (11.99, 0.00, -2.82), 0 )\nmethod succeeded on edge 1. Here are the reports...\nend rprt------------\nprojected to edge: '[13][1]' at '12.96993, 0.0006940365, -1.457362'. Shared edge is: '[14][2]'\nedge is NOT terminal. Checking to see if we're at the end...\ntest1, Triangles[13].AmAdjacentToTri(5): 'False'\nDecided NOT at the end. Set new current tri to: '14'...\n\nwhile5=============================================== \n(currentTri: '14', startPt: '12.96993, 0.0006940365, -1.457362')\nprojecting through triangle...\ntri.prjctThrToPerim report----------------\nProjectThroughToPerimeter( (12.97, 0.00, -1.46), (11.99, 0.00, -2.82), 2 )\nmethod succeeded on edge 1. Here are the reports...\nend rprt------------\nprojected to edge: '[14][1]' at '12.9183, 0.0006940365, -1.529014'. Shared edge is: '[4][0]'\nedge is NOT terminal. Checking to see if we're at the end...\ntest1, Triangles[14].AmAdjacentToTri(5): 'True'\nDecided NOT at the end. Set new current tri to: '4'...\n\nwhile6=============================================== \n(currentTri: '4', startPt: '12.9183, 0.0006940365, -1.529014')\nprojecting through triangle...\ntri.prjctThrToPerim report----------------\nProjectThroughToPerimeter( (12.92, 0.00, -1.53), (11.99, 0.00, -2.82), 0 )\nmethod succeeded on edge 1. Here are the reports...\nend rprt------------\nprojected to edge: '[4][1]' at '12.40101, 0.0006940365, -2.246982'. Shared edge is: '[5][2]'\nedge is NOT terminal. Checking to see if we're at the end...\ntest1, Triangles[4].AmAdjacentToTri(5): 'True'\nDecided AM at the end. Stopping...\nfinally returning: 'False'\n",
+    "DBG_NavmeshProjectionRprt": "Searching through '84' tris...\ni: '0'....................\ni: '1'....................\ni: '2'....................\ni: '3'....................\ni: '4'....................\ni: '5'....................\nfound AM in shape project at '(11.99, 0.00, -2.82)'...\ni: '6'....................\ni: '7'....................\ni: '8'....................\ni: '9'....................\ni: '10'....................\ni: '11'....................\ni: '12'....................\ni: '13'....................\ni: '14'....................\ni: '15'....................\ni: '16'....................\ni: '17'....................\ni: '18'....................\ni: '19'....................\ni: '20'....................\ni: '21'....................\ni: '22'....................\ni: '23'....................\ni: '24'....................\ni: '25'....................\ni: '26'....................\ni: '27'....................\ni: '28'....................\ni: '29'....................\ni: '30'....................\ni: '31'....................\ni: '32'....................\ni: '33'....................\ni: '34'....................\ni: '35'....................\ni: '36'....................\ni: '37'....................\ni: '38'....................\ni: '39'....................\ni: '40'....................\ni: '41'....................\ni: '42'....................\ni: '43'....................\ni: '44'....................\ni: '45'....................\ni: '46'....................\ni: '47'....................\ni: '48'....................\ni: '49'....................\ni: '50'....................\ni: '51'....................\ni: '52'....................\ni: '53'....................\ni: '54'....................\ni: '55'....................\ni: '56'....................\ni: '57'....................\ni: '58'....................\ni: '59'....................\ni: '60'....................\ni: '61'....................\ni: '62'....................\ni: '63'....................\ni: '64'....................\ni: '65'....................\ni: '66'....................\ni: '67'....................\ni: '68'....................\ni: '69'....................\ni: '70'....................\ni: '71'....................\ni: '72'....................\ni: '73'....................\ni: '74'....................\ni: '75'....................\ni: '76'....................\ni: '77'....................\ni: '78'....................\ni: '79'....................\ni: '80'....................\ni: '81'....................\ni: '82'....................\ni: '83'....................\nfinished. returning: '5' with pt: '(11.99, 0.00, -2.82)'\n"
+}

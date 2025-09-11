@@ -5,10 +5,7 @@ using UnityEngine;
 
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
-using UnityEditor.PackageManager.UI;
-using System.Runtime.InteropServices;
 using System;
-using System.Text;
 
 namespace LogansNavigationExtension
 {
@@ -118,7 +115,7 @@ namespace LogansNavigationExtension
 				return;
 			}
 
-			DateTime dt_osgStart = DateTime.Now;
+			//DateTime dt_osgStart = DateTime.Now;
 			string diagLag = "";
 
 			if ( !Application.isPlaying && Event.current.type == EventType.MouseMove )
@@ -221,7 +218,7 @@ namespace LogansNavigationExtension
 			if (_targetScript.OperationMode == LNX_OperationMode.Translating && _targetScript.HaveVertsSelected)
 			{
 				//note: This block is called continuously when the mouse moves and the above if-check is satisfied...
-				DateTime dt_blockStart = DateTime.Now;
+				//DateTime dt_blockStart = DateTime.Now;
 
 				EditorGUI.BeginChangeCheck();
 
@@ -313,8 +310,8 @@ namespace LogansNavigationExtension
 				EditorUtility.SetDirty( _targetScript );
 			}
 
-			diagLag += $"osg took: '{DateTime.Now.Subtract(dt_osgStart)}'...";
-			Debug.Log(diagLag);
+			//diagLag += $"osg took: '{DateTime.Now.Subtract(dt_osgStart)}'...";
+			//Debug.Log(diagLag);
 		}
 	}
 }

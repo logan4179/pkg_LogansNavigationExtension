@@ -108,7 +108,7 @@ namespace LogansNavigationExtension
 
 			//https://math.libretexts.org/Bookshelves/Algebra/Algebra_and_Trigonometry_1e_(OpenStax)/10%3A_Further_Applications_of_Trigonometry/10.01%3A_Non-right_Triangles_-_Law_of_Sines
 
-			Vector3 v_starPtTToEndPt = (endPt.V_Point - startPt.V_Point);
+			Vector3 v_starPtTToEndPt = (endPt.V_Position - startPt.V_Position);
 			Vector3 v_endPtToStartPt = -v_starPtTToEndPt;
 			float dist_hypotenuse = v_endPtToStartPt.magnitude;
 			float angleA = 90f - Vector3.Angle(startPt.V_normal, v_starPtTToEndPt.normalized);
@@ -118,7 +118,7 @@ namespace LogansNavigationExtension
 			//note: need to convert to radians in the following, as opposed to degrees...
 			float distA = Mathf.Sin(Mathf.Deg2Rad * angleB) * (dist_hypotenuse / Mathf.Sin(Mathf.Deg2Rad * angle_opposingHypotenuse)); //This is a re-ordered algebraic equation based on trigonometry
 
-			resultPt = startPt.V_Point + Vector3.ProjectOnPlane(v_starPtTToEndPt, startPt.V_normal).normalized * distA;
+			resultPt = startPt.V_Position + Vector3.ProjectOnPlane(v_starPtTToEndPt, startPt.V_normal).normalized * distA;
 
 			return resultPt;
 		}
@@ -526,11 +526,88 @@ namespace LogansNavigationExtension
 		}
 	}
 
+	/// <summary>
+	/// A more basic representation of an LNX_Triangle. This is useful in situations where you need an 
+	/// object that will have a much cheaper serialization cost than a full LNX_Triangle.
+	/// </summary>
+	[System.Serializable]
+	public struct LNX_AtomicTriangle
+	{
+		public Vector3 VertPos0_current, VertPos0_orig;
+
+		public Vector3 VertPos1_current, VertPos1_orig;
+
+		public Vector3 VertPos2_current, VertPos2_orig;
+
+		public LNX_AtomicTriangle ( LNX_Triangle tri )
+		{
+			VertPos0_current = tri.Verts[0].V_Position;
+			VertPos0_orig = tri.Verts[0].OriginalPosition;
+
+			VertPos1_current = tri.Verts[1].V_Position;
+			VertPos1_orig = tri.Verts[1].OriginalPosition;
+
+			VertPos2_current = tri.Verts[2].V_Position;
+			VertPos2_orig = tri.Verts[2].OriginalPosition;
+
+		}
+
+		public LNX_AtomicTriangle( Vector3 v0pos, Vector3 v1pos, Vector3 v2pos )
+		{
+			VertPos0_current = v0pos;
+			VertPos0_orig = v0pos;
+
+			VertPos1_current = v1pos;
+			VertPos1_orig = v1pos;
+
+			VertPos2_current = v2pos;
+			VertPos2_orig = v2pos;
+		}
+
+		/// <summary>
+		/// Returns any vertices owned by this triangle that originally existed at the supplied position before 
+		/// being modified.
+		/// </summary>
+		/// <param name="pos"></param>
+		/// <returns></returns>
+		public int GetVertIndextAtOriginalPosition(Vector3 pos)
+		{
+			if ( VertPos0_orig == pos )
+			{
+				return 0;
+			}
+			else if ( VertPos1_orig == pos )
+			{
+				return 1;
+			}
+			else if ( VertPos2_orig == pos)
+			{
+				return 2;
+			}
+
+			return -1;
+		}
+
+		public bool HasVertAtOriginalPosition(Vector3 pos)
+		{
+			if ( GetVertIndextAtOriginalPosition(pos) > -1 )
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+	}
+
+	[System.Serializable]
 	public struct LNX_ProjectionHit
 	{
 		/// <summary>Index of the Triangle or component that was hit, depending on the context.</summary>
 		public int Index_Hit;
 		public Vector3 HitPosition;
+		public float DistanceAway;
 
 		private static LNX_ProjectionHit none = new LNX_ProjectionHit(-1, Vector3.zero);
 
@@ -538,6 +615,14 @@ namespace LogansNavigationExtension
 		{
 			Index_Hit = indx;
 			HitPosition = pos;
+			DistanceAway = 0f;
+		}
+
+		public LNX_ProjectionHit(int indx, Vector3 hitpos, Vector3 originpos )
+		{
+			Index_Hit = indx;
+			HitPosition = hitpos;
+			DistanceAway = Vector3.Distance(originpos, hitpos);
 		}
 
 		public static LNX_ProjectionHit None
@@ -576,51 +661,68 @@ namespace LogansNavigationExtension
 	{
 		public LNX_ComponentCoordinate RelatedVertCoordinate;
 
-		public Vector3 RelatedVertPosition;
+		public Vector3 RelatedVertPosition => PathTo.EndGoal;
+		public Vector3 OwnerVertPosition => PathTo.StartPoint;
 
 		public bool CanSee;
 
 		/// <summary>The shortest possible distance to the destination vertex via traveling over the surface of the navmesh</summary>
-		public float FlatDistance => PathTo.Distance;
+		public float PathDistance => PathTo.TotalDistance;
 
 		/// <summary>The most direct path from the perspective vert to the related vert </summary>
-		public LNX_Path PathTo;
+		public LNX_Path PathTo; 
+
+		/// <summary>If true, this vert and it's related vert are part of the same terminal cutout 
+		/// (obstacle) in the navmesh. This efficiency boolean is useful for efficient pathfinding 
+		/// around obstacles</summary>
+		//public bool AmPartOfSharedTerminalCutout; //todo: implement
 
 		public LNX_VertexRelationship( LNX_Vertex myVert, LNX_Vertex relatedVert, LNX_NavMesh nvMsh )
 		{
 			RelatedVertCoordinate = relatedVert.MyCoordinate;
-
-			RelatedVertPosition = relatedVert.V_Position;
-
-			PathTo = LNX_Path.None;
 			CanSee = false;
+
+			PathTo = new LNX_Path
+			( 
+				new List<LNX_ProjectionHit> 
+				{ 
+					new LNX_ProjectionHit(myVert.TriangleIndex, myVert.V_Position),
+					new LNX_ProjectionHit(relatedVert.TriangleIndex, relatedVert.V_Position)
+				}, 
+				nvMsh 
+			);
+
+
+			if (myVert.AreSiblings(relatedVert))
+			{
+				CanSee = true;
+			}
+		}
+
+		public void CalculatePathing( LNX_NavMesh nm, LNX_Vertex myVert ) //unfortunately, I
+		//couldn't do this during the ctor bc of dependencies
+		{
+			LNX_Vertex relatedVert = nm.GetVertexAtCoordinate( RelatedVertCoordinate );
 
 			if ( myVert.AreSiblings(relatedVert) )
 			{
 				PathTo = new LNX_Path
 				( 
 					new List<Vector3>(){ myVert.V_Position, relatedVert.V_Position }, 
-					new List<Vector3>() { nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal,
-					nvMsh.Triangles[relatedVert.MyCoordinate.TrianglesIndex].V_PathingNormal}
+					new List<Vector3>() { nm.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal,
+					nm.Triangles[relatedVert.MyCoordinate.TrianglesIndex].V_PathingNormal}
 				);
+
 				CanSee = true;
 			}
 			else
 			{
-				//CanSee = !nvMsh.Raycast(myVert.V_Position, relatedVert.V_Position, 1f);
 
-				if ( CanSee )
+				CanSee = !nm.Raycast(myVert.V_Position, relatedVert.V_Position, 1f, out PathTo, false );
+
+				if ( !CanSee )
 				{
-					/*try
-					{
-						nvMsh.CalculatePath( myVert.V_Position, relatedVert.V_Position, 0.3f, out PathTo );
-					}
-					catch (System.Exception e)
-					{
-						Debug.Log($"caught exception. dumping report...");
-						Debug.Log( nvMsh.dbgCalculatePath );
-						throw;
-					}*/
+					nm.CalculatePath(myVert.V_Position, relatedVert.V_Position, 0.2f, out PathTo, false);
 				}
 			}
 		}
@@ -629,7 +731,9 @@ namespace LogansNavigationExtension
 		{
 			return $"Related: '{RelatedVertCoordinate}'\n" +
 				$"{nameof(CanSee)}: '{CanSee}'\n" +
-				$"flatdist: '{FlatDistance}'\n" +
+				$"PathPoints: '{PathTo.PathPoints.Count}'\n" +
+				$"flatdist: '{PathDistance}'\n" +
+
 				$"";
 		}
 	}

@@ -1,22 +1,12 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Xml;
-using UnityEditor.SearchService;
 using UnityEngine;
-using UnityEngine.AI;
-using UnityEngine.UIElements;
-using static UnityEditor.PlayerSettings;
-
 
 namespace LogansNavigationExtension
 {
 	[System.Serializable]
 	public class LNX_Triangle
 	{
-		public string name;
-
 		/// <summary>Describes this triangle's position inside the containing manager's Triangles array </summary>
 		[SerializeField, HideInInspector] private int index_inCollection;
 		public int Index_inCollection => index_inCollection;
@@ -123,6 +113,9 @@ namespace LogansNavigationExtension
 			}
 		}
 
+		/// <summary>Whether this triangle's face direction is oriented correctly </summary>
+		public bool AmKinked => Vector3.Dot(v_SurfaceNormal_cached, V_PlaneFaceNormal) <= 0f; //note: this will only work if the plane face normal is calculated correctly. Will need to make sure to do that
+
 		//[Header("OTHER")]
 		/// <summary>Normal derived by sampling the terrain underfoot.</summary>
 		[HideInInspector] public Vector3 v_sampledNormal;
@@ -141,31 +134,27 @@ namespace LogansNavigationExtension
 			}
 		}
 
-		[Header("DEBUG")]
-		[TextArea(0,10)] public string DBG_Class;
-		[SerializeField] private string DbgCalculateTriInfo;
+		//[Header("DEBUG")]
+		//[TextArea(0,10)] public string DBG_Class;
+		//[SerializeField] private string DbgCalculateTriInfo;
 		/*[TextArea(0, 10)]*/
-		[HideInInspector] public string DBG_Relationships;
+		//[HideInInspector] public string DBG_Relationships;
 
 		public LNX_Triangle( int parallelIndex, int areaIndx, Vector3 vrtPos0, Vector3 vrtPos1, Vector3 vrtPos2, LNX_NavMesh navMesh )
 		{
-			//Debug.Log($"tri ctor. {nameof(parallelIndex)}: '{parallelIndex}' (x3: '{parallelIndex * 3}'). verts start: '{nmTriangulation.indices[(parallelIndex * 3)]}'");
-
-			DBG_Class = $"ctor '({DateTime.Now.ToString()})'...\n";
+			//DBG_Class = $"ctor '({DateTime.Now.ToString()})'...\n";
 
 			index_inCollection = parallelIndex;
 
 			AreaIndex = areaIndx;
 			v_SurfaceNormal_cached = navMesh.GetSurfaceNormal();
 
+			V_Center = (vrtPos0 + vrtPos1 + vrtPos2) / 3f;
+
 			Verts = new LNX_Vertex[3];
 			Verts[0] = new LNX_Vertex( this, vrtPos0, index_inCollection, 0 );
 			Verts[1] = new LNX_Vertex( this, vrtPos1, index_inCollection, 1 );
 			Verts[2] = new LNX_Vertex( this, vrtPos2, index_inCollection, 2 );
-
-			V_Center = (Verts[0].V_Position + Verts[1].V_Position + Verts[2].V_Position) / 3f;
-
-			//v_flattenedCenter = GetFlattenedPosition( V_Center ); //dws
 
 			Edges = new LNX_Edge[3];
 			Edges[0] = new LNX_Edge( this, Verts[1], Verts[2], index_inCollection, 0 );
@@ -175,6 +164,7 @@ namespace LogansNavigationExtension
 			CalculateDerivedInfo();
 			SampleNormal( navMesh ); 
 
+			/*
 			DBG_Class += $"\nEnd of ctor(). Report:\n" +
 				$"{nameof(V_Center)}: '{V_Center}'\n" +
 				$"{nameof(V_FlattenedCenter)}: '{V_FlattenedCenter}'\n" +
@@ -182,20 +172,23 @@ namespace LogansNavigationExtension
 				$"derivdNrml: '{V_PlaneFaceNormal}'\n" +
 				$"edge lengths: '{Edges[0].EdgeLength}', '{Edges[1].EdgeLength}', '{Edges[2].EdgeLength}'\n" +
 				$"Prmtr: '{Perimeter}', Area: '{AreaIndex}'\n\n";
+			*/
 
+			/*
 			DbgCalculateTriInfo = $"{nameof(V_Center)}: '{V_Center}'\n" +
 				$"{nameof(V_FlattenedCenter)}: '{V_FlattenedCenter}'\n" +
 				$"nrml (smpld): '{v_sampledNormal}', prjctd: '{v_SurfaceNormal_cached}'\n" +
 				$"derivdNrml: '{V_PlaneFaceNormal}'\n" +
 				$"edge lengths: '{Edges[0].EdgeLength}', '{Edges[1].EdgeLength}', '{Edges[2].EdgeLength}'\n" +
 				$"Prmtr: '{Perimeter}', Area: '{AreaIndex}'\n";
+			*/
 		}
 
 		public void AdoptValues( LNX_Triangle baseTri )
 		{
 			index_inCollection = baseTri.index_inCollection;
 
-			DbgCalculateTriInfo = baseTri.DbgCalculateTriInfo;
+			//DbgCalculateTriInfo = baseTri.DbgCalculateTriInfo;
 
 			V_Center = baseTri.V_Center;
 			v_sampledNormal = baseTri.v_sampledNormal;
@@ -211,8 +204,6 @@ namespace LogansNavigationExtension
 
 			AdjacentTriIndices = baseTri.AdjacentTriIndices;
 			dirtyFlag_repositionedVert = false;
-
-			name = $"ind: '{index_inCollection}', ctr: '{V_Center}'";
 		}
 
 		public void RefreshMe( LNX_NavMesh nm, bool meshContinuityHasChanged ) //NEW
@@ -261,11 +252,16 @@ namespace LogansNavigationExtension
 
 				AdjacentTriIndices = temp_adjcntTriIndics.ToArray();
 
-				Edges[0].CalculateRelational(nm);
-				Edges[1].CalculateRelational(nm);
-				Edges[2].CalculateRelational(nm);
+				Edges[0].CreateRelationships(nm);
+				Edges[1].CreateRelationships(nm);
+				Edges[2].CreateRelationships(nm);
 				#endregion
 			}
+		}
+
+		public void EstablishRelationalPathing( LNX_NavMesh nm )
+		{
+
 		}
 
 
@@ -282,23 +278,21 @@ namespace LogansNavigationExtension
 			V_PlaneFaceNormal = Vector3.Cross(
 				Vector3.Normalize(Verts[0].V_Position - Verts[1].V_Position),
 				Vector3.Normalize(Verts[2].V_Position - Verts[1].V_Position)
-			);
+			).normalized;
 			if ( Vector3.Dot(v_SurfaceNormal_cached, V_PlaneFaceNormal) > Vector3.Dot(v_SurfaceNormal_cached, -V_PlaneFaceNormal) )
 			{
 				V_PlaneFaceNormal = -V_PlaneFaceNormal;
 			}
 			#endregion
 
-			Edges[0].CalculateDerivedInfo(this, Verts[1], Verts[2]);
-			Edges[1].CalculateDerivedInfo(this, Verts[0], Verts[2]);
-			Edges[2].CalculateDerivedInfo(this, Verts[1], Verts[0]);
-
-			name = $"ind: '{index_inCollection}', ctr: '{V_Center}'";
+			Edges[0].CalculateDerivedInfo(this);
+			Edges[1].CalculateDerivedInfo(this);
+			Edges[2].CalculateDerivedInfo(this);
 		}
 
 		public void SampleNormal( LNX_NavMesh nm )
 		{
-			DbgCalculateTriInfo += $"{nameof(SampleNormal)}() report\n";
+			//DbgCalculateTriInfo += $"{nameof(SampleNormal)}() report\n";
 
 			RaycastHit rcHit = new RaycastHit();
 
@@ -309,14 +303,14 @@ namespace LogansNavigationExtension
 			);
 			V_PlaneFaceNormal = -castDir.normalized; //setting this here to a default because why not...
 
-			DbgCalculateTriInfo += $"castdir decided to be: '{castDir}'\n";
+			//DbgCalculateTriInfo += $"castdir decided to be: '{castDir}'\n";
 
 			if (
 				Physics.Linecast(V_Center - (castDir.normalized * 0.3f),
 				V_Center + (castDir.normalized * 0.3f),
 				out rcHit, nm.CachedLayerMask))
 			{
-				DbgCalculateTriInfo += $"rc1 success. hit at: '{rcHit.point}'\n";
+				//DbgCalculateTriInfo += $"rc1 success. hit at: '{rcHit.point}'\n";
 				v_sampledNormal = rcHit.normal;
 				//v_planarNormal = -castDir.normalized; //because if we hit something, that tells us which direction the planar normal should probably face.
 			}
@@ -325,7 +319,7 @@ namespace LogansNavigationExtension
 				V_Center - (castDir.normalized * 0.3f),
 				out rcHit, nm.CachedLayerMask))
 			{
-				DbgCalculateTriInfo += $"rc2 success\n";
+				//DbgCalculateTriInfo += $"rc2 success\n";
 				v_sampledNormal = rcHit.normal;
 				V_PlaneFaceNormal = castDir.normalized;//because if we hit something, that tells us which direction the planar normal should probably face.
 			}
@@ -338,13 +332,13 @@ namespace LogansNavigationExtension
 				V_Center + (-v_SurfaceNormal_cached * 0.3f),
 				out rcHit, nm.CachedLayerMask))
 			{
-				DbgCalculateTriInfo += $"linecast success. hit at: '{rcHit.point}'\n";
+				//DbgCalculateTriInfo += $"linecast success. hit at: '{rcHit.point}'\n";
 				v_sampledNormal = rcHit.normal;
 			}
 			else
 			{
 				v_sampledNormal = Vector3.zero;
-				DbgCalculateTriInfo += $"";
+				//DbgCalculateTriInfo += $"";
 			}
 			#endregion
 		}
@@ -501,7 +495,7 @@ namespace LogansNavigationExtension
 			return false;
 		}
 
-		[TextArea(1,5)] public string dbg_prjctThrhToPerim;
+		[NonSerialized] public string dbg_prjctThrhToPerim;
 		public LNX_ProjectionHit ProjectThroughToPerimeter( Vector3 innerPos, Vector3 outerPos, int indx_edgeExclude = -1 )
 		{
 			dbg_prjctThrhToPerim = $"ProjectThroughToPerimeter( {innerPos}, {outerPos}, {indx_edgeExclude} )\n";
@@ -521,48 +515,51 @@ namespace LogansNavigationExtension
 			(
 				(indx_edgeExclude == -1 || indx_edgeExclude != 0) &&
 				!Edges[0].DoesPositionLieOnEdge(ftndInrPos, v_SurfaceNormal_cached) && 
-				Edges[0].DoesProjectionIntersectEdge(innerPos, outerPos, v_SurfaceNormal_cached, ref dbg_prjctThrhToPerim, out projectedEdgePosition) 
+				Edges[0].DoesProjectionIntersectEdge(innerPos, outerPos, v_SurfaceNormal_cached, out projectedEdgePosition) 
 			)
 			{
-				dbg_prjctThrhToPerim += $"method succeeded on edge 0. Here are the reports...\n" +
-					$"rprt----\n" +
-					$"{Edges[0].dbg_doesPositionLieOnEdge}\n" +
-					$"---end of reports. returning indx: '{0}', pos: '{projectedEdgePosition}'...\n";
+				dbg_prjctThrhToPerim += $"method succeeded on edge 0. Here are the reports...\n";
 				return new LNX_ProjectionHit( 0, projectedEdgePosition );
 			}
 			else if
 			(
 				(indx_edgeExclude == -1 || indx_edgeExclude != 1) &&
 				!Edges[1].DoesPositionLieOnEdge(ftndInrPos, v_SurfaceNormal_cached) &&
-				Edges[1].DoesProjectionIntersectEdge(innerPos,outerPos, v_SurfaceNormal_cached, ref dbg_prjctThrhToPerim, out projectedEdgePosition) 
+				Edges[1].DoesProjectionIntersectEdge(innerPos,outerPos, v_SurfaceNormal_cached, out projectedEdgePosition) 
 			)
 			{
-				dbg_prjctThrhToPerim += $"method succeeded on edge 1. Here are the reports...\n" +
-					$"IsPositionOnGivenEdge rprt----\n" +
-					$"{Edges[1].dbg_doesPositionLieOnEdge}\n" +
-					$"---end of reports. returning indx: '{1}', pos: '{projectedEdgePosition}'...\n";
+				dbg_prjctThrhToPerim += $"method succeeded on edge 1. Here are the reports...\n";
 				return new LNX_ProjectionHit( 1, projectedEdgePosition );
 			}
 			else if
 			(
 				(indx_edgeExclude == -1 || indx_edgeExclude != 2) &&
 				!Edges[2].DoesPositionLieOnEdge(ftndInrPos, v_SurfaceNormal_cached) && 
-				Edges[2].DoesProjectionIntersectEdge(innerPos, outerPos, v_SurfaceNormal_cached, ref dbg_prjctThrhToPerim, out projectedEdgePosition) 
+				Edges[2].DoesProjectionIntersectEdge(innerPos, outerPos, v_SurfaceNormal_cached, out projectedEdgePosition) 
 			)
 			{
-				dbg_prjctThrhToPerim += $"method succeeded on edge 2. Here are the reports...\n" +
-					$"IsPositionOnGivenEdge rprt----\n" +
-					$"{Edges[2].dbg_doesPositionLieOnEdge}\n" +
-					$"---end of reports. returning indx: '{2}', pos: '{projectedEdgePosition}'...\n";
+				dbg_prjctThrhToPerim += $"method succeeded on edge 2. Here are the reports...\n";
 				return new LNX_ProjectionHit( 2, projectedEdgePosition );
 			}
 			else
 			{
 				dbg_prjctThrhToPerim += $"NONE succeeded.\n" +
 					//$"onEdge0: '{IsPositionOnGivenEdge(ftndInrPos, 0)}', onEdge1: '{IsPositionOnGivenEdge(ftndInrPos, 1)}', onEdge2: '{IsPositionOnGivenEdge(ftndInrPos, 2)}'\n" +
-					$"onEdge0: '{Edges[0].DoesPositionLieOnEdge(ftndInrPos, v_SurfaceNormal_cached)}', " +
-					$"onEdge1: '{Edges[1].DoesPositionLieOnEdge(ftndInrPos, v_SurfaceNormal_cached)}', " +
-					$"onEdge2: '{Edges[2].DoesPositionLieOnEdge(ftndInrPos, v_SurfaceNormal_cached)}'\n" +
+					$"edge0\n" +
+					$" check1) '{Edges[0].DoesPositionLieOnEdge(ftndInrPos, v_SurfaceNormal_cached)}', " +
+					/*$"check2) '{Edges[0].DoesProjectionIntersectEdge(innerPos, outerPos, v_SurfaceNormal_cached, out projectedEdgePosition)}'\n" +*/
+					$"\ncheck2 (intersect report)\n{Edges[0].dbg_doesProjectionIntersectEdge}\n" +
+
+					$"edge1\n" +
+					$" check1) '{Edges[1].DoesPositionLieOnEdge(ftndInrPos, v_SurfaceNormal_cached)}', " +
+					/*$"check2) '{Edges[1].DoesProjectionIntersectEdge(innerPos, outerPos, v_SurfaceNormal_cached, out projectedEdgePosition)}'\n" +*/
+					$"\ncheck2 (intersect report)\n{Edges[1].dbg_doesProjectionIntersectEdge}\n" +
+
+					$"Edge2\n" +
+					$" check1) '{Edges[2].DoesPositionLieOnEdge(ftndInrPos, v_SurfaceNormal_cached)}' " +
+					/*$"check2) '{Edges[2].DoesProjectionIntersectEdge(innerPos, outerPos, v_SurfaceNormal_cached, out projectedEdgePosition)}'\n" +*/
+					$"\ncheck2 (intersect report)\n{Edges[2].dbg_doesProjectionIntersectEdge}\n" +
+
 					$" returning null...";
 				return LNX_ProjectionHit.None;
 			}
@@ -621,8 +618,6 @@ namespace LogansNavigationExtension
 			Edges[0].TriIndexChanged(newIndex);
 			Edges[1].TriIndexChanged(newIndex);
 			Edges[2].TriIndexChanged(newIndex);
-
-			name = $"ind: '{index_inCollection}', ctr: '{V_Center}'";
 		}
 
 		public void ClearModifications()
@@ -926,6 +921,7 @@ namespace LogansNavigationExtension
 			Verts[2].Ping( tris );
 		}
 
+		#region HELPERS --------------------------------------------------
 		public string GetCurrentInfoString()
 		{
 			string adjcntTriindcsString = $"count: '{AdjacentTriIndices.Length}'\n";
@@ -968,5 +964,106 @@ namespace LogansNavigationExtension
 			Edges[1].SayCurrentInfo();
 			Edges[2].SayCurrentInfo();
 		}
+
+		public string GetAnomolyString()
+		{
+			string returnString = string.Empty;
+
+			if( Index_inCollection < 0 )
+			{
+				returnString += $"{nameof(Index_inCollection)}: '{Index_inCollection}'\n";
+			}
+
+			if (MeshIndex_trianglesStart < 0)
+			{
+				returnString += $"{nameof(MeshIndex_trianglesStart)}: '{MeshIndex_trianglesStart}'\n";
+			}
+
+			if( Verts == null || Verts.Length == 0 )
+			{
+				returnString += $"{nameof(Verts)} collection not set.";
+			}
+
+			//Note: Add more checks as you go...
+
+			#region VERTS -------------------------------------------
+			string v0_string = Verts[0].GetAnomolyString();
+			string v1_string = Verts[1].GetAnomolyString();
+			string v2_string = Verts[2].GetAnomolyString();
+
+			if 
+			(
+				!string.IsNullOrWhiteSpace(v0_string) || 
+				!string.IsNullOrWhiteSpace(v1_string) ||
+				!string.IsNullOrWhiteSpace(v2_string)
+			)
+			{
+				returnString += $"Anomoly found in verts!\n";
+
+				if( !string.IsNullOrWhiteSpace(v0_string) )
+				{
+					returnString += $"Vert0---\n" +
+						$"{v0_string}\n";
+				}
+				if (!string.IsNullOrWhiteSpace(v1_string))
+				{
+					returnString += $"Vert1---\n" +
+						$"{v1_string}\n";
+				}
+				if (!string.IsNullOrWhiteSpace(v2_string))
+				{
+					returnString += $"Vert2---\n" +
+						$"{v2_string}\n";
+				}
+			}
+			#endregion
+
+			#region EDGES -------------------------------------------
+			string e0_string = Edges[0].GetAnomolyString();
+			string e1_string = Edges[1].GetAnomolyString();
+			string e2_string = Edges[2].GetAnomolyString();
+
+			if
+			(
+				!string.IsNullOrWhiteSpace(e0_string) ||
+				!string.IsNullOrWhiteSpace(e1_string) ||
+				!string.IsNullOrWhiteSpace(e2_string)
+			)
+			{
+				returnString += $"Anomoly found in Edges!\n";
+
+				if (!string.IsNullOrWhiteSpace(e0_string))
+				{
+					returnString += $"Edge0---\n" +
+						$"{e0_string}\n";
+				}
+				if (!string.IsNullOrWhiteSpace(e1_string))
+				{
+					returnString += $"Edge1---\n" +
+						$"{e1_string}\n";
+				}
+				if (!string.IsNullOrWhiteSpace(e2_string))
+				{
+					returnString += $"Edge2---\n" +
+						$"{e2_string}\n";
+				}
+			}
+			#endregion
+			return returnString;
+		}
+
+		public string GetRelationalString()
+		{
+			return $"LNX_Triangle[{Index_inCollection}].{nameof(GetRelationalString)}()\n" +
+				$"vert0\n" +
+				$"{Verts[0].GetRelationalString()}\n" +
+				$"vert1\n" +
+				$"{Verts[1].GetRelationalString()}\n" +
+				$"vert2\n" +
+				$"{Verts[2].GetRelationalString()}\n" +
+
+				$"";
+		}
+		#endregion
 	}
 }

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO.Compression;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
@@ -13,8 +12,6 @@ namespace LogansNavigationExtension
 		/// <summary>Current position of this vertex in 3d space. Potentially modified after initial
 		/// construction of the tri this vertex belongs to.</summary>
 		public Vector3 V_Position;
-
-		//[SerializeField, HideInInspector] private Vector3 V_flattenedPosition;
 
 		[SerializeField, HideInInspector] private Vector3 originalPosition;
 		/// <summary>Initial position, in 3d space, of this vertex upon creation of it's owning triangle, 
@@ -80,25 +77,34 @@ namespace LogansNavigationExtension
 			get {  return V_Position != originalPosition; }
 		}
 
+		public int TriangleIndex => MyCoordinate.TrianglesIndex;
+		public int ComponentIndex => MyCoordinate.ComponentIndex;
 
+		public bool AmOnTerminalEdge; //todo: Implement
 
 		[Header("RELATIONAL")] //---------------------------------------------------------------
 		[HideInInspector] public LNX_VertexRelationship[] Relationships;
-		
+
+		private int firstSiblingRelationshipIndex => MyCoordinate.ComponentIndex == 0 ? (MyCoordinate.TrianglesIndex * 3) + 1 : MyCoordinate.TrianglesIndex * 3;
 		public LNX_VertexRelationship FirstSiblingRelationship
 		{
 			get
 			{
-				return MyCoordinate.ComponentIndex == 0 ?
-					Relationships[(MyCoordinate.TrianglesIndex * 3) + 1] : Relationships[MyCoordinate.TrianglesIndex * 3];
+				/*return MyCoordinate.ComponentIndex == 0 ?
+					Relationships[(MyCoordinate.TrianglesIndex * 3) + 1] : Relationships[MyCoordinate.TrianglesIndex * 3];*/
+
+				return Relationships[firstSiblingRelationshipIndex];
 			}
 		}
+
+		private int secondSiblingRelationshipIndex => MyCoordinate.ComponentIndex == 2 ? (MyCoordinate.TrianglesIndex * 3) + 1 : (MyCoordinate.TrianglesIndex * 3) + 2;
 		public LNX_VertexRelationship SecondSiblingRelationship
 		{
 			get
 			{
-				return MyCoordinate.ComponentIndex == 2 ?
-					Relationships[(MyCoordinate.TrianglesIndex * 3) + 1] : Relationships[(MyCoordinate.TrianglesIndex * 3) + 2];
+				/*return MyCoordinate.ComponentIndex == 2 ?
+					Relationships[(MyCoordinate.TrianglesIndex * 3) + 1] : Relationships[(MyCoordinate.TrianglesIndex * 3) + 2];*/
+				return Relationships[secondSiblingRelationshipIndex];
 			}
 		}
 
@@ -121,12 +127,8 @@ namespace LogansNavigationExtension
 
 		public LNX_ComponentCoordinate[] SharedVertexCoordinates;
 
-		/*[TextArea(1,10)]*/ [HideInInspector] public string DBG_constructor;
-
 		public LNX_Vertex( LNX_Triangle ownerTri, Vector3 vrtPos, int triIndx, int cmpntIndx )
         {
-			DBG_constructor = "Ctor start...\n";
-
 			V_Position = vrtPos;
 			originalPosition = vrtPos;
 
@@ -138,13 +140,23 @@ namespace LogansNavigationExtension
 
 			Index_VisMesh_Vertices = -1;
 
-			DBG_constructor = $"Was passed pos: '{vrtPos}' indx: '{cmpntIndx}'\n\n" +
-				$"at tri[{MyCoordinate.TrianglesIndex}], [{MyCoordinate.ComponentIndex}]\n" +
-				$"Pos: '{V_Position}', orig: '{originalPosition}'\n" +
-				$"fltndPos: '{V_flattenedPosition}'\n" +
-				$"vToCtr: '{v_toCenter}'\n" +
-				$"nml: '{v_surfaceNormal_cached}', dstToCtr: '{DistanceToCenter}'\n" +
-				$"";
+			#region ESTABLISH SIBLING RELATIONSHIPS FIRST --------------------------------------------------
+			//I really wish I could find a way to do the following right here...
+			/*
+			Relationships = new LNX_VertexRelationship[nvmsh.Triangles.Length * 3];
+			//First establish initial relationships sibling relationships. This is important to do 
+			//now so that the rest can raycast without error...
+			Relationships[MyCoordinate.TrianglesIndex * 3] = new LNX_VertexRelationship(
+				this, nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[0], nvmsh
+			);
+			Relationships[(MyCoordinate.TrianglesIndex * 3) + 1] = new LNX_VertexRelationship(
+				this, nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[1], nvmsh
+			);
+			Relationships[(MyCoordinate.TrianglesIndex * 3) + 2] = new LNX_VertexRelationship(
+				this, nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[2], nvmsh
+			);
+			*/
+			#endregion
 		}
 
 		public void AdoptValues( LNX_Vertex vert )
@@ -159,7 +171,6 @@ namespace LogansNavigationExtension
 			Relationships = vert.Relationships;
 			SharedVertexCoordinates = vert.SharedVertexCoordinates;
 
-			DBG_constructor = vert.DBG_constructor;
 		}
 
 		public void TriIndexChanged( int newIndex )
@@ -169,14 +180,8 @@ namespace LogansNavigationExtension
 
 		public void CreateRelationships( LNX_NavMesh nvmsh ) //todo: unit test
 		{
-			DBG_constructor += $"{nameof(CreateRelationships)}() start...\n";
-			//Debug.Log( $"{nameof(CreateRelationships)}() for vert: '{MyCoordinate}'..." );
-
 			Relationships = new LNX_VertexRelationship[nvmsh.Triangles.Length * 3];
 			List<LNX_ComponentCoordinate> temp_sharedVrtCoords = new List<LNX_ComponentCoordinate>();
-
-			DBG_constructor += $"Initialized relationships list with '{Relationships.Length}'" +
-				$" entries. Iterating through...\n";
 
 			//First establish initial relationships sibling relationships. This is important to do 
 			//now so that the rest can raycast without error...
@@ -199,10 +204,7 @@ namespace LogansNavigationExtension
 					continue;
 				}
 
-				DBG_constructor += $"making relationships for verts belonging to tri: '{i}'...\n";
-				//Debug.Log($"iterated to verts belonging to tri: '{i}'...");
-
-				Relationships[(i*3)] = new LNX_VertexRelationship( this, nvmsh.Triangles[i].Verts[0], nvmsh );
+				Relationships[(i*3)] = new LNX_VertexRelationship( this, nvmsh.Triangles[i].Verts[0], nvmsh ); //Error trace
 				//Debug.Log($"created vert rel {i*3}\n{Relationships[i*3]}...");
 				if ( nvmsh.Triangles[i].Verts[0].V_Position == V_Position )
 				{
@@ -225,18 +227,18 @@ namespace LogansNavigationExtension
 			}
 
 			SharedVertexCoordinates = temp_sharedVrtCoords.ToArray();
+		}
 
-			DBG_constructor += $"\n{nameof(CreateRelationships)}() report...\n" +
-				$"AngAtBnd: '{AngleAtBend}', flatnd: '{AngleAtBend_flattened}' \n" +
-				$"vToFirst: '{V_ToFirstSiblingVert}', vToSecond: '{V_ToSecondSiblingVert}'\n" +
-				//$"'{}' - '{}'\n" +
-				$"{nameof(Index_VisMesh_Vertices)}: '{Index_VisMesh_Vertices}'\n" +
-				$"created '{Relationships.Length}' relationships...";
+		public void CalculatePathing( LNX_NavMesh nm )
+		{
+			for( int i = 0; i < Relationships.Length; i++ )
+			{
+				Relationships[i].CalculatePathing( nm, this );
+			}
 		}
 
 		#region API METHODS ------------------------------------------------------------
-		public string DBG_IsInCenterSweep;
-
+		[NonSerialized] public string DBG_IsInCenterSweep;
 		public bool IsInCenterSweep( Vector3 pos )
 		{
 			DBG_IsInCenterSweep = $"Vert{MyCoordinate.ComponentIndex}.{nameof(IsInCenterSweep)}({pos}) " +
@@ -272,6 +274,7 @@ namespace LogansNavigationExtension
 		}
 		#endregion
 
+		#region RELATIONAL METHODS----------------------------------------------
 		public int GetNumberOfSharedVerts( int triIndex )
 		{
 			if( triIndex == MyCoordinate.TrianglesIndex )
@@ -291,12 +294,21 @@ namespace LogansNavigationExtension
 			return sharedCount;
 		}
 
+		public bool AreSiblings( LNX_ComponentCoordinate otherVertCoordinate )
+		{
+			return MyCoordinate.TrianglesIndex > -1 &&
+				otherVertCoordinate.TrianglesIndex > -1 &&
+				MyCoordinate.TrianglesIndex == otherVertCoordinate.TrianglesIndex;
+		}
+
 		public bool AreSiblings( LNX_Vertex otherVert )
 		{
 			return MyCoordinate.TrianglesIndex > -1 && 
 				otherVert.MyCoordinate.TrianglesIndex > -1 && 
 				MyCoordinate.TrianglesIndex == otherVert.MyCoordinate.TrianglesIndex;
 		}
+
+		#endregion
 
 		public void Ping( LNX_Triangle[] tris )
 		{
@@ -311,6 +323,7 @@ namespace LogansNavigationExtension
 			}
 		}
 
+		#region HELPERS --------------------------------------------------
 		public string GetCurrentInfoString()
 		{
 			return $"Vert.{nameof(SayCurrentInfo)}()\n" +
@@ -334,5 +347,58 @@ namespace LogansNavigationExtension
 		{
 			return $"{MyCoordinate.ToString()} {V_Position}";
 		}
+
+		public string GetAnomolyString()
+		{
+			string returnString = string.Empty;
+
+			if ( MyCoordinate.TrianglesIndex < 0 || MyCoordinate.ComponentIndex < 0 )
+			{
+				returnString += $"{nameof(MyCoordinate)}: '{MyCoordinate}'\n";
+			}
+
+			if (V_Position == Vector3.zero)
+			{
+				returnString += $"{nameof(V_Position)}: '{V_Position}'\n";
+			}
+
+			if (originalPosition == Vector3.zero)
+			{
+				returnString += $"{nameof(originalPosition)}: '{originalPosition}'\n";
+			}
+
+			if (Index_VisMesh_Vertices == -1 )
+			{
+				returnString += $"{nameof(Index_VisMesh_Vertices)}: '{Index_VisMesh_Vertices}'\n";
+			}
+
+			if (v_triCenter_cached == Vector3.zero)
+			{
+				returnString += $"{nameof(v_triCenter_cached)}: '{v_triCenter_cached}'\n";
+			}
+
+			if (v_surfaceNormal_cached == Vector3.zero)
+			{
+				returnString += $"{nameof(v_surfaceNormal_cached)}: '{v_surfaceNormal_cached}'\n";
+			}
+
+			if ( Relationships == null || Relationships.Length == 0 )
+			{
+				returnString += $"{nameof(Relationships)} collection not set\n";
+			}
+
+			return returnString;
+		}
+
+		public string GetRelationalString()
+		{
+			return $"Vert[{ComponentIndex}].{nameof(GetRelationalString)}()\n" +
+				$"{nameof(Relationships)} count: '{Relationships.Length}'\n" +
+				$"{nameof(FirstSiblingRelationship)}: '{FirstSiblingRelationship}'\n" +
+				$"{nameof(SecondSiblingRelationship)}: '{SecondSiblingRelationship}'\n" +
+
+				$"";
+		}		
+		#endregion
 	}
 }

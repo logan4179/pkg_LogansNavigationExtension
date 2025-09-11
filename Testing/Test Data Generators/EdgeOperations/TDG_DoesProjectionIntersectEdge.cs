@@ -123,7 +123,6 @@ namespace LogansNavigationExtension
 					CapturedStartPositions[i],
 					CapturedEndPositions[i],
 					_navmesh.GetSurfaceNormal(),
-					ref DBG_Operation,
 					out CurrentProjectedPosition
 				);
 			}
@@ -216,7 +215,6 @@ namespace LogansNavigationExtension
 					startTrans.position,
 					endTrans.position,
 					_navmesh.GetSurfaceNormal(),
-					ref DBG_Operation,
 					out CurrentProjectedPosition
 				);
 			DBG_Operation += $"=============================\n";

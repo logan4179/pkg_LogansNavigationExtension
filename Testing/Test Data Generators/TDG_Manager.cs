@@ -43,6 +43,9 @@ namespace LogansNavigationExtension
 		public TDG_SamplePosition _tdg_samplePosition;
 		public static string filePath_testData_SamplePosition = Path.Combine( dirPath_testDataFolder, "tdg_samplePosition_data_A.json" );
 
+		public TDG_Raycasting _tdg_raycasting;
+		public static string filePath_testData_Raycasting = Path.Combine(dirPath_testDataFolder, "tdg_raycasting_data_A.json");
+
 		public TDG_CalculatePath _tdg_pathing;
 		public static string filePath_testData_pathing = $"{dirPath_testDataFolder}\\tdg_pathing_data_A.json";
 
@@ -231,25 +234,6 @@ namespace LogansNavigationExtension
 				}
 				#endregion
 
-				#region SAMPLE POSITION ---------------------------------------------------------------------
-				_tdg_samplePosition.GenerateHItResultCollections();
-
-				if( _tdg_samplePosition.capturedHitPositions == null || _tdg_samplePosition.capturedHitPositions.Count <= 0 || 
-					_tdg_samplePosition.capturedTriCenters == null || _tdg_samplePosition.capturedTriCenters.Count <= 0 )
-				{
-					Debug.LogError($"ERROR! Apparently something failed in {nameof(_tdg_samplePosition)}. returning early...");
-					return;
-				}
-				else
-				{
-					if( !_tdg_samplePosition.WriteMeToJson() )
-					{
-						Debug.LogError($"write to json didn't work on {nameof(_tdg_samplePosition)}. Returning early...");
-						return;
-					}
-				}
-				#endregion
-
 				#region PATHING ---------------------------------------------------
 				//todo: implement when this tdg works...
 				#endregion
@@ -293,6 +277,31 @@ namespace LogansNavigationExtension
 				if ( !_tdg_cuttingTests.WriteMeToJson() )
 				{
 					Debug.LogError($"write to json didn't work on {nameof(_tdg_cuttingTests)}. Returning early...");
+					return;
+				}
+				#endregion
+
+				#region NAVMESH OPERATIONS -------------------------------------------------
+				_tdg_samplePosition.GenerateHItResultCollections();
+
+				if (_tdg_samplePosition.capturedHitPositions == null || _tdg_samplePosition.capturedHitPositions.Count <= 0 ||
+					_tdg_samplePosition.capturedTriCenters == null || _tdg_samplePosition.capturedTriCenters.Count <= 0)
+				{
+					Debug.LogError($"ERROR! Apparently something failed in {nameof(_tdg_samplePosition)}. returning early...");
+					return;
+				}
+				else
+				{
+					if (!_tdg_samplePosition.WriteMeToJson())
+					{
+						Debug.LogError($"write to json didn't work on {nameof(_tdg_samplePosition)}. Returning early...");
+						return;
+					}
+				}
+
+				if ( !_tdg_raycasting.WriteMeToJson() )
+				{
+					Debug.LogError($"write to json didn't work on {nameof(_tdg_raycasting)}. Returning early...");
 					return;
 				}
 				#endregion

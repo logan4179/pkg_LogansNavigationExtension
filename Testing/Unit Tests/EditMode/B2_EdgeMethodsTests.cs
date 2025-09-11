@@ -180,7 +180,6 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 					_tdg_doesProjectionIntersectEdge.CapturedStartPositions[i],
 					_tdg_doesProjectionIntersectEdge.CapturedEndPositions[i],
 					_serializedLNXNavmesh.GetSurfaceNormal(),
-					ref rprt,
 					out prjctPos
 				);
 

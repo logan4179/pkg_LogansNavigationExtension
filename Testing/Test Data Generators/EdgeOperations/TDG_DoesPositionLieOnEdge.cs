@@ -63,12 +63,8 @@ namespace LogansNavigationExtension
 			DrawStandardFocusTriGizmos(_navmesh.Triangles[EdgeCoordinate.TrianglesIndex], 1f, $"tri{EdgeCoordinate.TrianglesIndex}");
 			DrawStandardEdgeFocusGizmos(CurrentEdge, 0.1f, "", Color.magenta);
 
-			DBG_Operation += $"Commencing edge operation...\n" +
-				$"projection report says:\n" +
-				$"{CurrentEdge.dbg_doesPositionLieOnEdge}" +
-				$"---------------------------------\n";
+			DBG_Operation += $"Commencing edge operation...\n";
 			CurrentProjectionResult = _navmesh.GetEdge(EdgeCoordinate).DoesPositionLieOnEdge(transform.position, _navmesh.GetSurfaceNormal() );
-			DBG_Operation += $"=============================\n";
 
 			Gizmos.color = CurrentProjectionResult ? Color.green : Color.red;
 
