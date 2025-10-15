@@ -1,7 +1,6 @@
 using JetBrains.Annotations;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics.Tracing;
-using System.Runtime.CompilerServices;
 using UnityEditor;
 using UnityEngine;
 using static UnityEditor.PlayerSettings;
@@ -156,17 +155,44 @@ namespace LogansNavigationExtension
 
 		public static Vector3 FlatVector( Vector3 vector, Vector3 nrml )
 		{
-			if (nrml == Vector3.up || nrml == Vector3.down)
+			if( nrml == Vector3.zero )
 			{
-				return new Vector3(vector.x, 0f, vector.z);
+				Debug.LogError( $"LNX ERROR! You supplied a normal parameter of 0. Need a normal direction in order to flatten!" );
+				return Vector3.zero;
+			}
+
+			if ( (nrml == Vector3.up || nrml == Vector3.down) )
+			{
+				if( vector.y != 0f )
+				{
+					return new Vector3(vector.x, 0f, vector.z);
+				}
+				else
+				{
+					return vector;
+				}
 			}
 			else if (nrml == Vector3.right || nrml == Vector3.left)
 			{
-				return new Vector3(0f, vector.y, vector.z);
+				if( vector.x != 0f )
+				{
+					return new Vector3(0f, vector.y, vector.z);
+				}
+				else
+				{
+					return vector;
+				}
 			}
 			else if (nrml == Vector3.forward || nrml == Vector3.back)
 			{
-				return new Vector3(vector.x, vector.y, 0f);
+				if( vector.z != 0f )
+				{
+					return new Vector3(vector.x, vector.y, 0f);
+				}
+				else
+				{
+					return vector;
+				}
 			}
 			else if ( nrml != Vector3.zero )
 			{
@@ -192,10 +218,138 @@ namespace LogansNavigationExtension
 			}
 		}
 
+		public static bool PositionIsBetweenTriPoints( Vector3 pos, Vector3 triPointA,  Vector3 triPointB, Vector3 triPointC, Vector3 nrml/*, ref string dbgString*/ )
+		{
+			/*dbgString = $"{nameof(PositionIsBetweenTriPoints)}({pos}', \n" +
+				$"'{triPointA}', '{triPointB}', '{triPointC}')\n" +
+				$"'{nrml}'\n";*/
+
+			Vector3 v_a_to_b = Vector3.Normalize( FlatVector(triPointB,nrml) - FlatVector(triPointA,nrml) );
+			Vector3 v_a_to_c = Vector3.Normalize( FlatVector(triPointC, nrml) - FlatVector(triPointA, nrml) );
+			Vector3 v_ptA_to_pos = Vector3.Normalize( FlatVector(pos,nrml) - FlatVector(triPointA,nrml) );
+
+			float crnrAngle = Vector3.Angle( v_a_to_b, v_a_to_c ) + 0.001f;
+			/*dbgString += $"{nameof(crnrAngle)}: '{crnrAngle}'\n" +
+				$"{nameof(v_a_to_b)}: '{v_a_to_b}'\n" +
+				$"{nameof(v_a_to_c)}: '{v_a_to_c}'\n";*/
+
+			if
+			(  
+				Vector3.Angle(v_a_to_b, v_ptA_to_pos) < crnrAngle &&
+				Vector3.Angle(v_a_to_c, v_ptA_to_pos) < crnrAngle
+			)
+			{
+				//dbgString += $"cndtn1 passed...\n";
+				Vector3 v_b_toA = -v_a_to_b;
+				Vector3 v_b_to_c = Vector3.Normalize(FlatVector(triPointC, nrml) - FlatVector(triPointB, nrml));
+				Vector3 v_ptB_to_pos = Vector3.Normalize( FlatVector(pos, nrml) - FlatVector(triPointB, nrml) );
+				crnrAngle = Vector3.Angle(v_b_toA, v_b_to_c) + 0.001f;
+				/*dbgString += $"new crnr angle: '{crnrAngle}'\n" +
+					$"";*/
+
+				if
+				(
+					Vector3.Angle(v_b_toA, v_ptB_to_pos) < crnrAngle &&
+					Vector3.Angle(v_b_to_c, v_ptB_to_pos) < crnrAngle
+				)
+				{
+					//dbgString += $"cndtn2 passed...\n";
+
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		public static bool AmBetweenConcurrentLines( Vector3 pos, Vector3 lineAStart, Vector3 lineAEnd, Vector3 lineBStart, Vector3 lineBEnd, Vector3 nrml, ref string dbgRprt )
+		{
+			bool dbgIt = false;
+
+			if( lineAStart == lineAEnd && lineBStart == lineBEnd )
+			{
+				if(dbgIt) Debug.LogError($"LNX ERROR! You supplied '{nameof(AmBetweenConcurrentLines)}'() with two lines with the same start and end points.");
+				dbgRprt += $"LNX ERROR! You supplied '{nameof(AmBetweenConcurrentLines)}'() with two lines with the same start and end points.\n";
+				return false;
+			}
+
+			if ( lineAStart == lineAEnd )
+			{
+				if (dbgIt) Debug.Log("chose lineA equal to block...");
+				dbgRprt += "chose lineA equal to block...\n";
+
+				return PositionIsBetweenTriPoints( pos, lineAStart, lineBStart, lineBEnd, nrml/*, ref dbgit*/ );
+
+			}
+			if ( lineBStart == lineBEnd )
+			{
+				if (dbgIt) Debug.Log("chose lineB equal to block...");
+				dbgRprt += "chose lineB equal to block...\n";
+
+				return PositionIsBetweenTriPoints( pos, lineAStart, lineAEnd, lineBStart, nrml/*, ref dbgit*/);
+			}
+			else //This would be expected most of the time...
+			{
+				Vector3 v_lnAStart_to_lnAEnd = Vector3.Normalize(FlatVector(lineAEnd, nrml) - FlatVector(lineAStart, nrml));
+				Vector3 v_lnBStart_to_lnBEnd = Vector3.Normalize(FlatVector(lineBEnd, nrml) - FlatVector(lineBStart, nrml));
+				Vector3 v_lineAStart_to_pos = Vector3.Normalize(FlatVector(pos, nrml) - FlatVector(lineAStart, nrml));
+				Vector3 v_lineBStart_to_pos = Vector3.Normalize(FlatVector(pos, nrml) - FlatVector(lineBStart, nrml));
+
+				if (dbgIt)
+				{
+					Debug.Log($"vA: '{v_lnAStart_to_lnAEnd}', vB: '{v_lnBStart_to_lnBEnd}', " +
+					$"angA: '{Vector3.SignedAngle(v_lnAStart_to_lnAEnd, v_lineAStart_to_pos, nrml)}', angB: '{Vector3.SignedAngle(v_lnBStart_to_lnBEnd, v_lineBStart_to_pos, nrml)}'");
+				}
+				dbgRprt += $"vA: '{v_lnAStart_to_lnAEnd}', vB: '{v_lnBStart_to_lnBEnd}', " +
+					$"angA: '{Vector3.SignedAngle(v_lnAStart_to_lnAEnd, v_lineAStart_to_pos, nrml)}', angB: '{Vector3.SignedAngle(v_lnBStart_to_lnBEnd, v_lineBStart_to_pos, nrml)}'\n";
+
+				//Vector3 v_offset = Vector3.up * 0.2f;
+				//Debug.DrawLine(lineAStart + v_offset, lineAEnd + v_offset);
+				//Debug.DrawLine(lineBStart + v_offset, lineBEnd + v_offset);
+
+				dbgRprt = $"Angle1: '{Vector3.SignedAngle(v_lnAStart_to_lnAEnd, v_lineAStart_to_pos, nrml)}'\n" +
+				$"Angle2: '{Vector3.SignedAngle(v_lnBStart_to_lnBEnd, v_lineBStart_to_pos, nrml)}'\n";
+
+				if(dbgIt)
+				{
+					Debug.Log($"Angle1: '{Vector3.SignedAngle(v_lnAStart_to_lnAEnd, v_lineAStart_to_pos, nrml)}'\n" +
+						$"Angle2: '{Vector3.SignedAngle(v_lnBStart_to_lnBEnd, v_lineBStart_to_pos, nrml)}'");
+				}
+
+				if
+				(
+					Mathf.Sign(Vector3.SignedAngle(v_lnAStart_to_lnAEnd, v_lineAStart_to_pos, nrml)) !=
+					Mathf.Sign(Vector3.SignedAngle(v_lnBStart_to_lnBEnd, v_lineBStart_to_pos, nrml))
+				)
+				{
+					if(dbgIt) Debug.Log("returning true...");
+					dbgRprt += "returning true...\n";
+					return true;
+				}
+				else
+				{
+					if (dbgIt) Debug.Log("returning false...");
+					dbgRprt += "returning false...\n";
+
+					return false;
+				}
+			}
+		}
+
 		#region MATH OPERATIONS --------------------------------------
 		public static float CalculateTriangleEdgeLength( float angA, float angB, float lenB )
 		{
 			return Mathf.Sin(angA * Mathf.Deg2Rad) * lenB / Mathf.Sin(angB * Mathf.Deg2Rad);
+		}
+
+		public static float SignedAngleToFullDegrees( float angleAmount )
+		{
+			if( angleAmount < 0f )
+			{
+				return 180f + (180f - Mathf.Abs(angleAmount));
+			}
+
+			return angleAmount;
 		}
 		#endregion
 
@@ -411,6 +565,326 @@ namespace LogansNavigationExtension
 		}
 		#endregion
 
+		//NOte: The following "special" methods are methods that I don't really want to put in the object classes
+		// because it would feel like I'm cluttering/enlarging them with methods I don't commonly need in those classes
+		#region SPECIAL TRIANGLE METHODS ------------------------
+		/// <summary>
+		/// Gets the edge on a triangle that appears the widest from the supplied perspective.
+		/// </summary>
+		/// <returns></returns>
+		public static LNX_Edge GetWidestEdgeFromPerspective( Vector3 vPerspective, LNX_Triangle triangle )
+		{
+			float runningWidestAngle = Vector3.Angle(
+				triangle.Verts[triangle.Edges[0].StartVertIndex].V_flattenedPosition - FlatVector(vPerspective,triangle.v_SurfaceNormal_cached),
+				triangle.Verts[triangle.Edges[0].EndVertIndex].V_flattenedPosition - FlatVector(vPerspective, triangle.v_SurfaceNormal_cached)
+			);
+			int runningWidestEdge = 0;
+
+			if
+			(
+				Vector3.Angle(
+				triangle.Verts[triangle.Edges[1].StartVertIndex].V_flattenedPosition - FlatVector(vPerspective, triangle.v_SurfaceNormal_cached),
+				triangle.Verts[triangle.Edges[1].EndVertIndex].V_flattenedPosition - FlatVector(vPerspective, triangle.v_SurfaceNormal_cached)
+				) > runningWidestAngle
+			)
+			{
+				runningWidestAngle = Vector3.Angle(
+				triangle.Verts[triangle.Edges[1].StartVertIndex].V_flattenedPosition - FlatVector(vPerspective, triangle.v_SurfaceNormal_cached),
+				triangle.Verts[triangle.Edges[1].EndVertIndex].V_flattenedPosition - FlatVector(vPerspective, triangle.v_SurfaceNormal_cached)
+				);
+				runningWidestEdge = 1;
+			}
+
+			if
+			(
+				Vector3.Angle(
+				triangle.Verts[triangle.Edges[2].StartVertIndex].V_flattenedPosition - FlatVector(vPerspective, triangle.v_SurfaceNormal_cached),
+				triangle.Verts[triangle.Edges[2].EndVertIndex].V_flattenedPosition - FlatVector(vPerspective, triangle.v_SurfaceNormal_cached)
+				) > runningWidestAngle
+			)
+			{
+				runningWidestAngle = Vector3.Angle(
+				triangle.Verts[triangle.Edges[2].StartVertIndex].V_flattenedPosition - FlatVector(vPerspective, triangle.v_SurfaceNormal_cached),
+				triangle.Verts[triangle.Edges[2].EndVertIndex].V_flattenedPosition - FlatVector(vPerspective, triangle.v_SurfaceNormal_cached)
+				);
+				runningWidestEdge = 2;
+			}
+
+			return triangle.Edges[runningWidestEdge];
+		}
+
+		/// <summary>
+		/// Checks if any point on a given edge lies in the path between two triangles.
+		/// </summary>
+		/// <param name="nm"></param>
+		/// <param name="obstructEdge"></param>
+		/// <param name="triIndxA"></param>
+		/// <param name="triIndxB"></param>
+		/// <returns></returns>
+		public static bool DoesEdgeObstructTriPath(LNX_NavMesh nm, LNX_Edge obstructEdge, int triIndxA, int triIndxB, ref string dbgRprt )
+		{
+			dbgRprt = $"{nameof(DoesEdgeObstructTriPath)}() Report---------------\n" +
+				$"params--------\n" +
+				$"{nameof(obstructEdge)}: '{obstructEdge.ToString()}', midPos: '{obstructEdge.MidPosition}' (flt: '{obstructEdge.MidPosition_flat}')\n" +
+				$"{nameof(triIndxA)}: '{triIndxA}' (ctr: {nm.Triangles[triIndxA].V_Center}), {nameof(triIndxB)}: '{triIndxB}' (ctr: {nm.Triangles[triIndxB].V_Center})\n" +
+				$"nm surface orientation: '{nm.V_SurfaceOrientation}'\n" +
+				$"--\n\n";
+
+			if ( triIndxA == triIndxB )
+			{
+				dbgRprt += $"LNX Error! supplied triangle indices were the same. Returning early...\n";
+				Debug.LogError($"LNX Error! supplied triangle indices were the same. Returning early...");
+				return false;
+			}
+
+			Vector3 v_midPt = (nm.Triangles[triIndxA].V_Center + nm.Triangles[triIndxB].V_Center) / 2f; //necessary to obtain the correct edges...
+			//dbgRprt += $"midpoint between triangles calculated to be: '{v_midPt}'...\n";
+			//Debug.DrawLine(v_midPt, v_midPt + (Vector3.up * 5f));
+			//Debug.DrawLine(obstructEdge.MidPosition, obstructEdge.MidPosition + (Vector3.up * 2f));
+
+			LNX_Edge edgeA = GetWidestEdgeFromPerspective(v_midPt, nm.Triangles[triIndxA]);
+			LNX_Edge edgeB = GetWidestEdgeFromPerspective(v_midPt, nm.Triangles[triIndxB]);
+
+			//Debug.DrawLine(edgeA.StartPosition, edgeA.StartPosition + (Vector3.up * 1f));
+			//Debug.DrawLine(edgeA.EndPosition, edgeA.EndPosition + (Vector3.up * 1f));
+			//Debug.DrawLine(edgeB.StartPosition, edgeB.StartPosition + (Vector3.up * 1f));
+			//Debug.DrawLine(edgeB.EndPosition, edgeB.EndPosition + (Vector3.up * 1f));
+
+			dbgRprt += $"Chose widestEdgeA: '{edgeA}', strt: '{edgeA.StartPosition}', end: '{edgeA.EndPosition}', mid: '{edgeA.MidPosition}'\n" +
+				$"Chose widestEdgeB: '{edgeB}, strt: '{edgeB.StartPosition}', end: '{edgeB.EndPosition}', mid: '{edgeB.MidPosition}'\n" +
+				$"Obstructedge strt: '{obstructEdge.StartPosition}, end: '{obstructEdge.EndPosition}'...\n\n";
+
+			Vector3 v_startToStart = Vector3.Normalize(FlatVector(edgeB.StartPosition, nm.V_SurfaceOrientation) - FlatVector(edgeA.StartPosition, nm.V_SurfaceOrientation));
+			Vector3 v_startToEnd = Vector3.Normalize(FlatVector(edgeB.EndPosition, nm.V_SurfaceOrientation) - FlatVector(edgeA.StartPosition, nm.V_SurfaceOrientation));
+			Vector3 v_endToStart = Vector3.Normalize(FlatVector(edgeB.StartPosition, nm.V_SurfaceOrientation) - FlatVector(edgeA.EndPosition, nm.V_SurfaceOrientation));
+			Vector3 v_endToEnd = Vector3.Normalize(FlatVector(edgeB.EndPosition, nm.V_SurfaceOrientation) - FlatVector(edgeA.EndPosition, nm.V_SurfaceOrientation));
+
+			float alignmentA = Vector3.Dot(v_startToStart, v_endToEnd);
+			float alignmentB = Vector3.Dot(v_startToEnd, v_endToStart);
+
+			//Vector3 v_startToPos = Vector3.Normalize(FlatVector(pos, nm.V_SurfaceOrientation) - FlatVector(edgeA.StartPosition, nm.V_SurfaceOrientation)); //why did I make this?
+			//Vector3 v_endToPos = Vector3.Normalize(FlatVector(pos, nm.V_SurfaceOrientation) - FlatVector(edgeA.EndPosition, nm.V_SurfaceOrientation)); //why did I make this?
+
+			#region CHECK IF ANY OF THE EDGE POINTS ARE DISCRETELY WITHIN THE PROJECTION---------------------------------
+			//The following if-check determines which vector-set is in better alignment. This set will be the vector-set 
+			//that will be on the "outside", and therefore the correct one to use...
+
+			if ( alignmentA > alignmentB ) //this means the start and end positions of the edges "line up", so to speak.
+			{
+				dbgRprt += $"using first alignment\n";
+
+				string s = "";
+				dbgRprt += $"previewing obstructEdge midpoint at: '{obstructEdge.MidPosition}'\n" +
+					$"cndtn1: '{AmBetweenConcurrentLines(obstructEdge.MidPosition,		  edgeA.StartPosition_flat, edgeB.StartPosition_flat, edgeA.EndPosition_flat, edgeB.EndPosition_flat, nm.V_SurfaceOrientation, ref s)}'\n" +
+					$"cndtn2: '{AmBetweenConcurrentLines(obstructEdge.MidPosition,		  edgeA.StartPosition_flat, edgeA.EndPosition_flat, edgeB.StartPosition_flat, edgeB.EndPosition_flat, nm.V_SurfaceOrientation, ref s)}'\n" +
+					$"";																																															 
+																																																					 
+				dbgRprt += $"previewing obstructedge start at: '{obstructEdge.StartPosition_flat}'\n" +																														 
+					$"cndtn1: '{AmBetweenConcurrentLines(obstructEdge.StartPosition_flat, edgeA.StartPosition_flat, edgeB.StartPosition_flat, edgeA.EndPosition_flat, edgeB.EndPosition_flat, nm.V_SurfaceOrientation, ref s)}'\n" +
+					$"cndtn2: '{AmBetweenConcurrentLines(obstructEdge.StartPosition_flat, edgeA.StartPosition_flat, edgeA.EndPosition_flat, edgeB.StartPosition_flat, edgeB.EndPosition_flat, nm.V_SurfaceOrientation, ref s)}'\n" +
+					$"";																																															 
+																																																					 
+				dbgRprt += $"previewing obstruct edge end at: '{obstructEdge.EndPosition}'\n" +																																 
+					$"cndtn1: '{AmBetweenConcurrentLines(obstructEdge.EndPosition,		  edgeA.StartPosition_flat, edgeB.StartPosition_flat, edgeA.EndPosition_flat, edgeB.EndPosition_flat, nm.V_SurfaceOrientation, ref s)}'\n" +
+					$"cndtn2: '{AmBetweenConcurrentLines(obstructEdge.EndPosition,		  edgeA.StartPosition_flat, edgeA.EndPosition_flat, edgeB.StartPosition_flat, edgeB.EndPosition_flat, nm.V_SurfaceOrientation, ref s)}'\n" +
+					$"";
+
+				dbgRprt += ("\nnow actually doing it----------------//////////////\n");
+				if //check mid point...
+				(
+					AmBetweenConcurrentLines //checks that it's between vectors going from edge to edge
+					(
+						obstructEdge.MidPosition, 
+						edgeA.StartPosition_flat, edgeB.StartPosition_flat, 
+						edgeA.EndPosition_flat, edgeB.EndPosition_flat, 
+						nm.V_SurfaceOrientation, ref dbgRprt
+					) &&
+					AmBetweenConcurrentLines //checks that it's between the edges
+					(
+						obstructEdge.MidPosition, 
+						edgeA.StartPosition_flat, edgeA.EndPosition_flat, 
+						edgeB.StartPosition_flat, edgeB.EndPosition_flat, 
+						nm.V_SurfaceOrientation, ref dbgRprt
+					)
+				)
+				{
+					dbgRprt += $"midpoint check passed. Returning true...";
+					Debug.Log(dbgRprt);
+					return true;
+				}
+				else if //check start point...
+				(
+					AmBetweenConcurrentLines //checks that it's between vectors going from edge to edge
+					(
+						obstructEdge.StartPosition_flat, 
+						edgeA.StartPosition_flat, edgeB.StartPosition_flat, 
+						edgeA.EndPosition_flat, edgeB.EndPosition_flat, 
+						nm.V_SurfaceOrientation, ref dbgRprt
+					) &&
+					AmBetweenConcurrentLines //checks that it's between the edges
+					(
+						obstructEdge.StartPosition_flat, 
+						edgeA.StartPosition_flat, edgeA.EndPosition_flat, 
+						edgeB.StartPosition_flat, edgeB.EndPosition_flat, 
+						nm.V_SurfaceOrientation, ref dbgRprt
+					)
+				)
+				{
+					dbgRprt += $"start point check passed. Returning true...";
+					Debug.Log(dbgRprt);
+					return true;
+				}
+				else if //check end point...
+				(
+					AmBetweenConcurrentLines //checks that it's between vectors going from edge to edge
+					(
+						obstructEdge.EndPosition, 
+						edgeA.StartPosition_flat, edgeB.StartPosition_flat, 
+						edgeA.EndPosition_flat, edgeB.EndPosition_flat, 
+						nm.V_SurfaceOrientation, ref dbgRprt
+					) &&
+					AmBetweenConcurrentLines //checks that it's between the edges
+					(
+						obstructEdge.EndPosition, 
+						edgeA.StartPosition_flat, edgeA.EndPosition_flat, 
+						edgeB.StartPosition_flat, edgeB.EndPosition_flat, 
+						nm.V_SurfaceOrientation, ref dbgRprt
+					)
+				)
+				{
+					dbgRprt += $"end point check passed. Returning true...";
+					Debug.Log(dbgRprt);
+					return true;
+				}
+			}
+			else //This means that the starts and ends do NOT line up...
+			{
+				dbgRprt += $"using second alignment\n";
+				string s = "";
+
+				dbgRprt +=	$"checking midpoint at: '{obstructEdge.MidPosition}'\n" +
+					$"cndtn1: '{AmBetweenConcurrentLines(obstructEdge.MidPosition,			edgeA.StartPosition_flat, edgeB.EndPosition_flat, edgeA.EndPosition_flat, edgeB.StartPosition_flat, nm.V_SurfaceOrientation, ref s)}'\n" +
+					$"cndtn2: '{AmBetweenConcurrentLines(obstructEdge.MidPosition,			edgeA.StartPosition_flat, edgeA.EndPosition_flat, edgeB.EndPosition_flat, edgeB.StartPosition_flat, nm.V_SurfaceOrientation, ref s)}'\n" +
+					$"";																																									   						   		 
+																																															   						   		 
+				dbgRprt += $"checking obstruct edge start at: '{obstructEdge.StartPosition_flat}'\n" +																						   						   		 
+					$"cndtn1: '{AmBetweenConcurrentLines(obstructEdge.StartPosition_flat,	edgeA.StartPosition_flat, edgeB.EndPosition_flat, edgeA.EndPosition_flat, edgeB.StartPosition_flat, nm.V_SurfaceOrientation, ref s)}'\n" +
+					$"cndtn2: '{AmBetweenConcurrentLines(obstructEdge.StartPosition_flat,	edgeA.StartPosition_flat, edgeA.EndPosition_flat, edgeB.EndPosition_flat, edgeB.StartPosition_flat, nm.V_SurfaceOrientation, ref s)}'\n" +
+					$"";																																															   		
+																																																					   		
+				dbgRprt += $"checking obstruct edge end at: '{obstructEdge.EndPosition}'\n" +																														   		
+					$"cndtn1: '{AmBetweenConcurrentLines(obstructEdge.EndPosition,			edgeA.StartPosition_flat, edgeB.EndPosition_flat, edgeA.EndPosition_flat, edgeB.StartPosition_flat, nm.V_SurfaceOrientation, ref s)}'\n" +
+					$"cndtn2: '{AmBetweenConcurrentLines(obstructEdge.EndPosition,			edgeA.StartPosition_flat, edgeA.EndPosition_flat, edgeB.EndPosition_flat, edgeB.StartPosition_flat, nm.V_SurfaceOrientation, ref s)}'\n" +
+					$"";
+
+				if //check mid point...
+				(
+					AmBetweenConcurrentLines //checks that it's between vectors going from edge to edge
+					(
+						obstructEdge.MidPosition,
+						edgeA.StartPosition_flat, edgeB.EndPosition_flat,
+						edgeA.EndPosition_flat, edgeB.StartPosition_flat,
+						nm.V_SurfaceOrientation, ref dbgRprt
+					) &&
+					AmBetweenConcurrentLines //checks that it's between the edges
+					(
+						obstructEdge.MidPosition,
+						edgeA.StartPosition_flat, edgeA.EndPosition_flat,
+						edgeB.EndPosition_flat, edgeB.StartPosition_flat,
+						nm.V_SurfaceOrientation, ref dbgRprt
+					)
+				)
+				{
+					dbgRprt += $"midpoint check passed. Returning true...";
+					Debug.Log(dbgRprt);
+
+					return true;
+				}
+				else if //check start point...
+				(
+					AmBetweenConcurrentLines //checks that it's between vectors going from edge to edge
+					(
+						obstructEdge.StartPosition_flat,
+						edgeA.StartPosition_flat, edgeB.EndPosition_flat,
+						edgeA.EndPosition_flat, edgeB.StartPosition_flat,
+						nm.V_SurfaceOrientation, ref dbgRprt
+					) &&
+					AmBetweenConcurrentLines //checks that it's between the edges
+					(
+						obstructEdge.StartPosition_flat,
+						edgeA.StartPosition_flat, edgeA.EndPosition_flat,
+						edgeB.EndPosition_flat, edgeB.StartPosition_flat,
+						nm.V_SurfaceOrientation, ref dbgRprt
+					)
+				)
+				{
+					dbgRprt += $"start point check passed. Returning true...";
+					Debug.Log(dbgRprt);
+
+					return true;
+				}
+				else if //check end point...
+				(
+					AmBetweenConcurrentLines //checks that it's between vectors going from edge to edge
+					(
+						obstructEdge.EndPosition,
+						edgeA.StartPosition_flat, edgeB.EndPosition_flat,
+						edgeA.EndPosition_flat, edgeB.StartPosition_flat,
+						nm.V_SurfaceOrientation, ref dbgRprt
+					) &&
+					AmBetweenConcurrentLines //checks that it's between the edges
+					(
+						obstructEdge.EndPosition,
+						edgeA.StartPosition_flat, edgeA.EndPosition_flat,
+						edgeB.EndPosition_flat, edgeB.StartPosition_flat,
+						nm.V_SurfaceOrientation, ref dbgRprt
+					)
+				)
+				{
+					dbgRprt += $"end point check passed. Returning true...";
+					Debug.Log(dbgRprt);
+
+					return true;
+				}
+			}
+
+			#endregion
+
+			dbgRprt += $"\n\nNow checking if the obstructing edge is wide enough to encompass...\n";
+			#region CHECK IF OBSTRUCT EDGE IS SO WIDE THAT IT ENCOMPASSES THE ENTIRE PROJECTION-----------
+			Vector3 v_edgeAStart_to_obstrctEdgeStrt = Vector3.Normalize( obstructEdge.StartPosition_flat - edgeA.StartPosition_flat );
+			Vector3 v_edgeAEnd_to_obstrctEdgeEnd = Vector3.Normalize( obstructEdge.EndPosition_flat - edgeA.EndPosition_flat );
+			Vector3 v_edgeAMid_toObstructEdgeMid = Vector3.Normalize( obstructEdge.MidPosition_flat - edgeA.MidPosition_flat );
+			dbgRprt += $"v_edgeAStart_to_obstrctEdgeStrt: '{LNX_UnitTestUtilities.LongVectorString(v_edgeAStart_to_obstrctEdgeStrt)}'\n" +
+				$"v_edgeAEnd_to_obstrctEdgeEnd: '{LNX_UnitTestUtilities.LongVectorString(v_edgeAEnd_to_obstrctEdgeEnd)}'\n" +
+				$"v_edgeAMid_toObstructEdgeMid: '{LNX_UnitTestUtilities.LongVectorString(v_edgeAMid_toObstructEdgeMid)}'\n" +
+				$"";
+
+			dbgRprt += $"previewing...\n" +
+				$"cndtn1: '{Vector3.SignedAngle(v_edgeAMid_toObstructEdgeMid, v_edgeAStart_to_obstrctEdgeStrt, nm.V_SurfaceOrientation)}'\n" + //TODO: this is returning 0...
+				$"cndtn2: '{Vector3.SignedAngle(v_edgeAMid_toObstructEdgeMid, v_edgeAEnd_to_obstrctEdgeEnd, nm.V_SurfaceOrientation)}'\n";
+
+			if( 
+				Mathf.Sign(Vector3.SignedAngle(v_edgeAMid_toObstructEdgeMid, v_edgeAStart_to_obstrctEdgeStrt, nm.V_SurfaceOrientation)) !=
+				Mathf.Sign(Vector3.SignedAngle(v_edgeAMid_toObstructEdgeMid, v_edgeAEnd_to_obstrctEdgeEnd, nm.V_SurfaceOrientation))
+			)
+			{
+				dbgRprt += $"Decided obstruct edge encompassed entire projection. Returning true...";
+				if (triIndxB == 39) Debug.Log(dbgRprt);
+
+				return true;
+			}
+			#endregion
+
+			if (triIndxB == 39) Debug.Log(dbgRprt);
+			return false;
+		}
+		#endregion
+
+		#region SPECIAL EDGE METHODS --------------------
+
+		#endregion
+
 #if UNITY_EDITOR
 		#region GIZMO DRAWING-------------------------------------
 		public static void DrawTriGizmos( LNX_Triangle tri )
@@ -429,313 +903,4 @@ namespace LogansNavigationExtension
 		#endregion
 #endif
 	}
-
-	#region ENUMS-----------------------------------------
-	[System.Serializable]
-	public enum LNX_SelectMode
-	{
-		None = 0,
-		Vertices = 1,
-		Edges = 2,
-		Faces = 3
-	}
-
-	[System.Serializable]
-	public enum LNX_OperationMode
-	{
-		Pointing = 0,
-		Translating = 1,
-	}
-
-	[System.Serializable]
-	public enum LNX_Direction
-	{
-		PositiveY = 0,
-		NegativeY = 1,
-		PositiveX = 2,
-		NegativeX = 3,
-		PositiveZ = 4,
-		NegativeZ = 0,
-	}
-	#endregion
-
-	[System.Serializable]
-	public struct LNX_ComponentCoordinate
-	{
-		public int TrianglesIndex;
-		public int ComponentIndex;
-		/*
-		public int TriangulationAreasIndex;
-		/// <summary>
-		/// Keeps track of the index inside of the NavMesh.CalculateTriangulation().vertices array where this component
-		/// originated. This value is only relevant if this coordinate is pointing to a vertex. If it's an edge, this 
-		/// value should be -1.
-		/// </summary>
-		public int TriangulationVerticesIndex;
-		*/
-
-		private static LNX_ComponentCoordinate none = new LNX_ComponentCoordinate()
-		{
-			TrianglesIndex = -1,
-			ComponentIndex = -1,
-		};
-
-		public static LNX_ComponentCoordinate None
-		{
-			get
-			{
-				return none;
-			}
-		}
-
-		public LNX_ComponentCoordinate( int triIndx, int cmptIndx )
-		{
-			TrianglesIndex = triIndx;
-			ComponentIndex = cmptIndx;
-		}
-
-		public static bool operator ==(LNX_ComponentCoordinate a, LNX_ComponentCoordinate b)
-		{
-			return a.Equals(b);
-		}
-
-		public static bool operator !=(LNX_ComponentCoordinate a, LNX_ComponentCoordinate b)
-		{
-			return !a.Equals(b);
-		}
-
-		public override bool Equals(object obj)
-		{
-			if (!(obj is LNX_ComponentCoordinate))
-				return false;
-
-			LNX_ComponentCoordinate coord = (LNX_ComponentCoordinate)obj;
-			if (coord.TrianglesIndex != TrianglesIndex || coord.ComponentIndex != ComponentIndex)
-			{
-				return false;
-			}
-			else
-			{
-				return true;
-			}
-		}
-
-		public override string ToString()
-		{
-			return $"[{TrianglesIndex}][{ComponentIndex}]";
-		}
-	}
-
-	/// <summary>
-	/// A more basic representation of an LNX_Triangle. This is useful in situations where you need an 
-	/// object that will have a much cheaper serialization cost than a full LNX_Triangle.
-	/// </summary>
-	[System.Serializable]
-	public struct LNX_AtomicTriangle
-	{
-		public Vector3 VertPos0_current, VertPos0_orig;
-
-		public Vector3 VertPos1_current, VertPos1_orig;
-
-		public Vector3 VertPos2_current, VertPos2_orig;
-
-		public LNX_AtomicTriangle ( LNX_Triangle tri )
-		{
-			VertPos0_current = tri.Verts[0].V_Position;
-			VertPos0_orig = tri.Verts[0].OriginalPosition;
-
-			VertPos1_current = tri.Verts[1].V_Position;
-			VertPos1_orig = tri.Verts[1].OriginalPosition;
-
-			VertPos2_current = tri.Verts[2].V_Position;
-			VertPos2_orig = tri.Verts[2].OriginalPosition;
-
-		}
-
-		public LNX_AtomicTriangle( Vector3 v0pos, Vector3 v1pos, Vector3 v2pos )
-		{
-			VertPos0_current = v0pos;
-			VertPos0_orig = v0pos;
-
-			VertPos1_current = v1pos;
-			VertPos1_orig = v1pos;
-
-			VertPos2_current = v2pos;
-			VertPos2_orig = v2pos;
-		}
-
-		/// <summary>
-		/// Returns any vertices owned by this triangle that originally existed at the supplied position before 
-		/// being modified.
-		/// </summary>
-		/// <param name="pos"></param>
-		/// <returns></returns>
-		public int GetVertIndextAtOriginalPosition(Vector3 pos)
-		{
-			if ( VertPos0_orig == pos )
-			{
-				return 0;
-			}
-			else if ( VertPos1_orig == pos )
-			{
-				return 1;
-			}
-			else if ( VertPos2_orig == pos)
-			{
-				return 2;
-			}
-
-			return -1;
-		}
-
-		public bool HasVertAtOriginalPosition(Vector3 pos)
-		{
-			if ( GetVertIndextAtOriginalPosition(pos) > -1 )
-			{
-				return true;
-			}
-			else
-			{
-				return false;
-			}
-		}
-	}
-
-	[System.Serializable]
-	public struct LNX_ProjectionHit
-	{
-		/// <summary>Index of the Triangle or component that was hit, depending on the context.</summary>
-		public int Index_Hit;
-		public Vector3 HitPosition;
-		public float DistanceAway;
-
-		private static LNX_ProjectionHit none = new LNX_ProjectionHit(-1, Vector3.zero);
-
-		public LNX_ProjectionHit(int indx, Vector3 pos)
-		{
-			Index_Hit = indx;
-			HitPosition = pos;
-			DistanceAway = 0f;
-		}
-
-		public LNX_ProjectionHit(int indx, Vector3 hitpos, Vector3 originpos )
-		{
-			Index_Hit = indx;
-			HitPosition = hitpos;
-			DistanceAway = Vector3.Distance(originpos, hitpos);
-		}
-
-		public static LNX_ProjectionHit None
-		{
-			get
-			{
-				return none;
-			}
-		}
-
-		public override bool Equals(object obj)
-		{
-			if ( !(obj is LNX_ProjectionHit) )
-				return false;
-
-			LNX_ProjectionHit hit = (LNX_ProjectionHit)obj;
-			if (hit.Index_Hit != Index_Hit || hit.HitPosition != HitPosition)
-			{
-				return false;
-			}
-			else
-			{
-				return true;
-			}
-		}
-
-		public override string ToString()
-		{
-			return $"Indx '{Index_Hit}', at '{HitPosition}'";
-		}
-	}
-
-	#region RELATIONSHIPS------------------------------------------------------------------------
-	[System.Serializable]
-	public struct LNX_VertexRelationship
-	{
-		public LNX_ComponentCoordinate RelatedVertCoordinate;
-
-		public Vector3 RelatedVertPosition => PathTo.EndGoal;
-		public Vector3 OwnerVertPosition => PathTo.StartPoint;
-
-		public bool CanSee;
-
-		/// <summary>The shortest possible distance to the destination vertex via traveling over the surface of the navmesh</summary>
-		public float PathDistance => PathTo.TotalDistance;
-
-		/// <summary>The most direct path from the perspective vert to the related vert </summary>
-		public LNX_Path PathTo; 
-
-		/// <summary>If true, this vert and it's related vert are part of the same terminal cutout 
-		/// (obstacle) in the navmesh. This efficiency boolean is useful for efficient pathfinding 
-		/// around obstacles</summary>
-		//public bool AmPartOfSharedTerminalCutout; //todo: implement
-
-		public LNX_VertexRelationship( LNX_Vertex myVert, LNX_Vertex relatedVert, LNX_NavMesh nvMsh )
-		{
-			RelatedVertCoordinate = relatedVert.MyCoordinate;
-			CanSee = false;
-
-			PathTo = new LNX_Path
-			( 
-				new List<LNX_ProjectionHit> 
-				{ 
-					new LNX_ProjectionHit(myVert.TriangleIndex, myVert.V_Position),
-					new LNX_ProjectionHit(relatedVert.TriangleIndex, relatedVert.V_Position)
-				}, 
-				nvMsh 
-			);
-
-
-			if (myVert.AreSiblings(relatedVert))
-			{
-				CanSee = true;
-			}
-		}
-
-		public void CalculatePathing( LNX_NavMesh nm, LNX_Vertex myVert ) //unfortunately, I
-		//couldn't do this during the ctor bc of dependencies
-		{
-			LNX_Vertex relatedVert = nm.GetVertexAtCoordinate( RelatedVertCoordinate );
-
-			if ( myVert.AreSiblings(relatedVert) )
-			{
-				PathTo = new LNX_Path
-				( 
-					new List<Vector3>(){ myVert.V_Position, relatedVert.V_Position }, 
-					new List<Vector3>() { nm.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal,
-					nm.Triangles[relatedVert.MyCoordinate.TrianglesIndex].V_PathingNormal}
-				);
-
-				CanSee = true;
-			}
-			else
-			{
-
-				CanSee = !nm.Raycast(myVert.V_Position, relatedVert.V_Position, 1f, out PathTo, false );
-
-				if ( !CanSee )
-				{
-					nm.CalculatePath(myVert.V_Position, relatedVert.V_Position, 0.2f, out PathTo, false);
-				}
-			}
-		}
-
-		public override string ToString()
-		{
-			return $"Related: '{RelatedVertCoordinate}'\n" +
-				$"{nameof(CanSee)}: '{CanSee}'\n" +
-				$"PathPoints: '{PathTo.PathPoints.Count}'\n" +
-				$"flatdist: '{PathDistance}'\n" +
-
-				$"";
-		}
-	}
-	#endregion
 }

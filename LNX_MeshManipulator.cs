@@ -658,6 +658,7 @@ namespace LogansNavigationExtension
 
 			DeleteTriangles(tri0, tri1);
 
+			/* //todo: make work
 			LNX_Triangle[] trisToAdd = new LNX_Triangle[4]
 			{
 				new LNX_Triangle(_LNX_NavMesh.Triangles.Length, 0, endEdge0.StartPosition, endEdge0.EndPosition, v_midPoint0, _LNX_NavMesh ),
@@ -667,7 +668,7 @@ namespace LogansNavigationExtension
 			};
 
 			_LNX_NavMesh.AddTriangles( trisToAdd );
-			
+			*/
 		}
 		#endregion
 

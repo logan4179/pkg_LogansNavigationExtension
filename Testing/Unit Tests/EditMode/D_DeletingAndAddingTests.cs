@@ -25,15 +25,27 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		[Test]
 		public void a1_SetupLnxNavmeshReferences()
 		{
-			GameObject go = GameObject.Find( LNX_UnitTestUtilities.Name_SerializedNavmeshGameobject );
+			#region SETUP SERIALIZED NAVMESH ---------------------------------------------------------------------
+			Debug.Log($"Making a version of the serialized navmesh just for this test suite...");
+			GameObject go_serializedNavmesh = new GameObject();
+			//go_serializedNavmesh.name = "go_serializedNavmesh_forCtests";
+			_serializedLNXNavmesh = go_serializedNavmesh.AddComponent<LNX_NavMesh>();
+			string jsonString = File.ReadAllText(TDG_Manager.filePath_serializedLnxNavMesh);
+			JsonUtility.FromJsonOverwrite(jsonString, _serializedLNXNavmesh);
 
-			_serializedLNXNavmesh = go.GetComponent<LNX_NavMesh>();
 			Assert.NotNull(_serializedLNXNavmesh);
 
+			Debug.Log($"Created serialized navmesh object from data file. Tris: '{_serializedLNXNavmesh.Triangles.Length}'\n" +
+				$"test vert vismesh index: '{_serializedLNXNavmesh.Triangles[13].Verts[1].Index_VisMesh_triangles}'");
 
-			_lnx_meshManipulator = go.GetComponent<LNX_MeshManipulator>();
-			Assert.NotNull(_serializedLNXNavmesh);
+			_serializedLNXNavmesh.ReconstructVisualizationMesh();
 
+			_lnx_meshManipulator = go_serializedNavmesh.AddComponent<LNX_MeshManipulator>();
+			_lnx_meshManipulator._LNX_NavMesh = _serializedLNXNavmesh;
+			Assert.NotNull(_lnx_meshManipulator);
+			_lnx_meshManipulator.ClearSelection();
+			Debug.Log($"End of secton: 'Setup serialized navmesh'...");
+			#endregion
 		}
 
 		[Test]

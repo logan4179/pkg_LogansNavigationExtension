@@ -14,8 +14,6 @@ namespace LoganLand.LogansNavmeshExtension.Tests
     {
 		LNX_NavMesh _serializedLNXNavmesh;
 
-		LNX_MeshManipulator _lnx_meshManipulator;
-
 		[Header("TEST OBJECTS")]
 		TDG_ProjectThroughToPerimeter _tdg_projectThroughToPerimeter;
 
@@ -27,11 +25,6 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 			_serializedLNXNavmesh = go.GetComponent<LNX_NavMesh>();
 			Assert.NotNull(_serializedLNXNavmesh);
-
-
-			_lnx_meshManipulator = go.GetComponent<LNX_MeshManipulator>();
-			Assert.NotNull(_lnx_meshManipulator);
-
 		}
 
 		[Test]
@@ -48,6 +41,8 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 			//-----------------------------
 			_tdg_projectThroughToPerimeter = _serializedLNXNavmesh.gameObject.AddComponent<TDG_ProjectThroughToPerimeter>();
+			_tdg_projectThroughToPerimeter.AmInUnitTest = true;
+
 			string jsonString = File.ReadAllText( TDG_Manager.filePath_testData_projectThroughToPerimeter );
 			JsonUtility.FromJsonOverwrite( jsonString, _tdg_projectThroughToPerimeter );
 			Assert.NotNull( _tdg_projectThroughToPerimeter );

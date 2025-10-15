@@ -35,8 +35,6 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		// collection lengths instead of testing a hard-coded value, but those things don't seem to get serialized to JSON. 
 		// Leaving this here in case I think of something else to do with it...
 
-		LNX_MeshManipulator _sceneGeneratedMeshManipulator, _serializedMeshManipulator;
-
         //TDG_SamplePosition _tdg_samplePosition;
 
 		//TDG_SampleClosestPtOnPerimeter _test_closestOnPerimeter;
@@ -49,6 +47,9 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			LNX_UnitTestUtilities.LogTestStart(nameof(a1_CreateAndSetUpObjectsInTheScene),
 				$"Finds existing scene navmesh, and calculates a new one for test use."
 			);
+
+			UnityEditor.Selection.activeGameObject = null; //I think this will clear out some debug error logs that are happening...
+
 			#region FIND/HANDLE EXISTING SCENE NAVMESH ----------------------------------------------------------------
 			LNX_NavMesh existingSceneMesh = GameObject.Find(LNX_UnitTestUtilities.Name_ExistingSceneNavmeshGameobject).GetComponent<LNX_NavMesh>();
 
@@ -84,9 +85,6 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			Debug.Log($"scene generated navmesh bounds size: '{_testGeneratedLnxNavmesh.V_BoundsSize}'");
 			Debug.Log($"scene generated navmesh bounds center: '{_testGeneratedLnxNavmesh.V_BoundsCenter}'");
 
-			_sceneGeneratedMeshManipulator = go.AddComponent<LNX_MeshManipulator>();
-			_sceneGeneratedMeshManipulator._LNX_NavMesh = _testGeneratedLnxNavmesh;
-			Assert.NotNull( _sceneGeneratedMeshManipulator );
 			Debug.Log (string.Format(LNX_UnitTestUtilities.UnitTestSectionEndString, "set up scene-generated navmesh") );
 			#endregion
 
@@ -108,8 +106,6 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestSectionEndString, "set up scene-generated navmesh data model"));
 			#endregion
 
-			_sceneGeneratedMeshManipulator.ClearSelection(); //Not doing this was causing an error...
-
 			#region SETUP SERIALIZED NAVMESH ---------------------------------------------------------------------
 			GameObject go_serializedNavmesh = new GameObject();
 			go_serializedNavmesh.name = LNX_UnitTestUtilities.Name_SerializedNavmeshGameobject; //so that other test scripts can find this
@@ -125,9 +121,6 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 			_jsonGeneratedLnxNavmesh.ReconstructVisualizationMesh();
 
-			_serializedMeshManipulator = go_serializedNavmesh.AddComponent<LNX_MeshManipulator>();
-			_serializedMeshManipulator._LNX_NavMesh = _jsonGeneratedLnxNavmesh;
-			Assert.NotNull( _serializedMeshManipulator );
 			Debug.Log( string.Format(LNX_UnitTestUtilities.UnitTestMethodEndString, $"setting up json serialized navmesh...") );
 
 			#endregion
@@ -234,22 +227,6 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			}
 		}
 		*/
-
-		[Test]
-		public void C4_All_Triangle_AdjacentTriIndices_Array_Length_Are_Greater_Than_Zero()
-		{
-			Debug.Log(
-				string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, 
-				nameof(C4_All_Triangle_AdjacentTriIndices_Array_Length_Are_Greater_Than_Zero)));
-
-			Debug.Log($"\nChecking relationships...");
-			Debug.Log($"Running through '{_testGeneratedLnxNavmesh.Triangles.Length}' triangles to check relationships..");
-			for (int i = 0; i < _testGeneratedLnxNavmesh.Triangles.Length; i++)
-			{
-				Debug.Log($"checking tri '{i}'...");
-				Assert.Greater(_testGeneratedLnxNavmesh.Triangles[i].AdjacentTriIndices.Length, 0);
-			}
-		}
 
 		/*
 		[Test]
@@ -395,13 +372,14 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 			Debug.Log($"\nThis Test ensures that all vertices have a sharedvertexcoordinates arrays that have the correct entries.\n");
 
+			Debug.Log($"Now iterating through EVERY vert on the navmesh, and comparing ");
 			LNX_Vertex currentVert = null;
 			for ( int i_tris = 0; i_tris < _testGeneratedLnxNavmesh.Triangles.Length; i_tris++ )
 			{
 				for ( int i_verts = 0; i_verts < 3; i_verts++ )
 				{
 					currentVert = _testGeneratedLnxNavmesh.Triangles[i_tris].Verts[i_verts];
-					Debug.Log($"iterating currentVert: '{currentVert}'..................");
+					Debug.Log($"iterating currentVert: '{currentVert}'. Now assembling a list of all verts that share space..........");
 
 					List<LNX_Vertex> locatedSharedSpaceVerts = new List<LNX_Vertex>();
 
@@ -419,7 +397,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 						}
 					}
 
-					Debug.Log($"finally located total of '{locatedSharedSpaceVerts.Count}' sharedspaceverts. Asserting this is equal to what was logged into " +
+					Debug.Log($"\nfinally located total of '{locatedSharedSpaceVerts.Count}' sharedspaceverts. Asserting this is equal to what was logged into " +
 						$"current vert's collection...");
 					Assert.AreEqual( currentVert.SharedVertexCoordinates.Length, locatedSharedSpaceVerts.Count );
 

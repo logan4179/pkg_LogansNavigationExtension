@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using static UnityEditor.PlayerSettings;
@@ -8,7 +9,9 @@ namespace LogansNavigationExtension
 {
     public class TDG_IsInCenterSweep : TDG_base
 	{
-		public LNX_Triangle CurrentTriangle;
+		public int CurrentTriIndex = 0;
+
+		LNX_Triangle CurrentTriangle => _navmesh.Triangles[CurrentTriIndex];
 		public bool CurrentRslt_vert0;
 		public bool CurrentRslt_vert1;
 		public bool CurrentRslt_vert2;
@@ -26,8 +29,7 @@ namespace LogansNavigationExtension
 		public List<bool> Results_Vert2 = new List<bool>();
 		public List<Vector3> CapturedVertPositions_vert2 = new List<Vector3>();
 
-		[Header("DEBUG")]
-		public int Index_GoToDataPoint = 0;
+		//[Header("DEBUG")]
 
 		[ContextMenu("z call CaptureDataPoint()")]
 		public void CaptureDataPoint()
@@ -62,13 +64,23 @@ namespace LogansNavigationExtension
 
 			if (_navmesh.SamplePosition(transform.position, out hit, 2f, false))
 			{
-				CurrentTriangle = _navmesh.Triangles[hit.Index_Hit];
+				CurrentTriIndex = hit.Index_Hit;
 				Debug.Log($"Succesful sample! Set new triangle to: '{hit.Index_Hit}'");
 			}
 			else
 			{
 				Debug.Log($"sample unsuccesful...");
 			}
+		}
+
+		[ContextMenu("z call SayFocusTri()")]
+		public void SayFocusTri()
+		{
+			Debug.Log($"{nameof(SayFocusTri)}()...");
+
+			_navmesh.Triangles[CurrentTriIndex].SayCurrentInfo(_navmesh);
+
+			Debug.Log( CurrentTriangle.GetAnomolyString(_navmesh) );
 		}
 
 		[ContextMenu("z call DoEet()")]
@@ -88,8 +100,15 @@ namespace LogansNavigationExtension
 
 			}
 		}
+
+		[ContextMenu("z call SendToDataPoint")]
+		public void SendToDataPoint()
+		{
+			transform.position = CapturedStartPositions[Index_GoToDataPoint];
+		}
 		#endregion
 
+		[TextArea(1,10)] public string DBGAngleTo;
 		protected override void OnDrawGizmos()
 		{
 			DBG_Operation = "";
@@ -106,18 +125,27 @@ namespace LogansNavigationExtension
 				return;
 			}
 
+			DBG_Operation += $"CurrentTriangle: '{CurrentTriangle.Index_inCollection}' at '{CurrentTriangle.V_Center}'\n";
+
+			DBGAngleTo = $"first sibling pathpts count: '{CurrentTriangle.Verts[0].FirstSiblingRelationship.PathTo.PathPoints.Count}'\n" +
+				$"second sibling pathpts count: '{CurrentTriangle.Verts[0].SecondSiblingRelationship.PathTo.PathPoints.Count}'\n";
+
+			DBGAngleTo += $"to first sibling prop: '{CurrentTriangle.Verts[0].V_ToFirstSiblingVert}'\n" +
+				//$"calc: '{}'\n" +
+				$"";
+
 			base.OnDrawGizmos();
 
-			DrawStandardFocusTriGizmos(CurrentTriangle, 1f, $"tri{CurrentTriangle.Index_inCollection}");
+			DrawStandardFocusTriGizmos(CurrentTriangle, 1f, $"tri{CurrentTriangle.Index_inCollection}", Color.magenta );
 
 			CurrentRslt_vert0 = false;
 			CurrentRslt_vert1 = false;
 			CurrentRslt_vert2 = false;
 
 			DBG_Operation += $"Commencing operation...\n";
-			CurrentRslt_vert0 = CurrentTriangle.Verts[0].IsInCenterSweep( transform.position );
-			CurrentRslt_vert1 = CurrentTriangle.Verts[1].IsInCenterSweep(transform.position);
-			CurrentRslt_vert2 = CurrentTriangle.Verts[2].IsInCenterSweep(transform.position);
+			CurrentRslt_vert0 = CurrentTriangle.Verts[0].IsInCenterSweep( transform.position, _navmesh.V_SurfaceOrientation );
+			CurrentRslt_vert1 = CurrentTriangle.Verts[1].IsInCenterSweep(transform.position, _navmesh.V_SurfaceOrientation);
+			CurrentRslt_vert2 = CurrentTriangle.Verts[2].IsInCenterSweep(transform.position, _navmesh.V_SurfaceOrientation);
 
 			DBG_Operation += $"Operation complete. \n" +
 

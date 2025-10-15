@@ -30,7 +30,7 @@ namespace LogansNavigationExtension
 
 		protected override void OnDrawGizmos()
 		{
-			if ( Selection.activeGameObject != gameObject )
+			if ( AmInUnitTest || Selection.activeGameObject != gameObject )
 			{
 				return;
 			}
@@ -45,7 +45,7 @@ namespace LogansNavigationExtension
 			{
 				LNX_Triangle chosenTri = _navmesh.Triangles[lnxHit.Index_Hit];
 
-				DrawStandardFocusTriGizmos( chosenTri, 0.3f, lnxHit.Index_Hit.ToString() );
+				DrawStandardFocusTriGizmos( chosenTri, 0.3f, lnxHit.Index_Hit.ToString(), Color.magenta );
 
 				v_result = chosenTri.ClosestPointOnPerimeter(transform.position);
 

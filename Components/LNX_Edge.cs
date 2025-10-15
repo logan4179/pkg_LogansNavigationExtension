@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace LogansNavigationExtension
 {
@@ -10,13 +13,27 @@ namespace LogansNavigationExtension
 		
 		//[Header("CACHED")]
 		public Vector3 StartPosition;
-		public LNX_ComponentCoordinate StartVertCoordinate;
+		public Vector3 StartPosition_flat => LNX_Utils.FlatVector(StartPosition, v_SurfaceNormal_cached);
+		//public LNX_ComponentCoordinate StartVertCoordinate; //Trying turning this into property so it's no longer serialized, dws
+		public LNX_ComponentCoordinate StartVertCoordinate => 
+			new LNX_ComponentCoordinate( MyCoordinate.TrianglesIndex, MyCoordinate.ComponentIndex == 0 ? 1 : 0 ); //Check out the LNX_Triangle ctor where the edges are made to understand this
+		public int StartVertIndex => MyCoordinate.ComponentIndex == 0 ? 1 : 0;
+
 		public Vector3 EndPosition;
-		public LNX_ComponentCoordinate EndVertCoordinate;
+		public Vector3 EndPosition_flat => LNX_Utils.FlatVector(EndPosition, v_SurfaceNormal_cached);
+		//public LNX_ComponentCoordinate EndVertCoordinate; //Trying turning this into property so it's no longer serialized, dws
+		public LNX_ComponentCoordinate EndVertCoordinate => 
+			new LNX_ComponentCoordinate(MyCoordinate.TrianglesIndex, MyCoordinate.ComponentIndex == 2 ? 1 : 2); //Check out the LNX_Triangle ctor where the edges are made to understand this
+		public int EndVertIndex => MyCoordinate.ComponentIndex == 2 ? 1 : 2;
+
 		/// <summary> Currently set in the Triangle relationship constructor</summary>
 		public LNX_ComponentCoordinate SharedEdgeCoordinate;
+
 		/// <summary>Cached center vector for the owning triangle. This is for exposed property calculation </summary>
 		[SerializeField, HideInInspector] private Vector3 v_triCenter_cached;
+
+		[SerializeField, HideInInspector] private Vector3 v_SurfaceNormal_cached;
+		public Vector3 V_SurfaceNormal_cached => v_SurfaceNormal_cached;
 
 		/// <summary>Vector perpendicular to this edge, and to the side 
 		///  that points inside of the owning triangle</summary>
@@ -27,10 +44,14 @@ namespace LogansNavigationExtension
 
 		//[Header("PROPERTIES")]
 		public Vector3 MidPosition => (StartPosition + EndPosition) / 2f;
+		public Vector3 MidPosition_flat => LNX_Utils.FlatVector((StartPosition + EndPosition) / 2f, v_SurfaceNormal_cached);
 
 		public Vector3 V_StartToEnd => Vector3.Normalize(EndPosition - StartPosition);
 
+		public Vector3 V_StartToEnd_flattened => Vector3.Normalize( EndPosition_flat - StartPosition_flat );
+
 		public Vector3 V_EndToStart => Vector3.Normalize(StartPosition - EndPosition);
+		public Vector3 V_EndToStart_flattened => Vector3.Normalize( StartPosition_flat - EndPosition_flat );
 
 		public Vector3 v_toCenter => Vector3.Normalize( v_triCenter_cached - MidPosition );
 		public float EdgeLength => Vector3.Distance(StartPosition, EndPosition);
@@ -39,7 +60,7 @@ namespace LogansNavigationExtension
 		public int TriangleIndex => MyCoordinate.TrianglesIndex;
 		public int ComponentIndex => MyCoordinate.ComponentIndex;
 
-		public LNX_Edge( LNX_Triangle ownerTri, LNX_Vertex strtVrt, LNX_Vertex endVrt, int triIndx, int cmptIndx )
+		public LNX_Edge( List<LNX_AtomicTriangle> atomicTris, LNX_Triangle ownerTri, LNX_Vertex strtVrt, LNX_Vertex endVrt, int triIndx, int cmptIndx )
 		{
 			Debug.Log($"ctor. edge: '{ownerTri.Index_inCollection},{cmptIndx}', passed tri ctr: '{ownerTri.V_Center}'");
 			//StartPosition = strtVrt.V_Position;
@@ -47,10 +68,11 @@ namespace LogansNavigationExtension
 
 			MyCoordinate = new LNX_ComponentCoordinate( triIndx, cmptIndx );
 
-			StartVertCoordinate = strtVrt.MyCoordinate;
-			EndVertCoordinate = endVrt.MyCoordinate;
+			//StartVertCoordinate = strtVrt.MyCoordinate;
+			//EndVertCoordinate = endVrt.MyCoordinate;
 
 			v_triCenter_cached = ownerTri.V_Center;
+			v_SurfaceNormal_cached = ownerTri.v_SurfaceNormal_cached;
 
 			SharedEdgeCoordinate = LNX_ComponentCoordinate.None;
 		}
@@ -58,9 +80,9 @@ namespace LogansNavigationExtension
 		public LNX_Edge( LNX_Edge edge )
 		{
 			StartPosition = edge.StartPosition;
-			StartVertCoordinate = edge.StartVertCoordinate;
+			//StartVertCoordinate = edge.StartVertCoordinate;
 			EndPosition = edge.EndPosition;
-			EndVertCoordinate = edge.EndVertCoordinate;
+			//EndVertCoordinate = edge.EndVertCoordinate;
 
 			v_Cross = edge.v_Cross;
 
@@ -72,9 +94,9 @@ namespace LogansNavigationExtension
 		public void AdoptValues(LNX_Edge edge)
 		{
 			StartPosition = edge.StartPosition;
-			StartVertCoordinate = edge.StartVertCoordinate;
+			//StartVertCoordinate = edge.StartVertCoordinate;
 			EndPosition = edge.EndPosition;
-			EndVertCoordinate = edge.EndVertCoordinate;
+			//EndVertCoordinate = edge.EndVertCoordinate;
 
 			v_Cross = edge.v_Cross;
 
@@ -111,7 +133,7 @@ namespace LogansNavigationExtension
 		}
 
 		public string DBG_vcross;
-		public void CalculateDerivedInfo( LNX_Triangle tri )
+		public void CalculateDerivedInfo( LNX_Triangle tri, LNX_NavMesh nm )
 		{
 			StartPosition = tri.Verts[StartVertCoordinate.ComponentIndex].V_Position;
 			EndPosition = tri.Verts[EndVertCoordinate.ComponentIndex].V_Position;
@@ -126,7 +148,7 @@ namespace LogansNavigationExtension
 			/*
 			Note: My testing has found that the following calculation results in a subtly different value than just flattening the
 			above v_Cross value. If I simply flattened that value, edge projecting didn't work at very acute angles for triangles
-			with slanted surfaces.
+			with slanted surfaces, so now I'm doing this, which works better...
 			*/
 			v_Cross_flat = Vector3.Cross 
 			( 
@@ -138,9 +160,9 @@ namespace LogansNavigationExtension
 		{
 			MyCoordinate = new LNX_ComponentCoordinate( newIndex, MyCoordinate.ComponentIndex );
 
-			StartVertCoordinate = new LNX_ComponentCoordinate( newIndex, StartVertCoordinate.ComponentIndex);
+			//StartVertCoordinate = new LNX_ComponentCoordinate( newIndex, StartVertCoordinate.ComponentIndex);
 
-			EndVertCoordinate = new LNX_ComponentCoordinate( newIndex, EndVertCoordinate.ComponentIndex);
+			//EndVertCoordinate = new LNX_ComponentCoordinate( newIndex, EndVertCoordinate.ComponentIndex);
 		}
 
 		/// <summary>
@@ -217,7 +239,7 @@ namespace LogansNavigationExtension
 		/// <param name="outPos"></param>
 		/// <returns></returns>
 		public bool DoesProjectionIntersectEdge( 
-			Vector3 origin, Vector3 destination, Vector3 flattenDir, out Vector3 outPos 
+			Vector3 origin, Vector3 destination, Vector3 flattenDir, out Vector3 outPos
 		)
 		{
 			Vector3 v_projection = LNX_Utils.FlatVector( destination - origin, flattenDir ).normalized;
@@ -228,44 +250,44 @@ namespace LogansNavigationExtension
 			//The following tests if the origin and projection direction allow for the possibilty of edge intersection...
 			Vector3 v_edgeMid_toOriginPt = LNX_Utils.FlatVector( origin - MidPosition ).normalized;
 
-			dbg_doesProjectionIntersectEdge += $"directional short circuit test\n" +
+			/*dbg_doesProjectionIntersectEdge += $"directional short circuit test\n" +
 				$"{nameof(v_Cross_flat)}: '{v_Cross_flat}', {nameof(v_edgeMid_toOriginPt)}: '{v_edgeMid_toOriginPt}'\n" +
-				$"side check rslt: '{Vector3.Dot(v_Cross_flat, v_edgeMid_toOriginPt)}'...\n";
+				$"side check rslt: '{Vector3.Dot(v_Cross_flat, v_edgeMid_toOriginPt)}'...\n";*/
 
 			if ( Vector3.Dot(v_Cross_flat, v_edgeMid_toOriginPt) >= 0f ) //origin is towards "inside" direction of edge...
 			{
-				dbg_doesProjectionIntersectEdge += $"origin is towards 'inside' direction of edge. now checking that " +
+				/*dbg_doesProjectionIntersectEdge += $"origin is towards 'inside' direction of edge. now checking that " +
 					$"the projection is in correct dir:...\n" +
-					$"comparing '{v_projection}' with '{-v_Cross_flat}'. rslt: '{Vector3.Dot(v_projection, -v_Cross_flat)}'\n";
+					$"comparing '{v_projection}' with '{-v_Cross_flat}'. rslt: '{Vector3.Dot(v_projection, -v_Cross_flat)}'\n";*/
 
 				if ( Vector3.Dot(v_projection, -v_Cross_flat) < 0f )
 				{
-					dbg_doesProjectionIntersectEdge += $"!!! Operation short-circuited bc of containment check! Returning false...\n" +
+					/*dbg_doesProjectionIntersectEdge += $"!!! Operation short-circuited bc of containment check! Returning false...\n" +
 						$"info dump: {nameof(origin)}: '{LNX_UnitTestUtilities.LongVectorString(origin)}'\n" +
 						$"dest: '{LNX_UnitTestUtilities.LongVectorString(destination)}'\n" +
 						$"{nameof(v_Cross)}: '{LNX_UnitTestUtilities.LongVectorString(v_Cross)}\n" +
 						$"{nameof(v_Cross_flat)}: '{LNX_UnitTestUtilities.LongVectorString(v_Cross_flat)}\n" +
 						$"{nameof(v_edgeMid_toOriginPt)}: '{LNX_UnitTestUtilities.LongVectorString(v_edgeMid_toOriginPt)}\n" +
-						$"";
+						$"";*/
 					outPos = Vector3.zero;
 					return false; //short-circuit
 				}
 			}
 			else //origin is towards "outside" direction of edge...
 			{
-				dbg_doesProjectionIntersectEdge += $"origin is towards 'outside' direction of edge. now checking that " +
+				/*dbg_doesProjectionIntersectEdge += $"origin is towards 'outside' direction of edge. now checking that " +
 					$"the projection is in correct dir:...\n" +
-					$"comparing '{v_projection}' with '{v_Cross_flat}'. rslt: '{Vector3.Dot(v_projection, v_Cross_flat)}'\n";
+					$"comparing '{v_projection}' with '{v_Cross_flat}'. rslt: '{Vector3.Dot(v_projection, v_Cross_flat)}'\n";*/
 
 				if ( Vector3.Dot(v_projection, v_Cross_flat) < 0f )
 				{
-					dbg_doesProjectionIntersectEdge += $"!!! Operation short-circuited bc of containment check! Returning false...\n" +
+					/*dbg_doesProjectionIntersectEdge += $"!!! Operation short-circuited bc of containment check! Returning false...\n" +
 						$"info dump: {nameof(origin)}: '{LNX_UnitTestUtilities.LongVectorString(origin)}'\n" +
 						$"dest: '{LNX_UnitTestUtilities.LongVectorString(destination)}'\n" +
 						$"{nameof(v_Cross)}: '{LNX_UnitTestUtilities.LongVectorString(v_Cross)}\n" +
 						$"{nameof(v_Cross_flat)}: '{LNX_UnitTestUtilities.LongVectorString(v_Cross_flat)}\n" +
 						$"{nameof(v_edgeMid_toOriginPt)}: '{LNX_UnitTestUtilities.LongVectorString(v_edgeMid_toOriginPt)}\n" +
-						$""; 
+						$""; */
 					outPos = Vector3.zero;
 					return false; //short-circuit
 				}
@@ -273,35 +295,35 @@ namespace LogansNavigationExtension
 			#endregion
 
 			#region ANGULAR SHORT-CIRCUIT TEST-------------------------------------------------------
-			float ang_prjctTo_orgnToStrt = Vector3.Angle(v_projection, v_originToStart);
+			float ang_vprjctTo_orgnToStrt = Vector3.Angle(v_projection, v_originToStart);
 			float ang_prjctTo_orgnToEnd = Vector3.Angle(v_projection, v_originToEnd);
 			//float ang_chevron = ang_prjctTo_orgnToStrt + ang_prjctTo_orgnToEnd; //this is cheap, but is it right?
 			float ang_chevron = Vector3.Angle(v_originToStart, v_originToEnd);
 
 			float lrgst = Mathf.Max
 			(
-				ang_prjctTo_orgnToStrt,
+				ang_vprjctTo_orgnToStrt,
 				ang_prjctTo_orgnToEnd
 			);
 
-			dbg_doesProjectionIntersectEdge += $"\n" +
+			/*dbg_doesProjectionIntersectEdge += $"\n" +
 				$"Angular short-circuit test\n" +
 				$"trying angle short-circuit with rslts. 1: '{ang_prjctTo_orgnToStrt}', " +
 				$"2: '{ang_prjctTo_orgnToEnd}'...\n" +
-				$"chev: '{ang_chevron}', lrgst: '{lrgst}'...";
+				$"chev: '{ang_chevron}', lrgst: '{lrgst}'...";*/
 
 			if (
-				(ang_prjctTo_orgnToStrt > 90f && ang_prjctTo_orgnToEnd > 90f) ||
+				(ang_vprjctTo_orgnToStrt > 90f && ang_prjctTo_orgnToEnd > 90f) ||
 				lrgst > ang_chevron
 			)
 			{
-				dbg_doesProjectionIntersectEdge += $"\nOperation short-circuited bc of dot-prdct check! Returning false...\n";
+				//dbg_doesProjectionIntersectEdge += $"\nOperation short-circuited bc of dot-prdct check! Returning false...\n";
 				outPos = Vector3.zero;
 				return false; //short-circuit
 			}
 			else
 			{
-				dbg_doesProjectionIntersectEdge += $"no short-circuit. Method will continue...\n";
+				//dbg_doesProjectionIntersectEdge += $"no short-circuit. Method will continue...\n";
 			}
 
 			#endregion
@@ -321,125 +343,154 @@ namespace LogansNavigationExtension
 			return true;
 		}
 
-		/*
-		public bool DoesProjectionIntersectEdge //Use this for experimentation
-		(
-			Vector3 origin, Vector3 destination, Vector3 flattenDir, out Vector3 outPos
-		)
+		//public string DBG_GetSharedAngle;
+		/// <summary>
+		/// Returns both the angles, added together, on either side of a shared edge, either at the start or end point.
+		/// </summary>
+		/// <param name="nm"></param>
+		/// <param name="atStart"></param>
+		/// <returns></returns>
+		public float GetCombinedSharedEdgeAngle( LNX_NavMesh nm, bool atStart )
 		{
-			dbg_doesProjectionIntersectEdge = $"{nameof(DoesProjectionIntersectEdge)}{MyCoordinate.ComponentIndex}()-----\n" +
-				$"{nameof(origin)}: '{origin}', {nameof(destination)}: '{destination}', {nameof(flattenDir)}: '{flattenDir}'\n";
-			Vector3 v_projection = LNX_Utils.FlatVector(destination - origin, flattenDir).normalized;
-			Vector3 v_originToStart = LNX_Utils.FlatVector(StartPosition - origin, flattenDir).normalized;
-			Vector3 v_originToEnd = LNX_Utils.FlatVector(EndPosition - origin).normalized;
-			dbg_doesProjectionIntersectEdge += $"{nameof(v_projection)}: '{v_projection}'\n";
-
-			#region DIRECTIONAL SHORT-CIRCUIT TEST-------------------------------------------------
-			//The following tests if the origin and projection direction allow for the possibilty of edge intersection...
-			Vector3 v_cross_flat = LNX_Utils.FlatVector(v_Cross, flattenDir).normalized;
-			Vector3 v_edgeMid_toOriginPt = LNX_Utils.FlatVector(origin - MidPosition).normalized;
-
-			float checkThis = Vector3.Dot(LNX_Utils.FlatVector(V_StartToEnd).normalized, v_cross_flat);
-			float checkThisB = Vector3.Dot(V_StartToEnd.normalized, v_Cross.normalized);
-
-			dbg_doesProjectionIntersectEdge += $"directional short circuit test\n" +
-				$"{nameof(v_cross_flat)}: '{v_cross_flat}', {nameof(v_edgeMid_toOriginPt)}: '{v_edgeMid_toOriginPt}'\n" +
-				$"check: '{checkThis}', check2: '{checkThisB}'\n" +
-				$"side check rslt: '{Vector3.Dot(v_cross_flat, v_edgeMid_toOriginPt)}'...\n";
-
-			if (Vector3.Dot(v_cross_flat, v_edgeMid_toOriginPt) >= 0f) //origin is towards "inside" direction of edge...
+			//DBG_GetSharedAngle = $"{ToString()}.{nameof(GetSharedAngle)}({nameof(atStart)}: '{atStart}') sharedEdgeCoord: '{SharedEdgeCoordinate}'\n";
+			if ( SharedEdgeCoordinate == LNX_ComponentCoordinate.None )
 			{
-				dbg_doesProjectionIntersectEdge += $"origin is towards 'inside' direction of edge. now checking that " +
-					$"the projection is in correct dir:...\n" +
-					$"comparing '{v_projection}' with '{-v_cross_flat}'. rslt: '{Vector3.Dot(v_projection, -v_cross_flat)}'\n";
-
-				if (Vector3.Dot(v_projection, -v_cross_flat) < 0f)
-				{
-					dbg_doesProjectionIntersectEdge += $"!!! Operation short-circuited bc of containment check! Returning false...\n" +
-						$"info dump: {nameof(origin)}: '{LNX_UnitTestUtilities.LongVectorString(origin)}'\n" +
-						$"dest: '{LNX_UnitTestUtilities.LongVectorString(destination)}'\n" +
-						$"{nameof(v_Cross)}: '{LNX_UnitTestUtilities.LongVectorString(v_Cross)}\n" +
-						$"{nameof(v_cross_flat)}: '{LNX_UnitTestUtilities.LongVectorString(v_cross_flat)}\n" +
-						$"{nameof(v_edgeMid_toOriginPt)}: '{LNX_UnitTestUtilities.LongVectorString(v_edgeMid_toOriginPt)}\n" +
-						$"";
-					outPos = Vector3.zero;
-					return false; //short-circuit
-				}
+				//DBG_GetSharedAngle += $"shared edge coord was none. Returning early...";
+				return -1f;
 			}
-			else //origin is towards "outside" direction of edge...
+
+			LNX_Edge sharedEdge = nm.Triangles[SharedEdgeCoordinate.TrianglesIndex].Edges[SharedEdgeCoordinate.ComponentIndex];
+			//DBG_GetSharedAngle += $"got shared edge: '{sharedEdge.ToString()}'...\n";
+
+			if( atStart )
 			{
-				dbg_doesProjectionIntersectEdge += $"origin is towards 'outside' direction of edge. now checking that " +
-					$"the projection is in correct dir:...\n" +
-					$"comparing '{v_projection}' with '{v_cross_flat}'. rslt: '{Vector3.Dot(v_projection, v_cross_flat)}'\n";
-
-				if (Vector3.Dot(v_projection, v_cross_flat) < 0f)
-				{
-					dbg_doesProjectionIntersectEdge += $"!!! Operation short-circuited bc of containment check! Returning false...\n" +
-						$"info dump: {nameof(origin)}: '{LNX_UnitTestUtilities.LongVectorString(origin)}'\n" +
-						$"dest: '{LNX_UnitTestUtilities.LongVectorString(destination)}'\n" +
-						$"{nameof(v_Cross)}: '{LNX_UnitTestUtilities.LongVectorString(v_Cross)}\n" +
-						$"{nameof(v_cross_flat)}: '{LNX_UnitTestUtilities.LongVectorString(v_cross_flat)}\n" +
-						$"{nameof(v_edgeMid_toOriginPt)}: '{LNX_UnitTestUtilities.LongVectorString(v_edgeMid_toOriginPt)}\n" +
-						$"";
-					outPos = Vector3.zero;
-					return false; //short-circuit
-				}
-			}
-			#endregion
-
-			#region ANGULAR SHORT-CIRCUIT TEST-------------------------------------------------------
-			float ang_prjctTo_orgnToStrt = Vector3.Angle(v_projection, v_originToStart);
-			float ang_prjctTo_orgnToEnd = Vector3.Angle(v_projection, v_originToEnd);
-			//float ang_chevron = ang_prjctTo_orgnToStrt + ang_prjctTo_orgnToEnd; //this is cheap, but is it right?
-			float ang_chevron = Vector3.Angle(v_originToStart, v_originToEnd);
-
-			float lrgst = Mathf.Max
-			(
-				ang_prjctTo_orgnToStrt,
-				ang_prjctTo_orgnToEnd
-			);
-
-			dbg_doesProjectionIntersectEdge += $"\n" +
-				$"Angular short-circuit test\n" +
-				$"trying angle short-circuit with rslts. 1: '{ang_prjctTo_orgnToStrt}', " +
-				$"2: '{ang_prjctTo_orgnToEnd}'...\n" +
-				$"chev: '{ang_chevron}', lrgst: '{lrgst}'...";
-
-			if (
-				(ang_prjctTo_orgnToStrt > 90f && ang_prjctTo_orgnToEnd > 90f) ||
-				lrgst > ang_chevron
-			)
-			{
-				dbg_doesProjectionIntersectEdge += $"\nOperation short-circuited bc of dot-prdct check! Returning false...\n";
-				outPos = Vector3.zero;
-				return false; //short-circuit
+				return nm.Triangles[MyCoordinate.TrianglesIndex].Verts[StartVertCoordinate.ComponentIndex].AngleAtBend_flattened +
+				(
+					StartPosition == sharedEdge.StartPosition ? nm.GetVertexAtCoordinate(sharedEdge.StartVertCoordinate).AngleAtBend_flattened :
+					nm.GetVertexAtCoordinate(sharedEdge.EndVertCoordinate).AngleAtBend_flattened
+				);
 			}
 			else
 			{
-				dbg_doesProjectionIntersectEdge += $"no short-circuit. Method will continue...\n";
+				return nm.Triangles[MyCoordinate.TrianglesIndex].Verts[EndVertCoordinate.ComponentIndex].AngleAtBend_flattened +
+				(
+					EndPosition == sharedEdge.StartPosition ? nm.GetVertexAtCoordinate(sharedEdge.StartVertCoordinate).AngleAtBend_flattened :
+					nm.GetVertexAtCoordinate(sharedEdge.EndVertCoordinate).AngleAtBend_flattened
+				);
+			}
+		}
+
+		public string DBG_GetContinuousAngleBetween;
+		/// <summary>
+		/// Calculates the angle from this edge to the edge at the passed coordinate as long as the two share a vert and 
+		/// don't have broken space between.
+		/// </summary>
+		/// <param name="nm"></param>
+		/// <param name="otherEdgeCoord"></param>
+		/// <param name="prspctvVrtPos"></param>
+		/// <returns></returns>
+		public float GetContinuousAngleBetween( LNX_NavMesh nm, LNX_ComponentCoordinate otherEdgeCoord, Vector3 prspctvVrtPos )
+		{
+			DBG_GetContinuousAngleBetween = $"{ToString()}.{nameof(GetContinuousAngleBetween)}('{otherEdgeCoord}', '{prspctvVrtPos}')\n";
+
+			#region SHORT-CIRCUITING ---------------------------
+			if( otherEdgeCoord == MyCoordinate )
+			{
+				Debug.LogError($"{nameof(GetContinuousAngleBetween)}() edges are the same. Can't continue.");
+				return -1f;
 			}
 
+			if ( !AmTouching(nm.Triangles[otherEdgeCoord.TrianglesIndex].Edges[otherEdgeCoord.ComponentIndex]) )
+			{
+				Debug.LogError($"{nameof(GetContinuousAngleBetween)}() this edge doesn't touch the other edge, so it's unable to " +
+					$"resolve a shared angle");
+				return -1f;
+			}
+
+			if
+			( 
+				!AmTouching(prspctvVrtPos) ||
+				nm.Triangles[otherEdgeCoord.TrianglesIndex].Edges[otherEdgeCoord.ComponentIndex].AmTouching(prspctvVrtPos)
+			)
+			{
+				Debug.LogError($"{nameof(GetContinuousAngleBetween)}() supplied position was not start or end position of either the owning edge, or other edge.");
+				return -1f;
+			}
 			#endregion
 
-			#region CALCULATE OUT POS -----------------------------------------------------------
-			outPos = StartPosition +
-			(
-				V_StartToEnd * LNX_Utils.CalculateTriangleEdgeLength
-				(
-					Vector3.Angle(v_projection, v_originToStart),
-					Vector3.Angle(-v_projection, -V_StartToEnd),
-					Vector3.Distance(origin, StartPosition)
-				)
-			); //Todo: This length isn't actually accurate at this point because we're using flattened positions in here (as well as mixing with unflattened)
-			#endregion
+			float runningAngle = 0f;
+			int runningWhileCount = 0;
 
-			return true;
+			LNX_ComponentCoordinate runningEdgeCoord = MyCoordinate;
+
+			bool amFinished = false;
+			while ( !amFinished )
+			{
+				DBG_GetContinuousAngleBetween += $"while{runningWhileCount}. Current edge: '{runningEdgeCoord}'\n" +
+					$"getting vert...\n";
+				LNX_Vertex vrt = nm.Triangles[runningEdgeCoord.TrianglesIndex].GetVertexAtCurrentPosition(prspctvVrtPos);
+				if( vrt == null )
+				{
+					Debug.LogError($"getvertatcrntpos returned null");
+					return -1f;
+				}
+				DBG_GetContinuousAngleBetween += $"got {vrt.ToString()} with angle: '{vrt.AngleAtBend_flattened}'...\n";
+
+				runningAngle += vrt.AngleAtBend_flattened;
+
+				DBG_GetContinuousAngleBetween += $"angle added, now '{runningAngle}'...\n";
+
+
+
+				if( vrt.TriangleIndex == otherEdgeCoord.TrianglesIndex )
+				{
+					amFinished = true;
+				}
+				else
+				{
+					//runningEdgeCoord = nm.Triangles[runningEdgeCoord.TrianglesIndex].Edges[runningEdgeCoord.ComponentIndex].SharedEdgeCoordinate;
+
+					for (int i = 0; i < 3; i++) 
+					{
+						if 
+						( 
+							i != runningEdgeCoord.ComponentIndex && 
+							nm.Triangles[runningEdgeCoord.TrianglesIndex].Edges[runningEdgeCoord.ComponentIndex].AmTouching
+							(
+								nm.Triangles[runningEdgeCoord.TrianglesIndex].Edges[runningEdgeCoord.ComponentIndex]
+							) 
+						)
+						{
+							runningEdgeCoord = new LNX_ComponentCoordinate( runningEdgeCoord.TrianglesIndex, i );
+							DBG_GetContinuousAngleBetween += ($"Decided next edge coordinate will be '{runningEdgeCoord}'\n");
+
+							if( nm.Triangles[runningEdgeCoord.TrianglesIndex].Edges[runningEdgeCoord.ComponentIndex].AmTerminal )
+							{
+								Debug.Log($"Edge '{runningEdgeCoord}' along angle path was terminal. Can't get shared angle");
+								return -1f;
+							}
+
+							break;
+						}
+					}
+				}
+
+
+
+				runningWhileCount++;
+				if( runningWhileCount > 10 )
+				{
+					Debug.LogError($"while seems to be in infinte loop");
+					return -1;
+				}
+			}
+
+			return runningAngle;
 		}
-		*/
 
 		/// <summary>
-		/// Checks whether the supplied edge is touching this edge at both the start 
-		/// and end position.
+		/// Checks whether the supplied edge is touching this edge at either the start 
+		/// or end position.
 		/// </summary>
 		/// <param name="edge"></param>
 		/// <returns></returns>
@@ -457,13 +508,32 @@ namespace LogansNavigationExtension
 
 			return false;
 		}
-		#endregion
+		/// <summary>
+		/// Checks whether the supplied position is touching this edge at either the start or end position
+		/// </summary>
+		/// <param name="pos"></param>
+		/// <returns></returns>
+		public bool AmTouching( Vector3 pos )
+		{
+			if ( pos == StartPosition || pos == StartPosition )
+			{
+				return true;
+			}
 
-		public bool AmOnSharedEdgeSpace( LNX_Edge edj )
+			if ( pos == EndPosition || pos == StartPosition )
+			{
+				return true;
+			}
+
+			return false;
+		}
+
+		private bool AmOnSharedEdgeSpace( Vector3 endA, Vector3 endB )
 		{
 			if (
-				(edj.StartPosition == StartPosition || edj.EndPosition == StartPosition) &&
-				(edj.StartPosition == EndPosition || edj.EndPosition == EndPosition)
+				endA != endB &&
+				(endA == StartPosition || endB == StartPosition) &&
+				(endA == EndPosition || endB == EndPosition)
 			)
 			{
 				return true;
@@ -472,21 +542,120 @@ namespace LogansNavigationExtension
 			return false;
 		}
 
-		#region HELPERS --------------------------------------------------
-		public void SayCurrentInfo()
+		public bool AmOnSharedEdgeSpace( LNX_Edge edj )
 		{
-			Debug.Log($"Edge.{nameof(SayCurrentInfo)}()\n" +
+			return AmOnSharedEdgeSpace( edj.StartPosition, edj.EndPosition );
+		}
+
+		public bool AmBoundsEdge(LNX_NavMesh nm)
+		{
+			//note: It's possible to have a navmesh that isn't mostly square shaped. This won't help for that...
+			//Debug.Log($"{nameof(AmBoundsEdge)}(), {nm.SurfaceOrientation}");
+			#region short-circuit check ----------------------
+			if ( SharedEdgeCoordinate != LNX_ComponentCoordinate.None ) 
+			{
+				return false;
+			}
+
+			if ( nm.SurfaceOrientation == LNX_Direction.PositiveY || nm.SurfaceOrientation == LNX_Direction.NegativeY) 
+			{
+				if
+				(
+					(StartPosition.x == nm.Bounds_HighestX && EndPosition.x == nm.Bounds_HighestX) ||
+					(StartPosition.x == nm.Bounds_LowestX && EndPosition.x == nm.Bounds_LowestX) ||
+					(StartPosition.z == nm.Bounds_HighestZ && EndPosition.z == nm.Bounds_HighestZ) ||
+					(StartPosition.z == nm.Bounds_LowestZ && EndPosition.z == nm.Bounds_LowestZ)
+				)
+				{
+					return true;
+				}
+			}
+
+			if (nm.SurfaceOrientation == LNX_Direction.PositiveX || nm.SurfaceOrientation == LNX_Direction.NegativeX)
+			{
+				if
+				(
+					(StartPosition.y == nm.Bounds_HighestY && EndPosition.y == nm.Bounds_HighestY) ||
+					(StartPosition.y == nm.Bounds_LowestY && EndPosition.y == nm.Bounds_LowestY) ||
+					(StartPosition.z == nm.Bounds_HighestZ && EndPosition.z == nm.Bounds_HighestZ) ||
+					(StartPosition.z == nm.Bounds_LowestZ && EndPosition.z == nm.Bounds_LowestZ)
+				)
+				{
+					return true;
+				}
+			}
+			
+			if ( nm.SurfaceOrientation == LNX_Direction.PositiveZ || nm.SurfaceOrientation == LNX_Direction.NegativeZ )
+			{
+				if
+				(
+					(StartPosition.y == nm.Bounds_HighestY && EndPosition.y == nm.Bounds_HighestY) ||
+					(StartPosition.y == nm.Bounds_LowestY && EndPosition.y == nm.Bounds_LowestY) ||
+					(StartPosition.x == nm.Bounds_HighestX && EndPosition.x == nm.Bounds_HighestX) ||
+					(StartPosition.x == nm.Bounds_LowestX && EndPosition.x == nm.Bounds_LowestX)
+				)
+				{
+					return true;
+				}
+			}
+			#endregion
+
+			/* //todo: Maybe in the future I could also add triangles that weren't caught above
+			Debug.Log("now checking projections...");
+			//Now check projections...
+			for ( int i = 0; i < nm.Triangles.Length; i++ )
+			{
+				
+			}
+			*/
+
+			return false;
+		}
+
+		public bool HaveObtuseAngle(LNX_NavMesh nm)
+		{
+			if 
+			(
+				nm.Triangles[StartVertCoordinate.TrianglesIndex].Verts[StartVertCoordinate.ComponentIndex].AngleAtBend_flattened > 90f ||
+				nm.Triangles[StartVertCoordinate.TrianglesIndex].Verts[EndVertCoordinate.ComponentIndex].AngleAtBend_flattened > 90f
+			)
+			{
+				return true;
+			}
+
+			return false;
+		} //todo: I think I can use this method for determining tri visibility
+
+		#endregion
+
+
+		#region HELPERS --------------------------------------------------
+		public string GetCurrentInfoString(LNX_NavMesh nm)
+		{
+			return $"Edge.{nameof(SayCurrentInfo)}()\n" +
 				$"{nameof(MyCoordinate)}: '{MyCoordinate}'\n" +
 				$"{nameof(StartPosition)}: '{StartPosition}'\n" +
 				$"{nameof(v_Cross)}: '{v_Cross}'\n" +
-				$"");
+				$"{nameof(SharedEdgeCoordinate)}: '{SharedEdgeCoordinate}'\n" +
+				$"{nameof(AmBoundsEdge)}: '{AmBoundsEdge(nm)}'\n" +
+				$"";
 		}
 
-		public string GetAnomolyString()
+		public void SayCurrentInfo(LNX_NavMesh nm)
+		{
+			Debug.Log( GetCurrentInfoString(nm) );
+		}
+
+		public string GetAnomolyString( LNX_NavMesh nm )
 		{
 			string returnString = string.Empty;
 
-			if ( MyCoordinate.TrianglesIndex < 0 || MyCoordinate.ComponentIndex < 0 )
+			if ( 
+				MyCoordinate.TrianglesIndex < 0 || 
+				MyCoordinate.TrianglesIndex > nm.Triangles.Length - 1 || 
+				MyCoordinate.ComponentIndex < 0 ||
+				MyCoordinate.ComponentIndex > 2
+			)
 			{
 				returnString += $"{nameof(MyCoordinate)}: '{MyCoordinate}'\n";
 			}
@@ -506,6 +675,11 @@ namespace LogansNavigationExtension
 				returnString += $"{nameof(v_triCenter_cached)}: '{v_triCenter_cached}'\n";
 			}
 
+			if ( v_SurfaceNormal_cached == Vector3.zero)
+			{
+				returnString += $"{nameof(v_SurfaceNormal_cached)}: '{v_SurfaceNormal_cached}'\n";
+			}
+
 			if (v_Cross == Vector3.zero)
 			{
 				returnString += $"{nameof(v_Cross)}: '{v_Cross}'\n";
@@ -518,6 +692,21 @@ namespace LogansNavigationExtension
 
 			return returnString;
 		}
+
+		public string GetRelationalString()
+		{
+			return $"Edge[{ComponentIndex}].{nameof(GetRelationalString)}()\n" +
+				$"{nameof(SharedEdgeCoordinate)}: '{SharedEdgeCoordinate}'\n" +
+				$" == none: '{SharedEdgeCoordinate == LNX_ComponentCoordinate.None}'\n" +
+				$"{nameof(StartVertCoordinate)}: '{StartVertCoordinate}'\n" +
+
+				$"";
+		}
 		#endregion
+
+		public override string ToString()
+		{
+			return $"Edge{MyCoordinate.ToString()}";
+		}
 	}
 }

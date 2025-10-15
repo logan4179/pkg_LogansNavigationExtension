@@ -7,7 +7,7 @@ using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 using System;
 
-namespace LogansNavigationExtension
+namespace LogansNavigationExtension.CustomEditors
 {
 	[CustomEditor(typeof(LNX_MeshManipulator)), CanEditMultipleObjects]
 	public class LNX_MeshManipulator_editor : Editor
@@ -81,6 +81,7 @@ namespace LogansNavigationExtension
 		private void Btn_fetchTriangulation_action()
 		{
 			_targetScript._LNX_NavMesh.CalculateTriangulation();
+			Debug.Log(_targetScript._LNX_NavMesh.DBG_CalculateTriangulation);
 			_targetScript.ClearSelection();
 		}
 
@@ -123,6 +124,17 @@ namespace LogansNavigationExtension
 				SceneView.RepaintAll(); //This is so that the refreshing is quick for OnDrawGizmos
 				//SceneView.currentDrawingSceneView.Repaint();
 
+			}
+
+			if( _targetScript._LNX_NavMesh.V_SurfaceOrientation == Vector3.zero )
+			{
+				//TODO: Read the following...
+				Debug.LogWarning( $"LNX WARNING! Currently the navmesh's surface orientation vector isn't calculated/cached. " +
+					$"In the future, I'll need to create a custom inspector for the actual LNX_Navmesh (as opposed to " +
+					$"just having one for the mesh editor) where it calculates this vector whenever the user changes the " +
+					$"'SurfaceOrientation' dropdown choice. For now, I'll leave this warning here so I'm cognizant of the " +
+					$"need to manually calculate this..." );
+				
 			}
 
 			#region INPUT --------------------------

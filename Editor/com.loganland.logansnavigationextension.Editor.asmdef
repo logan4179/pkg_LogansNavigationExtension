@@ -1,6 +1,6 @@
 {
     "name": "com.loganland.logansnavigationextension.editor",
-    "rootNamespace": "LogansNavigationExtension.Editor",
+    "rootNamespace": "LogansNavigationExtension.CustomEditors",
     "references": [
         "GUID:f0709e0acd1746f4cada73798ae78c50"
     ],

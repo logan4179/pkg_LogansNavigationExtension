@@ -76,7 +76,7 @@ namespace LogansNavigationExtension
 		{
 			DBG_NavmeshRaycastRprt = "";
 
-			if( Selection.activeObject != gameObject && Selection.activeObject != startTrans.gameObject )
+			if( AmInUnitTest || Selection.activeObject != gameObject && Selection.activeObject != startTrans.gameObject )
 			{
 				return;
 			}

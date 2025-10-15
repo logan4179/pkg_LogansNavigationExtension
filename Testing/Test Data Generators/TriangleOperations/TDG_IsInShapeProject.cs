@@ -75,7 +75,7 @@ namespace LogansNavigationExtension
 
 			DBG_Operation += $"Commencing operation using triangle '{CurrentTriangle.Index_inCollection}'...\n";
 
-			DrawStandardFocusTriGizmos(CurrentTriangle, 1f, $"tri{CurrentTriangle.Index_inCollection}");
+			DrawStandardFocusTriGizmos(CurrentTriangle, 1f, $"tri{CurrentTriangle.Index_inCollection}", Color.magenta);
 
 			CurrentProjectedPos = Vector3.zero;
 			CurrentResult = false;

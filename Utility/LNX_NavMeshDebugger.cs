@@ -99,7 +99,7 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call SayFocusedTriInfo()")]
 		public void SayFocusedTriInfo()
 		{
-			FocusedTri.SayCurrentInfo();
+			FocusedTri.SayCurrentInfo(_mgr);
 		}
 
 		[ContextMenu("z call SayVisualMeshInfo()")]

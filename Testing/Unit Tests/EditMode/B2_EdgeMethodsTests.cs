@@ -53,6 +53,8 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			}
 
 			_tdg_doesPositionLieOnEdge = _serializedLNXNavmesh.gameObject.AddComponent<TDG_DoesPositionLieOnEdge>();
+			_tdg_doesPositionLieOnEdge.AmInUnitTest = true;
+
 			string jsonString = File.ReadAllText( TDG_Manager.filePath_testData_doesPositionLieOnEdge );
 			JsonUtility.FromJsonOverwrite( jsonString, _tdg_doesPositionLieOnEdge );
 			Debug.Log($"Created object from JSON. Asserting object is not null...");
@@ -71,6 +73,8 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			}
 
 			_tdg_doesProjectionIntersectEdge = _serializedLNXNavmesh.gameObject.AddComponent<TDG_DoesProjectionIntersectEdge>();
+			_tdg_doesProjectionIntersectEdge.AmInUnitTest = true;
+
 			jsonString = File.ReadAllText(TDG_Manager.filePath_testData_doesProjectionIntersectEdge);
 			JsonUtility.FromJsonOverwrite(jsonString, _tdg_doesProjectionIntersectEdge);
 			Debug.Log($"Created object from JSON. Asserting object is not null...");
@@ -151,7 +155,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				LNX_Edge edge = tri.GetEdge( _tdg_doesPositionLieOnEdge.CapturedEdgeCenters[i] );
 
 				bool rslt = edge.DoesPositionLieOnEdge(
-					_tdg_doesPositionLieOnEdge.CapturedPositions[i], _serializedLNXNavmesh.GetSurfaceNormal()
+					_tdg_doesPositionLieOnEdge.CapturedPositions[i], _serializedLNXNavmesh.V_SurfaceOrientation
 				);
 
 				Assert.AreEqual( _tdg_doesPositionLieOnEdge.CapturedResults[i], rslt );
@@ -179,7 +183,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				bool rslt = edge.DoesProjectionIntersectEdge(
 					_tdg_doesProjectionIntersectEdge.CapturedStartPositions[i],
 					_tdg_doesProjectionIntersectEdge.CapturedEndPositions[i],
-					_serializedLNXNavmesh.GetSurfaceNormal(),
+					_serializedLNXNavmesh.V_SurfaceOrientation,
 					out prjctPos
 				);
 

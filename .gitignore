@@ -13,7 +13,7 @@
 # Folders to ignore added by me (Logan)
 /[Pp]rofile[Aa]nalyzer/
 /.idea/
-/LNX Testing/
+/Testing/Unit Tests/Test Data/
 
 
 # MemoryCaptures can get excessive in size.
@@ -78,3 +78,4 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 waypointscript.jpg
 *.data
+Testing/Unit Tests/Test Data/serializedNavmesh_A

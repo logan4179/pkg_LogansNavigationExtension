@@ -8,6 +8,10 @@ namespace LogansNavigationExtension
 {
     public class TDG_DoesProjectionIntersectEdge : TDG_base
 	{
+		[Header("START OF DERIVED CLASS-------------------")]
+
+		[SerializeField] protected LNX_NavMeshDebugger _debugger;
+
 		public Transform startTrans;
 		public Transform endTrans;
 		public LNX_ComponentCoordinate EdgeCoordinate;
@@ -122,7 +126,7 @@ namespace LogansNavigationExtension
 				(
 					CapturedStartPositions[i],
 					CapturedEndPositions[i],
-					_navmesh.GetSurfaceNormal(),
+					_navmesh.V_SurfaceOrientation,
 					out CurrentProjectedPosition
 				);
 			}
@@ -190,7 +194,7 @@ namespace LogansNavigationExtension
 		{
 			DBG_Operation = "";
 
-			if (Selection.activeObject != gameObject && Selection.activeObject != startTrans.gameObject)
+			if ( AmInUnitTest || Selection.activeObject != gameObject && Selection.activeObject != startTrans.gameObject)
 			{
 				return;
 			}
@@ -203,7 +207,7 @@ namespace LogansNavigationExtension
 				return;
 			}
 
-			DrawStandardFocusTriGizmos( _navmesh.Triangles[EdgeCoordinate.TrianglesIndex], 1f, $"tri{EdgeCoordinate.TrianglesIndex}" );
+			DrawStandardFocusTriGizmos( _navmesh.Triangles[EdgeCoordinate.TrianglesIndex], 1f, $"tri{EdgeCoordinate.TrianglesIndex}", Color.magenta);
 			DrawStandardEdgeFocusGizmos( _navmesh.GetEdge(EdgeCoordinate), 0.1f, "", Color.magenta );
 
 			DBG_Operation += $"Commencing edge project...\n" +
@@ -214,7 +218,7 @@ namespace LogansNavigationExtension
 				(
 					startTrans.position,
 					endTrans.position,
-					_navmesh.GetSurfaceNormal(),
+					_navmesh.V_SurfaceOrientation,
 					out CurrentProjectedPosition
 				);
 			DBG_Operation += $"=============================\n";
