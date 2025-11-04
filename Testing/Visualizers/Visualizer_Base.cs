@@ -17,7 +17,7 @@ namespace LogansNavigationExtension
 		[TextArea(1, 20)]
 		public string DBG_Operation;
 
-		public void DrawTriGizmo(LNX_Triangle tri, Color col)
+		public void DrawTriGizmo(LNX_Triangle tri, Color col, float offsetHeight = 0f)
 		{
 			Color oldColor = Gizmos.color;
 
@@ -27,15 +27,17 @@ namespace LogansNavigationExtension
 			GUIStyle gstl_vertLines = new GUIStyle();
 			gstl_vertLines.normal.textColor = col;
 
+			Vector3 v_offsetHeight = Vector3.up * offsetHeight;
+
 			//Draw borders...
-			Handles.DrawLine(tri.Verts[0].V_Position, tri.Verts[1].V_Position);
-			Handles.DrawLine(tri.Verts[1].V_Position, tri.Verts[2].V_Position);
-			Handles.DrawLine(tri.Verts[2].V_Position, tri.Verts[0].V_Position);
+			Handles.DrawLine(tri.Verts[0].V_Position + v_offsetHeight, tri.Verts[1].V_Position + v_offsetHeight);
+			Handles.DrawLine(tri.Verts[1].V_Position + v_offsetHeight, tri.Verts[2].V_Position + v_offsetHeight);
+			Handles.DrawLine(tri.Verts[2].V_Position + v_offsetHeight, tri.Verts[0].V_Position + v_offsetHeight);
 
 			Gizmos.color = oldColor;
 		}
 
-		public void DrawStandardFocusTriGizmos(LNX_Triangle tri, float raiseAmount, string lblString, Color clr)
+		public void DrawStandardFocusTriGizmos(LNX_Triangle tri, float raiseAmount, string lblString, Color clr, bool drawTriGizmo = false, float triGzmoRaiseAmt = 0f)
 		{
 			Color oldColor = Gizmos.color;
 
@@ -48,7 +50,10 @@ namespace LogansNavigationExtension
 
 			Handles.Label(tri.V_Center + vRaise, lblString);
 
-			DrawTriGizmo(tri, clr);
+			if( drawTriGizmo )
+			{
+				DrawTriGizmo(tri, clr, triGzmoRaiseAmt);
+			}
 
 			Gizmos.color = oldColor;
 		}

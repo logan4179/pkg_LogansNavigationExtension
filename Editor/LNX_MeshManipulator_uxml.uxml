@@ -34,6 +34,7 @@
                 <uie:PropertyField name="pf_drawNavMeshLines" label="Mesh Lines" binding-path="drawNavMeshLines" style="height: 25px;" />
                 <uie:PropertyField name="pf_drawTriLabels" label="Draw Tri Labels" binding-path="drawTriLabels" style="height: 25px;" />
                 <uie:PropertyField name="pf_drawEdgeLabels" label="Edge Labels" binding-path="drawEdgeLabels" style="height: 25px;" />
+                <uie:PropertyField name="pf_edgeLineColor" label="Edge Color" binding-path="color_edgeLines" style="height: 25px;" />
                 <uie:PropertyField name="pf_thickness_edgeLines" label="Line Thickness" binding-path="thickness_edges" style="height: 25px;" />
                 <uie:PropertyField name="pf_size_hoverededComponent" label="Selected Size" binding-path="Size_HoveredComponent" style="height: 25px;" />
                 <uie:PropertyField name="pf_color_SelectedComponent" label="Selected Component Color" binding-path="color_selectedComponent" style="height: 25px;" />

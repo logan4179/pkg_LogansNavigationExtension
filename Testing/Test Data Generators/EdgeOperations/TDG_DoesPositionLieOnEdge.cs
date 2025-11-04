@@ -106,8 +106,7 @@ namespace LogansNavigationExtension
 		[ContextMenu("z GoToProblem()")]
 		public void GoToProblem()
 		{
-			transform.position = problemPositions[index_focusProblem];
-
+			//todo: implement
 
 			Debug.Log($"{nameof(GoToProblem)}()...");
 		}

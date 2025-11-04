@@ -82,7 +82,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			Debug.Log( string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(b1_tri_Collection_Length_Is_Correct_After_Cut)) );
 
 			_lnx_meshManipulator.ClearSelection(); //just to be sure...
-			_lnx_meshManipulator.ChangeSelectMode( LNX_SelectMode.Edges );
+			_lnx_meshManipulator.ChangeSelectMode( LNX_Component.Edge );
 
 			_lnx_meshManipulator.TryPointAtComponentViaDirection(
 			_tdg_cuttingTests.TestMousePositions_edge[0], _tdg_cuttingTests.TestMouseDirections_edge[0]);

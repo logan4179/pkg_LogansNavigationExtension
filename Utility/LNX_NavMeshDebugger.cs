@@ -22,6 +22,11 @@ namespace LogansNavigationExtension
 		[Range(0, 7)] public float Thickness_focusTri = 1f;
 		public bool AmAllowingVertFocus = true;
 		[Range(0, 2)] public int Index_VertFocus = 0;
+
+		[Space(5)]
+		public bool AllowEdgeFocus = false;
+		public LNX_ComponentCoordinate Coord_EdgeFocus = new LNX_ComponentCoordinate();
+
 		public LNX_Triangle FocusedTri
 		{
 			get
@@ -156,6 +161,11 @@ namespace LogansNavigationExtension
 					}
 				}
 			}
+
+			if( AllowEdgeFocus && Coord_EdgeFocus != LNX_ComponentCoordinate.None )
+			{
+				DrawStandardEdgeFocusGizmos(_mgr.GetEdge(Coord_EdgeFocus), 0.25f, "", Color.yellow, true);
+			}
 		}
 
 		public void DrawTriGizmos(LNX_Triangle tri, bool amFocused)
@@ -266,6 +276,30 @@ namespace LogansNavigationExtension
 			{
 				Gizmos.DrawLine(tri.Verts[Index_VertFocus].V_Position, tri.Verts[Index_VertFocus].V_Position + (Vector3.up * 1.2f) );
 			}
+		}
+
+		public void DrawStandardEdgeFocusGizmos(LNX_Edge edge, float raiseAmount, string lblString, Color clr, bool incldStrtAndEndLbls = false)
+		{
+			Color oldColor = Gizmos.color;
+
+			Gizmos.color = clr;
+			Vector3 vRaise = Vector3.up * raiseAmount;
+
+			Handles.Label(edge.MidPosition + vRaise, edge.ToString());
+
+			Gizmos.DrawLine(edge.StartPosition, edge.StartPosition + vRaise);
+
+
+			Gizmos.DrawLine(edge.StartPosition + vRaise, edge.EndPosition + vRaise);
+			Gizmos.DrawLine(edge.EndPosition, edge.EndPosition + vRaise);
+
+			if (incldStrtAndEndLbls)
+			{
+				Handles.Label(edge.StartPosition + vRaise, "eStrt");
+				Handles.Label(edge.EndPosition + vRaise, "eEnd");
+			}
+
+			Gizmos.color = oldColor;
 		}
 	}
 }

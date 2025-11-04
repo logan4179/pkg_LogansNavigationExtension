@@ -156,9 +156,10 @@ namespace LogansNavigationExtension
 			//endTrans.position = ProblemEndPositions[index_focusProblem];
 
 			
-			startTrans.position = CapturedStartPositions[index_focusProblem];
-			endTrans.position = CapturedEndPositions[index_focusProblem];
+			//startTrans.position = CapturedStartPositions[index_focusProblem];
+			//endTrans.position = CapturedEndPositions[index_focusProblem];
 			
+			//TODO: Implement now that I'm using the TDG_DataCapture object...
 
 			Debug.Log($"{nameof(GoToProblem)}()...");
 		}

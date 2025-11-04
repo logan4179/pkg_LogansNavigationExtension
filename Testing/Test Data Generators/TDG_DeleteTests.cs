@@ -46,7 +46,7 @@ namespace LogansNavigationExtension
 			GrabbedPositions_face = new List<Vector3>();
 			GrabbedManipulatorPos_face = new List<Vector3>();
 			CapturedNumberOfSharedVerts_face = new List<int>();
-			_Lnx_MeshManipulator.SelectMode = LNX_SelectMode.Faces;
+			_Lnx_MeshManipulator.SelectMode = LNX_Component.Triangle;
 
 			for ( int i = 0; i < tempTestPositions_face.Count; i++ )
 			{
@@ -61,7 +61,7 @@ namespace LogansNavigationExtension
 		{
 			Debug.Log($"capturing pos '{pos}', and dir: '{dir}'. mode: '{_Lnx_MeshManipulator.SelectMode}'...");
 
-			if ( _Lnx_MeshManipulator.SelectMode != LNX_SelectMode.Faces )
+			if ( _Lnx_MeshManipulator.SelectMode != LNX_Component.Triangle )
 			{
 				Debug.LogError($"Error! change mesh manipulator select mode to faces. Returning early...");
 				return;

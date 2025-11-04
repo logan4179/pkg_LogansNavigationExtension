@@ -128,6 +128,23 @@ namespace LogansNavigationExtension
 
 			return null;
 		}
+
+		public LNX_Triangle GetClosestTriangleToPosition(Vector3 pos)
+		{
+			float runningClosestDist = float.MaxValue;
+			int runningBestTriIndex = 0;
+
+			for (int i = 0; i < Triangles.Length; i++)
+			{
+				if (Vector3.Distance(pos, Triangles[i].V_Center) < runningClosestDist)
+				{
+					runningClosestDist = Vector3.Distance(pos, Triangles[i].V_Center );
+					runningBestTriIndex = i;
+				}
+			}
+
+			return Triangles[runningBestTriIndex];
+		}
 		#endregion
 
 		#region Vertex fetchers -----------------------------------------------------------------------
@@ -180,6 +197,28 @@ namespace LogansNavigationExtension
 			}
 
 			return returnList;
+		}
+
+		public LNX_Vertex GetClosestVertexToPosition(Vector3 pos)
+		{
+			float runningClosestDist = float.MaxValue;
+			int runningBestTriIndex = 0;
+			int runningBestVertIndex = 0;
+
+			for( int i = 0; i < Triangles.Length; i++ )
+			{
+				for ( int j = 0; j < 3; j++ )
+				{
+					if( Vector3.Distance(pos, Triangles[i].Verts[j].V_Position) < runningClosestDist )
+					{
+						runningClosestDist = Vector3.Distance(pos, Triangles[i].Verts[j].V_Position);
+						runningBestTriIndex = i;
+						runningBestVertIndex = j;
+					}
+				}
+			}
+
+			return Triangles[runningBestTriIndex].Verts[runningBestVertIndex];
 		}
 		#endregion
 

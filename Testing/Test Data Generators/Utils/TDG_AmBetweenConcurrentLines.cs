@@ -21,6 +21,13 @@ namespace LogansNavigationExtension
 		public List<Vector3> CapturedPerspectivePositions = new List<Vector3>();
 		public List<Vector3> CapturedTriCenterPositions = new List<Vector3>();
 
+		[Header("GOTO")]
+		public LNX_ComponentCoordinate GotoCoord_EdgeA;
+		public LNX_ComponentCoordinate GotoCoord_EdgeB;
+		public LNX_ComponentCoordinate GotoCoord_ObstructEdge;
+
+		public bool SwitchOrientation = false;
+		[Range(0, 2)] public int StartMidOrEnd = 0;
 
 		//[Header("DEBUG")]
 		[TextArea(1,10)] public string DBG_Method;
@@ -46,10 +53,44 @@ namespace LogansNavigationExtension
 
 		}
 
+		[ContextMenu("z call GotoIt()")]
+		public void GotoIt()
+		{
+			trans_LIneAStart.position = _navmesh.GetEdge(GotoCoord_EdgeA).StartPosition;
+			trans_LineAEnd.position = _navmesh.GetEdge(GotoCoord_EdgeA).EndPosition;
+
+
+
+
+			if( StartMidOrEnd == 0 )
+			{
+				trans_posParameter.position = _navmesh.GetEdge(GotoCoord_ObstructEdge).StartPosition;
+			}
+			else if (StartMidOrEnd == 1)
+			{
+				trans_posParameter.position = _navmesh.GetEdge(GotoCoord_ObstructEdge).MidPosition;
+			}
+			else if (StartMidOrEnd == 2)
+			{
+				trans_posParameter.position = _navmesh.GetEdge(GotoCoord_ObstructEdge).EndPosition;
+			}
+
+			if (SwitchOrientation)
+			{
+				trans_LIneBStart.position = _navmesh.GetEdge(GotoCoord_EdgeB).EndPosition;
+				trans_LineBEnd.position = _navmesh.GetEdge(GotoCoord_EdgeB).StartPosition;
+			}
+			else
+			{
+				trans_LIneBStart.position = _navmesh.GetEdge(GotoCoord_EdgeB).StartPosition;
+				trans_LineBEnd.position = _navmesh.GetEdge(GotoCoord_EdgeB).EndPosition;
+			}
+		}
+
 		[ContextMenu("z call SendToDataPoint")]
 		public void SendToDataPoint()
 		{
-			transform.position = CapturedPerspectivePositions[Index_GoToDataPoint];
+			transform.position = CapturedPerspectivePositions[Index_GoToProblem];
 		}
 		#endregion
 

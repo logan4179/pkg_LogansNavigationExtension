@@ -6,6 +6,12 @@ using UnityEngine.AI;
 
 namespace LogansNavigationExtension
 {
+	/// <summary>
+	/// Class that creates an edge object composing a triangle.
+	/// Note: On an LNX_Triangle, Edge0 will start at vert1 and end at vert2.
+	/// Edge1 will start on vert0 and end at vert2. Edge2 will start at 
+	/// vert0 and end at vert1
+	/// </summary>
 	[System.Serializable]
 	public class LNX_Edge
 	{
@@ -207,9 +213,19 @@ namespace LogansNavigationExtension
 
 		public bool DoesPositionLieOnEdge( Vector3 pos, Vector3 flattenDir )
 		{
+			if( pos == StartPosition || pos == EndPosition || pos == MidPosition )
+			{
+				return true;
+			}
+
+			Vector3 pos_fltnd = LNX_Utils.FlatVector(pos, flattenDir);
+			if( pos_fltnd == StartPosition_flat || pos_fltnd == EndPosition_flat || pos_fltnd == MidPosition_flat )
+			{
+				return true;
+			}
+
 			if
 			( 
-				pos == StartPosition || pos == EndPosition ||
 				(
 					LNX_Utils.FlatVector(pos - StartPosition, flattenDir).normalized == LNX_Utils.FlatVector(V_StartToEnd, flattenDir).normalized && 
 					Vector3.Distance(StartPosition,pos) <= EdgeLength

@@ -12,12 +12,12 @@ namespace LogansNavigationExtension
 
 	#region ENUMS-----------------------------------------
 	[System.Serializable]
-	public enum LNX_SelectMode
+	public enum LNX_Component
 	{
 		None = 0,
-		Vertices = 1,
-		Edges = 2,
-		Faces = 3
+		Vertex = 1,
+		Edge = 2,
+		Triangle = 3
 	}
 
 	[System.Serializable]
@@ -278,6 +278,23 @@ namespace LogansNavigationExtension
 		public override string ToString()
 		{
 			return $"Indx '{Index_Hit}', at '{HitPosition}'";
+		}
+	}
+
+	[System.Serializable]
+	public struct LNX_Quad
+	{
+		public Vector3 crnrA;
+		public Vector3 crnrB;
+		public Vector3 crnrC;
+		public Vector3 crnrD;
+
+		public LNX_Quad( Vector3 cA, Vector3 cB, Vector3 cC, Vector3 cD )
+		{
+			crnrA = cA;
+			crnrB = cB;
+			crnrC = cC;
+			crnrD = cD;
 		}
 	}
 

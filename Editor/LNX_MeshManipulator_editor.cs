@@ -167,16 +167,16 @@ namespace LogansNavigationExtension.CustomEditors
 				{
 					if ( Event.current.keyCode == KeyCode.Alpha1 ) // Vertex mode
 					{
-						_targetScript.ChangeSelectMode( LNX_SelectMode.Vertices );
+						_targetScript.ChangeSelectMode( LNX_Component.Vertex );
 						
 					}
 					else if ( Event.current.keyCode == KeyCode.Alpha2 ) // Edge Mode
 					{
-						_targetScript.ChangeSelectMode( LNX_SelectMode.Edges );
+						_targetScript.ChangeSelectMode( LNX_Component.Edge );
 					}
 					else if ( Event.current.keyCode == KeyCode.Alpha3 ) // Face Mode
 					{
-						_targetScript.ChangeSelectMode( LNX_SelectMode.Faces );
+						_targetScript.ChangeSelectMode( LNX_Component.Triangle );
 					}
 					else if( Event.current.keyCode == KeyCode.L ) // Lock selection
 					{
@@ -201,13 +201,13 @@ namespace LogansNavigationExtension.CustomEditors
 				{
 					if ( Event.current.keyCode == KeyCode.Escape )
 					{
-						_targetScript.ChangeSelectMode( LNX_SelectMode.None );
+						_targetScript.ChangeSelectMode( LNX_Component.None );
 					}
 				}
 			}
 			#endregion
 
-			if ( _targetScript.SelectMode != LNX_SelectMode.None )
+			if ( _targetScript.SelectMode != LNX_Component.None )
 			{
 				_targetScript.AmPointingATBounds = false; //todo: in the future, I need to make something that can detect if I'm pointing at the bounds first before detecting if pointing at component for efficiency...
 

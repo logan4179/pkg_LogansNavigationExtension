@@ -85,7 +85,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			_lnx_meshManipulator.ClearSelection(); //just to be sure...
 			Debug.Log($"attempting to select first json serialized tri...");
 
-			_lnx_meshManipulator.ChangeSelectMode( LNX_SelectMode.Faces );
+			_lnx_meshManipulator.ChangeSelectMode( LNX_Component.Triangle );
 
 			_lnx_meshManipulator.TryPointAtComponentViaDirection(
 				_tdg_deleteTests.TestMousePositions_face[0], _tdg_deleteTests.TestDirections_face[0] );

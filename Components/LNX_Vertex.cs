@@ -40,7 +40,7 @@ namespace LogansNavigationExtension
 		public float AngleAtBend => Vector3.Angle(V_ToFirstSiblingVert.normalized, V_ToSecondSiblingVert.normalized); //~~
 
 		/// <summary>Aangle at the inner corner of the triangle at this vertex assuming all verts are flattneed.</summary>
-		[HideInInspector] public float AngleAtBend_flattened
+		public float AngleAtBend_flattened
 		{
 			get
 			{
@@ -50,6 +50,12 @@ namespace LogansNavigationExtension
 				);
 			}
 		}
+
+		/// <summary>
+		/// Signed angle going from V_ToFirstSiblingVert to V_ToSecondSiblingVert. You can use -SignedAngle (negative) to 
+		/// get the signed angle from V_ToSecondSiblingVert to V_ToFirstSiblingVert.
+		/// </summary>
+		public float SignedAngle => Vector3.SignedAngle( V_ToFirstSiblingVert_flat, V_ToSecondSiblingVert_flat, v_surfaceNormal_cached );
 
 		/// <summary>Cached center vector for the owning triangle. This is for exposed property calculation </summary>
 		[SerializeField, HideInInspector] private Vector3 v_triCenter_cached;
@@ -125,6 +131,13 @@ namespace LogansNavigationExtension
 				return Relationships[firstSiblingRelationshipIndex].V_to;
 			}
 		}
+		public Vector3 V_ToFirstSiblingVert_flat
+		{
+			get
+			{
+				return LNX_Utils.FlatVector(V_ToFirstSiblingVert).normalized;
+			}
+		}
 		/// <summary> Returns a localized (0 origin) vector pointing from this vert to it's first sibling vert. </summary>
 		public Vector3 V_ToSecondSiblingVert
 		{
@@ -133,12 +146,20 @@ namespace LogansNavigationExtension
 				return Relationships[secondSiblingRelationshipIndex].V_to;
 			}
 		}
+		public Vector3 V_ToSecondSiblingVert_flat
+		{
+			get
+			{
+				return LNX_Utils.FlatVector(V_ToSecondSiblingVert).normalized;
+			}
+		}
 
 		public float DistToFirstSiblingVert_path => FirstSiblingRelationship.PathDistance;
 		public float DistToSecondSiblingVert_path => SecondSiblingRelationship.PathDistance;
 		public float DistToFirstSiblingVert_straight => FirstSiblingRelationship.V_to.magnitude;
 		public float DistToSecondSiblingVert_straight => SecondSiblingRelationship.V_to.magnitude;
 
+		/// <summary>Collection of vertices sharing the same space as this one.</summary>
 		public LNX_ComponentCoordinate[] SharedVertexCoordinates;
 
 		public LNX_Vertex (List<LNX_AtomicTriangle> atomicTris, int triIndx, int cmpntIndx, LNX_NavMesh nvmsh )
@@ -247,11 +268,11 @@ namespace LogansNavigationExtension
 				{
 					temp_sharedVrtCoords.Add( nvmsh.Triangles[i].Verts[0].MyCoordinate );
 				}
-				if ( nvmsh.Triangles[i].Verts[1].V_Position == V_Position )
+				else if ( nvmsh.Triangles[i].Verts[1].V_Position == V_Position )
 				{
 					temp_sharedVrtCoords.Add( nvmsh.Triangles[i].Verts[1].MyCoordinate );
 				}
-				if ( nvmsh.Triangles[i].Verts[2].V_Position == V_Position )
+				else if ( nvmsh.Triangles[i].Verts[2].V_Position == V_Position )
 				{
 					temp_sharedVrtCoords.Add(nvmsh.Triangles[i].Verts[2].MyCoordinate);
 				}
@@ -301,24 +322,22 @@ namespace LogansNavigationExtension
 		#endregion
 
 		#region RELATIONAL METHODS----------------------------------------------
-		public int GetNumberOfVertsSharedWithTri( int triIndex )
+		public bool SharesVertSpaceWithTri( int triIndex )
 		{
 			if( triIndex == MyCoordinate.TrianglesIndex || SharedVertexCoordinates == null || SharedVertexCoordinates.Length == 0)
 			{
-				return 0;
+				return false;
 			}
-
-			int sharedCount = 0;
 
 			for ( int i = 0; i < SharedVertexCoordinates.Length; i++ )
 			{
 				if ( SharedVertexCoordinates[i].TrianglesIndex == triIndex )
 				{
-					sharedCount++;
+					return true;
 				}
 			}
 
-			return sharedCount;
+			return false;
 		}
 
 		public bool SharesVertSpace( LNX_Vertex vert )

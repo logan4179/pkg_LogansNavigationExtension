@@ -119,8 +119,8 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			);
 
 			Debug.Log("Changing selectmode to Vertices...");
-			_lnx_meshManipulator.ChangeSelectMode( LNX_SelectMode.Vertices );
-			Assert.AreEqual( _lnx_meshManipulator.SelectMode, LNX_SelectMode.Vertices );
+			_lnx_meshManipulator.ChangeSelectMode( LNX_Component.Vertex );
+			Assert.AreEqual( _lnx_meshManipulator.SelectMode, LNX_Component.Vertex );
 
 			#region make sure it ends correctly cleared ----------------------------------
 			Debug.Log("Making sure mesh manipulator starts out completely cleared...");
@@ -180,7 +180,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				$"\nproperty's position is correct after attempting to point at an array of positions/directions"
 			);
 
-			_lnx_meshManipulator.ChangeSelectMode(LNX_SelectMode.Vertices);
+			_lnx_meshManipulator.ChangeSelectMode(LNX_Component.Vertex);
 			for ( int i = 0; i < _tdg_pointingAndGrabbing.TestMousePositions_vert.Count; i++ )
 			{
 				Debug.Log($"{i}...");
@@ -214,7 +214,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				$"method is invoked."
 			);
 
-			_lnx_meshManipulator.ChangeSelectMode(LNX_SelectMode.Vertices);
+			_lnx_meshManipulator.ChangeSelectMode(LNX_Component.Vertex);
 
 			for ( int i = 0; i < _tdg_pointingAndGrabbing.TestMousePositions_vert.Count; i++ )
 			{
@@ -298,7 +298,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				$"the {nameof(_lnx_meshManipulator.ClearSelection)} method is invoked."
 			);
 
-			_lnx_meshManipulator.ChangeSelectMode( LNX_SelectMode.Vertices );			
+			_lnx_meshManipulator.ChangeSelectMode( LNX_Component.Vertex );			
 
 			for ( int i = 0; i < _tdg_pointingAndGrabbing.TestMousePositions_vert.Count; i++ )
 			{
@@ -366,7 +366,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				"visualization mesh vertices..."
 			);
 
-			_lnx_meshManipulator.ChangeSelectMode(LNX_SelectMode.Vertices);
+			_lnx_meshManipulator.ChangeSelectMode(LNX_Component.Vertex);
 			for (int i = 0; i < _tdg_pointingAndGrabbing.TestMousePositions_vert.Count; i++)
 			{
 				Debug.Log($"{i}...");
@@ -412,8 +412,8 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			);
 
 			Debug.Log("Changing selectmode to Edges...");
-			_lnx_meshManipulator.ChangeSelectMode( LNX_SelectMode.Edges );
-			Assert.AreEqual( _lnx_meshManipulator.SelectMode, LNX_SelectMode.Edges );
+			_lnx_meshManipulator.ChangeSelectMode( LNX_Component.Edge );
+			Assert.AreEqual( _lnx_meshManipulator.SelectMode, LNX_Component.Edge );
 
 			#region make sure it ends correctly cleared ----------------------------------
 			Debug.Log("Making sure mesh manipulator starts out completely cleared...");
@@ -472,7 +472,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				$"to point at an array of positions/directions"
 			);
 
-			_lnx_meshManipulator.ChangeSelectMode( LNX_SelectMode.Edges );
+			_lnx_meshManipulator.ChangeSelectMode( LNX_Component.Edge );
 			for ( int i = 0; i < _tdg_pointingAndGrabbing.TestMousePositions_edge.Count; i++ )
 			{
 				Debug.Log($"{i}...");
@@ -509,7 +509,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				$"method is invoked."
 			);
 
-			_lnx_meshManipulator.ChangeSelectMode (LNX_SelectMode.Edges );
+			_lnx_meshManipulator.ChangeSelectMode (LNX_Component.Edge );
 
 			for ( int i = 0; i < _tdg_pointingAndGrabbing.TestMousePositions_edge.Count; i++ )
 			{
@@ -595,7 +595,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				$"the {nameof(_lnx_meshManipulator.ClearSelection)} method is invoked."
 			);
 
-			_lnx_meshManipulator.ChangeSelectMode( LNX_SelectMode.Edges );
+			_lnx_meshManipulator.ChangeSelectMode( LNX_Component.Edge );
 
 			for ( int i = 0; i < _tdg_pointingAndGrabbing.TestMousePositions_edge.Count; i++ )
 			{
@@ -710,8 +710,8 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			);
 
 			Debug.Log("Changing selectmode to Faces...");
-			_lnx_meshManipulator.ChangeSelectMode( LNX_SelectMode.Faces );
-			Assert.AreEqual( _lnx_meshManipulator.SelectMode, LNX_SelectMode.Faces );
+			_lnx_meshManipulator.ChangeSelectMode( LNX_Component.Triangle );
+			Assert.AreEqual( _lnx_meshManipulator.SelectMode, LNX_Component.Triangle );
 
 			#region make sure it ends correctly cleared ----------------------------------
 			Debug.Log("Making sure mesh manipulator starts out completely cleared...");
@@ -772,7 +772,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				$"to point at an array of positions/directions"
 			);
 
-			_lnx_meshManipulator.ChangeSelectMode( LNX_SelectMode.Faces );
+			_lnx_meshManipulator.ChangeSelectMode( LNX_Component.Triangle );
 			for (int i = 0; i < _tdg_pointingAndGrabbing.TestMousePositions_face.Count; i++)
 			{
 				Debug.Log($"{i}...");
@@ -809,7 +809,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				$"method is invoked."
 			);
 
-			_lnx_meshManipulator.ChangeSelectMode( LNX_SelectMode.Faces );
+			_lnx_meshManipulator.ChangeSelectMode( LNX_Component.Triangle );
 
 			for ( int i = 0; i < _tdg_pointingAndGrabbing.TestMousePositions_face.Count; i++ )
 			{
@@ -899,7 +899,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				$"the {nameof(_lnx_meshManipulator.ClearSelection)} method is invoked."
 			);
 
-			_lnx_meshManipulator.ChangeSelectMode( LNX_SelectMode.Faces );
+			_lnx_meshManipulator.ChangeSelectMode( LNX_Component.Triangle );
 
 			for ( int i = 0; i < _tdg_pointingAndGrabbing.TestMousePositions_face.Count; i++ )
 			{
@@ -971,7 +971,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 			Debug.Log($"now selecting and moving {_tdg_pointingAndGrabbing.TestMousePositions_vert.Count} verts...");
 			//Debug.Log(_lnx_meshManipulator.SelectMode);
-			_lnx_meshManipulator.SelectMode = LNX_SelectMode.Vertices;
+			_lnx_meshManipulator.SelectMode = LNX_Component.Vertex;
 			for ( int i = 0; i < _tdg_pointingAndGrabbing.TestMousePositions_vert.Count; i++ )
 			{
 				Debug.Log($"{i}...........................................................................");
@@ -1051,7 +1051,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 			Debug.Log($"now selecting and moving {_tdg_pointingAndGrabbing.TestMousePositions_vert.Count} verts...");
 			//Debug.Log(_lnx_meshManipulator.SelectMode);
-			_lnx_meshManipulator.SelectMode = LNX_SelectMode.Vertices;
+			_lnx_meshManipulator.SelectMode = LNX_Component.Vertex;
 			for (int i = 0; i < _tdg_pointingAndGrabbing.TestMousePositions_vert.Count; i++)
 			{
 				Debug.Log($"{i}...........................................................................");
@@ -1140,7 +1140,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			}
 			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestSectionEndString, "setup"));
 
-			_lnx_meshManipulator.SelectMode = LNX_SelectMode.Edges;
+			_lnx_meshManipulator.SelectMode = LNX_Component.Edge;
 			for ( int i = 0; i < _tdg_pointingAndGrabbing.TestMousePositions_edge.Count; i++ )
 			{
 				Debug.Log($"{i}...........................................................................");

@@ -18,6 +18,12 @@ namespace LogansNavigationExtension
 		[Header("CURRENT CAPTURE")]
 		public bool CurrentResult = false;
 
+		[Header("GOTO")]
+		public LNX_ComponentCoordinate Coord_ToVert_SendA;
+		public LNX_ComponentCoordinate Coord_ToVert_SendB;
+		public LNX_ComponentCoordinate Coord_ToVert_SendC;
+		public LNX_ComponentCoordinate Coord_SendPos;
+
 		[Header("DEBUG")]
 		public string DBG_Method;
 
@@ -49,10 +55,13 @@ namespace LogansNavigationExtension
 
 		}
 
-		[ContextMenu("z call SendToProblemPosition (derived)")]
-		public override void SendToProblemPosition()
+		[ContextMenu("z call SendToGoTo")]
+		public void SendToGoTo()
 		{
-
+			Trans_TriPtA.position = _navmesh.GetVertexAtCoordinate(Coord_ToVert_SendA).V_Position;
+			Trans_TriPtB.position = _navmesh.GetVertexAtCoordinate(Coord_ToVert_SendB).V_Position;
+			Trans_TriPtC.position = _navmesh.GetVertexAtCoordinate(Coord_ToVert_SendC).V_Position;
+			Trans_PosParam.position = _navmesh.GetEdge(Coord_SendPos).MidPosition;
 		}
 		#endregion
 

@@ -144,7 +144,7 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call SendToDataPoint")]
 		public void SendToDataPoint()
 		{
-			transform.position = CapturedPerspectivePositions[Index_GoToDataPoint];
+			transform.position = CapturedPerspectivePositions[Index_GoToProblem];
 		}
 		#endregion
 

@@ -78,7 +78,7 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call SendToDataPoint")]
 		public void SendToDataPoint()
 		{
-			transform.position = CapturedPerspectivePositions[Index_GoToDataPoint];
+			transform.position = CapturedPerspectivePositions[Index_GoToProblem];
 		}
 		#endregion
 
@@ -106,7 +106,8 @@ namespace LogansNavigationExtension
 			Index_CurrentEdge = -1;
 
 			DBG_Operation += $"Commencing operation...\n";
-			LNX_Edge foundEdge = LNX_Utils.GetWidestEdgeFromPerspective(transform.position, CurrentTriangle);
+			string s = "";
+			LNX_Edge foundEdge = LNX_Utils.GetWidestEdgeFromPerspective(transform.position, CurrentTriangle, ref s);
 			DBG_Operation += $"Completed operation. found edge null?: '{foundEdge == null}'\n";
 
 			if (foundEdge != null)
