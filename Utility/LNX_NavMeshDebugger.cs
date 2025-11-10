@@ -10,6 +10,11 @@ namespace LogansNavigationExtension
     {
 		[SerializeField] public LNX_NavMesh _mgr;
 
+		public LNX_ComponentGrabber Grabber_FocusTri;
+		
+		public LNX_ComponentGrabber Grabber_FocusEdge;
+		
+		public LNX_ComponentGrabber Grabber_FocusVert;
 
 
 		[Header("DEBUG")]
@@ -18,48 +23,14 @@ namespace LogansNavigationExtension
 		[Header("FOCUS")]
 		public bool AmAllowingFocus = true;
 		public bool FocusExclusively = true;
-		/*[Range(0, 23)]*/ public int Index_TriFocus = 0;
-		[Range(0, 7)] public float Thickness_focusTri = 1f;
-		public bool AmAllowingVertFocus = true;
-		[Range(0, 2)] public int Index_VertFocus = 0;
 
-		[Space(5)]
-		public bool AllowEdgeFocus = false;
-		public LNX_ComponentCoordinate Coord_EdgeFocus = new LNX_ComponentCoordinate();
-
-		public LNX_Triangle FocusedTri
-		{
-			get
-			{
-				if( _mgr.Triangles == null || Index_TriFocus < 0 || Index_TriFocus > _mgr.Triangles.Length-1 )
-				{
-					return null;
-				}
-				else
-				{
-					return _mgr.Triangles[Index_TriFocus];
-				}
-			}
-		}
-
-		public LNX_Vertex FocusedVert
-		{
-			get
-			{
-				if ( FocusedTri == null || Index_VertFocus < 0 || Index_VertFocus > 2 )
-				{
-					return null;
-				}
-				else
-				{
-					return FocusedTri.Verts[Index_VertFocus];
-				}
-			}
-		}
-
+		public LNX_Triangle FocusedTri => Grabber_FocusTri.CurrentlyGrabbedTriangle;
+		public LNX_Edge FocusedEdge => Grabber_FocusEdge.CurrentlyGrabbedEdge;
+		public LNX_Vertex FocusedVert => Grabber_FocusVert.CurrentlyGrabbedVert;
 
 		[Header("DEBUG TRIANGLES")]
 		public bool DrawTriLabels = true;
+		[Range(0f, 0.25f)] public float Thickness_focusTri = 0.1f;
 
 		[Header("DEBUG EDGES")]
 		public bool DrawEdges = true;
@@ -149,22 +120,25 @@ namespace LogansNavigationExtension
 
 			if ( _mgr.Triangles != null && _mgr.Triangles.Length > 0 )
 			{
-				if ( AmAllowingFocus && FocusExclusively )
+				if ( FocusedTri != null )
 				{
-					DrawTriGizmos( _mgr.Triangles[Index_TriFocus], true );
+					DrawTriGizmos( FocusedTri, true );
 				}
-				else
+
+				for (int i = 0; i < _mgr.Triangles.Length; i++)
 				{
-					for (int i = 0; i < _mgr.Triangles.Length; i++)
-					{
-						DrawTriGizmos(_mgr.Triangles[i], (Index_TriFocus > -1 && Index_TriFocus == i) ? true : false);
-					}
+					DrawTriGizmos(_mgr.Triangles[i], false);
 				}
 			}
 
-			if( AllowEdgeFocus && Coord_EdgeFocus != LNX_ComponentCoordinate.None )
+			if( FocusedEdge != null )
 			{
-				DrawStandardEdgeFocusGizmos(_mgr.GetEdge(Coord_EdgeFocus), 0.25f, "", Color.yellow, true);
+				DrawStandardEdgeFocusGizmos( Grabber_FocusEdge.CurrentlyGrabbedEdge, 0.25f, "", Color.yellow, true);
+			}
+
+			if( FocusedVert != null )
+			{
+
 			}
 		}
 
@@ -224,10 +198,10 @@ namespace LogansNavigationExtension
 			#region VERTS -----------------------------------------------
 			if ( drawVertSpheres )
 			{
-				if( amFocused && AmAllowingVertFocus )
+				if( amFocused && Grabber_FocusVert.gameObject.activeSelf && FocusedVert != null )
 				{
 					//Gizmos.DrawSphere( tri.Verts[Index_VertFocus].Position, radius_vertSphere * 3f );
-					Handles.DrawWireDisc(tri.Verts[Index_VertFocus].V_Position, Vector3.up, radius_vertSphere * 4f);
+					Handles.DrawWireDisc(FocusedVert.V_Position, Vector3.up, radius_vertSphere * 4f);
 				}
 				Gizmos.color = color_vertSphere;
 
@@ -272,9 +246,9 @@ namespace LogansNavigationExtension
 
 			}
 
-			if ( AmAllowingFocus && amFocused && AmAllowingVertFocus )
+			if ( AmAllowingFocus && amFocused && Grabber_FocusVert.gameObject.activeSelf && FocusedVert != null )
 			{
-				Gizmos.DrawLine(tri.Verts[Index_VertFocus].V_Position, tri.Verts[Index_VertFocus].V_Position + (Vector3.up * 1.2f) );
+				Gizmos.DrawLine(FocusedVert.V_Position, FocusedVert.V_Position + (Vector3.up * 1.2f) );
 			}
 		}
 

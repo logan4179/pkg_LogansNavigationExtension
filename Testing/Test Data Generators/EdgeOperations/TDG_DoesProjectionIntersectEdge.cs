@@ -188,7 +188,7 @@ namespace LogansNavigationExtension
 		{
 			Debug.Log($"{nameof(SetDebuggerFocusToMine)}()...");
 
-			_debugger.Index_TriFocus = EdgeCoordinate.TrianglesIndex;
+			_debugger.Grabber_FocusTri.transform.position = _navmesh.Triangles[EdgeCoordinate.TrianglesIndex].V_Center;
 		}
 
 		protected override void OnDrawGizmos()

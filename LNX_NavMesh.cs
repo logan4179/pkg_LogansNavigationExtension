@@ -610,28 +610,9 @@ namespace LogansNavigationExtension
 
 
 			//dt_start = DateTime.Now;
-			if( meshContinuityHasChanged )
+			if( !Application.isPlaying && meshContinuityHasChanged )
 			{
 				ReconstructVisualizationMesh();
-			}
-
-
-
-#if !DOING_WORK
-			if ( !Application.isPlaying )
-			{
-				//EXPLANATION: If this is a live package, the known tri indices collection will 
-				//NOT be serialized in the inspector, and if the application also isn't playing, 
-				//it would be a waste of time to do the expensive process of 
-				//calculating/re-calculating that list for literally no reason while in the editor.
-				return;
-			}
-#endif
-
-			LNX_Edge[] trmnlEdges = GetTerminalEdges(false);
-			for( int i = 0; i < Triangles.Length; i++ )
-			{
-				Triangles[i].CalculateCompletelyVisibleTris(this, trmnlEdges);
 			}
 
 			//TimeSpan ts = DateTime.Now.Subtract(dt_start);
@@ -697,6 +678,25 @@ namespace LogansNavigationExtension
 				V_Bounds[0] + V_Bounds[1] + V_Bounds[2] + V_Bounds[3] +
 				V_Bounds[4] + V_Bounds[5] + V_Bounds[6] + V_Bounds[7]
 			) / 8f;
+		}
+
+		/// <summary>
+		/// Calculates and caches certain information that can make this navmesh's operations run much faster. Note: This method can be a very
+		/// expensive call, and though it can drastically speed up operations like path finding, it isn't necessary for operation of the 
+		/// LNX_NavMesh. Find an appropriate spot in your code to do it once, not continuously. If for some reason it's necessary to calculate 
+		/// this after game load/start, you can optionally call this method in a thread so it doesn't hang up your game.
+		/// </summary>
+		public void CacheMeshEfficiencyInformation()
+		{
+			#region CALCULATE TRI KNOWN-VISIBILITY ----------------------------------
+			LNX_Edge[] trmnlEdges = GetTerminalEdges(false);
+			for (int i = 0; i < Triangles.Length; i++)
+			{
+				Triangles[i].CalculateCompletelyVisibleTris(this, trmnlEdges);
+			}
+			#endregion
+
+
 		}
 
 		/// <summary>
@@ -1603,16 +1603,6 @@ namespace LogansNavigationExtension
 			for (int i = 0; i < Triangles.Length; i++)
 			{
 				Debug.Log( Triangles[i].GetRelationalString() );
-			}
-		}
-
-		[ContextMenu("z call CalculateVisibility()")]
-		public void CalculateVisibility()
-		{
-			LNX_Edge[] trmnlEdges = GetTerminalEdges(false);
-			for (int i = 0; i < Triangles.Length; i++)
-			{
-				Triangles[i].CalculateCompletelyVisibleTris(this, trmnlEdges);
 			}
 		}
 

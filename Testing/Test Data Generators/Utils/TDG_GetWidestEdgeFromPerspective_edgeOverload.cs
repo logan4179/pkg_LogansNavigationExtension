@@ -10,8 +10,8 @@ namespace LogansNavigationExtension
     {
 		//TODO: NEED TO CREATE DATA AND FULLY INTEGRATE THIS INTO THE TDG MANAGER CLASS
 
-		public ComponentGrabber PerspectiveEdgeGrabber;
-		public ComponentGrabber OtherTriGrabber;
+		public LNX_ComponentGrabber PerspectiveEdgeGrabber;
+		public LNX_ComponentGrabber OtherTriGrabber;
 
 		LNX_Edge PerspectiveEdge => PerspectiveEdgeGrabber.CurrentlyGrabbedEdge;
 		public LNX_Triangle PerspectiveTri => _navmesh.Triangles[PerspectiveEdgeGrabber.CurrentCoordinate.TrianglesIndex];
@@ -119,9 +119,12 @@ namespace LogansNavigationExtension
 
 			base.OnDrawGizmos();
 
+			PerspectiveEdgeGrabber.DrawMyGizmos(Radius_ObjectDebugSpheres);
+			OtherTriGrabber.DrawMyGizmos(Radius_ObjectDebugSpheres);
+
 			DrawStandardFocusTriGizmos(PerspectiveTri, 0.1f, $"PerspectiveTri", Color.magenta, true, 0.01f, true);
 
-			DrawStandardEdgeFocusGizmos(PerspectiveEdge, 0.1f, $"prspctvEdge", Color.yellow);
+			DrawStandardEdgeFocusGizmos(PerspectiveEdge, 0.1f, $"prspctvEdge", Color.green);
 			DrawStandardFocusTriGizmos(OtherTriangle, 0.1f, $"otherTri", Color.magenta, true, 0.01f, true);
 
 			LNX_Edge rsltEdge = null;
@@ -147,8 +150,6 @@ namespace LogansNavigationExtension
 			DBG_Operation += $"Operation complete. \n" +
 				$"";
 
-			Gizmos.DrawSphere(PerspectiveEdgeGrabber.transform.position, Radius_ObjectDebugSpheres);
-			Gizmos.DrawSphere(OtherTriGrabber.transform.position, Radius_ObjectDebugSpheres);
 		}
 
 		#region WRITING ----------------------------------------------------

@@ -9,9 +9,9 @@ namespace LogansNavigationExtension
     {
 		//TODO: Implement in manager and create tests!
 
-		public ComponentGrabber Grabber_StartEdge;
-        public ComponentGrabber Grabber_EndEdge;
-		public ComponentGrabber Grabber_ObstructEdge;
+		public LNX_ComponentGrabber Grabber_StartEdge;
+        public LNX_ComponentGrabber Grabber_EndEdge;
+		public LNX_ComponentGrabber Grabber_ObstructEdge;
 
 		public LNX_Edge CurrentStartEdge => Grabber_StartEdge.CurrentlyGrabbedEdge;
 		public LNX_Edge CurrentEndEdge => Grabber_EndEdge.CurrentlyGrabbedEdge;

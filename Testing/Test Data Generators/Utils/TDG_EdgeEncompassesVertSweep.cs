@@ -7,8 +7,8 @@ namespace LogansNavigationExtension
 {
     public class TDG_EdgeEncompassesVertSweep : TDG_base
     {
-		public ComponentGrabber Grabber_Vert;
-		public ComponentGrabber Grabber_Edge;
+		public LNX_ComponentGrabber Grabber_Vert;
+		public LNX_ComponentGrabber Grabber_Edge;
 		public LNX_Vertex GrabbedVert => Grabber_Vert.CurrentlyGrabbedVert;
 		public LNX_Edge GrabbedEdge => Grabber_Edge.CurrentlyGrabbedEdge;
 

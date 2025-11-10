@@ -7,8 +7,8 @@ namespace LogansNavigationExtension
 {
     public class TDG_GetEdgeBridgeAngleAmount : TDG_base
     {
-        public ComponentGrabber Grabber_PerspectiveEdge;
-        public ComponentGrabber Grabber_OtherEdge;
+        public LNX_ComponentGrabber Grabber_PerspectiveEdge;
+        public LNX_ComponentGrabber Grabber_OtherEdge;
 
 		public LNX_Edge CurrentPerspectiveEdge => Grabber_PerspectiveEdge.CurrentlyGrabbedEdge;
 		public LNX_Edge CurrentOtherEdge => Grabber_OtherEdge.CurrentlyGrabbedEdge;
@@ -60,38 +60,20 @@ namespace LogansNavigationExtension
 			base.OnDrawGizmos();
 			bool prblm = false;
 
-			Gizmos.DrawSphere(Grabber_PerspectiveEdge.transform.position, Radius_ObjectDebugSpheres);
-			Handles.Label(Grabber_PerspectiveEdge.transform.position + (Vector3.up * Radius_ObjectDebugSpheres), "PrspctvEdge");
+			Grabber_PerspectiveEdge.DrawMyGizmos(Radius_ObjectDebugSpheres);
+			Grabber_OtherEdge.DrawMyGizmos(Radius_ObjectDebugSpheres);
 
-			Gizmos.DrawSphere(Grabber_OtherEdge.transform.position, Radius_ObjectDebugSpheres);
-			Handles.Label(Grabber_OtherEdge.transform.position + (Vector3.up * Radius_ObjectDebugSpheres), "OtherEdge");
-
-
-			if (CurrentPerspectiveEdge != null)
+			if (CurrentPerspectiveEdge == null)
 			{
-				DrawStandardEdgeFocusGizmos(CurrentPerspectiveEdge, 0.15f, "", Color_Edges);
+				DBG_Operation += $"{nameof(CurrentPerspectiveEdge)} was null. Returning early...\n";
 			}
-			else
+			if (CurrentOtherEdge == null)
 			{
-				DBG_Operation += $"Problem! CurrentPerspectiveEdge is null...\n";
-				prblm = true;
+				DBG_Operation += $"{nameof(CurrentOtherEdge)} was null. Returning early...\n";
 			}
 
-			if (CurrentOtherEdge != null)
-			{
-				DrawStandardEdgeFocusGizmos(CurrentOtherEdge, 0.15f, "", Color_Edges);
-			}
-			else
-			{
-				DBG_Operation += $"Problem! CurrentOtherEdge is null...\n";
-				prblm = true;
-			}
-
-			if (prblm)
-			{
-				DBG_Operation += $"Can't resolve one of the parameters. Returning early...\n";
-				return;
-			}
+			DrawStandardEdgeFocusGizmos(CurrentPerspectiveEdge, 0.15f, CurrentPerspectiveEdge.ToString(), Color.yellow);
+			DrawStandardEdgeFocusGizmos(CurrentOtherEdge, 0.15f, CurrentOtherEdge.ToString(), Color.yellow);
 
 			DBG_Operation += $"using prspctvEdge: '{CurrentPerspectiveEdge}' and otherEdge: '{CurrentOtherEdge}'\n" +
 				$"edges aligned?: '{LNX_Utils.AreEdgesAlignedFromTheirPerspectives(CurrentPerspectiveEdge, CurrentOtherEdge)}'\n" +

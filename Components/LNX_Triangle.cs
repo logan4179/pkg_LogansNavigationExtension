@@ -92,14 +92,8 @@ namespace LogansNavigationExtension
 
 		/// <summary>Collection of indices of triangles known to be fully visible. Note: currently it's not guaranteed that all fully-visible 
 		/// tris will be in this list. These are only the ones I can tell for sure. To be used for efficiency short-circuiting.</summary>
-#if DOING_WORK
-		//Explanation: If I'm working on the package, I want to have this serialized in the inspector...
-		[SerializeField] private int[] indices_knownFullyVisibleTriangles;
-
-#else
 		private int[] indices_knownFullyVisibleTriangles;
 
-#endif
 		public int[] KnownFullyVisibleTriangleIndices => indices_knownFullyVisibleTriangles;
 
 
@@ -330,34 +324,7 @@ namespace LogansNavigationExtension
 						DBG_FullyVisible += $"Bypassing obstruction check because of index...\n";
 					}
 					continue;
-				}
-
-				/*
-				#region Check if the triangle now shares 2 edges with 2 known fully visible tris ================
-				if (i == triCheck)	DBG_FullyVisible += $"Checking if tri currently shares 2 edges with known visible tris...\n";
-				
-				int nmbrOFSharedEdges = 0;
-				for( int i_tmp = 0; i_tmp < temp_fullyVisTriIndices.Count; i_tmp++ )
-				{
-					if(HasSharedEdgeWith(temp_fullyVisTriIndices[i_tmp]) )
-					{
-						nmbrOFSharedEdges++;
-					}
-				}
-
-				if (i == triCheck) DBG_FullyVisible += $"determined currently there are '{nmbrOFSharedEdges}' shared edge with known visible tris...\n";
-
-				if ( nmbrOFSharedEdges >= 2 )
-				{
-					if (i == triCheck) DBG_FullyVisible += $"adding tri '{i}' to known fully visible list...\n";
-
-					temp_fullyVisTriIndices.Add(i);
-					continue;
-				}
-				#endregion
-				*/
-
-				string dbbbbbg = "";
+				}				
 
 				bool foundObstruction = false;
 
@@ -368,9 +335,7 @@ namespace LogansNavigationExtension
 						$"edge2 null: '{nm.Triangles[i].Edges[2] == null}'");
 				}
 
-				LNX_Edge wdstEdgeFrmThis = LNX_Utils.GetWidestEdgeFromPerspective( this, nm.Triangles[i], ref dbbbbbg ); // <<<< ERRORTRACE
-				LNX_Edge wdstEdgeFrmOther = LNX_Utils.GetWidestEdgeFromPerspective( nm.Triangles[i], this, ref dbbbbbg );
-
+				
 				for ( int i_trmnlEdgs = 0; i_trmnlEdgs < terminalEdges.Length; i_trmnlEdgs++ )
 				{
 					Debug.Log($"Checking if terminal edge: '{terminalEdges[i_trmnlEdgs].MyCoordinate}' obstructs...");
@@ -390,7 +355,7 @@ namespace LogansNavigationExtension
 					string DBG_Encompass = "";
 					if
 					(
-						LNX_Utils.DoesEdgeObstructEdgePath(terminalEdges[i_trmnlEdgs], wdstEdgeFrmThis, wdstEdgeFrmOther, ref DBG_Encompass)
+						LNX_Utils.DoesEdgeObstructTriPath(terminalEdges[i_trmnlEdgs], this, nm.Triangles[i], ref DBG_Encompass)
 					)
 					{
 						Debug.LogWarning($"Found obstruction by edge: '{terminalEdges[i_trmnlEdgs]}'!");
@@ -421,7 +386,10 @@ namespace LogansNavigationExtension
 						DBG_FullyVisible += $"Did NOT find obstruction. Adding tri: '{i}' to list of knownfullyvisible...";
 					}
 					temp_fullyVisTriIndices.Add(i);
+
+					//TODO: add any triangles that now have 2 known fully-visible edges
 				}
+				
 			}
 
 			DBG_FullyVisible += $"refresh end. Now have '{temp_fullyVisTriIndices.Count}' known fully visible tris...";

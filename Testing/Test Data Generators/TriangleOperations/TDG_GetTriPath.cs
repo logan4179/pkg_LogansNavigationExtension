@@ -10,8 +10,8 @@ namespace LogansNavigationExtension
 		//TODO: NEED TO CREATE DATA AND FULLY INTEGRATE THIS INTO THE TDG MANAGER CLASS
 
 		[Header("START OF DERIVED CLASS-------------------")]
-		public ComponentGrabber Grabber_TriA;
-		public ComponentGrabber Grabber_TriB;
+		public LNX_ComponentGrabber Grabber_TriA;
+		public LNX_ComponentGrabber Grabber_TriB;
 
 		[Header("CURRENT RESULTS")]
 		public LNX_Quad CurrentResult;
@@ -51,6 +51,14 @@ namespace LogansNavigationExtension
 			Grabber_TriB.GrabComponent();
 		}
 
+		[ContextMenu("z call GoToProblemPoint(derived)")]
+		public override void GoToProblemPoint()
+		{
+			base.GoToProblemPoint();
+
+			CaptureComponents();
+		}
+
 		#endregion
 
 		protected override void OnDrawGizmos()
@@ -70,6 +78,18 @@ namespace LogansNavigationExtension
 			DBG_Method = "";
 
 			base.OnDrawGizmos();
+
+			if( TriangleA == null )
+			{
+				DBG_Operation += $"{nameof(TriangleA)} was null. Returning early...\n";
+				return;
+			}
+
+			if (TriangleB == null)
+			{
+				DBG_Operation += $"{nameof(TriangleB)} was null. Returning early...\n";
+				return;
+			}
 
 			DrawStandardFocusTriGizmos(TriangleA, triRaise, "triA", Color.magenta, true, 0.025f, true);
 			Grabber_TriA.DrawMyGizmos( Radius_ObjectDebugSpheres );

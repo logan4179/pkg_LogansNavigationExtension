@@ -7,11 +7,11 @@ namespace LogansNavigationExtension
 {
 	public class TDG_AmInVectorCone_edgeOverload : TDG_base
 	{
-		public ComponentGrabber Grabber_edge;
+		public LNX_ComponentGrabber Grabber_edge;
 		public LNX_Edge EdgeParameter => Grabber_edge.CurrentlyGrabbedEdge;
 		public LNX_Triangle EdgeParamTri => _navmesh.Triangles[EdgeParameter.TriangleIndex];
 
-		public ComponentGrabber Grabber_PerspectiveVert;
+		public LNX_ComponentGrabber Grabber_PerspectiveVert;
 		public LNX_Vertex PerspectiveVert => Grabber_PerspectiveVert.CurrentlyGrabbedVert;
 		public LNX_Triangle PerspectiveTri => _navmesh.Triangles[PerspectiveVert.TriangleIndex];
 

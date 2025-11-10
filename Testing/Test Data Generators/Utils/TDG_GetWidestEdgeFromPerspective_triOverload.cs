@@ -10,27 +10,16 @@ namespace LogansNavigationExtension
     {
 		//TODO: NEED TO CREATE DATA AND FULLY INTEGRATE THIS INTO THE TDG MANAGER CLASS
 
-		public Transform Trans_perspectiveTriGrabber;
-		public Transform Trans_otherTriGrabber;
+		public LNX_ComponentGrabber Grabber_PerspectiveTri;
+		public LNX_ComponentGrabber Grabber_OtherTri;
 
-		public int PerspectiveTriIndex = 0;
-		LNX_Triangle PerspectiveTriangle => _navmesh.Triangles[PerspectiveTriIndex];
+		LNX_Triangle PerspectiveTriangle => Grabber_PerspectiveTri.CurrentlyGrabbedTriangle;
 
-		public int OtherTriIndex = 0;
-		LNX_Triangle OtherTriangle => _navmesh.Triangles[OtherTriIndex];
+		LNX_Triangle OtherTriangle => Grabber_OtherTri.CurrentlyGrabbedTriangle;
 
 
 		[Header("CURRENT RESULTS")]
 		public int Index_CurrentEdge = 0;
-
-
-		[Header("DATA")]
-		public List<Vector3> CapturedPerspectiveTriCenters = new List<Vector3>();
-		public List<Vector3> CapturedOtherTriCenters = new List<Vector3>();
-		public List<Vector3> CapturedResultEdgeCenters = new List<Vector3>();
-
-		//[Header("SAVED POSITIONS")]
-
 
 		[Header("DEBUG")]
 		[TextArea(1,20)] public string DBG_Method;
@@ -41,76 +30,21 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call CaptureDataPoint()")]
 		public void CaptureDataPoint()
 		{
-
-			CapturedPerspectiveTriCenters.Add( PerspectiveTriangle.V_Center );
-			CapturedOtherTriCenters.Add( OtherTriangle.V_Center );
-			CapturedResultEdgeCenters.Add( PerspectiveTriangle.Edges[Index_CurrentEdge].MidPosition );
-
-			DrawDataPointCapture(CapturedPerspectiveTriCenters[CapturedPerspectiveTriCenters.Count - 1],
-				Color.magenta
-			);
-
-			DrawDataPointCapture(CapturedOtherTriCenters[CapturedOtherTriCenters.Count - 1],
-				Color.magenta
-			);
-			DrawDataPointCapture(CapturedResultEdgeCenters[CapturedResultEdgeCenters.Count - 1],
-				Color.magenta
-			);
-
-
-			Debug.Log($"'{CapturedPerspectiveTriCenters[CapturedPerspectiveTriCenters.Count - 1]}'");
-			
+			_dataCapture.CaptureDataPoint
+			(
+				PerspectiveTriangle.V_Center, OtherTriangle.V_Center, PerspectiveTriangle.Edges[Index_CurrentEdge].MidPosition
+			);			
 		}
 
 		[ContextMenu("z call CaptureProblemPosition()")]
 		public override void CaptureProblemPosition()
 		{
-			_dataCapture_problems.CaptureDataPoint(Trans_perspectiveTriGrabber.transform.position, Trans_otherTriGrabber.transform.position );
+			_dataCapture_problems.CaptureDataPoint(
+				Grabber_PerspectiveTri.transform.position, Grabber_OtherTri.transform.position, PerspectiveTriangle.Edges[Index_CurrentEdge].MidPosition				
+			);
 		}
 
 		#region HELPERS ---------------------------------------------------
-		[ContextMenu("z call SampleTris()")]
-		public void SampleTris()
-		{
-			Debug.Log($"{nameof(SampleTris)}()...");
-
-			LNX_ProjectionHit hit = LNX_ProjectionHit.None;
-
-			if (_navmesh.SamplePosition(Trans_perspectiveTriGrabber.position, out hit, 2f, false))
-			{
-				PerspectiveTriIndex = hit.Index_Hit;
-				Debug.Log($"Succesful sample! Set new triangle to: '{hit.Index_Hit}'");
-			}
-			else
-			{
-				Debug.Log($"sample unsuccesful...");
-			}
-
-			if (_navmesh.SamplePosition(Trans_otherTriGrabber.position, out hit, 2f, false))
-			{
-				OtherTriIndex = hit.Index_Hit;
-				Debug.Log($"Succesful sample! Set new triangle to: '{hit.Index_Hit}'");
-			}
-			else
-			{
-				Debug.Log($"sample unsuccesful...");
-			}
-		}
-
-		[ContextMenu("z call SayFocusTri()")]
-		public void SayFocusTri()
-		{
-			Debug.Log($"{nameof(SayFocusTri)}()...");
-
-			PerspectiveTriangle.SayCurrentInfo(_navmesh);
-
-			Debug.Log(PerspectiveTriangle.GetAnomolyString(_navmesh));
-
-			OtherTriangle.SayCurrentInfo(_navmesh);
-
-			Debug.Log(OtherTriangle.GetAnomolyString(_navmesh));
-		}
-
 		[ContextMenu("z call DoEet()")]
 		public void DoEet()
 		{
@@ -124,15 +58,16 @@ namespace LogansNavigationExtension
 		}
 		#endregion
 
-
-		[SerializeReference] private Vector3 v_prspctv_lastPos = Vector3.zero;
-		[SerializeReference] private Vector3 v_other_lastPos = Vector3.zero;
 		protected override void OnDrawGizmos()
 		{
 			DBG_Operation = "";
 			DBG_Method = "";
 
-			if (Selection.activeObject != gameObject && Selection.activeObject != Trans_otherTriGrabber.gameObject && Selection.activeGameObject != Trans_perspectiveTriGrabber.gameObject)
+			if (
+				Selection.activeObject != gameObject && 
+				Selection.activeObject != Grabber_PerspectiveTri.gameObject && 
+				Selection.activeGameObject != Grabber_OtherTri.gameObject
+			)
 			{
 				DBG_Operation = $"OnDrawGizmos short-circuit. Object not selected";
 				return;
@@ -150,27 +85,21 @@ namespace LogansNavigationExtension
 				return;
 			}
 
-
-			DBG_Operation += $"PerspectiveTriangle: '{PerspectiveTriangle.Index_inCollection}' at '{PerspectiveTriangle.V_Center}'\n" +
-				$"OtherTriangle: '{OtherTriangle.Index_inCollection}' at '{OtherTriangle.V_Center}'\n";
-
 			base.OnDrawGizmos();
 
-			if( Trans_perspectiveTriGrabber.position != v_prspctv_lastPos || Trans_otherTriGrabber.position != v_other_lastPos )
-			{
-				SampleTris();
-			}
-
+			DBG_Operation += $"using PerspectiveTriangle: '{PerspectiveTriangle.Index_inCollection}' at '{PerspectiveTriangle.V_Center}'\n" +
+				$"OtherTriangle: '{OtherTriangle.Index_inCollection}' at '{OtherTriangle.V_Center}'\n";
+			/*
 			if( PerspectiveTriangle == OtherTriangle)
 			{
 				DBG_Operation += $"OnDrawGizmos short-circuit. Perspective and other triangles the same.";
 				return;
-			}
+			}*/
 
-			DrawStandardFocusTriGizmos(PerspectiveTriangle, 0.1f, $"pspctvTri", Color_perspectiveTri, true, 0.01f, true);
+			DrawStandardFocusTriGizmos(PerspectiveTriangle, 0.1f, "", Color_perspectiveTri, true, 0.01f, true);
 			//DrawTriGizmo(PerspectiveTriangle, Color.magenta, 0.01f);
 
-			DrawStandardFocusTriGizmos(OtherTriangle, 0.1f, $"otherTri", Color_otherTri, true, 0.01f, true);
+			DrawStandardFocusTriGizmos(OtherTriangle, 0.1f, "", Color_otherTri, true, 0.01f, true);
 			//DrawTriGizmo(OtherTriangle, Color.magenta, 0.01f);
 
 			Index_CurrentEdge = -1;
@@ -181,6 +110,7 @@ namespace LogansNavigationExtension
 
 			if (foundEdge != null)
 			{
+				DBG_Operation += $"foundedge: '{foundEdge}'\n";
 				Index_CurrentEdge = foundEdge.ComponentIndex;
 				DrawStandardEdgeFocusGizmos(foundEdge, 0.3f, "foundEdge", Color.yellow);
 				Gizmos.color = Color.green;
@@ -194,11 +124,8 @@ namespace LogansNavigationExtension
 				DBG_Operation += $"Operation complete. \n" +
 					$"";
 
-			Gizmos.DrawSphere(Trans_perspectiveTriGrabber.position, Radius_ObjectDebugSpheres);
-			Gizmos.DrawSphere(Trans_otherTriGrabber.position, Radius_ObjectDebugSpheres);
-
-			v_prspctv_lastPos = Trans_perspectiveTriGrabber.position;
-			v_other_lastPos = Trans_otherTriGrabber.position;
+			Grabber_PerspectiveTri.DrawMyGizmos(Radius_ObjectDebugSpheres);
+			Grabber_OtherTri.DrawMyGizmos(Radius_ObjectDebugSpheres);
 		}
 
 		#region WRITING ----------------------------------------------------

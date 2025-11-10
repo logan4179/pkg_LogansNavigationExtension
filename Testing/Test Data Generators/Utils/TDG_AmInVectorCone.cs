@@ -15,6 +15,8 @@ namespace LogansNavigationExtension
 		[Header("RESULTS")]
 		public bool CurrentOperationResult;
 
+		[Header("SEND TO")]
+		public TDG_DoesEdgeObstructArea _tdg_doesEdgeObstructArea;
 
 		[Header("DEBUG")]
 		public string DBG_Method;
@@ -30,6 +32,16 @@ namespace LogansNavigationExtension
 			_dataCapture_problems.CaptureDataPoint(
 				Trans_pos.position, Trans_Crnr.position, Trans_LegA.position, Trans_LegB.position
 			);
+		}
+
+		[ContextMenu("z call SendToTDG")]
+		public void SendToTDG()
+		{
+			Trans_pos.transform.position = _tdg_doesEdgeObstructArea.ObstructEdge.MidPosition;
+			Trans_Crnr.transform.position = _tdg_doesEdgeObstructArea.PerspectiveVert.V_Position;
+			Trans_LegA.transform.position = _tdg_doesEdgeObstructArea.DestinationTriangle.Verts[0].V_Position;
+			Trans_LegB.transform.position = _tdg_doesEdgeObstructArea.DestinationTriangle.Verts[1].V_Position;
+
 		}
 		#endregion
 

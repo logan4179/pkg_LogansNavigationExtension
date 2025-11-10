@@ -289,12 +289,33 @@ namespace LogansNavigationExtension
 		public Vector3 crnrC;
 		public Vector3 crnrD;
 
+		private static LNX_Quad none = new LNX_Quad()
+		{
+			crnrA = Vector3.zero,
+			crnrB = Vector3.zero,
+			crnrC = Vector3.zero,
+			crnrD = Vector3.zero
+		};
+
+		public static LNX_Quad None
+		{
+			get
+			{
+				return none;
+			}
+		}
+
 		public LNX_Quad( Vector3 cA, Vector3 cB, Vector3 cC, Vector3 cD )
 		{
 			crnrA = cA;
 			crnrB = cB;
 			crnrC = cC;
 			crnrD = cD;
+		}
+
+		public override string ToString()
+		{
+			return $"{crnrA}, {crnrB}, {crnrC}, {crnrD}";
 		}
 	}
 

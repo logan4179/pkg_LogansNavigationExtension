@@ -11,40 +11,20 @@ namespace LogansNavigationExtension
 		//todo: can get rid of a lot of the code here by implementing component grabbers, and datacapturers, etc
 
 		[Header("START OF DERIVED CLASS-------------------")]
-		public Transform Trans_CaptureObstructEdge;
-		public Transform Trans_CaptureTriangleA;
-		public Transform Trans_CaptureTriangleB;
-
-		public LNX_ComponentCoordinate Coord_EdgeA;
-		public LNX_ComponentCoordinate Coord_EdgeB;
-		public LNX_ComponentCoordinate Coord_ObstructEdge;
+		public LNX_ComponentGrabber Grabber_ObstructEdge;
+		public LNX_ComponentGrabber Grabber_TriA;
+		public LNX_ComponentGrabber Grabber_TriB;
 
 		//[Header("CURRENT RESULTS")]
 		[HideInInspector] public bool CurrentResult;
-		public LNX_Triangle FocusTriangleA => _navmesh.Triangles[Coord_EdgeA.TrianglesIndex];
-		public LNX_Edge WidestEdgeA => FocusTriangleA.Edges[Coord_EdgeA.ComponentIndex];
-
-		public LNX_Triangle FocusTriangleB => _navmesh.Triangles[Coord_EdgeB.TrianglesIndex];
-		public LNX_Edge WidestEdgeB => FocusTriangleB.Edges[Coord_EdgeB.ComponentIndex];
-
-		public LNX_Edge ObstructEdge => _navmesh.GetEdge(Coord_ObstructEdge);
-
-		[Header("DATA")]
-		public List<Vector3> CapturedTriCentersA = new List<Vector3>();
-		public List<Vector3> CapturedTriCentersB = new List<Vector3>();
-		public List<Vector3> CapturedObstructEdgeCenters = new List<Vector3>();
-
-		[Header("PROBLEM POINTS")]
-		public List<Vector3> ProblemPoints_TriGrabberA = new List<Vector3>();
-		public List<Vector3> ProblemPoints_TriGrabberB = new List<Vector3>();
-		public List<Vector3> ProblemPoints_ObstructEdgeGrabber = new List<Vector3>();
+		public LNX_Triangle TriA => Grabber_TriA.CurrentlyGrabbedTriangle;
+		public LNX_Triangle TriB => Grabber_TriB.CurrentlyGrabbedTriangle;
+		public LNX_Edge ObstructEdge => Grabber_ObstructEdge.CurrentlyGrabbedEdge;
 
 		[Header("DEBUG")]
 		public bool ReverseBridgeLineVisuals = false;
 		[Range(0f, 0.25f)] public float edgeRaise = 0.15f;
-		[Range(0f, 0.5f)] public float triRaise = 0.5f;
-		public Color Clr_widestEdges = Color.white;
-		public Color Clr_obstructEdge = Color.white;
+		[Range(0f, 0.1f)] public float triRaise = 0.5f;
 
 		public string DBG_Method;
 
@@ -53,95 +33,10 @@ namespace LogansNavigationExtension
 		public void CaptureDataPoint()
 		{
 			Debug.Log($"{nameof(CaptureDataPoint)}()");
-			CapturedTriCentersA.Add(FocusTriangleA.V_Center);
-			CapturedTriCentersB.Add(FocusTriangleB.V_Center);
-			CapturedObstructEdgeCenters.Add(ObstructEdge.MidPosition);
 
-			DrawDataPointCapture(CapturedTriCentersA[CapturedTriCentersA.Count - 1],
-				Color.magenta
-			);
-
-			DrawDataPointCapture(CapturedTriCentersB[CapturedTriCentersB.Count - 1],
-				Color.magenta
-			);
-
-			DrawDataPointCapture(CapturedObstructEdgeCenters[CapturedObstructEdgeCenters.Count - 1],
-				Color.magenta
-			);
 		}
 
 		#region HELPERS ---------------------------------------------------
-		[ContextMenu("z call CaptureComponents()")]
-		public void CaptureComponents()
-		{
-			Debug.Log($"{nameof(CaptureComponents)}()...");
-
-			LNX_ProjectionHit hit = LNX_ProjectionHit.None;
-
-			int triIndxA = 0;
-			int triIndxB = 0;
-
-			#region GET TRIANGLES ---------------------------------------
-			if (_navmesh.SamplePosition(Trans_CaptureTriangleA.position, out hit, 2f, false))
-			{
-				Coord_EdgeA = new LNX_ComponentCoordinate(hit.Index_Hit, 0);
-				triIndxA = hit.Index_Hit;
-				//Coord_EdgeA = new LNX_ComponentCoordinate(hit.Index_Hit, 
-				//LNX_Utils.GetWidestEdgeFromPerspective(Trans_CaptureTriangleA.position, _navmesh.Triangles[hit.Index_Hit]).ComponentIndex);
-				Debug.Log($"Succesful sample! Set new triangle to: '{hit.Index_Hit}'");
-			}
-			else
-			{
-				Debug.LogWarning($"sample unsuccesful...");
-			}
-
-			if (_navmesh.SamplePosition(Trans_CaptureTriangleB.position, out hit, 2f, false))
-			{
-				Coord_EdgeB = new LNX_ComponentCoordinate(hit.Index_Hit, 0);
-				triIndxB = hit.Index_Hit;
-
-				//Coord_EdgeB = new LNX_ComponentCoordinate(hit.Index_Hit,
-				//LNX_Utils.GetWidestEdgeFromPerspective(Trans_CaptureTriangleB.position, _navmesh.Triangles[hit.Index_Hit]).ComponentIndex);
-				Debug.Log($"Succesful sample! Set new triangle to: '{hit.Index_Hit}'");
-			}
-			else
-			{
-				Debug.LogWarning($"sample unsuccesful...");
-			}
-			#endregion
-
-			#region GET WIDEST PERSPECTIVE EDGES --------------------
-			Vector3 vctr = (FocusTriangleA.V_Center + FocusTriangleB.V_Center) / 2f;
-			string s = "";
-			Coord_EdgeA = new LNX_ComponentCoordinate( triIndxA, LNX_Utils.GetWidestEdgeFromPerspective(vctr, _navmesh.Triangles[triIndxA], ref s).ComponentIndex);
-			Coord_EdgeB = new LNX_ComponentCoordinate( triIndxB, LNX_Utils.GetWidestEdgeFromPerspective(vctr, _navmesh.Triangles[triIndxB], ref s).ComponentIndex);
-			#endregion
-
-			if ( _navmesh.SamplePosition(Trans_CaptureObstructEdge.position, out hit, 2f, false) )
-			{
-				float bestDist = Vector3.Distance(Trans_CaptureObstructEdge.position, _navmesh.GetEdge(hit.Index_Hit, 0).MidPosition);
-				int bestEdge = 0;
-
-				if (Vector3.Distance(Trans_CaptureObstructEdge.position, _navmesh.GetEdge(hit.Index_Hit, 1).MidPosition) < bestDist)
-				{
-					bestDist = Vector3.Distance(Trans_CaptureObstructEdge.position, _navmesh.GetEdge(hit.Index_Hit, 1).MidPosition);
-					bestEdge = 1;
-				}
-
-				if (Vector3.Distance(Trans_CaptureObstructEdge.position, _navmesh.GetEdge(hit.Index_Hit, 2).MidPosition) < bestDist)
-				{
-					bestDist = Vector3.Distance(Trans_CaptureObstructEdge.position, _navmesh.GetEdge(hit.Index_Hit, 2).MidPosition);
-					bestEdge = 2;
-				}
-
-				Coord_ObstructEdge = new LNX_ComponentCoordinate(hit.Index_Hit, bestEdge );
-				Debug.Log($"Succesful sample! Set new triangle to: '{hit.Index_Hit}'");
-			}
-			else
-			{
-				Debug.LogWarning($"sample unsuccesful...");
-			}
-		}
 
 		[ContextMenu("z call SendToDataPoint")]
 		public void SendToDataPoint()
@@ -152,35 +47,25 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call CaptureProblemPosition (derived)")]
 		public override void CaptureProblemPosition()
 		{
-			ProblemPoints_TriGrabberA.Add(Trans_CaptureTriangleA.position);
-			ProblemPoints_TriGrabberB.Add(Trans_CaptureTriangleB.position);
-			ProblemPoints_ObstructEdgeGrabber.Add( Trans_CaptureObstructEdge.position );
+			_dataCapture_problems.CaptureDataPoint(ObstructEdge.MidPosition, TriA.V_Center, TriB.V_Center);
 		}
 
 		[ContextMenu("z call SendToProblemPosition (derived)")]
 		public void SendToProblemPosition()
 		{
 
-			/*
-			Trans_CaptureTriangleA.position = ProblemPoints_TriGrabberA[index_focusProblem];
-			Trans_CaptureTriangleB.position = ProblemPoints_TriGrabberB[index_focusProblem];
-			Trans_CaptureObstructEdge.position = ProblemPoints_ObstructEdgeGrabber[index_focusProblem];
-			*/
+
 		}
 		#endregion
-
-		[HideInInspector] public Vector3 Trans_CaptureTriangleA_lastpos;
-		[HideInInspector] public Vector3 Trans_CaptureTriangleB_lastpos;
-		[HideInInspector] public Vector3 Trans_PosParam_lastpos;
 
 		protected override void OnDrawGizmos()
 		{
 			if
 			(
-				Selection.activeObject != gameObject &&
-				Selection.activeGameObject != Trans_CaptureObstructEdge.gameObject &&
-				Selection.activeGameObject != Trans_CaptureTriangleA.gameObject &&
-				Selection.activeObject != Trans_CaptureTriangleB.gameObject
+				Selection.activeGameObject != gameObject &&
+				Selection.activeGameObject != Grabber_ObstructEdge.gameObject &&
+				Selection.activeGameObject != Grabber_TriA.gameObject &&
+				Selection.activeGameObject != Grabber_TriB.gameObject
 			)
 			{
 				DBG_Operation = $"OnDrawGizmos short-circuit. Valid object not selected";
@@ -192,48 +77,19 @@ namespace LogansNavigationExtension
 
 			base.OnDrawGizmos();
 
-			if( 
-				Trans_CaptureObstructEdge.position != Trans_PosParam_lastpos || 
-				Trans_CaptureTriangleA.position != Trans_CaptureTriangleA_lastpos ||
-				Trans_CaptureTriangleB.position != Trans_CaptureTriangleB_lastpos
-			)
-			{
-				CaptureComponents();
+			DrawStandardFocusTriGizmos(TriA, triRaise, "triA", Color.magenta, true, triRaise, true, false);
+			Grabber_TriA.DrawMyGizmos(Radius_ObjectDebugSpheres);
 
-				Trans_PosParam_lastpos = Trans_CaptureObstructEdge.position;
-				Trans_CaptureTriangleA_lastpos = Trans_CaptureTriangleA.position;
-				Trans_CaptureTriangleB_lastpos = Trans_CaptureTriangleB.position;
-			}
+			DrawStandardFocusTriGizmos(TriB, triRaise, "triB", Color.magenta, true, triRaise, true, false);
+			Grabber_TriB.DrawMyGizmos(Radius_ObjectDebugSpheres);
 
-			DrawStandardFocusTriGizmos(FocusTriangleA, triRaise, "triA", Color.magenta, true, 0.025f, true);
-			DrawTriGizmo(FocusTriangleA, Color.magenta, 0.005f);
-			DrawStandardEdgeFocusGizmos(WidestEdgeA, edgeRaise, "WdstedgeA", Clr_widestEdges);
-			Gizmos.DrawSphere(Trans_CaptureTriangleA.position, Radius_ObjectDebugSpheres * 0.75f);
 
-			DrawStandardFocusTriGizmos(FocusTriangleB, triRaise, "triB", Color.magenta, true, 0.025f, true);
-			DrawTriGizmo(FocusTriangleB, Color.magenta, 0.005f);
-			DrawStandardEdgeFocusGizmos(WidestEdgeB, edgeRaise, "WdstedgeB", Clr_widestEdges );
-			Gizmos.DrawSphere(Trans_CaptureTriangleB.position, Radius_ObjectDebugSpheres * 0.75f);
-
-			if( !ReverseBridgeLineVisuals )
-			{
-				Gizmos.DrawLine( WidestEdgeA.StartPosition, WidestEdgeB.StartPosition );
-				Gizmos.DrawLine(WidestEdgeA.EndPosition, WidestEdgeB.EndPosition);
-			}
-			else
-			{
-				Gizmos.DrawLine(WidestEdgeA.StartPosition, WidestEdgeB.EndPosition);
-				Gizmos.DrawLine(WidestEdgeA.EndPosition, WidestEdgeB.StartPosition);
-			}
-
-			DrawStandardEdgeFocusGizmos( ObstructEdge, edgeRaise * 1.55f, "ObstrctEdge", Clr_obstructEdge, true );
-
-			DBG_Operation += $"using edgeA: '{Coord_EdgeA}', and edgeB: '{Coord_EdgeB}'...\n";
+			DBG_Operation += $"using triA: '{TriA}', and triB: '{TriB}', and obstruct edge: '{ObstructEdge}'...\n";
 
 			DBG_Operation += $"Commencing operation...\n";
 
 			CurrentResult = LNX_Utils.DoesEdgeObstructTriPath(
-				ObstructEdge, FocusTriangleA, FocusTriangleB,
+				ObstructEdge, TriA, TriB,
 				ref DBG_Method
 			);
 
@@ -241,17 +97,12 @@ namespace LogansNavigationExtension
 
 			if (CurrentResult)
 			{
-				Gizmos.color = Color.green;
+				DrawStandardEdgeFocusGizmos( ObstructEdge, edgeRaise * 1.55f, "ObstrctEdge", Color.green, true );
 			}
 			else
 			{
-				Gizmos.color = Color.red;
+				DrawStandardEdgeFocusGizmos(ObstructEdge, edgeRaise * 1.55f, "ObstrctEdge", Color.red, true);
 			}
-
-			Gizmos.DrawSphere(Trans_CaptureObstructEdge.position, Radius_ObjectDebugSpheres);
-
-			//Gizmos.DrawLine(WidestEdgeA.StartPosition, WidestEdgeB.StartPosition);
-			//Gizmos.DrawLine(WidestEdgeA.EndPosition, WidestEdgeB.EndPosition);
 		}
 
 		#region WRITING ----------------------------------------------------

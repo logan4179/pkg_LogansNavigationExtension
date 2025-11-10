@@ -48,7 +48,7 @@ namespace LogansNavigationExtension
             problemPositions.Add( transform.position );
         }
 
-		[ContextMenu("z call GoToProblemPoint()")]
+		[ContextMenu("z call GoToProblemPoint(base)")]
 		public virtual void GoToProblemPoint()
 		{
 			_dataCapture_problems.SendTo(Index_GoToProblem);
@@ -150,16 +150,19 @@ namespace LogansNavigationExtension
 			Gizmos.color = oldColor;
 		}
 
-		public void DrawStandardFocusTriGizmos(LNX_Triangle tri, float raiseAmount, string lblString, Color clr, bool drawTriGizmo = false, float triGzmoRaiseAmt = 0f, bool lblAll = false)
+		public void DrawStandardFocusTriGizmos(LNX_Triangle tri, float raiseAmount, string lblString, Color clr, bool drawTriGizmo = false, float triGzmoRaiseAmt = 0f, bool lblAll = false, bool drawToCtrLines = true)
 		{
 			Color oldColor = Gizmos.color;
 
 			Gizmos.color = clr;
 			Vector3 vRaise = Vector3.up * raiseAmount;
 
-			Gizmos.DrawLine(tri.Verts[0].V_Position, tri.V_Center + vRaise);
-			Gizmos.DrawLine(tri.Verts[1].V_Position, tri.V_Center + vRaise);
-			Gizmos.DrawLine(tri.Verts[2].V_Position, tri.V_Center + vRaise);
+			if (drawToCtrLines)
+			{
+				Gizmos.DrawLine(tri.Verts[0].V_Position, tri.V_Center + vRaise);
+				Gizmos.DrawLine(tri.Verts[1].V_Position, tri.V_Center + vRaise);
+				Gizmos.DrawLine(tri.Verts[2].V_Position, tri.V_Center + vRaise);
+			}
 
 			Handles.Label(tri.V_Center + vRaise, lblString);
 
