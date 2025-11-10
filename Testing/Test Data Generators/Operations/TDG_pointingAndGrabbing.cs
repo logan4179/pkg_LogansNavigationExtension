@@ -75,7 +75,7 @@ namespace LogansNavigationExtension
 			//PointedAtNumberOfSharedVerts = new List<int>();
 			CapturedGrabbedPositions_vert = new List<Vector3>();
 			CapturedGrabbedManipulatorPos_vert = new List<Vector3>();
-			_Lnx_MeshManipulator.SelectMode = LNX_SelectMode.Vertices;
+			_Lnx_MeshManipulator.SelectMode = LNX_Component.Vertex;
 			for ( int i = 0; i < tempTestPositions_vert.Count; i++ )
 			{
 				_Lnx_MeshManipulator.TryPointAtComponentViaDirection( tempTestPositions_vert[i], tempTestDirections_vert[i] );
@@ -91,7 +91,7 @@ namespace LogansNavigationExtension
 			CapturedPointedAtEdgeMidPositions = new List<Vector3>();
 			CapturedGrabbedPositions_edge = new List<Vector3>();
 			CapturedGrabbedManipulatorPos_edge = new List<Vector3>();
-			_Lnx_MeshManipulator.SelectMode = LNX_SelectMode.Edges;
+			_Lnx_MeshManipulator.SelectMode = LNX_Component.Edge;
 			
 			for ( int i = 0; i < tempTestPositions_edge.Count; i++ )
 			{
@@ -108,7 +108,7 @@ namespace LogansNavigationExtension
 			CapturedPointedAtFaceCenterPositions = new List<Vector3>();
 			CapturedGrabbedPositions_face = new List<Vector3>();
 			CapturedGrabbedManipulatorPos_face = new List<Vector3>();
-			_Lnx_MeshManipulator.SelectMode = LNX_SelectMode.Faces;
+			_Lnx_MeshManipulator.SelectMode = LNX_Component.Triangle;
 			
 			for ( int i = 0; i < tempTestPositions_face.Count; i++ )
 			{
@@ -123,13 +123,13 @@ namespace LogansNavigationExtension
         {
 			Debug.Log($"capturing pos '{pos}', and dir: '{dir}'. mode: '{_Lnx_MeshManipulator.SelectMode}'...");
 
-			if( _Lnx_MeshManipulator.SelectMode == LNX_SelectMode.None )
+			if( _Lnx_MeshManipulator.SelectMode == LNX_Component.None )
 			{
 				Debug.LogError($"Error! change mesh manipulator select mode to something other than 'none'. Returning early...");
 				return;
 			}
 
-			if( _Lnx_MeshManipulator.SelectMode == LNX_SelectMode.Vertices )
+			if( _Lnx_MeshManipulator.SelectMode == LNX_Component.Vertex )
 			{
 				TestMousePositions_vert.Add( pos );
 				TestMouseDirections_vert.Add( dir );
@@ -154,7 +154,7 @@ namespace LogansNavigationExtension
 					Debug.Log($"{_Lnx_MeshManipulator.Verts_currentlySelected.Count}");
 				}
 			}
-			else if( _Lnx_MeshManipulator.SelectMode == LNX_SelectMode.Edges )
+			else if( _Lnx_MeshManipulator.SelectMode == LNX_Component.Edge )
 			{
 				TestMousePositions_edge.Add( pos );
 				TestMouseDirections_edge.Add( dir );
@@ -180,7 +180,7 @@ namespace LogansNavigationExtension
 
 				}
 			}
-			else if( _Lnx_MeshManipulator.SelectMode == LNX_SelectMode.Faces )
+			else if( _Lnx_MeshManipulator.SelectMode == LNX_Component.Triangle )
 			{
 				TestMousePositions_face.Add( pos );
 				TestMouseDirections_face.Add( dir );

@@ -59,8 +59,8 @@ namespace LogansNavigationExtension
 			//startTrans.position = problemPositions[Index_FocusProblem];
 			//endTrans.position = ProblemEndPositions[Index_FocusProblem];
 
-			startTrans.position = CapturedStartPositions[index_focusProblem];
-			endTrans.position = CapturedEndPositions[index_focusProblem];
+			//startTrans.position = CapturedStartPositions[index_focusProblem];
+			//endTrans.position = CapturedEndPositions[index_focusProblem];
 
 			Debug.Log($"{nameof(GoToProblem)}()...");
 		}
@@ -76,7 +76,7 @@ namespace LogansNavigationExtension
 		{
 			DBG_NavmeshRaycastRprt = "";
 
-			if( Selection.activeObject != gameObject && Selection.activeObject != startTrans.gameObject )
+			if( AmInUnitTest || Selection.activeObject != gameObject && Selection.activeObject != startTrans.gameObject )
 			{
 				return;
 			}
@@ -144,8 +144,8 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call GoToDataPoint")]
 		public void GoToDataPoint()
 		{
-			startTrans.position = CapturedStartPositions[index_focusProblem];
-			endTrans.position = CapturedEndPositions[index_focusProblem];
+			//startTrans.position = CapturedStartPositions[index_focusProblem];
+			//endTrans.position = CapturedEndPositions[index_focusProblem];
 		}
 
 		[ContextMenu("z call DoEet")]

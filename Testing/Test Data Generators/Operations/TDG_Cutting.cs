@@ -32,7 +32,7 @@ namespace LogansNavigationExtension
 		{
 			Debug.Log($"capturing pos '{pos}', and dir: '{dir}'. mode: '{_Lnx_MeshManipulator.SelectMode}'...");
 
-			if ( _Lnx_MeshManipulator.SelectMode == LNX_SelectMode.Edges )
+			if ( _Lnx_MeshManipulator.SelectMode == LNX_Component.Edge )
 			{
 				if ( _Lnx_MeshManipulator.Edge_CurrentlyPointingAt == null )
 				{

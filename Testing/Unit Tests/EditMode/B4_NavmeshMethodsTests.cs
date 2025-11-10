@@ -46,6 +46,8 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 			//CREATE TEST OBJECT -----------------------------
 			_tdg_samplePosition = _serializedLNXNavmesh.gameObject.AddComponent<TDG_SamplePosition>();
+			_tdg_samplePosition.AmInUnitTest = true;
+
 			string jsonString = File.ReadAllText(TDG_Manager.filePath_testData_SamplePosition);
 			JsonUtility.FromJsonOverwrite(jsonString, _tdg_samplePosition);
 			Assert.NotNull(_tdg_samplePosition);
@@ -59,6 +61,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				return;
 			}
 			_tdg_sampleClosestPtOnPerimeter = _serializedLNXNavmesh.gameObject.AddComponent<TDG_SampleClosestPtOnPerimeter>();
+			_tdg_sampleClosestPtOnPerimeter.AmInUnitTest = true;
 
 			jsonString = File.ReadAllText(TDG_Manager.filePath_testData_sampleClosestPtOnPerim);
 
@@ -77,6 +80,8 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 			//CREATE TEST OBJECT -----------------------------
 			_tdg_raycasting = _serializedLNXNavmesh.gameObject.AddComponent<TDG_Raycasting>();
+			_tdg_raycasting.AmInUnitTest = true;
+
 			jsonString = File.ReadAllText( TDG_Manager.filePath_testData_Raycasting );
 			JsonUtility.FromJsonOverwrite(jsonString, _tdg_raycasting);
 			Assert.NotNull(_tdg_raycasting);

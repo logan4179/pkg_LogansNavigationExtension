@@ -15,12 +15,21 @@ namespace LogansNavigationExtension
 
 		public Vector3 StartPoint => PathPoints[0].V_Position;
 
-		public Vector3 EndGoal => PathPoints[PathPoints.Count - 1].V_Position;
+		public Vector3 EndPoint => PathPoints[PathPoints.Count - 1].V_Position;
+		/// <summary>A Vector pointing in a straight line from start to end.</summary>
+		public Vector3 V_CrowFlies => PathPoints[PathPoints.Count-1].V_Position - PathPoints[0].V_Position;
 
-		private float totalDistance;
+		private float totalDistance_cached;
 		/// <summary>Distance of the entire path.</summary>
-		public float TotalDistance => totalDistance;
+		public float TotalDistance => totalDistance_cached;
 
+		private bool amStraight_cached;
+		/// <summary>
+		/// Whether this path was straight when calculated in relation to the surface 
+		/// orientation of the navmesh. Note: This value is only relevant if this path is 
+		/// constructed with a provided LNX_Navmesh or provided surface normal.
+		/// </summary>
+		public bool AmStraight => amStraight_cached;
 
 		/// <summary>Tells if this path object has valid data to be used for pathing.</summary>
 		public bool AmValid
@@ -72,14 +81,18 @@ namespace LogansNavigationExtension
 			}
 		}
 
-		public LNX_Path( List<Vector3> pts, List<Vector3>nrmls )
+		public LNX_Path( List<Vector3> pts, List<Vector3>nrmls, Vector3 v_surfaceNormal )
 		{
 			Index_currentPoint = 0;
+			amStraight_cached = true;
+			totalDistance_cached = 0f;
+
 			PathPoints = new List<LNX_PathPoint>();
 
-			totalDistance = 0f;
 			if ( pts != null && pts.Count > 1 )
 			{
+				Vector3 dirTo = LNX_Utils.FlatVector( pts[1] - pts[0] ).normalized;
+
 				for ( int i = 0; i < pts.Count; i++ )
 				{
 					PathPoints.Add
@@ -90,28 +103,79 @@ namespace LogansNavigationExtension
 							(i > 0 ? pts[i-1] : pts[i]),
 							(i < pts.Count-1 ? pts[i+1] : pts[i]),
 							nrmls[i]
-						) 
+						)
 					);
 
 					if( i > 0 )
 					{
-						totalDistance += Vector3.Distance( pts[i - 1], pts[i] );
+						totalDistance_cached += Vector3.Distance( pts[i - 1], pts[i] );
+
+						if( amStraight_cached ) //only check the following if I still think I'm straight...
+						{
+							Vector3 dirNew = LNX_Utils.FlatVector( pts[i] - pts[i-1], v_surfaceNormal ).normalized;
+							if( dirNew != dirTo )
+							{
+								amStraight_cached = false;
+							}
+							else
+							{
+								dirTo = dirNew;
+							}
+						}
 					}
 				}
 			}
 		}
 
+		
+		public LNX_Path(List<Vector3> pts, List<Vector3> nrmls, bool straightness )
+		{
+			Index_currentPoint = 0;
+			amStraight_cached = straightness;
+			totalDistance_cached = 0f;
+
+			PathPoints = new List<LNX_PathPoint>();
+
+			if (pts != null && pts.Count > 1)
+			{
+				for (int i = 0; i < pts.Count; i++)
+				{
+					PathPoints.Add
+					(
+						new LNX_PathPoint
+						(
+							pts[i],
+							(i > 0 ? pts[i - 1] : pts[i]),
+							(i < pts.Count - 1 ? pts[i + 1] : pts[i]),
+							nrmls[i]
+						)
+					);
+
+					if (i > 0)
+					{
+						totalDistance_cached += Vector3.Distance(pts[i - 1], pts[i]);
+					}
+				}
+			}
+		}
+		
+
 		public LNX_Path( List<LNX_ProjectionHit> hits, LNX_NavMesh navmesh )
 		{
 			Index_currentPoint = -1;
 			PathPoints = new List<LNX_PathPoint>();
-			totalDistance = 0f;
+			totalDistance_cached = 0f;
+			amStraight_cached = true;
 
-			if( hits != null && hits.Count > 1 )
+			if ( hits != null && hits.Count > 1 )
 			{
-				for( int i = 0; i < hits.Count; i++ )
+
+				Vector3 dirTo = LNX_Utils.FlatVector( hits[1].HitPosition - hits[0].HitPosition, navmesh.V_SurfaceOrientation ).normalized;
+				amStraight_cached = true;
+
+				for ( int i = 0; i < hits.Count; i++ )
 				{
-					PathPoints.Add
+					PathPoints.Add //StackTrace 1
 					( 
 						new LNX_PathPoint
 						(
@@ -124,7 +188,20 @@ namespace LogansNavigationExtension
 
 					if ( i > 0 )
 					{
-						totalDistance += Vector3.Distance(hits[i-1].HitPosition, hits[i].HitPosition );
+						totalDistance_cached += Vector3.Distance( hits[i-1].HitPosition, hits[i].HitPosition );
+
+						if (amStraight_cached) //only check the following if I still think I'm straight...
+						{
+							Vector3 dirNew = LNX_Utils.FlatVector(hits[i].HitPosition - hits[i - 1].HitPosition, navmesh.V_SurfaceOrientation).normalized;
+							if (dirNew != dirTo)
+							{
+								amStraight_cached = false;
+							}
+							else
+							{
+								dirTo = dirNew;
+							}
+						}
 					}
 				}
 			}
@@ -134,8 +211,9 @@ namespace LogansNavigationExtension
 		{
 			Index_currentPoint = 0;
 			PathPoints = path_passed.PathPoints;
+			amStraight_cached = false;
 
-			totalDistance = path_passed.TotalDistance;
+			totalDistance_cached = path_passed.TotalDistance;
 		}
 
 		private static float dist_checkIfOffCourseBeyondPrev = 0.4f;
@@ -149,11 +227,48 @@ namespace LogansNavigationExtension
 			}
 
 			Vector3 vprv = PathPoints.Count == 0 ? hitPt.HitPosition : PathPoints[PathPoints.Count-1].V_Position;
-			Vector3 vnxt = hitPt.HitPosition;
-			Vector3 vnrml = _navmesh.Triangles[hitPt.Index_Hit].V_PathingNormal;
 
-			PathPoints.Add( new LNX_PathPoint(hitPt.HitPosition, vprv,vnxt, vnrml) );
-			totalDistance += Vector3.Distance( vprv, hitPt.HitPosition );
+			PathPoints.Add
+			( 
+				new LNX_PathPoint
+				(
+					hitPt.HitPosition,
+					vprv,
+					hitPt.HitPosition,
+					_navmesh.Triangles[hitPt.Index_Hit].V_PathingNormal
+				) 
+			);
+
+
+			totalDistance_cached += Vector3.Distance( vprv, hitPt.HitPosition );
+
+			//TODO: determine straightness!!!
+			if ( PathPoints.Count > 1 )
+			{
+				#region take care of previous point...
+				PathPoints[PathPoints.Count - 2] = new LNX_PathPoint(
+					PathPoints[PathPoints.Count - 2].V_Position,
+					PathPoints[PathPoints.Count - 2].V_PreviousPoint,
+					hitPt.HitPosition,
+					PathPoints[PathPoints.Count - 2].V_normal
+				);
+				#endregion
+
+				if ( amStraight_cached ) //Need to decide if path is straight...
+				{
+					Vector3 firstDir_fltnd = LNX_Utils.FlatVector( PathPoints[1].V_Position - PathPoints[0].V_Position, _navmesh.V_SurfaceOrientation ).normalized;
+
+					Vector3 dirNew = LNX_Utils.FlatVector(
+						hitPt.HitPosition - PathPoints[PathPoints.Count - 2].V_Position,
+						_navmesh.V_SurfaceOrientation
+					).normalized;
+
+					if  ( dirNew != firstDir_fltnd )
+					{
+						amStraight_cached = false;
+					}
+				}
+			}
 		}
 
 		public bool AmOnCourse( Vector3 pos_passed, float threshold )

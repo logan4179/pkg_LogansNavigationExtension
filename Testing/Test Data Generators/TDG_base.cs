@@ -1,6 +1,7 @@
 using LogansNavigationExtension;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.ConstrainedExecution;
 using UnityEditor;
 using UnityEngine;
 
@@ -8,28 +9,35 @@ namespace LogansNavigationExtension
 {
     public class TDG_base : MonoBehaviour
     {
+		public string testName;
 		public string LastWriteTime;
 
-		[SerializeField] protected LNX_NavMesh _navmesh;
-        [SerializeField] protected LNX_NavMeshDebugger _debugger;
+        [TextArea(1,5)] public string Description;
 
-        [Header("PROBLEMS")]
+		[SerializeField] protected LNX_NavMesh _navmesh;
+
+		[Header("PROBLEMS")]
+		public int Index_GoToProblem = 0;
+		public TDG_DataCapture _dataCapture_problems;
 		public bool DrawProblemPoints = true;
-        public int index_focusProblem = 0;
-        [SerializeField, Tooltip("These are meant to be positions that I'm currently experimenting with")]
+		[SerializeField, Tooltip("These are meant to be positions that I'm currently experimenting with")]
         public List<Vector3> problemPositions;
 		public List<Vector3> problemEndPositions;
 
-        [Header("DEBUG (BASE)")]
+		[Header("DATA")]
+		public TDG_DataCapture _dataCapture;
+
+		[Header("DEBUG (BASE)")]
 		[Range(0f, 0.3f)] public float Radius_ObjectDebugSpheres = 0.2f;
 		[Range(0f, 0.15f)] public float Radius_ProjectPos = 0.1f;
+		[HideInInspector] public bool AmInUnitTest = false;
 
 		[TextArea(1, 20)]
 		public string DBG_Operation;
 
 		//[Space(10f)]
 
-		[ContextMenu("z CaptureProblemPosition()")]
+		#region HELPERS --------------------------------------------
         public virtual void CaptureProblemPosition()
         {
             if (problemPositions == null)
@@ -40,17 +48,54 @@ namespace LogansNavigationExtension
             problemPositions.Add( transform.position );
         }
 
-        [ContextMenu("z SendToProblemPosition()")]
-        public void SendToProblemPosition()
-        {
-            if ( index_focusProblem > -1 && problemPositions != null && problemPositions.Count > 0 )
-            {
-                transform.position = problemPositions[index_focusProblem];
-            }
-        }
+		[ContextMenu("z call GoToProblemPoint(base)")]
+		public virtual void GoToProblemPoint()
+		{
+			_dataCapture_problems.SendTo(Index_GoToProblem);
+		}
 
-        public string testName;
-        protected virtual void OnDrawGizmos()
+		public LNX_Triangle CaptureTriFromSample(Vector3 samplePos)
+        {
+			LNX_ProjectionHit hit = LNX_ProjectionHit.None;
+
+			if (_navmesh.SamplePosition(samplePos, out hit, 2f, false))
+            {
+				return _navmesh.Triangles[hit.Index_Hit];
+            }
+
+			return null;
+		}
+
+		public LNX_Edge CaptureEdgeFromSample(Vector3 samplePos)
+		{
+			LNX_ProjectionHit hit = LNX_ProjectionHit.None;
+
+			if (_navmesh.SamplePosition(samplePos, out hit, 2f, false))
+			{
+				float bestDist = Vector3.Distance(samplePos, _navmesh.GetEdge(hit.Index_Hit, 0).MidPosition);
+				int bestEdge = 0;
+
+				if (Vector3.Distance(samplePos, _navmesh.GetEdge(hit.Index_Hit, 1).MidPosition) < bestDist)
+				{
+					bestDist = Vector3.Distance(samplePos, _navmesh.GetEdge(hit.Index_Hit, 1).MidPosition);
+					bestEdge = 1;
+				}
+
+				if (Vector3.Distance(samplePos, _navmesh.GetEdge(hit.Index_Hit, 2).MidPosition) < bestDist)
+				{
+					bestDist = Vector3.Distance(samplePos, _navmesh.GetEdge(hit.Index_Hit, 2).MidPosition);
+					bestEdge = 2;
+				}
+
+				return _navmesh.Triangles[hit.Index_Hit].Edges[bestEdge];
+			}
+
+			return null;
+		}
+
+		#endregion
+
+		protected virtual void OnDrawGizmos()
         {
 			GUIStyle gstl = new GUIStyle();
 			gstl.normal.textColor = Color.red;
@@ -74,65 +119,131 @@ namespace LogansNavigationExtension
 						Gizmos.DrawLine( problemEndPositions[i], problemEndPositions[i] + (Vector3.up * lineHeight) );
 						Handles.Label( problemEndPositions[i] + (Vector3.up * lineHeight), $"prob{i}", gstl );
 
+						/* commented out bc of new TDG_DataCapture mechanism
 						if ( i == index_focusProblem )
 						{
 							Gizmos.DrawLine( problemPositions[i], problemEndPositions[i] );
 						}
+						*/
 					}
                 }
             }
         }
 
-		public void DrawTriGizmo( LNX_Triangle tri, Color col )
+		public void DrawTriGizmo(LNX_Triangle tri, Color col, float offsetHeight = 0f)
 		{
+			Color oldColor = Gizmos.color;
+
 			Gizmos.color = col;
 			Handles.color = col;
 
 			GUIStyle gstl_vertLines = new GUIStyle();
 			gstl_vertLines.normal.textColor = col;
 
+			Vector3 v_offsetHeight = Vector3.up * offsetHeight;
+
 			//Draw borders...
-			Handles.DrawLine( tri.Verts[0].V_Position, tri.Verts[1].V_Position );
-			Handles.DrawLine( tri.Verts[1].V_Position, tri.Verts[2].V_Position );
-			Handles.DrawLine( tri.Verts[2].V_Position, tri.Verts[0].V_Position );
+			Handles.DrawLine(tri.Verts[0].V_Position + v_offsetHeight, tri.Verts[1].V_Position + v_offsetHeight);
+			Handles.DrawLine(tri.Verts[1].V_Position + v_offsetHeight, tri.Verts[2].V_Position + v_offsetHeight);
+			Handles.DrawLine(tri.Verts[2].V_Position + v_offsetHeight, tri.Verts[0].V_Position + v_offsetHeight);
+
+			Gizmos.color = oldColor;
 		}
 
-        public void DrawStandardFocusTriGizmos( LNX_Triangle tri, float raiseAmount, string lblString )
-        {
-            Color oldColor = Gizmos.color;
-
-			Gizmos.color = Color.magenta;
-			//Handles.color = Color.magenta;
-			Vector3 vRaise = Vector3.up * raiseAmount;
-
-			Gizmos.DrawLine( tri.Verts[0].V_Position, tri.V_Center + vRaise );
-			Gizmos.DrawLine( tri.Verts[1].V_Position, tri.V_Center + vRaise );
-			Gizmos.DrawLine( tri.Verts[2].V_Position, tri.V_Center + vRaise );
-
-			Handles.Label( tri.V_Center + vRaise, lblString );
-
-            Gizmos.color = oldColor;
-		}
-
-        public void DrawStandardEdgeFocusGizmos( LNX_Edge edge, float raiseAmount, string lblString, Color clr )
+		public void DrawStandardFocusTriGizmos(LNX_Triangle tri, float raiseAmount, string lblString, Color clr, bool drawTriGizmo = false, float triGzmoRaiseAmt = 0f, bool lblAll = false, bool drawToCtrLines = true)
 		{
 			Color oldColor = Gizmos.color;
 
 			Gizmos.color = clr;
 			Vector3 vRaise = Vector3.up * raiseAmount;
 
-            Gizmos.DrawLine( edge.StartPosition, edge.StartPosition + vRaise );
-            Handles.Label( edge.StartPosition + vRaise, "edgeStart" );
+			if (drawToCtrLines)
+			{
+				Gizmos.DrawLine(tri.Verts[0].V_Position, tri.V_Center + vRaise);
+				Gizmos.DrawLine(tri.Verts[1].V_Position, tri.V_Center + vRaise);
+				Gizmos.DrawLine(tri.Verts[2].V_Position, tri.V_Center + vRaise);
+			}
 
-            Gizmos.DrawLine( edge.StartPosition + vRaise, edge.EndPosition + vRaise );
-			Gizmos.DrawLine( edge.EndPosition, edge.EndPosition + vRaise );
-			Handles.Label(edge.EndPosition + vRaise, "edgeEnd");
+			Handles.Label(tri.V_Center + vRaise, lblString);
 
+			if (drawTriGizmo)
+			{
+				DrawTriGizmo(tri, clr, triGzmoRaiseAmt);
+			}
+
+			if (lblAll)
+			{
+				for (int i = 0; i < 3; i++)
+				{
+					Handles.Label( tri.Verts[i].V_Position + (tri.Verts[i].v_toCenter * 0.1f), $"v{i}" );
+				}
+
+				for (int i = 0; i < 3; i++)
+				{
+					Handles.Label(tri.Edges[i].MidPosition + (tri.Edges[i].v_toCenter * 0.15f), $"e{i}");
+				}
+			}
 
 			Gizmos.color = oldColor;
 		}
 
-        public void DrawDataPointCapture( Vector3 pos, Color clr )
+		public void DrawStandardEdgeFocusGizmos( LNX_Edge edge, float raiseAmount, string lblString, Color clr, bool drawMidPt = false )
+		{
+			Color oldColor = Gizmos.color;
+
+			Gizmos.color = clr;
+			Vector3 vRaise = Vector3.up * raiseAmount;
+
+			Handles.Label(edge.MidPosition + (vRaise * 1.3f), lblString );
+
+			Gizmos.DrawLine( edge.StartPosition, edge.StartPosition + vRaise );
+            Handles.Label( edge.StartPosition + vRaise, "eStrt" );
+
+            Gizmos.DrawLine( edge.StartPosition + vRaise, edge.EndPosition + vRaise );
+			Gizmos.DrawLine( edge.EndPosition, edge.EndPosition + vRaise );
+			Handles.Label(edge.EndPosition + vRaise, "eEnd");
+
+			if( drawMidPt )
+			{
+				Gizmos.DrawLine(edge.MidPosition + vRaise, edge.MidPosition + vRaise);
+				Gizmos.DrawLine(edge.MidPosition, edge.MidPosition + vRaise);
+				Handles.Label(edge.MidPosition + vRaise, "Mid");
+			}
+
+			Gizmos.color = oldColor;
+		}
+
+		public void DrawEdgeBridgeVisual(LNX_Edge strtEdge, LNX_Edge endEdge, Color clr )
+		{
+			Color oldClr = Gizmos.color;
+
+			Gizmos.color = clr;
+
+			if( LNX_Utils.AreEdgesAlignedFromTheirPerspectives(strtEdge, endEdge) )
+			{
+				Gizmos.DrawLine(strtEdge.StartPosition, endEdge.StartPosition);
+				Gizmos.DrawLine(strtEdge.EndPosition, endEdge.EndPosition);
+			}
+			else
+			{
+				Gizmos.DrawLine(strtEdge.StartPosition, endEdge.EndPosition);
+				Gizmos.DrawLine(strtEdge.EndPosition, endEdge.StartPosition);
+			}
+		}
+
+		public void DrawQuadVisual(Vector3 crnrA, Vector3 crnrB, Vector3 crnrC, Vector3 crnrD)
+		{
+			Gizmos.DrawLine( crnrA, crnrB );
+			Gizmos.DrawLine( crnrB, crnrC );
+			Gizmos.DrawLine( crnrC, crnrD );
+			Gizmos.DrawLine( crnrD, crnrA );
+		}
+
+		public void DrawQuadVisual(LNX_Quad q)
+		{
+			DrawQuadVisual( q.crnrA, q.crnrB, q.crnrC, q.crnrD );
+		}
+		public void DrawDataPointCapture( Vector3 pos, Color clr )
         {
 			Debug.DrawRay(
 	            pos, Vector3.up, clr, 2f

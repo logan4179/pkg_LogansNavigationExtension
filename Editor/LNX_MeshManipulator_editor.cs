@@ -7,7 +7,7 @@ using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 using System;
 
-namespace LogansNavigationExtension
+namespace LogansNavigationExtension.CustomEditors
 {
 	[CustomEditor(typeof(LNX_MeshManipulator)), CanEditMultipleObjects]
 	public class LNX_MeshManipulator_editor : Editor
@@ -81,6 +81,7 @@ namespace LogansNavigationExtension
 		private void Btn_fetchTriangulation_action()
 		{
 			_targetScript._LNX_NavMesh.CalculateTriangulation();
+			Debug.Log(_targetScript._LNX_NavMesh.DBG_CalculateTriangulation);
 			_targetScript.ClearSelection();
 		}
 
@@ -125,6 +126,17 @@ namespace LogansNavigationExtension
 
 			}
 
+			if( _targetScript._LNX_NavMesh.V_SurfaceOrientation == Vector3.zero )
+			{
+				//TODO: Read the following...
+				Debug.LogWarning( $"LNX WARNING! Currently the navmesh's surface orientation vector isn't calculated/cached. " +
+					$"In the future, I'll need to create a custom inspector for the actual LNX_Navmesh (as opposed to " +
+					$"just having one for the mesh editor) where it calculates this vector whenever the user changes the " +
+					$"'SurfaceOrientation' dropdown choice. For now, I'll leave this warning here so I'm cognizant of the " +
+					$"need to manually calculate this..." );
+				
+			}
+
 			#region INPUT --------------------------
 			if( Event.current.isMouse ) //fires continuously when the mouse is both in the scene and moving. Does not fire when mouse is in the scene and still.
 			{
@@ -155,16 +167,16 @@ namespace LogansNavigationExtension
 				{
 					if ( Event.current.keyCode == KeyCode.Alpha1 ) // Vertex mode
 					{
-						_targetScript.ChangeSelectMode( LNX_SelectMode.Vertices );
+						_targetScript.ChangeSelectMode( LNX_Component.Vertex );
 						
 					}
 					else if ( Event.current.keyCode == KeyCode.Alpha2 ) // Edge Mode
 					{
-						_targetScript.ChangeSelectMode( LNX_SelectMode.Edges );
+						_targetScript.ChangeSelectMode( LNX_Component.Edge );
 					}
 					else if ( Event.current.keyCode == KeyCode.Alpha3 ) // Face Mode
 					{
-						_targetScript.ChangeSelectMode( LNX_SelectMode.Faces );
+						_targetScript.ChangeSelectMode( LNX_Component.Triangle );
 					}
 					else if( Event.current.keyCode == KeyCode.L ) // Lock selection
 					{
@@ -189,13 +201,13 @@ namespace LogansNavigationExtension
 				{
 					if ( Event.current.keyCode == KeyCode.Escape )
 					{
-						_targetScript.ChangeSelectMode( LNX_SelectMode.None );
+						_targetScript.ChangeSelectMode( LNX_Component.None );
 					}
 				}
 			}
 			#endregion
 
-			if ( _targetScript.SelectMode != LNX_SelectMode.None )
+			if ( _targetScript.SelectMode != LNX_Component.None )
 			{
 				_targetScript.AmPointingATBounds = false; //todo: in the future, I need to make something that can detect if I'm pointing at the bounds first before detecting if pointing at component for efficiency...
 

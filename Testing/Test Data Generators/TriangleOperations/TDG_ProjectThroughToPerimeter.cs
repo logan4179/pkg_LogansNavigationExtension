@@ -63,7 +63,7 @@ namespace LogansNavigationExtension
 		{
 			DBG_Operation = "";
 
-			if ( Selection.activeGameObject != gameObject && Selection.activeGameObject != trans_start.gameObject && Selection.activeGameObject != transform.parent.gameObject )
+			if ( AmInUnitTest || Selection.activeGameObject != gameObject && Selection.activeGameObject != trans_start.gameObject && Selection.activeGameObject != transform.parent.gameObject )
 			{
 				DBG_Operation += $"OnDrawGizmos short-circuit. Something wrong with selection...";
 				return;
@@ -79,7 +79,7 @@ namespace LogansNavigationExtension
 			base.OnDrawGizmos();
 			DBG_Operation += $"Commencing operation using triangle '{CurrentTriangle.Index_inCollection}'...\n";
 
-			DrawStandardFocusTriGizmos( CurrentTriangle, 1f, $"tri{CurrentTriangle.Index_inCollection}");
+			DrawStandardFocusTriGizmos( CurrentTriangle, 1f, $"tri{CurrentTriangle.Index_inCollection}", Color.magenta);
 
 			CurrentHit = CurrentTriangle.ProjectThroughToPerimeter
 			(

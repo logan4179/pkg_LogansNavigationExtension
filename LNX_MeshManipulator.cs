@@ -10,7 +10,7 @@ namespace LogansNavigationExtension
 		[SerializeField] public LNX_NavMesh _LNX_NavMesh;
 
 		//[Header("FOCUS")]
-		public LNX_SelectMode SelectMode = LNX_SelectMode.None;
+		public LNX_Component SelectMode = LNX_Component.None;
 
 		public LNX_OperationMode OperationMode = LNX_OperationMode.Pointing;
 
@@ -189,25 +189,25 @@ namespace LogansNavigationExtension
 		}
 		#endregion
 
-		public void ChangeSelectMode( LNX_SelectMode mode )
+		public void ChangeSelectMode( LNX_Component mode )
 		{
-			if ( mode != SelectMode || mode == LNX_SelectMode.None ) //selection has changed to this... also, added selectmode == none check to allow a way to force initialization if necessary.
+			if ( mode != SelectMode || mode == LNX_Component.None ) //selection has changed to this... also, added selectmode == none check to allow a way to force initialization if necessary.
 			{
 				ClearSelection();
 			}
 
-			if ( mode == LNX_SelectMode.None )
+			if ( mode == LNX_Component.None )
 			{
 				
 			}
-			else if ( mode == LNX_SelectMode.Vertices )
+			else if ( mode == LNX_Component.Vertex )
 			{
 				if( mode != SelectMode ) //selection has changed to this...
 				{
 
 				}
 			}
-			else if ( mode == LNX_SelectMode.Edges )
+			else if ( mode == LNX_Component.Edge )
 			{
 
 			}
@@ -259,7 +259,7 @@ namespace LogansNavigationExtension
 
 			Flag_AComponentIsCurrentlyHighlighted = false;
 
-			if ( SelectMode == LNX_SelectMode.Faces )
+			if ( SelectMode == LNX_Component.Triangle )
 			{
 				Index_TriPointingAt = -1;
 
@@ -285,7 +285,7 @@ namespace LogansNavigationExtension
 					Flag_AComponentIsCurrentlyHighlighted = true;
 				}
 			}
-			else if ( SelectMode == LNX_SelectMode.Vertices )
+			else if ( SelectMode == LNX_Component.Vertex )
 			{
 				float runningBestAlignment = 0.998f;
 				int runningBestTriIndex = -1;
@@ -325,7 +325,7 @@ namespace LogansNavigationExtension
 
 				Vert_CurrentlyPointingAt = _LNX_NavMesh.GetVertexAtCoordinate( runningBestTriIndex, runningBestVertIndex );
 			}
-			else if ( SelectMode == LNX_SelectMode.Edges )
+			else if ( SelectMode == LNX_Component.Edge )
 			{
 				LNX_ComponentCoordinate runningBestCoordinate = LNX_ComponentCoordinate.None;
 				float runningBestAlignment = 0.97f;
@@ -387,7 +387,7 @@ namespace LogansNavigationExtension
 				return;
 			}
 
-			if ( SelectMode == LNX_SelectMode.Faces )
+			if ( SelectMode == LNX_Component.Triangle )
 			{
 				DebugSelectedReport += $"pointing at: '{Index_TriPointingAt}' \n";
 				Index_TriLastSelected = Index_TriPointingAt;
@@ -418,7 +418,7 @@ namespace LogansNavigationExtension
 
 				manipulatorPos = _LNX_NavMesh.Triangles[Index_TriLastSelected].V_Center;
 			}
-			else if( SelectMode == LNX_SelectMode.Vertices )
+			else if( SelectMode == LNX_Component.Vertex )
 			{
 				DebugSelectedReport += $"pointing at: '{Vert_CurrentlyPointingAt.ToString()}' \n";
 				Vert_LastSelected = Vert_CurrentlyPointingAt;
@@ -438,7 +438,7 @@ namespace LogansNavigationExtension
 
 				manipulatorPos = Vert_LastSelected.V_Position;
 			}
-			else if( SelectMode == LNX_SelectMode.Edges )
+			else if( SelectMode == LNX_Component.Edge )
 			{
 				DebugSelectedReport += $"pointing at: '{Edge_CurrentlyPointingAt.ToString()}' \n";
 				Edge_LastSelected = Edge_CurrentlyPointingAt; //note: something's funny with edge selection, particularly when selecting a terminal/border edge...
@@ -658,6 +658,7 @@ namespace LogansNavigationExtension
 
 			DeleteTriangles(tri0, tri1);
 
+			/* //todo: make work
 			LNX_Triangle[] trisToAdd = new LNX_Triangle[4]
 			{
 				new LNX_Triangle(_LNX_NavMesh.Triangles.Length, 0, endEdge0.StartPosition, endEdge0.EndPosition, v_midPoint0, _LNX_NavMesh ),
@@ -667,7 +668,7 @@ namespace LogansNavigationExtension
 			};
 
 			_LNX_NavMesh.AddTriangles( trisToAdd );
-			
+			*/
 		}
 		#endregion
 
@@ -814,7 +815,7 @@ namespace LogansNavigationExtension
 			#endregion
 
 			#region VERTICES --------------------------------------------
-			if( SelectMode == LNX_SelectMode.Vertices )
+			if( SelectMode == LNX_Component.Vertex )
 			{
 				Handles.color = Color.white;
 				Gizmos.color = Color.white;
@@ -844,7 +845,7 @@ namespace LogansNavigationExtension
 			#endregion
 
 			#region EDGES --------------------------------------------
-			if ( SelectMode == LNX_SelectMode.Edges )
+			if ( SelectMode == LNX_Component.Edge )
 			{
 				if ( Edges_currentlySelected != null && Edges_currentlySelected.Count > 0 )
 				{

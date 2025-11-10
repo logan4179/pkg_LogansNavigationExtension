@@ -59,7 +59,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			_lnx_meshManipulator.ClearSelection();
 
 			Debug.Log($"changing selectmode to vertices...");
-			_lnx_meshManipulator.ChangeSelectMode( LNX_SelectMode.Vertices );
+			_lnx_meshManipulator.ChangeSelectMode( LNX_Component.Vertex );
 			Debug.Log( string.Format(LNX_UnitTestUtilities.UnitTestSectionEndString, "setup") );
 			//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

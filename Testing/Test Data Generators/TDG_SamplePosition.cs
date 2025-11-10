@@ -28,7 +28,7 @@ namespace LogansNavigationExtension
 
 		protected override void OnDrawGizmos()
 		{
-			if (Selection.activeGameObject != gameObject)
+			if ( AmInUnitTest || Selection.activeGameObject != gameObject)
 			{
 				return;
 			}
@@ -53,7 +53,7 @@ namespace LogansNavigationExtension
 				DrawStandardFocusTriGizmos(
 					sampledTri,
 					1f,
-					sampledTri.Index_inCollection.ToString()
+					sampledTri.Index_inCollection.ToString(), Color.magenta
 				);
 
 				Gizmos.color = Color_sampleObject;

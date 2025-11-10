@@ -8,6 +8,9 @@ namespace LogansNavigationExtension
 {
 	public class TDG_DoesPositionLieOnEdge : TDG_base
 	{
+		[Header("START OF DERIVED CLASS-------------------")]
+
+		[SerializeField] protected LNX_NavMeshDebugger _debugger;
 
 		public LNX_ComponentCoordinate EdgeCoordinate;
 
@@ -44,7 +47,7 @@ namespace LogansNavigationExtension
 		{
 			DBG_Operation = "";
 
-			if ( Selection.activeObject != gameObject && Selection.activeObject != transform.parent.gameObject )
+			if ( AmInUnitTest || Selection.activeObject != gameObject && Selection.activeObject != transform.parent.gameObject )
 			{
 				return;
 			}
@@ -60,11 +63,11 @@ namespace LogansNavigationExtension
 			CurrentTriangle = _navmesh.GetTriangle( EdgeCoordinate );
 			CurrentEdge = _navmesh.GetEdge( EdgeCoordinate );
 
-			DrawStandardFocusTriGizmos(_navmesh.Triangles[EdgeCoordinate.TrianglesIndex], 1f, $"tri{EdgeCoordinate.TrianglesIndex}");
+			DrawStandardFocusTriGizmos(_navmesh.Triangles[EdgeCoordinate.TrianglesIndex], 1f, $"tri{EdgeCoordinate.TrianglesIndex}", Color.magenta );
 			DrawStandardEdgeFocusGizmos(CurrentEdge, 0.1f, "", Color.magenta);
 
 			DBG_Operation += $"Commencing edge operation...\n";
-			CurrentProjectionResult = _navmesh.GetEdge(EdgeCoordinate).DoesPositionLieOnEdge(transform.position, _navmesh.GetSurfaceNormal() );
+			CurrentProjectionResult = _navmesh.GetEdge(EdgeCoordinate).DoesPositionLieOnEdge(transform.position, _navmesh.V_SurfaceOrientation );
 
 			Gizmos.color = CurrentProjectionResult ? Color.green : Color.red;
 
@@ -97,14 +100,13 @@ namespace LogansNavigationExtension
 		{
 			Debug.Log($"{nameof(SetDebuggerFocusToMine)}()...");
 
-			_debugger.Index_TriFocus = EdgeCoordinate.TrianglesIndex;
+			_debugger.Grabber_FocusTri.transform.position = _navmesh.Triangles[EdgeCoordinate.TrianglesIndex].V_Center;
 		}
 
 		[ContextMenu("z GoToProblem()")]
 		public void GoToProblem()
 		{
-			transform.position = problemPositions[index_focusProblem];
-
+			//todo: implement
 
 			Debug.Log($"{nameof(GoToProblem)}()...");
 		}
