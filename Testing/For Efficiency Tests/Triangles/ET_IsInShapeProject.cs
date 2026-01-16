@@ -21,7 +21,7 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call RecallTriFromSavedCenter()")]
 		public void RecallTriFromSavedCenter()
 		{
-			LNX_ProjectionHit hit;
+			LNX_NavmeshHit hit;
 
             CurrentTri = _navmesh.GetTriangle(TriCenter);
 
@@ -31,11 +31,11 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call SampleTri()")]
 		public void SampleTri()
 		{
-            LNX_ProjectionHit hit;
+            LNX_NavmeshHit hit;
 
             _navmesh.SamplePosition( transform.position, out hit, 10f, false );
 
-			CurrentTri = _navmesh.Triangles[hit.Index_Hit];
+			CurrentTri = _navmesh.Triangles[hit.TriIndex];
 			TriCenter = CurrentTri.V_Center;
 		}
 

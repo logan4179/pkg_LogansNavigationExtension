@@ -25,7 +25,6 @@ namespace LogansNavigationExtension
 
 
 		[Header("DEBUG")]
-		[TextArea(1, 20)] public string DBG_Method;
 		public Color Clr_BridgeVisual;
 
 		[ContextMenu("z call CaptureDataPoint()")]

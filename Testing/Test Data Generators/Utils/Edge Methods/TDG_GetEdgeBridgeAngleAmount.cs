@@ -20,7 +20,6 @@ namespace LogansNavigationExtension
 		public TDG_GetWidestEdgeFromPerspective_edgeOverload _tdgA;
 
 		[Header("DEBUG")]
-		public string DBG_Method;
 		public Color Color_Edges;
 		public Color Color_BridgeVisual;
 

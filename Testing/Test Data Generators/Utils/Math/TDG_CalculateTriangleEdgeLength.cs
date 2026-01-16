@@ -17,8 +17,6 @@ namespace LogansNavigationExtension
 		[Header("DEBUG")]
 		public Color Clr_edges = Color.white;
 		
-		public string DBG_Method;
-
 		protected override void OnDrawGizmos()
 		{
 			if

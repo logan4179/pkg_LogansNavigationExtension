@@ -11,8 +11,7 @@ namespace LogansNavigationExtension
 
 		public int CurrentOperationResult = 0;
 
-		[Header("DEBUG")]
-		public string DBG_Method;
+		//[Header("DEBUG")]
 
 		protected override void OnDrawGizmos()
 		{

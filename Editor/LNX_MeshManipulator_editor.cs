@@ -126,7 +126,7 @@ namespace LogansNavigationExtension.CustomEditors
 
 			}
 
-			if( _targetScript._LNX_NavMesh.V_SurfaceOrientation == Vector3.zero )
+			if( _targetScript._LNX_NavMesh.GetSurfaceNormalVector() == Vector3.zero )
 			{
 				//TODO: Read the following...
 				Debug.LogWarning( $"LNX WARNING! Currently the navmesh's surface orientation vector isn't calculated/cached. " +

@@ -563,7 +563,7 @@ namespace LogansNavigationExtension
 			return AmOnSharedEdgeSpace( edj.StartPosition, edj.EndPosition );
 		}
 
-		public bool AmBoundsEdge(LNX_NavMesh nm)
+		public bool AmBoundsEdge(LNX_NavMesh nm) //OTOD: get rid of this now that I have this in the LNX_NavMesh class
 		{
 			//note: It's possible to have a navmesh that isn't mostly square shaped. This won't help for that...
 			//Debug.Log($"{nameof(AmBoundsEdge)}(), {nm.SurfaceOrientation}");

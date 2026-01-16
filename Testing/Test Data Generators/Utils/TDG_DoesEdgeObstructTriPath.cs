@@ -26,8 +26,6 @@ namespace LogansNavigationExtension
 		[Range(0f, 0.25f)] public float edgeRaise = 0.15f;
 		[Range(0f, 0.1f)] public float triRaise = 0.5f;
 
-		public string DBG_Method;
-
 
 		[ContextMenu("z call CaptureDataPoint()")]
 		public void CaptureDataPoint()

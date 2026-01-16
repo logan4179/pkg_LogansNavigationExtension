@@ -19,14 +19,12 @@ namespace LogansNavigationExtension
 
 		[Header("MatchTDGs")]
 		public TDG_DoesEdgeObstructEdgePath _TDG_DoesEdgeObstructEdgePath;
-		public TDG_GetTriPath _TDG_getTriPath;
 		public TDG_DoesEdgeObstructTriPath _tdg_doesEdgeObstructTriPath;
 
 		[Header("RESULTS")]
 		public bool CurrentOperationResult = false;
 
 		[Header("DEBUG")]
-		[TextArea(1,15)] public string DBG_Method;
 		public Vector3 v_lblOffset;
 
 		[ContextMenu("z call CaptureProblemPoint()")]
@@ -121,7 +119,7 @@ namespace LogansNavigationExtension
 				Grabber_Pos.transform.position,
 				Grabber_CrnrA.transform.position, Grabber_CrnrB.transform.position,
 				Grabber_CrnrC.transform.position, Grabber_CrnrD.transform.position, 
-				_navmesh.V_SurfaceOrientation, false, ref DBG_Method );
+				_navmesh.GetSurfaceNormalVector(), false, ref DBG_Method );
 
 			DBG_Operation += $"Result of AmInQuadArea(): '{CurrentOperationResult}'...\n";
 

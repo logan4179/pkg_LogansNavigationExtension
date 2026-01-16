@@ -67,7 +67,7 @@ namespace LogansNavigationExtension
 			DrawStandardEdgeFocusGizmos(CurrentEdge, 0.1f, "", Color.magenta);
 
 			DBG_Operation += $"Commencing edge operation...\n";
-			CurrentProjectionResult = _navmesh.GetEdge(EdgeCoordinate).DoesPositionLieOnEdge(transform.position, _navmesh.V_SurfaceOrientation );
+			CurrentProjectionResult = _navmesh.GetEdge(EdgeCoordinate).DoesPositionLieOnEdge(transform.position, _navmesh.GetSurfaceNormalVector() );
 
 			Gizmos.color = CurrentProjectionResult ? Color.green : Color.red;
 
@@ -81,11 +81,11 @@ namespace LogansNavigationExtension
 		{
 			Debug.Log($"{nameof(SampleFocusTri)}()...");
 
-			LNX_ProjectionHit hit = LNX_ProjectionHit.None;
+			LNX_NavmeshHit hit = LNX_NavmeshHit.None;
 
 			if ( _navmesh.SamplePosition(transform.position, out hit, 2f, false) )
 			{
-				EdgeCoordinate = new LNX_ComponentCoordinate(hit.Index_Hit, EdgeCoordinate.ComponentIndex);
+				EdgeCoordinate = new LNX_ComponentCoordinate(hit.TriIndex, EdgeCoordinate.ComponentIndex);
 				//SetDebuggerFocusToMine();
 				Debug.Log($"Succesful sample! Set new edgecoordinate to: '{EdgeCoordinate.ToString()}'");
 			}

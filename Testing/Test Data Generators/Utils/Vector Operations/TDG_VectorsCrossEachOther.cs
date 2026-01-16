@@ -16,25 +16,25 @@ namespace LogansNavigationExtension
 		public bool Result;
 
 
-		[Header("SEND TO")]
-		public TDG_DoesEdgeObstructArea _tdg_doesEdgeObstructArea;
+		//[Header("SEND TO")]
+		//public TDG_DoesEdgeObstructArea _tdg_doesEdgeObstructArea;
 
 		[Header("DEBUG")]
 		public Color Clr_edges = Color.white;
 
-		public string DBG_Method;
 
 		#region HELPERS =================================================
 
 		[ContextMenu("z call SendToTDG")]
 		public void SendToTDG()
 		{
+			/*
 			Grabber_LineA_start.transform.position = _tdg_doesEdgeObstructArea.ObstructEdge.StartPosition;
 			Grabber_LineA_end.transform.position = _tdg_doesEdgeObstructArea.ObstructEdge.EndPosition;
 
 			Grabber_LineB_start.transform.position = _tdg_doesEdgeObstructArea.DestinationTriangle.Verts[0].V_Position;
 			Grabber_LineB_end.transform.position = _tdg_doesEdgeObstructArea.DestinationTriangle.Verts[1].V_Position;
-
+			*/
 		}
 		#endregion
 

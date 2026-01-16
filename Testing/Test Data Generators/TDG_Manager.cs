@@ -241,20 +241,12 @@ namespace LogansNavigationExtension
 				#region CLOSEST POINT ON PERIMETER ---------------------------------------------------
 				_tdg_sampleClosestPtOnPerim.GenerateHItResultCollections();
 
-				if (_tdg_sampleClosestPtOnPerim.capturedPerimeterPositions == null || _tdg_sampleClosestPtOnPerim.capturedPerimeterPositions.Count <= 0 ||
-					_tdg_sampleClosestPtOnPerim.capturedTriCenters == null || _tdg_sampleClosestPtOnPerim.capturedTriCenters.Count <= 0)
+				if (!_tdg_sampleClosestPtOnPerim.WriteMeToJson())
 				{
-					Debug.LogError($"ERROR! Apparently something failed in {nameof(_tdg_sampleClosestPtOnPerim)}. returning early...");
+					Debug.LogError($"write to json didn't work on {nameof(_tdg_sampleClosestPtOnPerim)}. Returning early...");
 					return;
 				}
-				else
-				{
-					if (!_tdg_sampleClosestPtOnPerim.WriteMeToJson())
-					{
-						Debug.LogError($"write to json didn't work on {nameof(_tdg_sampleClosestPtOnPerim)}. Returning early...");
-						return;
-					}
-				}
+				
 				#endregion
 
 				#region POINTING AND GRABBING ----------------------------------------------------------
@@ -284,20 +276,12 @@ namespace LogansNavigationExtension
 				#region NAVMESH OPERATIONS -------------------------------------------------
 				_tdg_samplePosition.GenerateHItResultCollections();
 
-				if (_tdg_samplePosition.capturedHitPositions == null || _tdg_samplePosition.capturedHitPositions.Count <= 0 ||
-					_tdg_samplePosition.capturedTriCenters == null || _tdg_samplePosition.capturedTriCenters.Count <= 0)
+				if (!_tdg_samplePosition.WriteMeToJson())
 				{
-					Debug.LogError($"ERROR! Apparently something failed in {nameof(_tdg_samplePosition)}. returning early...");
+					Debug.LogError($"write to json didn't work on {nameof(_tdg_samplePosition)}. Returning early...");
 					return;
 				}
-				else
-				{
-					if (!_tdg_samplePosition.WriteMeToJson())
-					{
-						Debug.LogError($"write to json didn't work on {nameof(_tdg_samplePosition)}. Returning early...");
-						return;
-					}
-				}
+				
 
 				if ( !_tdg_raycasting.WriteMeToJson() )
 				{

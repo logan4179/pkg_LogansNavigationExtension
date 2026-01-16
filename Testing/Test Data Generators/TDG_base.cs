@@ -20,9 +20,9 @@ namespace LogansNavigationExtension
 		public int Index_GoToProblem = 0;
 		public TDG_DataCapture _dataCapture_problems;
 		public bool DrawProblemPoints = true;
-		[SerializeField, Tooltip("These are meant to be positions that I'm currently experimenting with")]
-        public List<Vector3> problemPositions;
-		public List<Vector3> problemEndPositions;
+		//[SerializeField, Tooltip("These are meant to be positions that I'm currently experimenting with")]
+        //public List<Vector3> problemPositions;
+		//public List<Vector3> problemEndPositions;
 
 		[Header("DATA")]
 		public TDG_DataCapture _dataCapture;
@@ -35,17 +35,15 @@ namespace LogansNavigationExtension
 		[TextArea(1, 20)]
 		public string DBG_Operation;
 
+		[TextArea(1, 20)]
+		public string DBG_Method;
+
 		//[Space(10f)]
 
 		#region HELPERS --------------------------------------------
-        public virtual void CaptureProblemPosition()
+		public virtual void CaptureProblemPosition()
         {
-            if (problemPositions == null)
-            {
-                problemPositions = new List<Vector3>();
-            }
 
-            problemPositions.Add( transform.position );
         }
 
 		[ContextMenu("z call GoToProblemPoint(base)")]
@@ -54,43 +52,17 @@ namespace LogansNavigationExtension
 			_dataCapture_problems.SendTo(Index_GoToProblem);
 		}
 
-		public LNX_Triangle CaptureTriFromSample(Vector3 samplePos)
-        {
-			LNX_ProjectionHit hit = LNX_ProjectionHit.None;
-
-			if (_navmesh.SamplePosition(samplePos, out hit, 2f, false))
-            {
-				return _navmesh.Triangles[hit.Index_Hit];
-            }
-
-			return null;
-		}
-
-		public LNX_Edge CaptureEdgeFromSample(Vector3 samplePos)
+		public bool SelectionIsOneOfTheFollowing( params GameObject[] gameObjects )
 		{
-			LNX_ProjectionHit hit = LNX_ProjectionHit.None;
-
-			if (_navmesh.SamplePosition(samplePos, out hit, 2f, false))
+			for( int i = 0; i < gameObjects.Length; i++ )
 			{
-				float bestDist = Vector3.Distance(samplePos, _navmesh.GetEdge(hit.Index_Hit, 0).MidPosition);
-				int bestEdge = 0;
-
-				if (Vector3.Distance(samplePos, _navmesh.GetEdge(hit.Index_Hit, 1).MidPosition) < bestDist)
+				if( Selection.activeGameObject == gameObjects[i] )
 				{
-					bestDist = Vector3.Distance(samplePos, _navmesh.GetEdge(hit.Index_Hit, 1).MidPosition);
-					bestEdge = 1;
+					return true;
 				}
-
-				if (Vector3.Distance(samplePos, _navmesh.GetEdge(hit.Index_Hit, 2).MidPosition) < bestDist)
-				{
-					bestDist = Vector3.Distance(samplePos, _navmesh.GetEdge(hit.Index_Hit, 2).MidPosition);
-					bestEdge = 2;
-				}
-
-				return _navmesh.Triangles[hit.Index_Hit].Edges[bestEdge];
 			}
 
-			return null;
+			return false;
 		}
 
 		#endregion
@@ -101,33 +73,6 @@ namespace LogansNavigationExtension
 			gstl.normal.textColor = Color.red;
 
 			Handles.Label( transform.position + (Vector3.up * 0.2f), testName, gstl );
-
-			if ( DrawProblemPoints && problemPositions != null && problemPositions.Count > 0 )
-            {
-                Gizmos.color = Color.yellow;
-                gstl = new GUIStyle();
-                gstl.normal.textColor = Color.yellow;
-                float lineHeight = 0.15f;
-
-                for ( int i = 0; i < problemPositions.Count; i++ )
-                {
-                    Gizmos.DrawLine(problemPositions[i], problemPositions[i] + (Vector3.up * lineHeight));
-                    Handles.Label(problemPositions[i] + (Vector3.up * lineHeight), $"prob{i}", gstl);
-
-                    if( problemEndPositions != null && problemEndPositions.Count > 0 && problemEndPositions.Count == problemPositions.Count )
-                    {
-						Gizmos.DrawLine( problemEndPositions[i], problemEndPositions[i] + (Vector3.up * lineHeight) );
-						Handles.Label( problemEndPositions[i] + (Vector3.up * lineHeight), $"prob{i}", gstl );
-
-						/* commented out bc of new TDG_DataCapture mechanism
-						if ( i == index_focusProblem )
-						{
-							Gizmos.DrawLine( problemPositions[i], problemEndPositions[i] );
-						}
-						*/
-					}
-                }
-            }
         }
 
 		public void DrawTriGizmo(LNX_Triangle tri, Color col, float offsetHeight = 0f)
@@ -257,33 +202,7 @@ namespace LogansNavigationExtension
         [ContextMenu("z call SayProblemPositions()")]
         public void SayProblemPositions()
         {
-            string s = "";
-            if (problemPositions == null)
-            {
-                Debug.LogError("Problem positions collection was null...");
-                return;
-            }
 
-            s = "logging problem positions...\n";
-            for ( int i = 0; i < problemPositions.Count; i++ )
-            {
-                s += LNX_UnitTestUtilities.LongVectorString(problemPositions[i]) + "\n";
-            }
-
-            if ( problemEndPositions == null || problemEndPositions.Count <= 0 )
-            {
-                Debug.LogWarning($"warning, '{nameof(problemEndPositions)}' either null or no values. Is this intentional?");
-            }
-            else
-            {
-				s += "logging problem END positions...";
-				for (int i = 0; i < problemEndPositions.Count; i++)
-				{
-					s += LNX_UnitTestUtilities.LongVectorString(problemEndPositions[i]) + "\n";
-				}
-			}
-
-            Debug.Log(s);
 		}
 	}
 }

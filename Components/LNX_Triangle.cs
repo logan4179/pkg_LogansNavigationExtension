@@ -158,7 +158,7 @@ namespace LogansNavigationExtension
 			dirtyFlag_repositionedVert = false;
 
 			AreaIndex = areaIndx;
-			v_SurfaceNormal_cached = navMesh.V_SurfaceOrientation;
+			v_SurfaceNormal_cached = navMesh.GetSurfaceNormalVector();
 
 			V_Center = atomicTris[parallelIndex].Center;
 
@@ -174,25 +174,6 @@ namespace LogansNavigationExtension
 
 			CalculateDerivedInfo( navMesh );
 			SampleNormal( navMesh ); 
-
-			/*
-			DBG_Class += $"\nEnd of ctor(). Report:\n" +
-				$"{nameof(V_Center)}: '{V_Center}'\n" +
-				$"{nameof(V_FlattenedCenter)}: '{V_FlattenedCenter}'\n" +
-				$"nrml (smpld): '{v_sampledNormal}', prjctd: '{v_SurfaceNormal_cached}'\n" +
-				$"derivdNrml: '{V_PlaneFaceNormal}'\n" +
-				$"edge lengths: '{Edges[0].EdgeLength}', '{Edges[1].EdgeLength}', '{Edges[2].EdgeLength}'\n" +
-				$"Prmtr: '{Perimeter}', Area: '{AreaIndex}'\n\n";
-			*/
-
-			/*
-			DbgCalculateTriInfo = $"{nameof(V_Center)}: '{V_Center}'\n" +
-				$"{nameof(V_FlattenedCenter)}: '{V_FlattenedCenter}'\n" +
-				$"nrml (smpld): '{v_sampledNormal}', prjctd: '{v_SurfaceNormal_cached}'\n" +
-				$"derivdNrml: '{V_PlaneFaceNormal}'\n" +
-				$"edge lengths: '{Edges[0].EdgeLength}', '{Edges[1].EdgeLength}', '{Edges[2].EdgeLength}'\n" +
-				$"Prmtr: '{Perimeter}', Area: '{AreaIndex}'\n";
-			*/
 		}
 
 		/// <summary>
@@ -238,29 +219,17 @@ namespace LogansNavigationExtension
 				Edges[1].CreateRelationships(nm);
 				Edges[2].CreateRelationships(nm);
 			}
-
-#if !DOING_WORK
-			if ( Application.isPlaying ) //If this is a live package, this method should stop at this point 
-			{
-				//EXPLANATION: If !DOING_WORK, then this is a live package. 
-				// If we're live, and unity is in play mode, it should stop here.
-				return;
-			}
-#endif
-			// Below this, include anything that only needs to refresh when in play mode...
-
-
 		}
 
 		public string DBG_FullyVisible;
 		public void CalculateCompletelyVisibleTris(LNX_NavMesh nm, LNX_Edge[] terminalEdges )
 		{
-			DBG_FullyVisible = $"{this.ToString()}.{nameof(CalculateCompletelyVisibleTris)}() at {DateTime.Now}----------\n";
-			Debug.Log(DBG_FullyVisible);
+			//DBG_FullyVisible = $"{this.ToString()}.{nameof(CalculateCompletelyVisibleTris)}() at {DateTime.Now}----------\n";
+			//Debug.Log(DBG_FullyVisible);
 			
 			List<int> temp_fullyVisTriIndices = new List<int>();
 
-			DBG_FullyVisible += $"First, inspecting composite edges for visibility based on angle...\n";
+			//DBG_FullyVisible += $"First, inspecting composite edges for visibility based on angle...\n";
 			#region ADD TRIS WITH SHARED COMPOSITE EDGES...
 			// Start with composing edges....
 			for (int i = 0; i < 3; i++) //Add any shared edge triangles that have the correct angle...
@@ -298,59 +267,43 @@ namespace LogansNavigationExtension
 			}
 			#endregion
 
-			DBG_FullyVisible += $"\nNow checking the rest based on terminal edge obstruction. There are '{terminalEdges.Length}' terminal edges...\n";
+			//DBG_FullyVisible += $"\nNow checking the rest based on terminal edge obstruction. There are '{terminalEdges.Length}' terminal edges...\n";
 
-			Debug.Log($"Now checking the rest based on terminal edge obstruction. There are '{terminalEdges.Length}' terminal edges...");
+			//Debug.Log($"Now checking the rest based on terminal edge obstruction. There are '{terminalEdges.Length}' terminal edges...");
 
-			int triCheck = 53; // 39;
 			LNX_ComponentCoordinate obstructEdgeCheck = new LNX_ComponentCoordinate(53, 0);
 
 			for( int i = 0; i < nm.Triangles.Length; i++ )
 			{
-				Debug.Log($"(for)tri '{i}'...\n");
+				//Debug.Log($"(for)tri '{i}'...\n");
 
-				if (i == triCheck)
+				#region SHORT-CIRCUITING ======================================================
+				if ( i == index_inCollection || temp_fullyVisTriIndices.Contains(i) )
 				{
-					Debug.Log($"hit tri of interest '{i}'-------------!!!!!!!!!!!!!!!!!!!!!!!");
-					DBG_FullyVisible += $"hit tri of interest '{i}'------------!!!!!!!!!!!!!!!!!!!!!!!\n";
+					//Debug.Log("Bypassing obstruction check because of index...");
+					continue;
 				}
 
-				if( i == index_inCollection || temp_fullyVisTriIndices.Contains(i) )
+				if 
+				( 
+					nm.Triangles[i].KnownFullyVisibleTriangleIndices != null && 
+					nm.Triangles[i].KnownFullyVisibleTriangleIndices.Length > 0
+				)
 				{
-					Debug.Log("Bypassing obstruction check because of index...");
-
-					if (i == triCheck)
+					//Debug.LogWarning("shortcircuit");
+					if( nm.Triangles[i].HasIndexInKnownFullyVisibleList(index_inCollection) )
 					{
-						DBG_FullyVisible += $"Bypassing obstruction check because of index...\n";
+						temp_fullyVisTriIndices.Add(i);
 					}
 					continue;
-				}				
+				}
+				#endregion --------------------------------------------------------
 
 				bool foundObstruction = false;
-
-				if( i == 48 )
-				{
-					Debug.Log($"edge0 null: '{nm.Triangles[i].Edges[0] == null}' " +
-						$"edge1 null: '{nm.Triangles[i].Edges[1] == null}' " +
-						$"edge2 null: '{nm.Triangles[i].Edges[2] == null}'");
-				}
-
 				
 				for ( int i_trmnlEdgs = 0; i_trmnlEdgs < terminalEdges.Length; i_trmnlEdgs++ )
 				{
-					Debug.Log($"Checking if terminal edge: '{terminalEdges[i_trmnlEdgs].MyCoordinate}' obstructs...");
-
-					if (i == triCheck)
-					{
-						//DBG_FullyVisible += $"Checking if terminal edge: '{terminalEdges[i_trmnlEdgs].MyCoordinate}' obstructs...\n";
-
-						if (terminalEdges[i_trmnlEdgs].MyCoordinate == obstructEdgeCheck)
-						{
-							Debug.Log( $"iterated to Terminal edge of interest ('{obstructEdgeCheck}')--------------------!!!!!" );
-							DBG_FullyVisible += $"iterated to Terminal edge of interest ('{obstructEdgeCheck}')-----------------!!!!!\n" +
-								$"Checking if terminal edge obstructs...\n";
-						}
-					}
+					//Debug.Log($"Checking if terminal edge: '{terminalEdges[i_trmnlEdgs].MyCoordinate}' obstructs...");
 
 					string DBG_Encompass = "";
 					if
@@ -358,43 +311,64 @@ namespace LogansNavigationExtension
 						LNX_Utils.DoesEdgeObstructTriPath(terminalEdges[i_trmnlEdgs], this, nm.Triangles[i], ref DBG_Encompass)
 					)
 					{
-						Debug.LogWarning($"Found obstruction by edge: '{terminalEdges[i_trmnlEdgs]}'!");
+						//Debug.Log($"Found obstruction by edge: '{terminalEdges[i_trmnlEdgs]}'!");
 
-						if (i == triCheck)
-						{
-
-						}
 						foundObstruction = true;
 						break;
-					}
-					else
-					{
-						if (i == triCheck)
-						{
-
-						}
 					}
 				}
 
 				if( !foundObstruction )
 				{
-					Debug.Log($"Adding tri: '{i}'...");
+					//Debug.Log($"Adding tri: '{i}'...");
 
-					if (i == triCheck)
-					{
-						//Debug.Log($"Did NOT find obstruction. Adding tri: '{i}'...");
-						DBG_FullyVisible += $"Did NOT find obstruction. Adding tri: '{i}' to list of knownfullyvisible...";
-					}
 					temp_fullyVisTriIndices.Add(i);
 
-					//TODO: add any triangles that now have 2 known fully-visible edges
+					#region ADD ANY THAT NOW HAVE 2 VISIBLE EDGES==============================
+					/*
+					for ( int i_tris = 0; i_tris < nm.Triangles.Length; i_tris++ ) //curently this doesn't seem like it works correctly
+					{
+						if( temp_fullyVisTriIndices.Contains(i_tris) )
+						{
+							continue;
+						}
+
+						int foundSharedEdgeCount = 0;
+
+						for (int i_tmp = 0; i_tmp < temp_fullyVisTriIndices.Count; i_tmp++)
+						{
+							if (nm.Triangles[i_tris].HasSharedEdgeWith(i) )
+							{
+								foundSharedEdgeCount++;
+								if( foundSharedEdgeCount > 1 )
+								{
+									DBG_FullyVisible += $"after adding fully visibile tri, found that tri{i_tris} now shares 2 edges with known fully visible...\n";
+									Debug.LogWarning($"added known visible via 2 shared edges...");
+									temp_fullyVisTriIndices.Add(i_tris);
+									break;
+								}
+							}
+						}
+
+						if( foundSharedEdgeCount > 1 )
+						{
+							break;
+						}
+					}
+					*/
+					#endregion
 				}
-				
+
 			}
 
 			DBG_FullyVisible += $"refresh end. Now have '{temp_fullyVisTriIndices.Count}' known fully visible tris...";
 			indices_knownFullyVisibleTriangles = temp_fullyVisTriIndices.ToArray();
 			//Debug.Log(DBG_FullyVisible);
+		}
+
+		public void ClearKnownVisible()
+		{
+			indices_knownFullyVisibleTriangles = new int[0];
 		}
 
 		/// <summary>
@@ -501,54 +475,20 @@ namespace LogansNavigationExtension
 
 			//todo: I can short-circuit here depending on distance, and it will make this and everything that relies on it way more performant...
 
+			pos = LNX_Utils.FlatVector(pos, v_SurfaceNormal_cached);
 
-			if ( !Verts[0].IsInCenterSweep(pos, v_SurfaceNormal_cached) )
+			if( !LNX_Utils.AmInArea(pos, Verts[0].V_flattenedPosition, Verts[1].V_flattenedPosition, Verts[2].V_flattenedPosition, v_SurfaceNormal_cached, true) )
 			{
-				//DBG_IsInShapeProject += $"vrt0: \n" +
-					//$"{Verts[0].DBG_IsInCenterSweep}\n";
-
-				//DBG_IsInShapeProject += $"vert0 center sweep failed. Returning false...";
-
 				projectedPos = Vector3.zero;
 				return false;
 			}
-
-			//DBG_IsInShapeProject += $"vrt0: \n" +
-				//$"{Verts[0].DBG_IsInCenterSweep}\n";
-
-			if ( !Verts[1].IsInCenterSweep(pos, v_SurfaceNormal_cached) ) //ERRORTRACE 9
-			{
-				//DBG_IsInShapeProject += $"vrt1: \n" +
-					//$"{Verts[1].DBG_IsInCenterSweep}\n";
-
-				//DBG_IsInShapeProject += $"vert1 center sweep failed. Returning false...";
-
-				projectedPos = Vector3.zero;
-				return false;
-			}
-			//DBG_IsInShapeProject += $"vrt1: \n" +
-				//$"{Verts[1].DBG_IsInCenterSweep}\n";
-
-			if ( !Verts[2].IsInCenterSweep(pos, v_SurfaceNormal_cached) )
-			{
-				//DBG_IsInShapeProject += $"vrt2: \n" +
-					//$"{Verts[2].DBG_IsInCenterSweep}\n";
-
-				//DBG_IsInShapeProject += $"vert2 center sweep failed. Returning false...";
-
-				projectedPos = Vector3.zero;
-				return false;
-			}
-			//DBG_IsInShapeProject += $"vrt2: \n" +
-				//$"{Verts[2].DBG_IsInCenterSweep}\n";
 
 			#region DETERMINE THE PROJECTED POSITION--------------------------------------
-			Vector3 flatPos = LNX_Utils.FlatVector(pos, v_SurfaceNormal_cached);
 			//DBG_IsInShapeProject += $"flatpos: '{flatPos}'\n";
 
 			if (Slope == 0f)
 			{
-				projectedPos = flatPos;
+				projectedPos = pos;
 			}
 			else
 			{
@@ -575,13 +515,13 @@ namespace LogansNavigationExtension
 					Vector3.Project(pos - Edges[1].StartPosition, Edges[1].V_StartToEnd);//this gets a point on the edge closest to the pos
 				DBG_IsInShapeProject += $"edjprjct: '{edgePrjct.y}'\n";
 				//float lenA = Vector3.Distance(edgePrjct, flatPos); //orig
-				float lenA = Vector3.Distance( LNX_Utils.FlatVector(edgePrjct, v_SurfaceNormal_cached), flatPos );
+				float lenA = Vector3.Distance( LNX_Utils.FlatVector(edgePrjct, v_SurfaceNormal_cached), pos );
 
 				float angA = 90f * Mathf.Deg2Rad;
 				float angC = Slope * Mathf.Deg2Rad;
 				float lenC = (Mathf.Sin(angC) * lenA) / MathF.Sin(angA);
 				//projectedPos = flatPos + (v_projectionNormal * lenC);
-				projectedPos = LNX_Utils.FlooredVector(flatPos, edgePrjct, v_SurfaceNormal_cached) + (v_SurfaceNormal_cached * lenC);
+				projectedPos = LNX_Utils.FlooredVector(pos, edgePrjct, v_SurfaceNormal_cached) + (v_SurfaceNormal_cached * lenC);
 			}
 			#endregion
 
@@ -641,10 +581,9 @@ namespace LogansNavigationExtension
 			return false;
 		}
 
-		[NonSerialized] public string dbg_prjctThrhToPerim;
-		public LNX_ProjectionHit ProjectThroughToPerimeter( Vector3 innerPos, Vector3 outerPos, int indx_edgeExclude = -1 )
+		public LNX_NavmeshHit ProjectThroughToPerimeter( Vector3 innerPos, Vector3 outerPos, ref string dbgRprt, int indx_edgeExclude = -1 )
 		{
-			dbg_prjctThrhToPerim = $"ProjectThroughToPerimeter( {innerPos}, {outerPos}, {indx_edgeExclude} )\n";
+			dbgRprt = $"ProjectThroughToPerimeter( {innerPos}, {outerPos}, {indx_edgeExclude} )\n";
 			
 			Vector3 projectedEdgePosition = Vector3.zero;
 
@@ -652,8 +591,8 @@ namespace LogansNavigationExtension
 
 			if( ftndInrPos == LNX_Utils.FlatVector(outerPos, v_SurfaceNormal_cached) ) //short-circuit
 			{
-				dbg_prjctThrhToPerim += $"Found flattened positions are the same. returning early...";
-				return LNX_ProjectionHit.None;
+				dbgRprt += $"Found flattened positions are the same. returning early...";
+				return LNX_NavmeshHit.None;
 			}
 
 			//Note: I call IsPositionOnGivenEdge() to count an edge out if the start position is on it.
@@ -664,8 +603,8 @@ namespace LogansNavigationExtension
 				Edges[0].DoesProjectionIntersectEdge(innerPos, outerPos, v_SurfaceNormal_cached, out projectedEdgePosition) 
 			)
 			{
-				dbg_prjctThrhToPerim += $"method succeeded on edge 0. Here are the reports...\n";
-				return new LNX_ProjectionHit( 0, projectedEdgePosition );
+				dbgRprt += $"method succeeded on edge 0. Here are the reports...\n";
+				return new LNX_NavmeshHit( projectedEdgePosition, v_SurfaceNormal_cached, innerPos, index_inCollection, 0 );
 			}
 			else if
 			(
@@ -674,8 +613,8 @@ namespace LogansNavigationExtension
 				Edges[1].DoesProjectionIntersectEdge(innerPos,outerPos, v_SurfaceNormal_cached, out projectedEdgePosition) 
 			)
 			{
-				dbg_prjctThrhToPerim += $"method succeeded on edge 1. Here are the reports...\n";
-				return new LNX_ProjectionHit( 1, projectedEdgePosition );
+				dbgRprt += $"method succeeded on edge 1. Here are the reports...\n";
+				return new LNX_NavmeshHit( projectedEdgePosition, v_SurfaceNormal_cached, innerPos, index_inCollection, 1 );
 			}
 			else if
 			(
@@ -684,12 +623,12 @@ namespace LogansNavigationExtension
 				Edges[2].DoesProjectionIntersectEdge(innerPos, outerPos, v_SurfaceNormal_cached, out projectedEdgePosition) 
 			)
 			{
-				dbg_prjctThrhToPerim += $"method succeeded on edge 2. Here are the reports...\n";
-				return new LNX_ProjectionHit( 2, projectedEdgePosition );
+				dbgRprt += $"method succeeded on edge 2. Here are the reports...\n";
+				return new LNX_NavmeshHit( projectedEdgePosition, v_SurfaceNormal_cached, innerPos, index_inCollection, 2 );
 			}
 			else
 			{
-				dbg_prjctThrhToPerim += $"NONE succeeded.\n" +
+				dbgRprt += $"NONE succeeded.\n" +
 					//$"onEdge0: '{IsPositionOnGivenEdge(ftndInrPos, 0)}', onEdge1: '{IsPositionOnGivenEdge(ftndInrPos, 1)}', onEdge2: '{IsPositionOnGivenEdge(ftndInrPos, 2)}'\n" +
 					$"edge0\n" +
 					$" check1) '{Edges[0].DoesPositionLieOnEdge(ftndInrPos, v_SurfaceNormal_cached)}', " +
@@ -707,7 +646,7 @@ namespace LogansNavigationExtension
 					$"\ncheck2 (intersect report)\n{Edges[2].dbg_doesProjectionIntersectEdge}\n" +
 
 					$" returning null...";
-				return LNX_ProjectionHit.None;
+				return LNX_NavmeshHit.None;
 			}
 		}
 		#endregion
@@ -1071,43 +1010,44 @@ namespace LogansNavigationExtension
 		/// </summary>
 		/// <param name="indx"></param>
 		/// <returns></returns>
-		public bool AmAdjacentToTri(int indx) //todo: unit test
+		public bool AmAdjacentToTri( LNX_Triangle tri ) //todo: unit test
 		{
-			if( indx == Index_inCollection )
+			if( tri.index_inCollection == Index_inCollection )
 			{
 				Debug.LogWarning($"LNX WARNING! {nameof(LNX_Triangle)}.{nameof(AmAdjacentToTri)} was passed it's own index! Was this intentional?");
 				return true;
 			}
 
-			if( GetNumberOfSharedVerts(indx) > 0 )
+			if( GetNumberOfSharedVerts(tri) > 0 )
 			{
 				return true;
 			}
 
 			return false;
 		}
-		public bool AmAdjacentToTri(LNX_Triangle tri) //todo: unit test
+
+		public bool AmAdjacentToVert( LNX_Vertex vert )
 		{
-			return AmAdjacentToTri(tri.index_inCollection);
+			return HasVertAtPosition( vert.V_Position );
 		}
 
-		public int GetNumberOfSharedVerts(int triIndex)
+		public int GetNumberOfSharedVerts(LNX_Triangle tri )
 		{
-			if (triIndex == index_inCollection)
+			if (tri.index_inCollection == index_inCollection)
 			{
-				return -1;
+				return 3;
 			}
 
 			int count = 0;
-			if( Verts[0].SharesVertSpaceWithTri(triIndex) )
+			if( Verts[0].SharesVertSpaceWithTri(tri) )
 			{
 				count++;
 			}
-			if (Verts[1].SharesVertSpaceWithTri(triIndex))
+			if ( Verts[1].SharesVertSpaceWithTri(tri) )
 			{
 				count++;
 			}
-			if (Verts[2].SharesVertSpaceWithTri(triIndex))
+			if ( Verts[2].SharesVertSpaceWithTri(tri) )
 			{
 				count++;
 			}
@@ -1127,9 +1067,8 @@ namespace LogansNavigationExtension
 
 			return false;
 		}
-		#endregion
-
-		public bool HasIndexInKnownVisibleList( int triIndex )
+		
+		public bool HasIndexInKnownFullyVisibleList( int triIndex )
 		{
 			if( triIndex == index_inCollection )
 			{
@@ -1150,16 +1089,20 @@ namespace LogansNavigationExtension
 			return false;
 		}
 
-		public void Ping( LNX_Triangle[] tris )
+		#endregion
+
+		public void LoadWithSerializedData(LNX_SerializedTriData data )
 		{
-			Verts[0].Ping( tris );
-			Verts[1].Ping( tris );
-			Verts[2].Ping( tris );
+			indices_knownFullyVisibleTriangles = data.KnownFullyVisibleTriangleIndices;
 		}
 
 		#region HELPERS --------------------------------------------------
 		public string GetCurrentInfoString(LNX_NavMesh nm)
 		{
+			if( indices_knownFullyVisibleTriangles == null )
+			{
+
+			}
 			string completelyVisibleTrisSTring = $"count: '{indices_knownFullyVisibleTriangles.Length}'\n";
 			for( int i = 0; i < indices_knownFullyVisibleTriangles.Length; i++ )
 			{

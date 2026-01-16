@@ -155,7 +155,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				LNX_Edge edge = tri.GetEdge( _tdg_doesPositionLieOnEdge.CapturedEdgeCenters[i] );
 
 				bool rslt = edge.DoesPositionLieOnEdge(
-					_tdg_doesPositionLieOnEdge.CapturedPositions[i], _serializedLNXNavmesh.V_SurfaceOrientation
+					_tdg_doesPositionLieOnEdge.CapturedPositions[i], _serializedLNXNavmesh.GetSurfaceNormalVector()
 				);
 
 				Assert.AreEqual( _tdg_doesPositionLieOnEdge.CapturedResults[i], rslt );
@@ -183,7 +183,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				bool rslt = edge.DoesProjectionIntersectEdge(
 					_tdg_doesProjectionIntersectEdge.CapturedStartPositions[i],
 					_tdg_doesProjectionIntersectEdge.CapturedEndPositions[i],
-					_serializedLNXNavmesh.V_SurfaceOrientation,
+					_serializedLNXNavmesh.GetSurfaceNormalVector(),
 					out prjctPos
 				);
 

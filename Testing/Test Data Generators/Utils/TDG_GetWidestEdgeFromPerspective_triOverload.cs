@@ -22,7 +22,6 @@ namespace LogansNavigationExtension
 		public int Index_CurrentEdge = 0;
 
 		[Header("DEBUG")]
-		[TextArea(1,20)] public string DBG_Method;
 		public Color Color_perspectiveTri;
 		public Color Color_otherTri;
 

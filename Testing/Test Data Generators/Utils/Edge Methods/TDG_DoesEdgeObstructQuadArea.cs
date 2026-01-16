@@ -17,8 +17,7 @@ namespace LogansNavigationExtension
 
 		public bool CurrentResult = false;
 
-		[Header("DEBUG")]
-		public string DBG_Method;
+		//[Header("DEBUG")]
 
 		#region HELPERS ========================================
 

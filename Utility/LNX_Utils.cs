@@ -1,10 +1,7 @@
-using JetBrains.Annotations;
-using System;
+using LogansNavigationExtension;
 using System.Collections.Generic;
-using System.Data.Common;
 using UnityEditor;
 using UnityEngine;
-using static UnityEditor.PlayerSettings;
 
 
 namespace LogansNavigationExtension
@@ -143,6 +140,86 @@ namespace LogansNavigationExtension
 
 			return 0;
 		}
+
+		#region MATH OPERATIONS --------------------------------------
+		/// <summary>
+		/// Solves for lenA
+		/// </summary>
+		/// <param name="angA"></param>
+		/// <param name="angB"></param>
+		/// <param name="lenB"></param>
+		/// <returns></returns>
+		public static float CalculateTriangleEdgeLength( float angA, float angB, float lenB ) //todo: use the following CalculateTriangleSideLength() instead and DWS
+		{
+			return Mathf.Sin(angA * Mathf.Deg2Rad) * lenB / Mathf.Sin(angB * Mathf.Deg2Rad);
+		}
+
+		/// <summary>
+		/// Solves triangle side length. Which side is solved will depend on which parameters were supplied.
+		/// Input -1f For the paramaters you don't know.
+		/// </summary>
+		/// <param name="lenA"></param>
+		/// <param name="angA"></param>
+		/// <param name="lenB"></param>
+		/// <param name="angB"></param>
+		/// <param name="lenC"></param>
+		/// <param name="angC"></param>
+		/// <returns></returns>
+		public static float CalculateTriangleSideLength( float lenA, float angA, float lenB, float angB, float lenC, float angC )
+		{
+			if( lenA < 0f && lenB < 0f && lenC < 0f )
+			{
+				Debug.LogWarning($"You supplised this method with no valid lengths. You MUST have at least one known length to solve a triangle.");
+				return -1f; //You MUST know a length...
+			}
+
+			if( lenA == -1f && angA > 0) //solve for lenA...
+			{
+				if( lenB > 0 && angB > 0 )
+				{
+					return Mathf.Sin(angA * Mathf.Deg2Rad) * lenB / Mathf.Sin(angB * Mathf.Deg2Rad);
+				}
+				if ( lenC > 0 && angC > 0)
+				{
+					return Mathf.Sin(angA * Mathf.Deg2Rad) * lenC / Mathf.Sin(angC * Mathf.Deg2Rad);
+				}
+			}
+			else if ( lenB == -1f && angB > 0 ) //solve for lenB...
+			{
+				if (lenA > 0 && angA > 0)
+				{
+					return Mathf.Sin(angB * Mathf.Deg2Rad) * lenA / Mathf.Sin(angA * Mathf.Deg2Rad);
+				}
+				if (lenC > 0 && angC > 0)
+				{
+					return Mathf.Sin(angB * Mathf.Deg2Rad) * lenC / Mathf.Sin(angC * Mathf.Deg2Rad);
+				}
+			}
+			else if (lenC == -1f && angC > 0) //solve for lenC...
+			{
+				if (lenA > 0 && angA > 0)
+				{
+					return Mathf.Sin(angC * Mathf.Deg2Rad) * lenA / Mathf.Sin(angA * Mathf.Deg2Rad);
+				}
+				if (lenB > 0 && angB > 0)
+				{
+					return Mathf.Sin(angC * Mathf.Deg2Rad) * lenB / Mathf.Sin(angB * Mathf.Deg2Rad);
+				}
+			}
+
+			return -1f;
+		}
+
+		public static float SignedAngleToFullDegrees( float angleAmount )
+		{
+			if( angleAmount < 0f )
+			{
+				return 180f + (180f - Mathf.Abs(angleAmount));
+			}
+
+			return angleAmount;
+		}
+		#endregion
 
 		#region VECTOR OPERATIONS ==========================================================================
 		public static Vector3 CreateCornerPathPoint(LNX_PathPoint startPt, LNX_PathPoint endPt)
@@ -392,85 +469,6 @@ namespace LogansNavigationExtension
 		}
 		#endregion
 
-		#region MATH OPERATIONS --------------------------------------
-		/// <summary>
-		/// Solves for lenA
-		/// </summary>
-		/// <param name="angA"></param>
-		/// <param name="angB"></param>
-		/// <param name="lenB"></param>
-		/// <returns></returns>
-		public static float CalculateTriangleEdgeLength( float angA, float angB, float lenB ) //todo: use the following CalculateTriangleSideLength() instead and DWS
-		{
-			return Mathf.Sin(angA * Mathf.Deg2Rad) * lenB / Mathf.Sin(angB * Mathf.Deg2Rad);
-		}
-
-		/// <summary>
-		/// Solves triangle side length. Which side is solved will depend on which parameters were supplied.
-		/// Input -1f For the paramaters you don't know.
-		/// </summary>
-		/// <param name="lenA"></param>
-		/// <param name="angA"></param>
-		/// <param name="lenB"></param>
-		/// <param name="angB"></param>
-		/// <param name="lenC"></param>
-		/// <param name="angC"></param>
-		/// <returns></returns>
-		public static float CalculateTriangleSideLength( float lenA, float angA, float lenB, float angB, float lenC, float angC )
-		{
-			if( lenA < 0f && lenB < 0f && lenC < 0f )
-			{
-				Debug.LogWarning($"You supplised this method with no valid lengths. You MUST have at least one known length to solve a triangle.");
-				return -1f; //You MUST know a length...
-			}
-
-			if( lenA == -1f && angA > 0) //solve for lenA...
-			{
-				if( lenB > 0 && angB > 0 )
-				{
-					return Mathf.Sin(angA * Mathf.Deg2Rad) * lenB / Mathf.Sin(angB * Mathf.Deg2Rad);
-				}
-				if ( lenC > 0 && angC > 0)
-				{
-					return Mathf.Sin(angA * Mathf.Deg2Rad) * lenC / Mathf.Sin(angC * Mathf.Deg2Rad);
-				}
-			}
-			else if ( lenB == -1f && angB > 0 ) //solve for lenB...
-			{
-				if (lenA > 0 && angA > 0)
-				{
-					return Mathf.Sin(angB * Mathf.Deg2Rad) * lenA / Mathf.Sin(angA * Mathf.Deg2Rad);
-				}
-				if (lenC > 0 && angC > 0)
-				{
-					return Mathf.Sin(angB * Mathf.Deg2Rad) * lenC / Mathf.Sin(angC * Mathf.Deg2Rad);
-				}
-			}
-			else if (lenC == -1f && angC > 0) //solve for lenC...
-			{
-				if (lenA > 0 && angA > 0)
-				{
-					return Mathf.Sin(angC * Mathf.Deg2Rad) * lenA / Mathf.Sin(angA * Mathf.Deg2Rad);
-				}
-				if (lenB > 0 && angB > 0)
-				{
-					return Mathf.Sin(angC * Mathf.Deg2Rad) * lenB / Mathf.Sin(angB * Mathf.Deg2Rad);
-				}
-			}
-
-			return -1f;
-		}
-
-		public static float SignedAngleToFullDegrees( float angleAmount )
-		{
-			if( angleAmount < 0f )
-			{
-				return 180f + (180f - Mathf.Abs(angleAmount));
-			}
-
-			return angleAmount;
-		}
-		#endregion
 
 		/// <summary>
 		/// Determines if a supplied position is in an area defined by 4 points. NOTE: The 4 points MUST run "clockwise" with respect to each other.
@@ -674,266 +672,14 @@ namespace LogansNavigationExtension
 				AmInVectorCone(v_ptB_to_pos, v_b_toA, v_b_to_c, nrml, ref s2, includeOnPerim)
 			)
 			{
-				Debug.Log(s1);
-				Debug.Log(s2);
+				//Debug.Log(s1);
+				//Debug.Log(s2);
 
 				return true;
 			}
 
 			return false;
 		}
-
-		public static bool DoesEdgeObstructArea( LNX_Edge edge, Vector3 crnrA, Vector3 crnrB, Vector3 crnrC, bool includeOnBorder, Vector3 nrml, ref string dbgReport)
-		{
-			dbgReport = $"DoesEdgeObstructArea({edge}, includeOnBorder: '{includeOnBorder}')\n";
-			/*
-			dbgReport = $"condition preview...\n" +
-				$"1: '{AmInArea(edge.MidPosition_flat, crnrA, crnrB, crnrC, nrml, includeOnBorder)}'\n" +
-				$"2: '{AmInArea(edge.StartPosition_flat, crnrA, crnrB, crnrC, nrml, includeOnBorder)}'\n" +
-				$"3: '{AmInArea(edge.EndPosition_flat, crnrA, crnrB, crnrC, nrml, includeOnBorder)}'\n" +
-				$"";*/
-
-			if
-			(
-				AmInArea(edge.MidPosition_flat, crnrA, crnrB, crnrC, nrml, includeOnBorder) ||
-				AmInArea(edge.StartPosition_flat, crnrA, crnrB, crnrC, nrml, includeOnBorder) ||
-				AmInArea(edge.EndPosition_flat, crnrA, crnrB, crnrC, nrml, includeOnBorder)
-			)
-			{
-				dbgReport += $"one of the edge positions was in tri area. Returning true...";
-				return true;
-			}
-
-			dbgReport += $"decided none of the obstruct edge points are in tri area\n" +
-				$"Now checking if obstruct edge encomapses entire bridge path by checking if the \n" +
-				$"supplied edge crosses any of the tri edges...\n";
-			//Todo: note: something's wrong with this check...
-			#region Now check if obstructEdge encompasses entire bridge path===================================			
-			//Vector3 mid2mid = Vector3.Normalize(FlatVector((crnrA + crnrB) / 2f) - obstructEdge.MidPosition_flat);
-
-			if (
-				VectorsCrossEachOther(edge.StartPosition_flat, edge.EndPosition_flat, crnrA, crnrB, nrml, includeOnBorder) ||
-				VectorsCrossEachOther(edge.StartPosition_flat, edge.EndPosition_flat, crnrB, crnrC, nrml, includeOnBorder) ||
-				VectorsCrossEachOther(edge.StartPosition_flat, edge.EndPosition_flat, crnrA, crnrC, nrml, includeOnBorder)
-			)
-			{
-				dbgReport += $"found that at least 1 of the following 3 conditions were true...\n" +
-					$"{VectorsCrossEachOther(edge.StartPosition_flat, edge.EndPosition_flat, crnrA, crnrB, nrml, includeOnBorder)}, " +
-					$"{VectorsCrossEachOther(edge.StartPosition_flat, edge.EndPosition_flat, crnrB, crnrC, nrml, includeOnBorder)}, " +
-					$"{VectorsCrossEachOther(edge.StartPosition_flat, edge.EndPosition_flat, crnrA, crnrC, nrml, includeOnBorder)}\n" +
-					$"returning true...";
-
-				//Debug.DrawLine(edge.StartPosition_flat, )
-				return true;
-			}
-			#endregion
-
-			dbgReport += $"apparently none of the tri edges crossed the supplied edge. Returning false...";
-			return false;
-		}
-
-		public static bool DoesEdgeObstructArea( LNX_Edge edge, LNX_Vertex vert, LNX_Triangle destinationTri, bool includeOnBorder, Vector3 nrml, ref string dbgRprt )
-		{
-			dbgRprt = $"DoesEdgeObstructArea(edge: '{edge}', includeOnBorder: '{includeOnBorder}')\n";
-
-			string dbg1 = "";
-			string dbg2 = "";
-			string dbg3 = "";
-
-			dbgRprt += $"\nFirst checking if edge obstructs any of the perspectiveVert's triangular areas to the destinationTri's 3 edges...\n";
-			if
-			( 
-				DoesEdgeObstructArea(
-					edge, vert.V_flattenedPosition, destinationTri.Verts[0].V_flattenedPosition, destinationTri.Verts[1].V_flattenedPosition, includeOnBorder, nrml, ref dbg1
-				) ||
-				DoesEdgeObstructArea(
-					edge, vert.V_flattenedPosition, destinationTri.Verts[1].V_flattenedPosition, destinationTri.Verts[2].V_flattenedPosition, includeOnBorder, nrml, ref dbg2
-				) ||
-				DoesEdgeObstructArea(
-					edge, vert.V_flattenedPosition, destinationTri.Verts[2].V_flattenedPosition, destinationTri.Verts[0].V_flattenedPosition, includeOnBorder, nrml, ref dbg3
-				)
-			)
-			{
-				dbgRprt += $"Checking persp vert to first dest edge...\n" +
-					$"rprt1:\n{dbg1}\n" +
-					$"Checking persp vert to second dest edge...\n" +
-					$"rprt2:\n{dbg2}\n" +
-					$"Checking persp vert to third dest edge...\n" +
-					$"rprt3:\n{dbg3}";
-				return true;
-			}
-			dbgRprt += $"Checking persp vert to first dest edge...\n" +
-				$"rprt1:\n{dbg1}\n" +
-				$"Checking persp vert to second dest edge...\n" +
-				$"rprt2:\n{dbg2}\n" +
-				$"Checking persp vert to third dest edge...\n" +
-				$"rprt3:\n{dbg3}";
-			return false;
-		}
-
-
-		/// <summary>
-		/// Used to check whether any part of an edge is in the cone formed by a vertex
-		/// </summary>
-		/// <param name="edge"></param>
-		/// <param name="vert"></param>
-		/// <param name="nrml"></param>
-		/// <param name="dbgString"></param>
-		/// <param name="includeOnPerim"></param>
-		/// <returns></returns>
-		public static bool AmInVertexCone(LNX_Edge edge, LNX_Vertex vert, Vector3 nrml, ref string dbgString, bool includeOnPerim = false)
-		{
-			dbgString = $"AmInVectorCone({edge})\n" +
-				$"";
-
-			dbgString += $"condition preview...\n" +
-				$"c1: '{vert.IsInCenterSweep(edge.StartPosition_flat, vert.CachedSurfaceNormal)}'\n" +
-				$"c2: '{vert.IsInCenterSweep(edge.EndPosition_flat, vert.CachedSurfaceNormal)}'\n";
-
-			if
-			(
-				vert.IsInCenterSweep(edge.MidPosition_flat, nrml) ||
-				vert.IsInCenterSweep(edge.StartPosition_flat, nrml) ||
-				vert.IsInCenterSweep(edge.EndPosition_flat, nrml)
-			)
-			{
-				return true;
-			}
-
-			#region Now check if obstructEdge is big enough to encompass entire Cone path===================================	
-			dbgString += $"None of the discrete edge points are in center sweep.\n\n" +
-				$"Checking if edge encompases sweep...\n";
-
-			string rprtC1 = "";
-			string rprtC2 = "";
-
-			if
-			(
-				AmInVectorCone
-				(
-					FlatVector(vert.V_ToFirstSiblingVert),
-					FlatVector(edge.StartPosition_flat - vert.V_flattenedPosition).normalized,
-					FlatVector(edge.EndPosition_flat - vert.V_flattenedPosition).normalized,
-					nrml, ref rprtC1
-				) &&
-				AmInVectorCone
-				(
-					FlatVector(vert.V_ToSecondSiblingVert),
-					FlatVector(edge.StartPosition_flat - vert.V_flattenedPosition).normalized,
-					FlatVector(edge.EndPosition_flat - vert.V_flattenedPosition).normalized,
-					nrml, ref rprtC1
-				)
-			)
-			{
-				dbgString += $"decided edge DOES encompas entire sweep! rprt:\n" +
-				$"c1: '{rprtC1}'\n" +
-				$"c2: '{rprtC2}'\n";
-
-				return true;
-			}
-			#endregion
-			dbgString += $"decided edge does NOT encompas entire sweep! Rprt: \n" +
-				$"c1: '{rprtC1}'\n" +
-				$"c2: '{rprtC2}'\n";
-
-
-			return false;
-		}
-
-		public static bool AmCompletelyInVertexCone(LNX_Edge edge, LNX_Vertex vert, Vector3 nrml, ref string dbgString, bool includeOnPerim = false)//todo: keep? right now nothing's using it.
-		{ 
-			if
-			(
-				vert.IsInCenterSweep(edge.StartPosition_flat, nrml) &&
-				vert.IsInCenterSweep(edge.EndPosition_flat, nrml)
-			)
-			{
-				return true;
-			}
-
-			return false;
-		}
-
-		public static bool EdgeEncompassesVertSweep(LNX_Edge edge, LNX_Vertex vert, Vector3 nrml, ref string dbgString)
-		{
-			dbgString = $"{nameof(EdgeEncompassesVertSweep)}()\n";
-
-			Vector3 vpos = vert.V_flattenedPosition; //caching it so I don't have to keep calling the property logic...
-			//float vrtSignedAngle = vert.SignedAngle; //caching it so I don't have to keep calling the property logic...
-
-			Vector3 v_vrtToEdgeStart = FlatVector( edge.StartPosition_flat - vpos).normalized;
-			Vector3 v_vrtToEdgeEnd = FlatVector( edge.EndPosition_flat - vpos).normalized;
-
-			dbgString += $"vert signed angle: '{vert.AngleAtBend}'\n";
-
-			#region SHORT-CIRCUITING ====================================
-			if( edge.TriangleIndex == vert.TriangleIndex && edge.StartVertCoordinate != vert.MyCoordinate && edge.EndVertCoordinate != vert.MyCoordinate )
-			{
-				dbgString += $"ss1\n";
-				return true;
-			}
-
-			//todo: might want a short-circuit that detects if the edge is on verts sharing space with the other verts on the triangle that vert is part of
-
-			if ( Vector3.Angle(v_vrtToEdgeStart, v_vrtToEdgeEnd) < vert.AngleAtBend) //todo: bring this back when I'm satisfied testing the rest. Commented this out so that the following stuff could be tested...
-			{
-				return false; //can return false right away
-			}
-
-			if
-			( 
-				(v_vrtToEdgeStart == vert.V_ToFirstSiblingVert_flat && v_vrtToEdgeEnd == vert.V_ToSecondSiblingVert_flat) ||
-				(v_vrtToEdgeStart == vert.V_ToSecondSiblingVert_flat && v_vrtToEdgeEnd == vert.V_ToFirstSiblingVert_flat)
-			)
-			{
-				dbgString += $"ss2\n";
-
-				return true;
-			}
-
-			if
-			( 
-				Vector3.Dot
-				(
-					(vert.V_ToFirstSiblingVert_flat + vert.V_ToSecondSiblingVert_flat) / 2f, FlatVector(edge.MidPosition_flat - vpos).normalized
-				) < 0f 
-			)
-			{
-				dbgString += $"ss3\n";
-
-				return false; //this would mean the vert legs aren't facing the edge enough...
-			}
-			#endregion
-
-			string dbgAVEEPA = "";
-
-			if
-			( 
-				(
-					Mathf.Sign(Vector3.SignedAngle(v_vrtToEdgeStart, vert.V_ToFirstSiblingVert_flat, nrml)) ==
-					Mathf.Sign(Vector3.SignedAngle(v_vrtToEdgeStart, vert.V_ToSecondSiblingVert_flat, nrml))
-				) && 
-				(
-					Mathf.Sign(Vector3.SignedAngle(v_vrtToEdgeEnd, vert.V_ToFirstSiblingVert_flat, nrml)) ==
-					Mathf.Sign(Vector3.SignedAngle(v_vrtToEdgeEnd, vert.V_ToSecondSiblingVert_flat, nrml))
-				)
-				&&
-				(
-					Mathf.Sign(Vector3.SignedAngle(vert.V_ToFirstSiblingVert_flat, v_vrtToEdgeStart, nrml)) !=
-					Mathf.Sign(Vector3.SignedAngle(vert.V_ToFirstSiblingVert_flat, v_vrtToEdgeEnd, nrml))
-				) &&
-				(
-					Mathf.Sign(Vector3.SignedAngle(v_vrtToEdgeStart, vert.V_ToFirstSiblingVert_flat, nrml)) !=
-					Mathf.Sign(Vector3.SignedAngle(v_vrtToEdgeEnd, vert.V_ToFirstSiblingVert_flat, nrml))
-				)
-			)
-			{
-				return true;
-			}
-
-				return false;
-		}
-
 
 		public static bool AmBetweenConcurrentLines( Vector3 pos, Vector3 lineAStart, Vector3 lineAEnd, Vector3 lineBStart, Vector3 lineBEnd, Vector3 nrml, ref string dbgRprt )
 		{
@@ -1240,6 +986,43 @@ namespace LogansNavigationExtension
 			return rtrnEdge;
 		}
 
+
+		#endregion
+
+		#region SPECIAL EDGE METHODS --------------------
+		public static bool AreStartAndEndPointsAlignedFromTheirPerspectives( Vector3 lineStrtA, Vector3 lineEndA, Vector3 lineStrtB, Vector3 lineEndB, Vector3 nrml )
+		{
+			if (lineStrtA == lineStrtB || lineEndA == lineEndB)
+			{
+				return true;
+			}
+			else if( lineStrtA == lineEndB || lineStrtB == lineEndA )
+			{
+				return false;
+			}
+
+			return Vector3.Dot(
+				Vector3.Normalize(FlatVector(lineStrtB, nrml) - FlatVector(lineStrtA, nrml)), //start to start
+				Vector3.Normalize(FlatVector(lineEndB, nrml) - FlatVector(lineEndA, nrml)) //end to end
+			) >
+			Vector3.Dot(
+				Vector3.Normalize(FlatVector(lineEndB, nrml) - FlatVector(lineStrtA, nrml)), //start to end
+				Vector3.Normalize(FlatVector(lineStrtB, nrml) - FlatVector(lineEndA, nrml)) //end to start
+			);
+		}
+
+		/// <summary>
+		/// Checks whether two edges have starts and end points that are more aligned with each others starts and end points than 
+		/// "crisscrossed", where one's start point is more aligned with the other's end point.
+		/// </summary>
+		/// <param name="edgeA"></param>
+		/// <param name="edgeB"></param>
+		/// <returns></returns>
+		public static bool AreEdgesAlignedFromTheirPerspectives( LNX_Edge edgeA, LNX_Edge edgeB )
+		{
+			return AreStartAndEndPointsAlignedFromTheirPerspectives(edgeA.StartPosition_flat, edgeA.EndPosition_flat, edgeB.StartPosition_flat, edgeB.EndPosition_flat, edgeA.V_SurfaceNormal_cached );
+		}
+
 		/// <summary>
 		/// Checks if any point on a given edge lies in the path between two triangles.
 		/// </summary>
@@ -1294,177 +1077,6 @@ namespace LogansNavigationExtension
 			}
 			return false;
 		}
-
-		public static LNX_Quad GetTriPath( LNX_Triangle triA, LNX_Triangle triB, ref string dbgString )
-		{
-			dbgString = $"GetTriPath({triA}, {triB})\n\n";
-			LNX_Quad rtrnQuad = LNX_Quad.None;
-
-			#region CHECK FOR SINGLE VERT AS WIDEST PERSPECTIVE =========================================
-			dbgString += $"First, seeing if a single vert on triA is the answer...\n";
-
-			for ( int i_vrts_triA = 0; i_vrts_triA < 3; i_vrts_triA++ )
-			{
-				dbgString += $"for triA.Vert{i_vrts_triA}...\n";
-
-				bool sweepEncompassesAllOtherVerts = true;
-				string s = "";
-
-				LNX_Edge wdstEdge = GetWidestEdgeFromPerspective( triA.Verts[i_vrts_triA].V_flattenedPosition, triB, ref s );
-				dbgString += $"widest edge from triA.Vert{i_vrts_triA} perspective was: '{wdstEdge}'...\n" +
-					$"checking if edge is in vector cone...\n";
-
-				if
-				(
-					EdgeEncompassesVertSweep(wdstEdge, triA.Verts[i_vrts_triA], triA.v_SurfaceNormal_cached, ref s )
-				)
-				{
-					dbgString += $"Found that widest edge from vert perspective WAS in vector cone. Figuring return quad...\n";
-
-					Vector3 v_v_toWdstEdgeStart = FlatVector(wdstEdge.StartPosition_flat - triA.Verts[i_vrts_triA].V_flattenedPosition).normalized;
-					//Vector3 v_v_toWdstEdgeEnd = FlatVector(wdstEdge.EndPosition_flat - triA.Verts[i_vrts_triA].V_flattenedPosition).normalized;
-					Vector3 v_v_toWdstEdgeMid = FlatVector(wdstEdge.MidPosition_flat - triA.Verts[i_vrts_triA].V_flattenedPosition).normalized;
-
-					if
-					(
-						Vector3.SignedAngle(v_v_toWdstEdgeMid, v_v_toWdstEdgeStart, triA.v_SurfaceNormal_cached) < 0
-					)
-					{
-						return new LNX_Quad
-						(
-							triA.Verts[i_vrts_triA].V_flattenedPosition, triA.Verts[i_vrts_triA].V_flattenedPosition,
-							wdstEdge.StartPosition_flat, wdstEdge.EndPosition_flat
-						);
-					}
-					else
-					{
-						return new LNX_Quad
-						(
-							triA.Verts[i_vrts_triA].V_flattenedPosition, triA.Verts[i_vrts_triA].V_flattenedPosition,
-							wdstEdge.EndPosition_flat, wdstEdge.StartPosition_flat
-						);
-					}
-				}
-				else
-				{
-					dbgString += $"Found that widest edge from vert perspective was NOT in vector cone...\n";
-				}
-			}
-			#endregion
-
-			dbgString += $"End of vert cone check...\n\n" +
-				$"now finding widest edge from tri perspectives...\n";
-
-			string sA = "";
-			LNX_Edge edgeA = GetWidestEdgeFromPerspective( triA, triB, ref sA );
-			if( edgeA == null )
-			{
-				dbgString += $"Couldn't get widest edge for triA...\n" +
-					$"rprt:\n" +
-					$"{sA}\n" +
-					$"returning early...";
-
-				Debug.LogError($"Couldn't get widest edge for triA. Returning early");
-
-				return rtrnQuad;
-			}
-			else
-			{
-				dbgString += $"widest edge for triA: '{edgeA}'...\n";
-			}
-
-			string sB = "";
-			LNX_Edge edgeB = GetWidestEdgeFromPerspective( triB, triA, ref sB );
-			if (edgeB == null)
-			{
-				dbgString += $"Couldn't get widest edge for triB...\n" +
-					$"rprt:\n" +
-					$"{sB}\n\n" +
-					$"returning early..";
-
-				Debug.LogError($"Couldn't get widest edge for triB. Returning early");
-
-				return rtrnQuad;
-			}
-			else
-			{
-				dbgString += $"widest edge for triB: '{edgeB}'...\n";
-			}
-
-			if ( AreEdgesAlignedFromTheirPerspectives(edgeA, edgeB) ) //<<<<<<<<Errortrace
-			{
-				dbgString += $"edges ARE aligned...\n";
-				rtrnQuad = new LNX_Quad( edgeA.StartPosition_flat, edgeA.EndPosition_flat, edgeB.EndPosition_flat, edgeB.StartPosition_flat );
-			}
-			else
-			{
-				dbgString += $"edges are NOT aligned...\n";
-
-				rtrnQuad = new LNX_Quad(edgeA.StartPosition_flat, edgeA.EndPosition_flat, edgeB.StartPosition_flat, edgeB.EndPosition_flat );
-			}
-
-			return rtrnQuad;
-		}
-		#endregion
-
-		#region SPECIAL EDGE METHODS --------------------
-		public static bool AreStartAndEndPointsAlignedFromTheirPerspectives( Vector3 lineStrtA, Vector3 lineEndA, Vector3 lineStrtB, Vector3 lineEndB, Vector3 nrml )
-		{
-			if (lineStrtA == lineStrtB || lineEndA == lineEndB)
-			{
-				return true;
-			}
-			else if( lineStrtA == lineEndB || lineStrtB == lineEndA )
-			{
-				return false;
-			}
-
-			return Vector3.Dot(
-				Vector3.Normalize(FlatVector(lineStrtB, nrml) - FlatVector(lineStrtA, nrml)), //start to start
-				Vector3.Normalize(FlatVector(lineEndB, nrml) - FlatVector(lineEndA, nrml)) //end to end
-			) >
-			Vector3.Dot(
-				Vector3.Normalize(FlatVector(lineEndB, nrml) - FlatVector(lineStrtA, nrml)), //start to end
-				Vector3.Normalize(FlatVector(lineStrtB, nrml) - FlatVector(lineEndA, nrml)) //end to start
-			);
-		}
-
-		/// <summary>
-		/// Checks whether two edges have starts and end points that are more aligned with each others starts and end points than 
-		/// "crisscrossed", where one's start point is more aligned with the other's end point.
-		/// </summary>
-		/// <param name="edgeA"></param>
-		/// <param name="edgeB"></param>
-		/// <returns></returns>
-		public static bool AreEdgesAlignedFromTheirPerspectives( LNX_Edge edgeA, LNX_Edge edgeB )
-		{
-			return AreStartAndEndPointsAlignedFromTheirPerspectives(edgeA.StartPosition_flat, edgeA.EndPosition_flat, edgeB.StartPosition_flat, edgeB.EndPosition_flat, edgeA.V_SurfaceNormal_cached );
-		}
-
-		/// <summary>
-		/// Determines if a supplied position lies between two edge lines, that is; if the position is at 
-		/// different signed angles compared to both edges.
-		/// Note: this method does NOT take into account edge length. It instead treats the edges as if they 
-		/// go on for infinity.
-		/// </summary>
-		/// <param name="pos"></param>
-		/// <param name="edgeA"></param>
-		/// <param name="edgeB"></param>
-		/// <returns></returns>
-		public static bool IsPositionBetweenEdges( Vector3 pos, LNX_Edge edgeA, LNX_Edge edgeB )
-		{
-			//todo: make a tdg...
-			string s = "";
-			if( AreEdgesAlignedFromTheirPerspectives(edgeA, edgeB) )
-			{
-				return AmBetweenConcurrentLines( pos, edgeA.StartPosition_flat, edgeA.EndPosition_flat, edgeB.StartPosition_flat, edgeB.EndPosition_flat, edgeA.V_SurfaceNormal_cached, ref s );
-			}
-			else
-			{
-				return AmBetweenConcurrentLines(pos, edgeA.StartPosition_flat, edgeA.EndPosition_flat, edgeB.EndPosition_flat, edgeB.StartPosition_flat, edgeA.V_SurfaceNormal_cached, ref s);
-			}
-		}
-
 		public static bool DoesEdgeObstructQuadArea( //3
 			LNX_Edge obstructEdge, Vector3 crnrA, Vector3 crnrB, Vector3 crnrC, Vector3 crnrD, 
 			bool includeOnBorder, ref string dbgReport 
@@ -1648,10 +1260,327 @@ namespace LogansNavigationExtension
 					(otherEdge.StartPosition_flat == prspctvEdge.EndPosition_flat ? 90f :  //If it's shared, just consider it 90 degrees...
 					Vector3.Angle(prspctvEdge.V_EndToStart_flattened, Vector3.Normalize(otherEdge.StartPosition_flat - prspctvEdge.EndPosition_flat)));
 			}
-			
+
 		}
 		#endregion
 
+		#region SPECIAL NAVMESH METHODS =======================
+
+		/// <summary>
+		/// Attempts to project through the LNX_NavMesh, from the startHit position to the endHit position, creating a path 
+		/// as it does.
+		/// </summary>
+		/// <param name="nm"></param>
+		/// <param name="startHit"></param>
+		/// <param name="endHit"></param>
+		/// <param name="outPath"></param>
+		/// <returns>True if it's able to project through from start to end, false if it hits an obstructing edge and cannot complete the path.</returns>
+		public static bool TryProjectPathThrough(LNX_NavMesh nm, LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, out LNX_Path outPath )
+		{ //note: started making this as cleaner/faster version. Use this when ready to efficiency test vs the overload after...
+			outPath = new LNX_Path();
+			outPath.AddPoint(startHit, nm);
+
+			#region SHORT-CIRCUITING =======================================
+			if(startHit.TriIndex == endHit.TriIndex )
+			{
+				outPath.AddPoint(endHit, nm);
+				return true;
+			}
+			#endregion
+
+			int runningTriIndex = startHit.TriIndex;
+			Vector3 runningStartPos = startHit.HitPosition;
+			int currentEdgeIndex = -1;
+
+			int runningWhileIterations = 0;
+
+			bool amStillProjecting = true;
+			while (amStillProjecting)
+			{
+				string dbgprjct = "";
+				LNX_NavmeshHit edgePerimHit = nm.Triangles[runningTriIndex].ProjectThroughToPerimeter(runningStartPos, endHit.HitPosition, ref dbgprjct, currentEdgeIndex);
+
+				if ( edgePerimHit.ComponentIndex < 0 || edgePerimHit.ComponentIndex > 2 )
+				{
+					return false;
+				}
+
+				//outPath.AddPoint( new LNX_NavmeshHit(runningTriIndex, edgePerimHit.HitPosition), nm ); //dws
+				outPath.AddPoint( edgePerimHit, nm );
+
+				//LNX_Edge hitEdge = nm.Triangles[runningTriIndex].Edges[edgePerimHit.ComponentIndex]; //dws
+				currentEdgeIndex = edgePerimHit.ComponentIndex;
+				runningStartPos = edgePerimHit.HitPosition;
+
+				if( Vector3.Distance(edgePerimHit.HitPosition, endHit.HitPosition) < 0.001f )
+				{
+					amStillProjecting = false;
+					runningTriIndex = endHit.TriIndex;
+				}
+				else if ( nm.Triangles[runningTriIndex].Edges[edgePerimHit.ComponentIndex].AmTerminal )
+				{
+					amStillProjecting = false;
+				}
+				else
+				{
+					if
+					(
+						nm.Triangles[runningTriIndex].Edges[edgePerimHit.ComponentIndex].SharedEdgeCoordinate.TrianglesIndex == endHit.TriIndex ||
+						(nm.Triangles[runningTriIndex].AmAdjacentToTri(nm.Triangles[endHit.TriIndex]) && nm.Triangles[runningTriIndex].IsPositionOnAnyEdge(endHit.HitPosition))
+					)
+					{
+						runningTriIndex = endHit.TriIndex;
+
+						if (endHit.HitPosition != edgePerimHit.HitPosition) //In case the end position is on the perimeter of the destination tri...
+						{
+							outPath.AddPoint(endHit, nm);
+						}
+
+						amStillProjecting = false;
+					}
+					else
+					{
+						runningTriIndex = nm.Triangles[runningTriIndex].Edges[edgePerimHit.ComponentIndex].SharedEdgeCoordinate.TrianglesIndex;
+						currentEdgeIndex = nm.Triangles[runningTriIndex].Edges[edgePerimHit.ComponentIndex].SharedEdgeCoordinate.ComponentIndex;
+						runningStartPos = edgePerimHit.HitPosition;
+
+					}
+				}
+
+				runningWhileIterations++;
+				if (runningWhileIterations > nm.Triangles.Length)
+				{
+					Debug.LogError($"while loop went for more than '{nm.Triangles.Length}' iterations. Breaking early...");
+					amStillProjecting = false;
+
+					return false;
+				}
+			}
+
+			return runningTriIndex == endHit.TriIndex;
+		}
+		public static bool TryProjectPathThrough(LNX_NavMesh nm, LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, out LNX_Path outPath, ref string dbgRprt )
+		{
+			dbgRprt = $"ProjectPathThrough(start: '{startHit}', end: '{endHit}')\n\n";
+			outPath = new LNX_Path();
+			outPath.AddPoint( startHit, nm );
+
+			#region SHORT-CIRCUITING =======================================
+			if( startHit.TriIndex == endHit.TriIndex )
+			{
+				dbgRprt += $"tri indices the same for hit objects. Short-circuting with 2 pt path...\n";
+				outPath.AddPoint( endHit, nm );
+				return true;
+			}
+			#endregion
+
+			LNX_Triangle currentTri = nm.Triangles[startHit.TriIndex];
+			Vector3 currentStartPos = startHit.HitPosition;
+			int currentEdgeIndex = -1;
+
+			int safetyTimeout = nm.Triangles.Length;
+			int runningWhileIterations = 0;
+
+			dbgRprt += $"starting with tri{currentTri}...\n\n" +
+				$"while-looping to build path==============\n";
+
+			bool amStillProjecting = true;
+			while (amStillProjecting)
+			{
+				dbgRprt += $"\nwhile{runningWhileIterations}...\n" +
+					$"\n(currentTri: '{currentTri.Index_inCollection}', startPt: '{LNX_UnitTestUtilities.LongVectorString(currentStartPos)}')\n" +
+					$"projecting through triangle...\n";
+
+				string dbgprjct = "";
+				LNX_NavmeshHit edgePerimHit = currentTri.ProjectThroughToPerimeter( currentStartPos, endHit.HitPosition, ref dbgprjct, currentEdgeIndex );
+				dbgRprt += $"Projected through to perim with hit: '{edgePerimHit}'...\n";
+				outPath.AddPoint( new LNX_NavmeshHit(currentTri.Index_inCollection, edgePerimHit.HitPosition), nm );
+
+				if (edgePerimHit.ComponentIndex < 0 || edgePerimHit.ComponentIndex > 2)
+				{
+					dbgRprt += $"after project, hit object has bad index of '{edgePerimHit.ComponentIndex}'. now returning...";
+					return false;
+				}
+
+				dbgRprt += $"hit object is okay. Continuing...\n";
+
+				LNX_Edge hitEdge = currentTri.Edges[edgePerimHit.ComponentIndex];
+				currentEdgeIndex = edgePerimHit.ComponentIndex;
+				currentStartPos = edgePerimHit.HitPosition;
+
+				dbgRprt += $"projected to edge: '{hitEdge.MyCoordinate}' at '{LNX_UnitTestUtilities.LongVectorString(edgePerimHit.HitPosition)}'. " +
+				$"Shared edge is: '{hitEdge.SharedEdgeCoordinate}'\n";
+
+				if (Vector3.Distance(edgePerimHit.HitPosition, endHit.HitPosition) < 0.001f)
+				{
+					//Debug.Log("close!");
+					amStillProjecting = false;
+					currentTri = nm.Triangles[endHit.TriIndex];
+				}
+				else if (hitEdge.AmTerminal)
+				{
+					dbgRprt += $"hit edge is terminal. Stopping loop...\n";
+					dbgRprt += $"currentHit {LNX_UnitTestUtilities.LongVectorString(edgePerimHit.HitPosition)} equals endhit " +
+						$"{LNX_UnitTestUtilities.LongVectorString(endHit.HitPosition)}: '{edgePerimHit.HitPosition == endHit.HitPosition}'\n" +
+						$"flat equals: '{FlatVector(edgePerimHit.HitPosition, nm.GetSurfaceNormalVector()) == FlatVector(endHit.HitPosition, nm.GetSurfaceNormalVector())}'\n" +
+						$"dist: '{Vector3.Distance(edgePerimHit.HitPosition, endHit.HitPosition)}'\n";
+					amStillProjecting = false;
+				}
+				else
+				{
+					dbgRprt += $"edge is NOT terminal. Checking to see if we're at the end...\n";
+					dbgRprt += $"test1, Triangles[{currentTri.Index_inCollection}].AmAdjacentToTri({endHit.TriIndex}): " +
+						$"'{currentTri.AmAdjacentToTri(nm.Triangles[endHit.TriIndex])}'\n" +
+						$"";
+
+					if 
+					(
+						hitEdge.SharedEdgeCoordinate.TrianglesIndex == endHit.TriIndex ||
+						(currentTri.AmAdjacentToTri(nm.Triangles[endHit.TriIndex]) && currentTri.IsPositionOnAnyEdge(endHit.HitPosition))
+					)
+					{
+						currentTri = nm.Triangles[endHit.TriIndex];
+
+						if( endHit.HitPosition != edgePerimHit.HitPosition ) //In case the end position is on the perimeter of the destination tri...
+						{
+							outPath.AddPoint( endHit, nm );
+						}
+
+						amStillProjecting = false;
+						dbgRprt += $"Decided AM at the end. Stopping...\n";
+					}
+					else
+					{
+						currentTri = nm.Triangles[hitEdge.SharedEdgeCoordinate.TrianglesIndex];
+						currentEdgeIndex = hitEdge.SharedEdgeCoordinate.ComponentIndex;
+						currentStartPos = edgePerimHit.HitPosition;
+
+						dbgRprt += $"Decided NOT at the end. Set new current tri to: '{currentTri.Index_inCollection}'...\n";
+					}
+				}
+
+
+				runningWhileIterations++;
+				if (runningWhileIterations > safetyTimeout)
+				{
+					Debug.LogError($"while loop went for more than '{safetyTimeout}' iterations. Breaking early...");
+					amStillProjecting = false;
+
+					return false;
+				}
+			}
+
+			return currentTri.Index_inCollection == endHit.TriIndex;
+		}
+
+		public static bool TryProjectPathThrough( LNX_NavMesh nm, LNX_Vertex startVert, LNX_Vertex endVert, out LNX_Path outPath, ref string dbgRprt)
+		{
+			return TryProjectPathThrough( nm, new LNX_NavmeshHit(startVert), new LNX_NavmeshHit(endVert), out outPath, ref dbgRprt );
+		}
+
+		public static bool TryProjectThrough( LNX_NavMesh nm, LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, ref string dbgRprt )
+		{
+			dbgRprt = $"ProjectPathThrough({startHit}, {endHit})\n\n";
+
+			#region SHORT-CIRCUITING =======================================
+			if (startHit.TriIndex == endHit.TriIndex)
+			{
+				dbgRprt += $"tri indices the same for hit objects. Short-circuting by returning true...\n";
+				return true;
+			}
+			#endregion
+
+			LNX_Triangle currentTri = nm.Triangles[startHit.TriIndex];
+			Vector3 currentStartPos = startHit.HitPosition;
+			int currentEdgeIndex = -1;
+
+			int safetyTimeout = nm.Triangles.Length;
+			int runningWhileIterations = 0;
+
+			dbgRprt += $"starting with tri{currentTri}...\n\n" +
+				$"while-looping to build path==============\n";
+
+			bool amStillProjecting = true;
+			while (amStillProjecting)
+			{
+				dbgRprt += $"\nwhile{runningWhileIterations}...\n" +
+					$"\n(currentTri: '{currentTri.Index_inCollection}', startPt: '{LNX_UnitTestUtilities.LongVectorString(currentStartPos)}')\n" +
+					$"projecting through triangle...\n";
+
+				string dbgprjct = "";
+				LNX_NavmeshHit edgePerimHit = currentTri.ProjectThroughToPerimeter(currentStartPos, endHit.HitPosition, ref dbgprjct, currentEdgeIndex);
+				dbgRprt += $"Projected through to perim with hit: '{edgePerimHit}'...\n";
+
+				/*DBGRaycast += $"tri.prjctThrToPerim report----------------\n" +
+					$"{currentTri.dbg_prjctThrhToPerim}" +
+					$"end rprt------------\n";*/
+
+				if (edgePerimHit.ComponentIndex < 0 || edgePerimHit.ComponentIndex > 2)
+				{
+					dbgRprt += $"after project, hit object has bad index of '{edgePerimHit.ComponentIndex}'. now returning...";
+					return false;
+				}
+
+				dbgRprt += $"hit object is okay. Continuing...\n";
+
+				LNX_Edge hitEdge = currentTri.Edges[edgePerimHit.ComponentIndex];
+				currentEdgeIndex = edgePerimHit.ComponentIndex;
+				currentStartPos = edgePerimHit.HitPosition;
+
+				dbgRprt += $"projected to edge: '{hitEdge.MyCoordinate}' at '{LNX_UnitTestUtilities.LongVectorString(edgePerimHit.HitPosition)}'. " +
+				$"Shared edge is: '{hitEdge.SharedEdgeCoordinate}'\n";
+
+				if (hitEdge.AmTerminal)
+				{
+					dbgRprt += $"hit edge is terminal. Stoping loop...\n";
+					amStillProjecting = false;
+				}
+				else
+				{
+					dbgRprt += $"edge is NOT terminal. Checking to see if we're at the end...\n";
+					dbgRprt += $"test1, Triangles[{currentTri.Index_inCollection}].AmAdjacentToTri({endHit.TriIndex}): " +
+						$"'{currentTri.AmAdjacentToTri(nm.Triangles[endHit.TriIndex])}'\n" +
+						$"";
+
+					if
+					(
+						hitEdge.SharedEdgeCoordinate.TrianglesIndex == endHit.TriIndex ||
+						(currentTri.AmAdjacentToTri(nm.Triangles[endHit.TriIndex]) && currentTri.IsPositionOnAnyEdge(endHit.HitPosition))
+					)
+					{
+						currentTri = nm.Triangles[endHit.TriIndex];
+
+						amStillProjecting = false;
+						dbgRprt += $"Decided AM at the end. Stopping...\n";
+					}
+					else
+					{
+						currentTri = nm.Triangles[hitEdge.SharedEdgeCoordinate.TrianglesIndex];
+						currentEdgeIndex = hitEdge.SharedEdgeCoordinate.ComponentIndex;
+						currentStartPos = edgePerimHit.HitPosition;
+
+						dbgRprt += $"Decided NOT at the end. Set new current tri to: '{currentTri.Index_inCollection}'...\n";
+					}
+				}
+
+				runningWhileIterations++;
+				if (runningWhileIterations > safetyTimeout)
+				{
+					Debug.LogError($"while loop went for more than '{safetyTimeout}' iterations. Breaking early...");
+					amStillProjecting = false;
+
+					return false;
+				}
+			}
+
+			return currentTri.Index_inCollection == endHit.TriIndex;
+		}
+
+		public static bool TryProjectPathThrough(LNX_NavMesh nm, LNX_NavmeshHit startHit, LNX_Vertex endVert, out LNX_Path outPath/*, ref string dbgRprt*/)
+		{
+			return TryProjectPathThrough( nm, startHit, new LNX_NavmeshHit(endVert), out outPath/*, ref dbgRprt*/ );
+		}
+		#endregion
 
 		#region FOR COMPONENT SELECTION ("GRABBING")-------------------------
 		//todo: could put methods in here to shorten constructing the list of vertices grabbed by various components... idk if it's worth it...
@@ -1863,6 +1792,10 @@ namespace LogansNavigationExtension
 
 			return returnVerts;
 		}
+		#endregion
+
+		#region FILE/DATA ===========================================
+
 		#endregion
 
 #if UNITY_EDITOR

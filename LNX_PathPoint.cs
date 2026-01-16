@@ -13,30 +13,48 @@ namespace LogansNavigationExtension
 		/// </summary>
 		public Vector3 V_normal;
 
-		public Vector3 V_PreviousPoint;
-		public Vector3 V_NextPoint;
-
-		/// <summary>
-		/// Vector pointing to the next pathpoint.
-		/// </summary>
-		public Vector3 V_ToNext => V_NextPoint - V_Position;
-
-		/// <summary>
-		/// Vector pointing to the previous pathpoint.
-		/// </summary>
-		public Vector3 V_ToPrev => V_PreviousPoint - V_Position;
-
-		/// <summary>The distance to the next path point.</summary>
-		public float Dist_toNext => Vector3.Distance(V_Position, V_NextPoint);
-		/// <summary>The distance to the previous path point.</summary>
-		public float Dist_toPrev => Vector3.Distance(V_Position, V_PreviousPoint);
-
-		public LNX_PathPoint(Vector3 pt, Vector3 prevPos, Vector3 nextPos, Vector3 nrml)
+		public LNX_PathPoint(Vector3 pt, Vector3 nrml)
 		{
 			V_Position = pt;
 			V_normal = nrml;
-			V_PreviousPoint = prevPos;
-			V_NextPoint = nextPos;
 		}
+
+		public LNX_PathPoint( LNX_NavmeshHit hit )
+		{
+			V_Position = hit.HitPosition;
+			V_normal = hit.Normal;
+		}
+
+		#region OPERATORS ======================================================
+		public static bool operator ==(LNX_PathPoint a, LNX_PathPoint b)
+		{
+			return a.Equals(b);
+		}
+
+		public static bool operator !=(LNX_PathPoint a, LNX_PathPoint b)
+		{
+			return !a.Equals(b);
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (!(obj is LNX_PathPoint))
+				return false;
+
+			LNX_PathPoint otherPoint = (LNX_PathPoint)obj;
+			if
+			(
+				otherPoint.V_Position != V_Position || 
+				otherPoint.V_normal != V_normal
+			)
+			{
+				return false;
+			}
+			else
+			{
+				return true;
+			}
+		}
+		#endregion ---------------------------------------
 	}
 }

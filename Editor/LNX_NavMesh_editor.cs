@@ -91,10 +91,9 @@ namespace LogansNavigationExtension.CustomEditors
 		{
 			Debug.Log($"surfaceorientation callback");
 
-			_targetScript.CalculateSurfaceNormal();
+			//todo: what should I do now to update all the objects???
 
-			Debug.Log($"surface orientation changed to: '{_targetScript.V_SurfaceOrientation}'..."); //todo: what should I do now to update all the 
-			//objects???
+			Debug.Log($"surface orientation changed to: '{_targetScript.GetSurfaceNormalVector()}'..."); 
 		}
 
 		public void OnSceneGUI()

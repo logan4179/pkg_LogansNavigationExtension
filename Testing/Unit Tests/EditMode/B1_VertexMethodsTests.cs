@@ -103,20 +103,20 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				Debug.Log($"trying first center sweep. expecting '{_tdg_isInCenterSweep.Results_Vert0[i]}'...");
 				LNX_Vertex vert0 = tri.GetVertexAtOriginalPosition(_tdg_isInCenterSweep.CapturedVertPositions_vert0[i] );
 				Debug.Log($"Got vert '{vert0.ToString()}' at pos: '{vert0.V_Position}', angle: '{vert0.AngleAtBend}'");
-				bool rslt = vert0.IsInCenterSweep( _tdg_isInCenterSweep.CapturedStartPositions[i], _serializedLNXNavmesh.V_SurfaceOrientation );
+				bool rslt = vert0.IsInCenterSweep( _tdg_isInCenterSweep.CapturedStartPositions[i], _serializedLNXNavmesh.GetSurfaceNormalVector() );
 				Assert.AreEqual(_tdg_isInCenterSweep.Results_Vert0[i], rslt );
 
 				Debug.Log($"trying second center sweep. expecting '{_tdg_isInCenterSweep.Results_Vert1[i]}'...");
 				LNX_Vertex vert1 = tri.GetVertexAtOriginalPosition(_tdg_isInCenterSweep.CapturedVertPositions_vert1[i]);
 				Debug.Log($"Got vert '{vert1.ToString()}'");
-				rslt = vert1.IsInCenterSweep(_tdg_isInCenterSweep.CapturedStartPositions[i], _serializedLNXNavmesh.V_SurfaceOrientation);
+				rslt = vert1.IsInCenterSweep(_tdg_isInCenterSweep.CapturedStartPositions[i], _serializedLNXNavmesh.GetSurfaceNormalVector());
 				Assert.AreEqual(_tdg_isInCenterSweep.Results_Vert1[i], rslt);
 
 				Debug.Log($"trying third center sweep. expecting '{_tdg_isInCenterSweep.Results_Vert2[i]}'...");
 				LNX_Vertex vert2 = tri.GetVertexAtOriginalPosition(_tdg_isInCenterSweep.CapturedVertPositions_vert2[i]);
 				Debug.Log($"Got vert2 '{vert2.ToString()}'");
 
-				rslt = vert2.IsInCenterSweep(_tdg_isInCenterSweep.CapturedStartPositions[i], _serializedLNXNavmesh.V_SurfaceOrientation);
+				rslt = vert2.IsInCenterSweep(_tdg_isInCenterSweep.CapturedStartPositions[i], _serializedLNXNavmesh.GetSurfaceNormalVector());
 				Assert.AreEqual(_tdg_isInCenterSweep.Results_Vert2[i], rslt);
 			}
 

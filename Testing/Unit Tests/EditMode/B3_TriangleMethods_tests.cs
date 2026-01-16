@@ -57,14 +57,13 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			);
 
 			Debug.Log($"Now checking that {nameof(TDG_ProjectThroughToPerimeter)} object is valid...");
-			Assert.Greater( _tdg_projectThroughToPerimeter.CapturedStartPositions.Count, 0 );
-			int commonCount = _tdg_projectThroughToPerimeter.CapturedStartPositions.Count;
+			Assert.Greater(_tdg_projectThroughToPerimeter._dataCapture.VectorCaptureLists[0].vectors.Count, 0 );
+			int commonCount = _tdg_projectThroughToPerimeter._dataCapture.VectorCaptureLists[0].vectors.Count;
 
-			Assert.AreEqual( commonCount, _tdg_projectThroughToPerimeter.CapturedEndPositions.Count );
-			Assert.AreEqual(commonCount, _tdg_projectThroughToPerimeter.CapturedTriCenters.Count);
-			Assert.AreEqual(commonCount, _tdg_projectThroughToPerimeter.CapturedEdgeMidPoints.Count);
-			Assert.AreEqual(commonCount, _tdg_projectThroughToPerimeter.CapturedProjectionPoints.Count);
-
+			Assert.AreEqual( commonCount, _tdg_projectThroughToPerimeter._dataCapture.VectorCaptureLists[1].vectors.Count );
+			Assert.AreEqual( commonCount, _tdg_projectThroughToPerimeter._dataCapture.VectorCaptureLists[2].vectors.Count);
+			Assert.AreEqual( commonCount, _tdg_projectThroughToPerimeter._dataCapture.VectorCaptureLists[3].vectors.Count);
+			Assert.AreEqual( commonCount, _tdg_projectThroughToPerimeter._dataCapture.VectorCaptureLists[4].vectors.Count);
 		}
 		#endregion
 
@@ -76,38 +75,40 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			LNX_UnitTestUtilities.LogTestStart(nameof(b1_Triangle_ProjectThroughToPerimeter),
 				$"Runs through multiple triangles and tests the results of the 'ProjectThroughToPerimeter' method ");
 
-			Debug.Log($"Now iterating through '{_tdg_projectThroughToPerimeter.CapturedStartPositions.Count}' data points...");
+			Debug.Log($"Now iterating through '{_tdg_projectThroughToPerimeter._dataCapture.VectorCaptureLists[0].vectors.Count}' data points...");
 
-			for ( int i = 0; i < _tdg_projectThroughToPerimeter.CapturedStartPositions.Count; i++ )
+			for ( int i = 0; i < _tdg_projectThroughToPerimeter._dataCapture.VectorCaptureLists[0].vectors.Count; i++ )
 			{
 				Debug.Log($"i: '{i}'...");
-				LNX_Triangle tri = _serializedLNXNavmesh.GetTriangle( _tdg_projectThroughToPerimeter.CapturedTriCenters[i] );
-				LNX_Edge edge = tri.GetEdge( _tdg_projectThroughToPerimeter.CapturedEdgeMidPoints[i] );
-				LNX_ProjectionHit hit = LNX_ProjectionHit.None;
+				LNX_Triangle tri = _serializedLNXNavmesh.GetTriangle( _tdg_projectThroughToPerimeter._dataCapture.VectorCaptureLists[2].vectors[i] );
+				LNX_Edge edge = tri.GetEdge( _tdg_projectThroughToPerimeter._dataCapture.VectorCaptureLists[3].vectors[i] );
+				LNX_NavmeshHit hit = LNX_NavmeshHit.None;
 
 				Debug.Log($"projecting through to perimeter...");
+				string s = "";
 				hit = tri.ProjectThroughToPerimeter(
-					_tdg_projectThroughToPerimeter.CapturedStartPositions[i], 
-					_tdg_projectThroughToPerimeter.CapturedEndPositions[i]
+					_tdg_projectThroughToPerimeter._dataCapture.VectorCaptureLists[0].vectors[i], 
+					_tdg_projectThroughToPerimeter._dataCapture.VectorCaptureLists[1].vectors[i], 
+					ref s
 				);
 				Debug.Log($"projected through. hit position: '{hit.HitPosition}'. Captured hit position is: " +
-					$"'{_tdg_projectThroughToPerimeter.CapturedProjectionPoints[i]}'." +
+					$"'{_tdg_projectThroughToPerimeter._dataCapture.VectorCaptureLists[4].vectors[i]}'." +
 					$"Now asserting value is as expected...");
 
 				//Assert.AreEqual( _tdg_projectThroughToPerimeter.CapturedProjectionPoints[i], hit.HitPosition );
 
 				UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-					_tdg_projectThroughToPerimeter.CapturedProjectionPoints[i].x,
+					_tdg_projectThroughToPerimeter._dataCapture.VectorCaptureLists[4].vectors[i].x,
 					hit.HitPosition.x
 				);
 
 				UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-					_tdg_projectThroughToPerimeter.CapturedProjectionPoints[i].y,
+					_tdg_projectThroughToPerimeter._dataCapture.VectorCaptureLists[4].vectors[i].y,
 					hit.HitPosition.y
 				);
 
 				UnityEngine.Assertions.Assert.AreApproximatelyEqual(
-					_tdg_projectThroughToPerimeter.CapturedProjectionPoints[i].z,
+					_tdg_projectThroughToPerimeter._dataCapture.VectorCaptureLists[4].vectors[i].z,
 					hit.HitPosition.z
 				);
 			}

@@ -11,12 +11,7 @@ namespace LogansNavigationExtension
     {
 
 		[SerializeField] private Vector3 v_result;
-		LNX_ProjectionHit lnxHit = new LNX_ProjectionHit();
-
-		[Header("DATA CAPTURE")]
-		public List<Vector3> SampleFromPositions = new List<Vector3>();
-		public List<Vector3> capturedPerimeterPositions = new List<Vector3>();
-		public List<Vector3> capturedTriCenters = new List<Vector3>();
+		LNX_NavmeshHit lnxHit = new LNX_NavmeshHit();
 
 		[Header("DEBUG")]
 		[Range(0,0.3f)] public float radius_testObject;
@@ -39,13 +34,13 @@ namespace LogansNavigationExtension
 
 			DBG_Operation = $"Searching through '{_navmesh.Triangles.Length}' tris...\n";
 
-			lnxHit = new LNX_ProjectionHit();
+			lnxHit = new LNX_NavmeshHit();
 
 			if( _navmesh.SamplePosition(transform.position, out lnxHit, 10f) ) //It needs to do this in order to decide which triangle to use...
 			{
-				LNX_Triangle chosenTri = _navmesh.Triangles[lnxHit.Index_Hit];
+				LNX_Triangle chosenTri = _navmesh.Triangles[lnxHit.TriIndex];
 
-				DrawStandardFocusTriGizmos( chosenTri, 0.3f, lnxHit.Index_Hit.ToString(), Color.magenta );
+				DrawStandardFocusTriGizmos( chosenTri, 0.3f, lnxHit.TriIndex.ToString(), Color.magenta );
 
 				v_result = chosenTri.ClosestPointOnPerimeter(transform.position);
 
@@ -69,9 +64,7 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call CaptureDataPoint()")]
 		public void CaptureDataPoint()
 		{
-			SampleFromPositions.Add( transform.position );
-			capturedPerimeterPositions.Add( v_result );
-			capturedTriCenters.Add( _navmesh.Triangles[lnxHit.Index_Hit].V_Center );
+
 
 			Debug.Log($"captured...");
 		}
@@ -79,53 +72,13 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call GenerateHItResultCollections()")]
 		public void GenerateHItResultCollections()
 		{
-			Debug.Log($"{nameof(GenerateHItResultCollections)}()...");
+			//Debug.Log($"{nameof(GenerateHItResultCollections)}()...");
 
-			LNX_ProjectionHit lnxHit = new LNX_ProjectionHit();
-			capturedPerimeterPositions = new List<Vector3>();
-			capturedTriCenters = new List<Vector3>();
-
-			for ( int i = 0; i < SampleFromPositions.Count; i++ )
-			{
-				lnxHit = new LNX_ProjectionHit();
-
-				if ( _navmesh.SamplePosition(SampleFromPositions[i], out lnxHit, 10f) )
-				{
-					LNX_Triangle chosenTri = _navmesh.Triangles[lnxHit.Index_Hit];
-
-					Vector3 v = chosenTri.ClosestPointOnPerimeter( SampleFromPositions[i] );
-
-					capturedPerimeterPositions.Add( v );
-					capturedTriCenters.Add( chosenTri.V_Center );
-				}
-			}
-
-			Debug.Log($"generated '{capturedPerimeterPositions.Count}' {nameof(capturedPerimeterPositions)}, and " +
-				$"'{capturedTriCenters.Count}' {nameof(capturedTriCenters)}. " +
-				$"this method does NOT write the test data to json.");
 		}
 
 		[ContextMenu("z call WriteMeToJson()")]
 		public bool WriteMeToJson()
 		{
-			if ( SampleFromPositions == null || SampleFromPositions.Count == 0 )
-			{
-				Debug.LogWarning($"WARNING! problem positions was null or 0 count.");
-			}
-			else
-			{
-				if ( capturedPerimeterPositions == null || capturedPerimeterPositions.Count == 0 )
-				{
-					Debug.LogWarning($"WARNING! {nameof(capturedPerimeterPositions)} was null or 0 count.");
-				}
-
-				if (capturedTriCenters == null || capturedTriCenters.Count == 0)
-				{
-					Debug.LogWarning($"WARNING! {nameof(capturedTriCenters)} was null or 0 count.");
-				}
-			}
-
-
 			if ( !Directory.Exists(TDG_Manager.dirPath_testDataFolder) )
 			{
 				Debug.LogWarning($"directory: '{TDG_Manager.dirPath_testDataFolder}' wasn't found.");

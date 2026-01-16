@@ -16,6 +16,7 @@ namespace LogansNavigationExtension
 		
 		public LNX_ComponentGrabber Grabber_FocusVert;
 
+		public LNX_NavMeshData _mgrData;
 
 		[Header("DEBUG")]
 		public bool AmDebugging = true;
@@ -24,6 +25,7 @@ namespace LogansNavigationExtension
 		public bool AmAllowingFocus = true;
 		public bool FocusExclusively = true;
 
+		public int Index_SendFocusTriGrabberTo = 0;
 		public LNX_Triangle FocusedTri => Grabber_FocusTri.CurrentlyGrabbedTriangle;
 		public LNX_Edge FocusedEdge => Grabber_FocusEdge.CurrentlyGrabbedEdge;
 		public LNX_Vertex FocusedVert => Grabber_FocusVert.CurrentlyGrabbedVert;
@@ -76,6 +78,12 @@ namespace LogansNavigationExtension
 		public void SayFocusedTriInfo()
 		{
 			FocusedTri.SayCurrentInfo(_mgr);
+		}
+
+		[ContextMenu("z call SendGrabberToFocusTri()")]
+		public void SendGrabberToFocusTri()
+		{
+			Grabber_FocusTri.transform.position = _mgr.Triangles[Index_SendFocusTriGrabberTo].V_Center;
 		}
 
 		[ContextMenu("z call SayVisualMeshInfo()")]
@@ -165,6 +173,7 @@ namespace LogansNavigationExtension
 
 			if( amFocused )
 			{
+				//Debug.Log($"amfocused '{tri}'");
 				Gizmos.color = Color.yellow;
 				Handles.color = Color.yellow;
 			}

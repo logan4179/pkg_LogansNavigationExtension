@@ -18,11 +18,7 @@ namespace LogansNavigationExtension
 		[Header("CURRENT CAPTURE")]
 		public bool CurrentResult = false;
 
-		[Header("GOTO")]
-		public TDG_DoesEdgeObstructArea _tdg_doesEdgeObstructArea;
-
-		[Header("DEBUG")]
-		public string DBG_Method;
+		//[Header("GOTO")]
 
 		[ContextMenu("z call CaptureDataPoint()")]
 		public void CaptureDataPoint()
@@ -47,11 +43,12 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call SendToTDG")]
 		public void SendToTDG()
 		{
+			/*
 			Grabber_Pos.transform.position = _tdg_doesEdgeObstructArea.ObstructEdge.MidPosition;
 			Grabber_CrnrA.transform.position = _tdg_doesEdgeObstructArea.PerspectiveVert.V_Position;
 			Grabber_CrnrB.transform.position = _tdg_doesEdgeObstructArea.DestinationTriangle.Verts[0].V_Position;
 			Grabber_CrnrC.transform.position = _tdg_doesEdgeObstructArea.DestinationTriangle.Verts[1].V_Position;
-
+			*/
 		}
 		#endregion
 
@@ -80,7 +77,7 @@ namespace LogansNavigationExtension
 			CurrentResult = LNX_Utils.AmInArea(
 				Grabber_Pos.transform.position,
 				Grabber_CrnrA.transform.position, Grabber_CrnrB.transform.position, Grabber_CrnrC.transform.position,
-				_navmesh.V_SurfaceOrientation, false/*, ref DBG_Method*/
+				_navmesh.GetSurfaceNormalVector(), false/*, ref DBG_Method*/
 			);
 
 			DBG_Operation += $"Operation returned: '{CurrentResult}'\n";

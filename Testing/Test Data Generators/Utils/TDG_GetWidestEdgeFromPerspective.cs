@@ -46,12 +46,12 @@ namespace LogansNavigationExtension
 		{
 			Debug.Log($"{nameof(SampleFocusTri)}()...");
 
-			LNX_ProjectionHit hit = LNX_ProjectionHit.None;
+			LNX_NavmeshHit hit = LNX_NavmeshHit.None;
 
 			if (_navmesh.SamplePosition(Trans_triGrabber.position, out hit, 2f, false))
 			{
-				CurrentTriIndex = hit.Index_Hit;
-				Debug.Log($"Succesful sample! Set new triangle to: '{hit.Index_Hit}'");
+				CurrentTriIndex = hit.TriIndex;
+				Debug.Log($"Succesful sample! Set new triangle to: '{hit.TriIndex}'");
 			}
 			else
 			{
@@ -118,9 +118,9 @@ namespace LogansNavigationExtension
 				Gizmos.DrawLine(transform.position, foundEdge.StartPosition);
 				Gizmos.DrawLine(transform.position, foundEdge.EndPosition);
 
-				DBG_Operation += $"angToStart: '{Vector3.SignedAngle(CurrentTriangle.V_FlattenedCenter - transform.position,foundEdge.StartPosition - transform.position,_navmesh.V_SurfaceOrientation)}'\n";
+				DBG_Operation += $"angToStart: '{Vector3.SignedAngle(CurrentTriangle.V_FlattenedCenter - transform.position,foundEdge.StartPosition - transform.position,_navmesh.GetSurfaceNormalVector())}'\n";
 
-				DBG_Operation += $"angToEnd: '{Vector3.SignedAngle(CurrentTriangle.V_FlattenedCenter - transform.position,foundEdge.EndPosition - transform.position,_navmesh.V_SurfaceOrientation)}'\n";
+				DBG_Operation += $"angToEnd: '{Vector3.SignedAngle(CurrentTriangle.V_FlattenedCenter - transform.position,foundEdge.EndPosition - transform.position,_navmesh.GetSurfaceNormalVector())}'\n";
 			}
 
 			DBG_Operation += $"Operation complete. \n" +

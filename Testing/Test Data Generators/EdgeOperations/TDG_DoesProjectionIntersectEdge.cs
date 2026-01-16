@@ -105,14 +105,12 @@ namespace LogansNavigationExtension
 			for( int i = 0; i < CapturedStartPositions.Count; i++ )
 			{
 				//LNX_Triangle startTri = _navmesh.GetTriangle(  ); //what do I do here?
-				LNX_ProjectionHit hit = LNX_ProjectionHit.None;
+				LNX_NavmeshHit hit = LNX_NavmeshHit.None;
 
 				if ( _navmesh.SamplePosition(CapturedStartPositions[i], out hit, 2f, false) )
 				{
 
-
-
-					EdgeCoordinate = new LNX_ComponentCoordinate(hit.Index_Hit, EdgeCoordinate.ComponentIndex);
+					EdgeCoordinate = new LNX_ComponentCoordinate(hit.TriIndex, EdgeCoordinate.ComponentIndex);
 					SetDebuggerFocusToMine();
 					Debug.Log($"Succesful sample! Set new edgecoordinate to: '{EdgeCoordinate.ToString()}'");
 				}
@@ -126,7 +124,7 @@ namespace LogansNavigationExtension
 				(
 					CapturedStartPositions[i],
 					CapturedEndPositions[i],
-					_navmesh.V_SurfaceOrientation,
+					_navmesh.GetSurfaceNormalVector(),
 					out CurrentProjectedPosition
 				);
 			}
@@ -143,8 +141,7 @@ namespace LogansNavigationExtension
 		{
 			Debug.Log("from override");
 
-			problemPositions.Add(startTrans.position);
-			problemEndPositions.Add(endTrans.position);
+			
 
 			Debug.Log($"{nameof(CaptureProblemPosition_override)}()...");
 		}
@@ -169,11 +166,11 @@ namespace LogansNavigationExtension
 		{
 			Debug.Log($"{nameof(SampleFocusTri)}()...");
 
-			LNX_ProjectionHit hit = LNX_ProjectionHit.None;
+			LNX_NavmeshHit hit = LNX_NavmeshHit.None;
 
 			if ( _navmesh.SamplePosition(startTrans.position, out hit, 2f, false) )
 			{
-				EdgeCoordinate = new LNX_ComponentCoordinate( hit.Index_Hit, EdgeCoordinate.ComponentIndex );
+				EdgeCoordinate = new LNX_ComponentCoordinate( hit.TriIndex, EdgeCoordinate.ComponentIndex );
 				SetDebuggerFocusToMine();
 				Debug.Log($"Succesful sample! Set new edgecoordinate to: '{EdgeCoordinate.ToString()}'");
 			}
@@ -219,7 +216,7 @@ namespace LogansNavigationExtension
 				(
 					startTrans.position,
 					endTrans.position,
-					_navmesh.V_SurfaceOrientation,
+					_navmesh.GetSurfaceNormalVector(),
 					out CurrentProjectedPosition
 				);
 			DBG_Operation += $"=============================\n";

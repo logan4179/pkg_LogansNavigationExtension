@@ -37,7 +37,7 @@ namespace LogansNavigationExtension
 			{
 				//dt_loopstart = DateTime.Now;  //Note: I think I should generally comment this out when gathering data so it doesn't effect the results
 
-				LNX_ProjectionHit hit;
+				LNX_NavmeshHit hit;
 				bool rslt = _navmesh.AmWithinSurfaceProjection( SamplePositions_onMesh[i], out hit );
 				//total += DateTime.Now.Subtract(dt_loopstart).TotalMilliseconds; //Note: I think I should generally comment this out when gathering data so it doesn't effect the results
 
@@ -58,7 +58,7 @@ namespace LogansNavigationExtension
 			{
 				//dt_loopstart = DateTime.Now;  //Note: I think I should generally comment this out when gathering data so it doesn't effect the results
 
-				LNX_ProjectionHit hit;
+				LNX_NavmeshHit hit;
 				bool rslt = _navmesh.AmWithinSurfaceProjection(SamplePositions_onMesh[i], out hit);
 				//total += DateTime.Now.Subtract(dt_loopstart).TotalMilliseconds;  //Note: I think I should generally comment this out when gathering data so it doesn't effect the results
 

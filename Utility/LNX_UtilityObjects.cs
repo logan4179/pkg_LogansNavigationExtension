@@ -214,44 +214,111 @@ namespace LogansNavigationExtension
 	}
 
 	[System.Serializable]
-	public struct LNX_ProjectionHit
+	public struct LNX_NavmeshHit
 	{
+		private Vector3 hitPosition;
 		/// <summary>Index of the Triangle or component that was hit, depending on the context.</summary>
-		public int Index_Hit;
-		public Vector3 HitPosition;
-		public float DistanceAway;
-		LNX_ComponentCoordinate Coordinate;
+		public Vector3 HitPosition => hitPosition;
 
-		private static LNX_ProjectionHit none = new LNX_ProjectionHit(-1, Vector3.zero);
+		private Vector3 startPosition;
+		public Vector3 StartPosition => startPosition;
 
-		public LNX_ProjectionHit(int indx, Vector3 pos)
+		private Vector3 normal;
+		public Vector3 Normal => normal;
+
+		public float DistanceAway => Vector3.Distance(startPosition, hitPosition);
+		LNX_ComponentCoordinate coordinate;
+		public LNX_ComponentCoordinate Coordinate => coordinate;
+
+		//PROPERTIES---------------
+		public int TriIndex => coordinate.TrianglesIndex;
+		public int ComponentIndex => coordinate.ComponentIndex;
+
+		private static LNX_NavmeshHit none = new LNX_NavmeshHit(-1, Vector3.zero);
+
+		public LNX_NavmeshHit(int triIndx, Vector3 pos) //todo; i need to check where this is being called and make sure there aren't any more problems
 		{
-			Index_Hit = indx;
-			HitPosition = pos;
-			DistanceAway = 0f;
+			hitPosition = pos;
 
-			Coordinate = LNX_ComponentCoordinate.None;
+			startPosition = Vector3.zero;
+			normal = Vector3.zero;
+
+			coordinate = new LNX_ComponentCoordinate(triIndx, -1);
+		}
+		
+		/* //Unfortunately can't do the following bc default vectors aren't compile-time constants...
+		public LNX_NavmeshHit( Vector3 pos, int triIndx, int cmpntIndx = -1, Vector3 strtPos = Vector3.zero, Vector3 nrml = Vector3.zero )
+		{
+			hitPosition = pos;
+			startPosition = strtPos;
+			normal = nrml;
+
+			Coordinate = new LNX_ComponentCoordinate( triIndx, cmpntIndx );
+		}
+		*/
+
+		public LNX_NavmeshHit(LNX_Triangle hitTriangle, Vector3 hitpos, Vector3 startPos )
+		{
+			hitPosition = hitpos;
+			startPosition = startPos;
+			normal = hitTriangle.v_SurfaceNormal_cached;
+
+			coordinate = new LNX_ComponentCoordinate(hitTriangle.Index_inCollection, -1);
 		}
 
-		public LNX_ProjectionHit(Vector3 pos, LNX_ComponentCoordinate coord)
+		public LNX_NavmeshHit ( LNX_Vertex vert )
 		{
-			Index_Hit = -1;
-			HitPosition = pos;
-			DistanceAway = 0f;
-
-			Coordinate = coord;
+			hitPosition = vert.V_Position;
+			startPosition = Vector3.zero;
+			normal = vert.CachedSurfaceNormal;
+			coordinate = vert.MyCoordinate;
 		}
 
-		public LNX_ProjectionHit(int indx, Vector3 hitpos, Vector3 originpos)
+		public LNX_NavmeshHit(Vector3 pos, LNX_ComponentCoordinate coord)
 		{
-			Index_Hit = indx;
-			HitPosition = hitpos;
-			DistanceAway = Vector3.Distance(originpos, hitpos);
+			hitPosition = pos;
+			startPosition = Vector3.zero;
+			normal = Vector3.zero;
 
-			Coordinate = LNX_ComponentCoordinate.None;
+			coordinate = coord;
 		}
 
-		public static LNX_ProjectionHit None
+		public LNX_NavmeshHit ( Vector3 pos, int triIndx, int cmpntIndx )
+		{
+			hitPosition = pos;
+			coordinate = new LNX_ComponentCoordinate( triIndx, cmpntIndx );
+
+			startPosition = Vector3.zero;
+			normal = Vector3.zero;
+		}
+
+		public LNX_NavmeshHit(Vector3 pos, Vector3 nrml, int triIndx, int cmpntIndx)
+		{
+			hitPosition = pos;
+			coordinate = new LNX_ComponentCoordinate(triIndx, cmpntIndx);
+			normal = nrml;
+
+			startPosition = Vector3.zero;
+		}
+
+		public LNX_NavmeshHit(Vector3 pos, Vector3 nrml, Vector3 strtPos, int triIndx, int cmpntIndx)
+		{
+			hitPosition = pos;
+			coordinate = new LNX_ComponentCoordinate(triIndx, cmpntIndx);
+			normal = nrml;
+			startPosition = strtPos;
+		}
+
+		public LNX_NavmeshHit(int indx, Vector3 hitpos, Vector3 originpos)
+		{
+			hitPosition = hitpos;
+			startPosition = originpos;
+			normal = Vector3.zero;
+
+			coordinate = new LNX_ComponentCoordinate(indx, -1);
+		}
+
+		public static LNX_NavmeshHit None
 		{
 			get
 			{
@@ -261,11 +328,11 @@ namespace LogansNavigationExtension
 
 		public override bool Equals(object obj)
 		{
-			if (!(obj is LNX_ProjectionHit))
+			if (!(obj is LNX_NavmeshHit))
 				return false;
 
-			LNX_ProjectionHit hit = (LNX_ProjectionHit)obj;
-			if (hit.Index_Hit != Index_Hit || hit.HitPosition != HitPosition)
+			LNX_NavmeshHit hit = (LNX_NavmeshHit)obj;
+			if ( hit.coordinate != coordinate || hit.hitPosition != hitPosition || startPosition != hit.startPosition )
 			{
 				return false;
 			}
@@ -277,7 +344,7 @@ namespace LogansNavigationExtension
 
 		public override string ToString()
 		{
-			return $"Indx '{Index_Hit}', at '{HitPosition}'";
+			return $"Hit[{HitPosition}][{coordinate}]'";
 		}
 	}
 
@@ -325,7 +392,7 @@ namespace LogansNavigationExtension
 	{
 		public LNX_ComponentCoordinate RelatedVertCoordinate;
 
-		public Vector3 RelatedVertPosition => PathTo.EndPoint;
+		public Vector3 RelatedVertPosition => PathTo.EndPosition;
 		public Vector3 OwnerVertPosition => PathTo.StartPoint;
 
 		public bool CanSee => PathTo.AmStraight;
@@ -338,10 +405,13 @@ namespace LogansNavigationExtension
 
 		public Vector3 V_to => PathTo.V_CrowFlies;
 
-		/// <summary>If true, this vert and it's related vert are part of the same terminal cutout 
-		/// (obstacle) in the navmesh. This efficiency boolean is useful for efficient pathfinding 
-		/// around obstacles</summary>
-		//public bool AmPartOfSharedTerminalCutout; //todo: implement
+		/// <summary>
+		/// Relates this relationship to it's position in the containing collection in the 'owner' LNX_Vertex
+		/// </summary>
+		public int Index_InCollection => RelatedVertCoordinate.TrianglesIndex * 3 + RelatedVertCoordinate.ComponentIndex;
+
+		public int RelatedTriIndex => RelatedVertCoordinate.TrianglesIndex;
+		public int RelatedComponentIndex => RelatedVertCoordinate.ComponentIndex;
 
 		public LNX_VertexRelationship(LNX_Vertex myVert, LNX_Vertex relatedVert, LNX_NavMesh nvMsh, bool allowBorrowing = false)
 		{
@@ -386,7 +456,7 @@ namespace LogansNavigationExtension
 					(
 						pthPts,
 						pthNrmls,
-						nvMsh.V_SurfaceOrientation
+						nvMsh.GetSurfaceNormalVector()
 					);
 				}
 				else

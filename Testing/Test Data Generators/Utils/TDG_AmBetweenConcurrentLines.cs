@@ -30,7 +30,6 @@ namespace LogansNavigationExtension
 		[Range(0, 2)] public int StartMidOrEnd = 0;
 
 		//[Header("DEBUG")]
-		[TextArea(1,10)] public string DBG_Method;
 
 		[ContextMenu("z call CaptureDataPoint()")]
 		public void CaptureDataPoint()
@@ -121,7 +120,7 @@ namespace LogansNavigationExtension
 			CurrentResult = LNX_Utils.AmBetweenConcurrentLines(
 				trans_posParameter.position, 
 				trans_LIneAStart.position, trans_LineAEnd.position,
-				trans_LIneBStart.position, trans_LineBEnd.position, _navmesh.V_SurfaceOrientation, ref DBG_Method
+				trans_LIneBStart.position, trans_LineBEnd.position, _navmesh.GetSurfaceNormalVector(), ref DBG_Method
 			);
 
 			if( CurrentResult )

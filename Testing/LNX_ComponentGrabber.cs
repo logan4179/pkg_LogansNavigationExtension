@@ -9,7 +9,10 @@ namespace LogansNavigationExtension
     public class LNX_ComponentGrabber : MonoBehaviour
     {
 		public string DisplayName = "";
+
+		[Header("SAMPLING")]
         public LNX_Component Mode;
+		public bool ConsiderClosestOffPerimeter;
 
 		[Header("REFERENCE")]
 		public LNX_NavMesh _navmesh;
@@ -22,14 +25,18 @@ namespace LogansNavigationExtension
 		[Header("DEBUG")]
 		public Vector3 V_labelOffset;
 		public Transform Trans_drawLineTo;
+		[SerializeField] private bool recalculatedLastFrame = false;
+		public bool RecalculatedLastFrame => recalculatedLastFrame;
 
 		[Header("OTHER")]
+		public LNX_NavmeshHit CurrentHit;
 		public LNX_ComponentCoordinate CurrentCoordinate;
+
 		public LNX_Triangle CurrentlyGrabbedTriangle
 		{
 			get
 			{
-				if( Mode == LNX_Component.Triangle && CurrentCoordinate.TrianglesIndex > -1 )
+				if( CurrentCoordinate.TrianglesIndex > -1 )
 				{
 					return _navmesh.Triangles[CurrentCoordinate.TrianglesIndex];
 				}
@@ -70,10 +77,14 @@ namespace LogansNavigationExtension
 
 		//[Header("DEBUG")]
 
+		[ExecuteInEditMode]
+		private void OnEnable()
+		{
+			Debug.Log($"{nameof(LNX_ComponentGrabber)}.{nameof(OnEnable)}");
+		}
 
 		public LNX_ComponentCoordinate GrabComponent()
         {
-			CurrentCoordinate = LNX_ComponentCoordinate.None;
 
             if (Mode == LNX_Component.None)
             {
@@ -81,36 +92,36 @@ namespace LogansNavigationExtension
                 return LNX_ComponentCoordinate.None;
             }
 
-			LNX_ProjectionHit hit = LNX_ProjectionHit.None;
-            if( _navmesh.SamplePosition(transform.position, out hit, 2f, false) )
+			CurrentHit = LNX_NavmeshHit.None;
+            if( _navmesh.SamplePosition(transform.position, out CurrentHit, 2f, ConsiderClosestOffPerimeter) )
             {
 			    if (Mode == LNX_Component.Vertex)
                 {
-					CurrentCoordinate = _navmesh.Triangles[hit.Index_Hit].GetClosestVertToPosition(transform.position).MyCoordinate;
+					CurrentCoordinate = _navmesh.Triangles[CurrentHit.TriIndex].GetClosestVertToPosition(transform.position).MyCoordinate;
                 }
 			    else if ( Mode == LNX_Component.Edge )
 			    {
-					float bestDist = Vector3.Distance(transform.position, _navmesh.GetEdge(hit.Index_Hit, 0).MidPosition);
+					float bestDist = Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriIndex, 0).MidPosition);
 					int bestEdge = 0;
 
-					if (Vector3.Distance(transform.position, _navmesh.GetEdge(hit.Index_Hit, 1).MidPosition) < bestDist)
+					if (Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriIndex, 1).MidPosition) < bestDist)
 					{
-						bestDist = Vector3.Distance(transform.position, _navmesh.GetEdge(hit.Index_Hit, 1).MidPosition);
+						bestDist = Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriIndex, 1).MidPosition);
 						bestEdge = 1;
 					}
 
-					if (Vector3.Distance(transform.position, _navmesh.GetEdge(hit.Index_Hit, 2).MidPosition) < bestDist)
+					if (Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriIndex, 2).MidPosition) < bestDist)
 					{
-						bestDist = Vector3.Distance(transform.position, _navmesh.GetEdge(hit.Index_Hit, 2).MidPosition);
+						bestDist = Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriIndex, 2).MidPosition);
 						bestEdge = 2;
 					}
 
-					CurrentCoordinate = _navmesh.Triangles[hit.Index_Hit].Edges[bestEdge].MyCoordinate;
+					CurrentCoordinate = _navmesh.Triangles[CurrentHit.TriIndex].Edges[bestEdge].MyCoordinate;
 					Debug.Log($"Sample succesful. Grabbed edge '{CurrentCoordinate}'...");
 				}
 				else if( Mode == LNX_Component.Triangle )
 				{
-					CurrentCoordinate = new LNX_ComponentCoordinate( hit.Index_Hit, -1 );
+					CurrentCoordinate = new LNX_ComponentCoordinate(CurrentHit.TriIndex, -1 );
 					Debug.Log($"Sample succesful. Grabbed tri '{CurrentCoordinate}'...");
 
 				}
@@ -122,6 +133,40 @@ namespace LogansNavigationExtension
 
 			return CurrentCoordinate;
         }
+
+		public Vector3 GetCurrentlyGrabbedPosition()
+		{
+			if (Mode == LNX_Component.None)
+			{
+				Debug.LogError($"LNX ERROR! Cannot get currently grabbed position if Mode is set to none");
+				return Vector3.zero;
+			}
+			else if (Mode == LNX_Component.Vertex)
+			{
+				return CurrentlyGrabbedVert.V_Position;
+			}
+			else if ( Mode == LNX_Component.Triangle )
+			{
+				return CurrentlyGrabbedTriangle.V_Center; //todo: maybe in the future I can get the closest point on a tri surface
+			}
+
+			return Vector3.zero;
+		}
+
+		[ContextMenu("z call SayCurrentlyGrabbed()")]
+		public void SayCurrentlyGrabbed()
+		{
+			if ( Mode == LNX_Component.Vertex )
+			{
+				CurrentlyGrabbedVert.SayCurrentInfo();
+				Debug.Log( CurrentlyGrabbedVert.GetAnomolyString(_navmesh) );
+			}
+			else if ( Mode == LNX_Component.Triangle )
+			{
+				CurrentlyGrabbedTriangle.SayCurrentInfo(_navmesh);
+				Debug.Log(CurrentlyGrabbedTriangle.GetAnomolyString(_navmesh));
+			}
+		}
 
 		public void DrawMyGizmos(float radius)
 		{
@@ -137,15 +182,15 @@ namespace LogansNavigationExtension
 		[HideInInspector, SerializeField] private Vector3 v_lastPos;
 		private void OnDrawGizmos()
 		{
-
 			if( Selection.activeGameObject != this.gameObject )
             {
                 return;
             }
 
-
+			recalculatedLastFrame = false;
 			if( transform.position != v_lastPos )
 			{
+				recalculatedLastFrame = true;
 				if( AutomaticallyGrab && Mode != LNX_Component.None )
 				{
 					GrabComponent();

@@ -17,7 +17,6 @@ namespace LogansNavigationExtension
 		public bool CurrentOperationResult;
 
 		[Header("DEBUG")]
-		public string DBG_Method;
 		public Color Color_Corners;
 		public Vector3 v_lblOffset;
 

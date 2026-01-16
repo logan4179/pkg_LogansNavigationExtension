@@ -20,9 +20,7 @@ namespace LogansNavigationExtension
 		[Header("RESULTS")]
 		public bool CurrentOperationResult = false;
 
-		[Header("DEBUG")]
-		public string DBG_Method;
-		
+		[Header("DEBUG")]		
 		public Color Color_Edges;
 		public Color Color_BridgeVisual;
 

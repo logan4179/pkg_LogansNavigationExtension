@@ -9,61 +9,43 @@ namespace LogansNavigationExtension
 {
     public class TDG_ProjectThroughToPerimeter : TDG_base
     {
-		[SerializeField] private Transform trans_start;
+		public LNX_ComponentGrabber Grabber_CurrentTri;
+		public LNX_ComponentGrabber Grabber_OuterPos;
 
-		public LNX_Triangle CurrentTriangle;
+		public LNX_Triangle CurrentTriangle => Grabber_CurrentTri.CurrentlyGrabbedTriangle;
 		public LNX_Edge ProjectedEdge;
-		public LNX_ProjectionHit CurrentHit;
+		public LNX_NavmeshHit CurrentHit;
 
-		[Header("DATA CAPTURE")]
-		public List<Vector3> CapturedStartPositions = new List<Vector3>();
-		public List<Vector3> CapturedEndPositions = new List<Vector3>();
-		public List<Vector3> CapturedTriCenters = new List<Vector3>();
-		public List<Vector3> CapturedEdgeMidPoints = new List<Vector3>();
-		public List<Vector3> CapturedProjectionPoints = new List<Vector3>();
+		[Header("GO TO")]
+		public TDG_TryProjectPathThrough _tdg_projectPathThrough;
 
 		//[Header("DEBUG")]
-
-
-		[ContextMenu("z call SampleFocusTri()")]
-		public void SampleFocusTri()
-		{
-			Debug.Log($"{nameof(SampleFocusTri)}()...");
-
-			LNX_ProjectionHit hit = LNX_ProjectionHit.None;
-
-			if ( _navmesh.SamplePosition(trans_start.position, out hit, 2f, false) )
-			{
-				CurrentTriangle = _navmesh.Triangles[hit.Index_Hit];
-				Debug.Log($"Succesful sample! Set new triangle to: '{hit.Index_Hit}'");
-			}
-			else
-			{
-				Debug.Log($"sample unsuccesful...");
-			}
-		}
 
 		[ContextMenu("z call CaptureDataPoint()")]
 		public void CaptureDataPoint()
 		{
-			CapturedStartPositions.Add(trans_start.position);
-			CapturedEndPositions.Add(transform.position);
-			CapturedTriCenters.Add( CurrentTriangle.V_Center);
-			CapturedEdgeMidPoints.Add( ProjectedEdge.MidPosition);
-			CapturedProjectionPoints.Add( CurrentHit.HitPosition);
+			_dataCapture.CaptureDataPoint(
+				Grabber_CurrentTri.transform.position, Grabber_OuterPos.transform.position,
+				CurrentTriangle.V_Center, ProjectedEdge.MidPosition, CurrentHit.HitPosition
+			);
+		}
 
-			DrawDataPointCapture( CapturedStartPositions[CapturedStartPositions.Count - 1], Color.magenta );
-			DrawDataPointCapture( CapturedEndPositions[CapturedEndPositions.Count - 1], Color.magenta );
-			DrawDataPointCapture( CapturedProjectionPoints[CapturedProjectionPoints.Count - 1], Color.magenta );
-
-			Debug.Log($"Logged '{CurrentHit.HitPosition}'...");
+		[ContextMenu("z call GoToTDG()")]
+		public void GoToTDG()
+		{
+			Grabber_CurrentTri.transform.position = _tdg_projectPathThrough.StartVert.V_Position;
+			Grabber_OuterPos.transform.position = _tdg_projectPathThrough.EndVert.V_Position;
 		}
 
 		protected override void OnDrawGizmos()
 		{
-			DBG_Operation = "";
-
-			if ( AmInUnitTest || Selection.activeGameObject != gameObject && Selection.activeGameObject != trans_start.gameObject && Selection.activeGameObject != transform.parent.gameObject )
+			if 
+			( 
+				AmInUnitTest || 
+				Selection.activeGameObject != gameObject && 
+				Selection.activeGameObject != Grabber_CurrentTri.gameObject && 
+				Selection.activeGameObject != Grabber_OuterPos.gameObject 
+			)
 			{
 				DBG_Operation += $"OnDrawGizmos short-circuit. Something wrong with selection...";
 				return;
@@ -77,36 +59,47 @@ namespace LogansNavigationExtension
 			}
 
 			base.OnDrawGizmos();
-			DBG_Operation += $"Commencing operation using triangle '{CurrentTriangle.Index_inCollection}'...\n";
 
-			DrawStandardFocusTriGizmos( CurrentTriangle, 1f, $"tri{CurrentTriangle.Index_inCollection}", Color.magenta);
+			DBG_Operation = "";
+			DBG_Method = "";
+			CurrentHit = LNX_NavmeshHit.None;
+
+			DrawStandardFocusTriGizmos( CurrentTriangle, 1f, $"", Color.magenta);
+
+			DBG_Operation += $"using triangle '{CurrentTriangle.Index_inCollection}'...\n" +
+				$"commencing operation...\n";
 
 			CurrentHit = CurrentTriangle.ProjectThroughToPerimeter
 			(
-				trans_start.position,
-				transform.position
+				Grabber_CurrentTri.transform.position,
+				Grabber_OuterPos.transform.position, 
+				ref DBG_Method
 			);
 
-			DBG_Operation += $"completed operation. {nameof(CurrentHit)} now: '{CurrentHit}'...\n\n" +
-				$"triangle report..............\n" +
-				$"{CurrentTriangle.dbg_prjctThrhToPerim}\nend of report............\n";
+			DBG_Operation += $"completed operation. {nameof(CurrentHit)} now: '{CurrentHit}'...\n";
 
-			if( CurrentHit.Index_Hit > -1 && CurrentHit.Index_Hit < 3 )
+			if( CurrentHit.TriIndex > -1 && CurrentHit.TriIndex < 3 )
 			{
-				ProjectedEdge = CurrentTriangle.Edges[CurrentHit.Index_Hit];
+				ProjectedEdge = CurrentTriangle.Edges[CurrentHit.TriIndex];
 				DrawStandardEdgeFocusGizmos( ProjectedEdge, 0.1f, $"edge{ProjectedEdge.MyCoordinate.ComponentIndex}", Color.green );
 
-				Gizmos.DrawCube( CurrentHit.HitPosition, Vector3.one * 0.05f );
+				Gizmos.DrawCube( CurrentHit.HitPosition, Vector3.one * 0.025f );
+				Handles.Label(CurrentHit.HitPosition + (Vector3.up * 0.03f), "hitPosition" );
 			}
 
-			Gizmos.color = CurrentHit.Equals(LNX_ProjectionHit.None) ? Color.red : Color.green;
+			Gizmos.color = CurrentHit.Equals(LNX_NavmeshHit.None) ? Color.red : Color.green;
 
-			Gizmos.DrawLine( trans_start.position, transform.position );
+			Grabber_CurrentTri.DrawMyGizmos(Radius_ObjectDebugSpheres);
+			Grabber_OuterPos.DrawMyGizmos(Radius_ObjectDebugSpheres);
+
+			/*
+			Gizmos.DrawLine( Grabber_CurrentTri.transform.position, transform.position );
 
 			Gizmos.DrawSphere(trans_start.position, Radius_ObjectDebugSpheres);
 			//Handles.Label(startTrans.position, "strtTrans");
 			Gizmos.DrawSphere(transform.position, Radius_ObjectDebugSpheres);
 			//Handles.Label(startTrans.position, "endTrans");
+			*/
 		}
 
 		#region HELPERS ---------------------------------------

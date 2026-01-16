@@ -104,12 +104,12 @@ namespace LogansNavigationExtension
 		{
 			Debug.Log($"{nameof(SampleFocusTri)}()...");
 
-			LNX_ProjectionHit hit = LNX_ProjectionHit.None;
+			LNX_NavmeshHit hit = LNX_NavmeshHit.None;
 
 			if (_navmesh.SamplePosition(transform.position, out hit, 2f, false))
 			{
-				PerspectiveEdgeCoordinate = new LNX_ComponentCoordinate( hit.Index_Hit, 0 );
-				Debug.Log($"Succesful sample! Set new triangle to: '{hit.Index_Hit}'");
+				PerspectiveEdgeCoordinate = new LNX_ComponentCoordinate( hit.TriIndex, 0 );
+				Debug.Log($"Succesful sample! Set new triangle to: '{hit.TriIndex}'");
 			}
 			else
 			{

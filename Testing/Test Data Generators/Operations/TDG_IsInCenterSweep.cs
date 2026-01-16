@@ -60,12 +60,12 @@ namespace LogansNavigationExtension
 		{
 			Debug.Log($"{nameof(SampleFocusTri)}()...");
 
-			LNX_ProjectionHit hit = LNX_ProjectionHit.None;
+			LNX_NavmeshHit hit = LNX_NavmeshHit.None;
 
 			if (_navmesh.SamplePosition(transform.position, out hit, 2f, false))
 			{
-				CurrentTriIndex = hit.Index_Hit;
-				Debug.Log($"Succesful sample! Set new triangle to: '{hit.Index_Hit}'");
+				CurrentTriIndex = hit.TriIndex;
+				Debug.Log($"Succesful sample! Set new triangle to: '{hit.TriIndex}'");
 			}
 			else
 			{
@@ -143,9 +143,9 @@ namespace LogansNavigationExtension
 			CurrentRslt_vert2 = false;
 
 			DBG_Operation += $"Commencing operation...\n";
-			CurrentRslt_vert0 = CurrentTriangle.Verts[0].IsInCenterSweep( transform.position, _navmesh.V_SurfaceOrientation );
-			CurrentRslt_vert1 = CurrentTriangle.Verts[1].IsInCenterSweep(transform.position, _navmesh.V_SurfaceOrientation);
-			CurrentRslt_vert2 = CurrentTriangle.Verts[2].IsInCenterSweep(transform.position, _navmesh.V_SurfaceOrientation);
+			CurrentRslt_vert0 = CurrentTriangle.Verts[0].IsInCenterSweep( transform.position, _navmesh.GetSurfaceNormalVector() );
+			CurrentRslt_vert1 = CurrentTriangle.Verts[1].IsInCenterSweep(transform.position, _navmesh.GetSurfaceNormalVector());
+			CurrentRslt_vert2 = CurrentTriangle.Verts[2].IsInCenterSweep(transform.position, _navmesh.GetSurfaceNormalVector());
 
 			DBG_Operation += $"Operation complete. \n" +
 
