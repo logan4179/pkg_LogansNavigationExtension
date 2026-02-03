@@ -41,7 +41,7 @@ namespace LogansNavigationExtension
 			{
 				DBG_Operation = _navmesh.DBG_SamplePosition;
 
-				DBG_Class += $"samplePosition returned true with: '{lnxHit.HitPosition}', on tri: '{lnxHit.TriIndex}'\n" +
+				DBG_Class += $"samplePosition returned true with: '{lnxHit.Position}', on tri: '{lnxHit.TriIndex}'\n" +
 					$"\nreport--------------------------------\n" +
 					$"{_navmesh.DBG_SamplePosition}\n";
 
@@ -54,9 +54,9 @@ namespace LogansNavigationExtension
 				);
 
 				Gizmos.color = Color_sampleObject;
-				Gizmos.DrawLine( transform.position, lnxHit.HitPosition );
-				Gizmos.DrawCube( lnxHit.HitPosition, Vector3.one * size_sampleObject );
-				Handles.Label( lnxHit.HitPosition + (Vector3.up * 0.015f), lnxHit.HitPosition.ToString() );
+				Gizmos.DrawLine( transform.position, lnxHit.Position );
+				Gizmos.DrawCube( lnxHit.Position, Vector3.one * size_sampleObject );
+				Handles.Label( lnxHit.Position + (Vector3.up * 0.015f), lnxHit.Position.ToString() );
 
 				Gizmos.color = color_success;
 			}
@@ -75,7 +75,7 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call CaptureDataPoint()")]
 		public void CaptureDataPoint()
 		{
-			_dataCapture.CaptureDataPoint(transform.position, lnxHit.HitPosition, _navmesh.Triangles[lnxHit.TriIndex].V_Center);
+			_dataCapture.CaptureDataPoint(transform.position, lnxHit.Position, _navmesh.Triangles[lnxHit.TriIndex].V_Center);
 
 			Debug.Log($"Captured ");
 		}
@@ -181,7 +181,7 @@ namespace LogansNavigationExtension
 			LNX_NavmeshHit lnxHit = new LNX_NavmeshHit();
 			if ( _navmesh.SamplePosition(transform.position, out lnxHit, 10f) )
 			{
-				Debug.Log($"hit pos: '{lnxHit.HitPosition}'");
+				Debug.Log($"hit pos: '{lnxHit.Position}'");
 
 			}
 			else

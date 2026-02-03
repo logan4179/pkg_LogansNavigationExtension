@@ -418,7 +418,7 @@ namespace LogansNavigationExtension
 			if (
 				Physics.Linecast(V_Center - (castDir.normalized * 0.3f),
 				V_Center + (castDir.normalized * 0.3f),
-				out rcHit, nm.CachedLayerMask))
+				out rcHit, nm.MyLayerMask))
 			{
 				//DbgCalculateTriInfo += $"rc1 success. hit at: '{rcHit.point}'\n";
 				v_sampledNormal = rcHit.normal;
@@ -427,7 +427,7 @@ namespace LogansNavigationExtension
 			else if (
 				Physics.Linecast(V_Center + (castDir.normalized * 0.3f),
 				V_Center - (castDir.normalized * 0.3f),
-				out rcHit, nm.CachedLayerMask))
+				out rcHit, nm.MyLayerMask))
 			{
 				//DbgCalculateTriInfo += $"rc2 success\n";
 				v_sampledNormal = rcHit.normal;
@@ -440,7 +440,7 @@ namespace LogansNavigationExtension
 				v_SurfaceNormal_cached != Vector3.zero &&
 				Physics.Linecast(V_Center + (v_SurfaceNormal_cached * 0.3f),
 				V_Center + (-v_SurfaceNormal_cached * 0.3f),
-				out rcHit, nm.CachedLayerMask))
+				out rcHit, nm.MyLayerMask))
 			{
 				//DbgCalculateTriInfo += $"linecast success. hit at: '{rcHit.point}'\n";
 				v_sampledNormal = rcHit.normal;
@@ -1162,19 +1162,32 @@ namespace LogansNavigationExtension
 				anomolyFound = true;
 			}
 
+			bool correctNumberOfVerts = true;
+
 			if ( Verts == null || Verts.Length == 0 )
 			{
 				returnString += $"{nameof(Verts)} collection not set\n";
 				anomolyFound = true;
+				correctNumberOfVerts = false;
+			}
+			else if( Verts.Length != 2 )
+			{
+				correctNumberOfVerts = false;
 			}
 
+			bool correctNumberOfEdges = true;
 			if ( Edges == null || Edges.Length == 0)
 			{
 				returnString += $"{nameof(Edges)} collection not set\n";
 				anomolyFound = true;
+				correctNumberOfEdges = false;
+			}
+			else if(  Edges.Length != 3 )
+			{
+				correctNumberOfEdges = false;
 			}
 
-			if( AmKinked )
+			if (AmKinked)
 			{
 				returnString += $"{nameof(AmKinked)} is true\n";
 				anomolyFound = true;
@@ -1183,68 +1196,83 @@ namespace LogansNavigationExtension
 			//Note: Add more checks as you go...
 
 			#region VERTS -------------------------------------------
-			string v0_string = Verts[0].GetAnomolyString(nm );
-			string v1_string = Verts[1].GetAnomolyString(nm );
-			string v2_string = Verts[2].GetAnomolyString(nm );
-
-			if 
-			(
-				!string.IsNullOrWhiteSpace(v0_string) || 
-				!string.IsNullOrWhiteSpace(v1_string) ||
-				!string.IsNullOrWhiteSpace(v2_string)
-			)
+			if( correctNumberOfVerts )
 			{
-				anomolyFound = true;
-				returnString += $"Anomoly found in verts!\n";
+				string v0_string = Verts[0].GetAnomolyString(nm );
+				string v1_string = Verts[1].GetAnomolyString(nm );
+				string v2_string = Verts[2].GetAnomolyString(nm );
 
-				if( !string.IsNullOrWhiteSpace(v0_string) )
+				if 
+				(
+					!string.IsNullOrWhiteSpace(v0_string) || 
+					!string.IsNullOrWhiteSpace(v1_string) ||
+					!string.IsNullOrWhiteSpace(v2_string)
+				)
 				{
-					returnString += $"Vert0---\n" +
-						$"{v0_string}\n";
-				}
-				if (!string.IsNullOrWhiteSpace(v1_string))
-				{
-					returnString += $"Vert1---\n" +
-						$"{v1_string}\n";
-				}
-				if (!string.IsNullOrWhiteSpace(v2_string))
-				{
-					returnString += $"Vert2---\n" +
-						$"{v2_string}\n";
+					anomolyFound = true;
+					returnString += $"Anomoly found in verts!\n";
+
+					if( !string.IsNullOrWhiteSpace(v0_string) )
+					{
+						returnString += $"Vert0---\n" +
+							$"{v0_string}\n";
+					}
+					if (!string.IsNullOrWhiteSpace(v1_string))
+					{
+						returnString += $"Vert1---\n" +
+							$"{v1_string}\n";
+					}
+					if (!string.IsNullOrWhiteSpace(v2_string))
+					{
+						returnString += $"Vert2---\n" +
+							$"{v2_string}\n";
+					}
 				}
 			}
+			else
+			{
+				returnString += $"this triangle does NOT have the correct number of verts...\n";
+			}
+
 			#endregion
 
 			#region EDGES -------------------------------------------
-			string e0_string = Edges[0].GetAnomolyString(nm );
-			string e1_string = Edges[1].GetAnomolyString(nm );
-			string e2_string = Edges[2].GetAnomolyString(nm );
-
-			if
-			(
-				!string.IsNullOrWhiteSpace(e0_string) ||
-				!string.IsNullOrWhiteSpace(e1_string) ||
-				!string.IsNullOrWhiteSpace(e2_string)
-			)
+			if (correctNumberOfEdges)
 			{
-				anomolyFound = true;
-				returnString += $"Anomoly found in Edges!\n";
+				string e0_string = Edges[0].GetAnomolyString(nm);
+				string e1_string = Edges[1].GetAnomolyString(nm);
+				string e2_string = Edges[2].GetAnomolyString(nm);
 
-				if (!string.IsNullOrWhiteSpace(e0_string))
+				if
+				(
+					!string.IsNullOrWhiteSpace(e0_string) ||
+					!string.IsNullOrWhiteSpace(e1_string) ||
+					!string.IsNullOrWhiteSpace(e2_string)
+				)
 				{
-					returnString += $"Edge0---\n" +
-						$"{e0_string}\n";
+					anomolyFound = true;
+					returnString += $"Anomoly found in Edges!\n";
+
+					if (!string.IsNullOrWhiteSpace(e0_string))
+					{
+						returnString += $"Edge0---\n" +
+							$"{e0_string}\n";
+					}
+					if (!string.IsNullOrWhiteSpace(e1_string))
+					{
+						returnString += $"Edge1---\n" +
+							$"{e1_string}\n";
+					}
+					if (!string.IsNullOrWhiteSpace(e2_string))
+					{
+						returnString += $"Edge2---\n" +
+							$"{e2_string}\n";
+					}
 				}
-				if (!string.IsNullOrWhiteSpace(e1_string))
-				{
-					returnString += $"Edge1---\n" +
-						$"{e1_string}\n";
-				}
-				if (!string.IsNullOrWhiteSpace(e2_string))
-				{
-					returnString += $"Edge2---\n" +
-						$"{e2_string}\n";
-				}
+			}
+			else
+			{
+				returnString += $"this triangle does NOT have the correct number of edges...\n";
 			}
 			#endregion
 			return returnString;

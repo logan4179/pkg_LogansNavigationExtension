@@ -102,8 +102,10 @@ namespace LogansNavigationExtension
 		#endregion
 
 		#region DEBUGGING ----------------------
-		[SerializeField] private bool drawTriLabels = true;
 		[SerializeField] private bool drawMeshVisualization = true;
+		[SerializeField] private Color color_meshVisualization;
+
+		[SerializeField] private bool drawTriLabels = true;
 		[SerializeField] private Color color_selectedComponent;
 
 		[SerializeField] private bool drawNavMeshLines = true;
@@ -696,11 +698,17 @@ namespace LogansNavigationExtension
 			*/
 
 			#region TRIANGLES ------------------------------------------------
-			Gizmos.color = _LNX_NavMesh.color_mesh;
-
+			Gizmos.color = color_meshVisualization;
 			if ( drawMeshVisualization && MeshIsValidForDrawing )
 			{
-				Gizmos.DrawMesh(_LNX_NavMesh._VisualizationMesh);
+				if( !MeshIsValidForDrawing )
+				{
+					Debug.LogError($"LNX ERROR! Mesh is not valid for drawing!");
+				}
+				else
+				{
+					Gizmos.DrawMesh(_LNX_NavMesh._VisualizationMesh);
+				}
 			}
 
 			if ( drawNavMeshLines || drawTriLabels || drawEdgeLabels )
@@ -748,7 +756,7 @@ namespace LogansNavigationExtension
 						);
 					}
 
-					if( drawNavMeshLines )
+					if( drawNavMeshLines && _LNX_NavMesh.Triangles[i].Verts != null && _LNX_NavMesh.Triangles[i].Verts.Length == 3 )
 					{
 						if( useGizmos )
 						{

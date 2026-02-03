@@ -67,7 +67,7 @@ namespace LogansNavigationExtension
 					return;
 				}
 
-				DBG_Operation += $"\nsampled hit at: '{ResultHit.HitPosition}'. Commencing operation...\n";
+				DBG_Operation += $"\nsampled hit at: '{ResultHit.Position}'. Commencing operation...\n";
 
 				ResultCoordinates = _navmesh.GetVisibleVertsFromPoint(ResultHit, ref DBG_Method, false, excludeCoords);
 
@@ -80,7 +80,7 @@ namespace LogansNavigationExtension
 			for( int i = 0; i < ResultCoordinates.Count; i++ )
 			{
 				Gizmos.DrawLine(
-					ResultHit.HitPosition,
+					ResultHit.Position,
 					_navmesh.GetVertexAtCoordinate(ResultCoordinates[i]).V_Position
 				);
 

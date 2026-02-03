@@ -16,6 +16,7 @@ namespace LogansNavigationExtension
 		[Header("RESULTS")]
 		public LNX_NavmeshHit ResultHit;
 		public List<LNX_ComponentCoordinate> ResultCoordinates;
+		List<LNX_Path> ResultPaths = new List<LNX_Path>();
 
 		[Header("DEBUG")]
 		public Color Color_lines;
@@ -91,10 +92,11 @@ namespace LogansNavigationExtension
 					return;
 				}
 
-				DBG_Operation += $"\nsampled hit at: '{ResultHit.HitPosition}'.\n" +
+				DBG_Operation += $"\nsampled hit at: '{ResultHit.Position}'.\n" +
 					$"Commencing operation...\n";
 
-				ResultCoordinates = _navmesh.GetVisibleVertsAtVert( ref DBG_Method, CurrentVert, true, ExcludeVerts );
+				ResultPaths = new List<LNX_Path>();
+				ResultCoordinates = _navmesh.GetVisibleVertsFromPoint( CurrentVert, out ResultPaths, ref DBG_Method, true, ExcludeVerts );
 
 				DBG_Operation += $"{nameof(ResultCoordinates)} count: '{ResultCoordinates.Count}'\n";
 			}
@@ -105,7 +107,7 @@ namespace LogansNavigationExtension
 			for (int i = 0; i < ResultCoordinates.Count; i++)
 			{
 				Gizmos.DrawLine(
-					ResultHit.HitPosition,
+					ResultHit.Position,
 					_navmesh.GetVertexAtCoordinate(ResultCoordinates[i]).V_Position
 				);
 

@@ -91,7 +91,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 					_tdg_projectThroughToPerimeter._dataCapture.VectorCaptureLists[1].vectors[i], 
 					ref s
 				);
-				Debug.Log($"projected through. hit position: '{hit.HitPosition}'. Captured hit position is: " +
+				Debug.Log($"projected through. hit position: '{hit.Position}'. Captured hit position is: " +
 					$"'{_tdg_projectThroughToPerimeter._dataCapture.VectorCaptureLists[4].vectors[i]}'." +
 					$"Now asserting value is as expected...");
 
@@ -99,17 +99,17 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 				UnityEngine.Assertions.Assert.AreApproximatelyEqual(
 					_tdg_projectThroughToPerimeter._dataCapture.VectorCaptureLists[4].vectors[i].x,
-					hit.HitPosition.x
+					hit.Position.x
 				);
 
 				UnityEngine.Assertions.Assert.AreApproximatelyEqual(
 					_tdg_projectThroughToPerimeter._dataCapture.VectorCaptureLists[4].vectors[i].y,
-					hit.HitPosition.y
+					hit.Position.y
 				);
 
 				UnityEngine.Assertions.Assert.AreApproximatelyEqual(
 					_tdg_projectThroughToPerimeter._dataCapture.VectorCaptureLists[4].vectors[i].z,
-					hit.HitPosition.z
+					hit.Position.z
 				);
 			}
 		}

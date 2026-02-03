@@ -1278,18 +1278,18 @@ namespace LogansNavigationExtension
 		public static bool TryProjectPathThrough(LNX_NavMesh nm, LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, out LNX_Path outPath )
 		{ //note: started making this as cleaner/faster version. Use this when ready to efficiency test vs the overload after...
 			outPath = new LNX_Path();
-			outPath.AddPoint(startHit, nm);
+			outPath.AddPoint( startHit );
 
 			#region SHORT-CIRCUITING =======================================
 			if(startHit.TriIndex == endHit.TriIndex )
 			{
-				outPath.AddPoint(endHit, nm);
+				outPath.AddPoint( endHit );
 				return true;
 			}
 			#endregion
 
 			int runningTriIndex = startHit.TriIndex;
-			Vector3 runningStartPos = startHit.HitPosition;
+			Vector3 runningStartPos = startHit.Position;
 			int currentEdgeIndex = -1;
 
 			int runningWhileIterations = 0;
@@ -1298,7 +1298,7 @@ namespace LogansNavigationExtension
 			while (amStillProjecting)
 			{
 				string dbgprjct = "";
-				LNX_NavmeshHit edgePerimHit = nm.Triangles[runningTriIndex].ProjectThroughToPerimeter(runningStartPos, endHit.HitPosition, ref dbgprjct, currentEdgeIndex);
+				LNX_NavmeshHit edgePerimHit = nm.Triangles[runningTriIndex].ProjectThroughToPerimeter(runningStartPos, endHit.Position, ref dbgprjct, currentEdgeIndex);
 
 				if ( edgePerimHit.ComponentIndex < 0 || edgePerimHit.ComponentIndex > 2 )
 				{
@@ -1306,13 +1306,13 @@ namespace LogansNavigationExtension
 				}
 
 				//outPath.AddPoint( new LNX_NavmeshHit(runningTriIndex, edgePerimHit.HitPosition), nm ); //dws
-				outPath.AddPoint( edgePerimHit, nm );
+				outPath.AddPoint( edgePerimHit );
 
 				//LNX_Edge hitEdge = nm.Triangles[runningTriIndex].Edges[edgePerimHit.ComponentIndex]; //dws
 				currentEdgeIndex = edgePerimHit.ComponentIndex;
-				runningStartPos = edgePerimHit.HitPosition;
+				runningStartPos = edgePerimHit.Position;
 
-				if( Vector3.Distance(edgePerimHit.HitPosition, endHit.HitPosition) < 0.001f )
+				if( Vector3.Distance(edgePerimHit.Position, endHit.Position) < 0.001f )
 				{
 					amStillProjecting = false;
 					runningTriIndex = endHit.TriIndex;
@@ -1326,14 +1326,14 @@ namespace LogansNavigationExtension
 					if
 					(
 						nm.Triangles[runningTriIndex].Edges[edgePerimHit.ComponentIndex].SharedEdgeCoordinate.TrianglesIndex == endHit.TriIndex ||
-						(nm.Triangles[runningTriIndex].AmAdjacentToTri(nm.Triangles[endHit.TriIndex]) && nm.Triangles[runningTriIndex].IsPositionOnAnyEdge(endHit.HitPosition))
+						(nm.Triangles[runningTriIndex].AmAdjacentToTri(nm.Triangles[endHit.TriIndex]) && nm.Triangles[runningTriIndex].IsPositionOnAnyEdge(endHit.Position))
 					)
 					{
 						runningTriIndex = endHit.TriIndex;
 
-						if (endHit.HitPosition != edgePerimHit.HitPosition) //In case the end position is on the perimeter of the destination tri...
+						if (endHit.Position != edgePerimHit.Position) //In case the end position is on the perimeter of the destination tri...
 						{
-							outPath.AddPoint(endHit, nm);
+							outPath.AddPoint( endHit );
 						}
 
 						amStillProjecting = false;
@@ -1342,7 +1342,7 @@ namespace LogansNavigationExtension
 					{
 						runningTriIndex = nm.Triangles[runningTriIndex].Edges[edgePerimHit.ComponentIndex].SharedEdgeCoordinate.TrianglesIndex;
 						currentEdgeIndex = nm.Triangles[runningTriIndex].Edges[edgePerimHit.ComponentIndex].SharedEdgeCoordinate.ComponentIndex;
-						runningStartPos = edgePerimHit.HitPosition;
+						runningStartPos = edgePerimHit.Position;
 
 					}
 				}
@@ -1363,19 +1363,19 @@ namespace LogansNavigationExtension
 		{
 			dbgRprt = $"ProjectPathThrough(start: '{startHit}', end: '{endHit}')\n\n";
 			outPath = new LNX_Path();
-			outPath.AddPoint( startHit, nm );
+			outPath.AddPoint( startHit );
 
 			#region SHORT-CIRCUITING =======================================
 			if( startHit.TriIndex == endHit.TriIndex )
 			{
 				dbgRprt += $"tri indices the same for hit objects. Short-circuting with 2 pt path...\n";
-				outPath.AddPoint( endHit, nm );
+				outPath.AddPoint( endHit );
 				return true;
 			}
 			#endregion
 
 			LNX_Triangle currentTri = nm.Triangles[startHit.TriIndex];
-			Vector3 currentStartPos = startHit.HitPosition;
+			Vector3 currentStartPos = startHit.Position;
 			int currentEdgeIndex = -1;
 
 			int safetyTimeout = nm.Triangles.Length;
@@ -1392,9 +1392,9 @@ namespace LogansNavigationExtension
 					$"projecting through triangle...\n";
 
 				string dbgprjct = "";
-				LNX_NavmeshHit edgePerimHit = currentTri.ProjectThroughToPerimeter( currentStartPos, endHit.HitPosition, ref dbgprjct, currentEdgeIndex );
+				LNX_NavmeshHit edgePerimHit = currentTri.ProjectThroughToPerimeter( currentStartPos, endHit.Position, ref dbgprjct, currentEdgeIndex );
 				dbgRprt += $"Projected through to perim with hit: '{edgePerimHit}'...\n";
-				outPath.AddPoint( new LNX_NavmeshHit(currentTri.Index_inCollection, edgePerimHit.HitPosition), nm );
+				outPath.AddPoint( edgePerimHit );
 
 				if (edgePerimHit.ComponentIndex < 0 || edgePerimHit.ComponentIndex > 2)
 				{
@@ -1406,12 +1406,12 @@ namespace LogansNavigationExtension
 
 				LNX_Edge hitEdge = currentTri.Edges[edgePerimHit.ComponentIndex];
 				currentEdgeIndex = edgePerimHit.ComponentIndex;
-				currentStartPos = edgePerimHit.HitPosition;
+				currentStartPos = edgePerimHit.Position;
 
-				dbgRprt += $"projected to edge: '{hitEdge.MyCoordinate}' at '{LNX_UnitTestUtilities.LongVectorString(edgePerimHit.HitPosition)}'. " +
+				dbgRprt += $"projected to edge: '{hitEdge.MyCoordinate}' at '{LNX_UnitTestUtilities.LongVectorString(edgePerimHit.Position)}'. " +
 				$"Shared edge is: '{hitEdge.SharedEdgeCoordinate}'\n";
 
-				if (Vector3.Distance(edgePerimHit.HitPosition, endHit.HitPosition) < 0.001f)
+				if (Vector3.Distance(edgePerimHit.Position, endHit.Position) < 0.001f)
 				{
 					//Debug.Log("close!");
 					amStillProjecting = false;
@@ -1420,10 +1420,10 @@ namespace LogansNavigationExtension
 				else if (hitEdge.AmTerminal)
 				{
 					dbgRprt += $"hit edge is terminal. Stopping loop...\n";
-					dbgRprt += $"currentHit {LNX_UnitTestUtilities.LongVectorString(edgePerimHit.HitPosition)} equals endhit " +
-						$"{LNX_UnitTestUtilities.LongVectorString(endHit.HitPosition)}: '{edgePerimHit.HitPosition == endHit.HitPosition}'\n" +
-						$"flat equals: '{FlatVector(edgePerimHit.HitPosition, nm.GetSurfaceNormalVector()) == FlatVector(endHit.HitPosition, nm.GetSurfaceNormalVector())}'\n" +
-						$"dist: '{Vector3.Distance(edgePerimHit.HitPosition, endHit.HitPosition)}'\n";
+					dbgRprt += $"currentHit {LNX_UnitTestUtilities.LongVectorString(edgePerimHit.Position)} equals endhit " +
+						$"{LNX_UnitTestUtilities.LongVectorString(endHit.Position)}: '{edgePerimHit.Position == endHit.Position}'\n" +
+						$"flat equals: '{FlatVector(edgePerimHit.Position, nm.GetSurfaceNormalVector()) == FlatVector(endHit.Position, nm.GetSurfaceNormalVector())}'\n" +
+						$"dist: '{Vector3.Distance(edgePerimHit.Position, endHit.Position)}'\n";
 					amStillProjecting = false;
 				}
 				else
@@ -1436,14 +1436,14 @@ namespace LogansNavigationExtension
 					if 
 					(
 						hitEdge.SharedEdgeCoordinate.TrianglesIndex == endHit.TriIndex ||
-						(currentTri.AmAdjacentToTri(nm.Triangles[endHit.TriIndex]) && currentTri.IsPositionOnAnyEdge(endHit.HitPosition))
+						(currentTri.AmAdjacentToTri(nm.Triangles[endHit.TriIndex]) && currentTri.IsPositionOnAnyEdge(endHit.Position))
 					)
 					{
 						currentTri = nm.Triangles[endHit.TriIndex];
 
-						if( endHit.HitPosition != edgePerimHit.HitPosition ) //In case the end position is on the perimeter of the destination tri...
+						if( endHit.Position != edgePerimHit.Position ) //In case the end position is on the perimeter of the destination tri...
 						{
-							outPath.AddPoint( endHit, nm );
+							outPath.AddPoint( endHit );
 						}
 
 						amStillProjecting = false;
@@ -1453,7 +1453,7 @@ namespace LogansNavigationExtension
 					{
 						currentTri = nm.Triangles[hitEdge.SharedEdgeCoordinate.TrianglesIndex];
 						currentEdgeIndex = hitEdge.SharedEdgeCoordinate.ComponentIndex;
-						currentStartPos = edgePerimHit.HitPosition;
+						currentStartPos = edgePerimHit.Position;
 
 						dbgRprt += $"Decided NOT at the end. Set new current tri to: '{currentTri.Index_inCollection}'...\n";
 					}
@@ -1491,7 +1491,7 @@ namespace LogansNavigationExtension
 			#endregion
 
 			LNX_Triangle currentTri = nm.Triangles[startHit.TriIndex];
-			Vector3 currentStartPos = startHit.HitPosition;
+			Vector3 currentStartPos = startHit.Position;
 			int currentEdgeIndex = -1;
 
 			int safetyTimeout = nm.Triangles.Length;
@@ -1508,7 +1508,7 @@ namespace LogansNavigationExtension
 					$"projecting through triangle...\n";
 
 				string dbgprjct = "";
-				LNX_NavmeshHit edgePerimHit = currentTri.ProjectThroughToPerimeter(currentStartPos, endHit.HitPosition, ref dbgprjct, currentEdgeIndex);
+				LNX_NavmeshHit edgePerimHit = currentTri.ProjectThroughToPerimeter(currentStartPos, endHit.Position, ref dbgprjct, currentEdgeIndex);
 				dbgRprt += $"Projected through to perim with hit: '{edgePerimHit}'...\n";
 
 				/*DBGRaycast += $"tri.prjctThrToPerim report----------------\n" +
@@ -1525,9 +1525,9 @@ namespace LogansNavigationExtension
 
 				LNX_Edge hitEdge = currentTri.Edges[edgePerimHit.ComponentIndex];
 				currentEdgeIndex = edgePerimHit.ComponentIndex;
-				currentStartPos = edgePerimHit.HitPosition;
+				currentStartPos = edgePerimHit.Position;
 
-				dbgRprt += $"projected to edge: '{hitEdge.MyCoordinate}' at '{LNX_UnitTestUtilities.LongVectorString(edgePerimHit.HitPosition)}'. " +
+				dbgRprt += $"projected to edge: '{hitEdge.MyCoordinate}' at '{LNX_UnitTestUtilities.LongVectorString(edgePerimHit.Position)}'. " +
 				$"Shared edge is: '{hitEdge.SharedEdgeCoordinate}'\n";
 
 				if (hitEdge.AmTerminal)
@@ -1545,7 +1545,7 @@ namespace LogansNavigationExtension
 					if
 					(
 						hitEdge.SharedEdgeCoordinate.TrianglesIndex == endHit.TriIndex ||
-						(currentTri.AmAdjacentToTri(nm.Triangles[endHit.TriIndex]) && currentTri.IsPositionOnAnyEdge(endHit.HitPosition))
+						(currentTri.AmAdjacentToTri(nm.Triangles[endHit.TriIndex]) && currentTri.IsPositionOnAnyEdge(endHit.Position))
 					)
 					{
 						currentTri = nm.Triangles[endHit.TriIndex];
@@ -1557,7 +1557,7 @@ namespace LogansNavigationExtension
 					{
 						currentTri = nm.Triangles[hitEdge.SharedEdgeCoordinate.TrianglesIndex];
 						currentEdgeIndex = hitEdge.SharedEdgeCoordinate.ComponentIndex;
-						currentStartPos = edgePerimHit.HitPosition;
+						currentStartPos = edgePerimHit.Position;
 
 						dbgRprt += $"Decided NOT at the end. Set new current tri to: '{currentTri.Index_inCollection}'...\n";
 					}

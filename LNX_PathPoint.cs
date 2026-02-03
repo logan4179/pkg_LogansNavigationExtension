@@ -21,7 +21,7 @@ namespace LogansNavigationExtension
 
 		public LNX_PathPoint( LNX_NavmeshHit hit )
 		{
-			V_Position = hit.HitPosition;
+			V_Position = hit.Position;
 			V_normal = hit.Normal;
 		}
 

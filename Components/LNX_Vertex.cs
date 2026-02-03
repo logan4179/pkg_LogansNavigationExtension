@@ -88,8 +88,6 @@ namespace LogansNavigationExtension
 		#region RELATIONAL ======================================================================
 		[HideInInspector] public LNX_VertexRelationship[] Relationships;
 
-		public bool RelationshipsCollectionIsValid => Relationships != null && Relationships.Length > 0;
-
 		/// <summary>Index where you can find this vertex from the perspective of other Vertices.</summary>
 		public int Index_Relational => (MyCoordinate.TrianglesIndex * 3) + MyCoordinate.ComponentIndex;
 
@@ -301,19 +299,6 @@ namespace LogansNavigationExtension
 			return LNX_Utils.AmInVectorCone( pos, V_ToFirstSiblingVert_flat, V_ToSecondSiblingVert_flat, v_surfaceNormal_cached, ref s );
 		}
 
-		public LNX_Path GetPathTo(LNX_NavmeshHit hit, LNX_NavMesh nm)
-		{
-			List<LNX_NavmeshHit> pathHits = new List<LNX_NavmeshHit>() { new LNX_NavmeshHit(V_Position, MyCoordinate) };
-
-			bool amPinging = true;
-			while (amPinging)
-			{
-
-			}
-
-			return new LNX_Path(pathHits, nm);
-		}
-
 		public LNX_Path GetPathTo(LNX_Vertex otherVert)
 		{
 			return GetRelationship(otherVert).PathTo;
@@ -370,7 +355,6 @@ namespace LogansNavigationExtension
 			return V_Position == vert.V_Position;
 		}
 
-
 		public bool AreSiblings( LNX_ComponentCoordinate otherVertCoordinate )
 		{
 			return MyCoordinate.TrianglesIndex > -1 &&
@@ -395,6 +379,24 @@ namespace LogansNavigationExtension
 			return Relationships[vertCoord.TrianglesIndex * 3 + (vertCoord.ComponentIndex)];
 		}
 
+		public bool IsRelationshipCollectionValid()
+		{
+			if( Relationships == null || Relationships.Length <= 0 )
+			{
+				return false;
+			}
+
+			for( int i = 0; i < Relationships.Length; i++ )
+			{
+				//if( Relationships[i] == LNX_VertexRelationship.None )
+				if ( !Relationships[i].AmValid )
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
 		#endregion
 
 		public void DbgPing(ref string dbgString, LNX_NavmeshHit endPoint, LNX_NavMesh nm, 
@@ -438,7 +440,8 @@ namespace LogansNavigationExtension
 				$"now getting visible verts from This vert...\n";
 
 			string dbgGetVisVrtsAt = "";
-			List<LNX_ComponentCoordinate> visibleVrts = nm.GetVisibleVertsAtVert(ref dbgGetVisVrtsAt, this, false, fwdBackstopVerts);
+			List<LNX_Path> vsblVrtPths = new List<LNX_Path>();
+			List<LNX_ComponentCoordinate> visibleVrts = nm.GetVisibleVertsFromPoint(this, out vsblVrtPths, ref dbgGetVisVrtsAt, false, fwdBackstopVerts);
 
 			if (visibleVrts.Count <= 0)
 			{
@@ -469,7 +472,7 @@ namespace LogansNavigationExtension
 			}
 
 			#region SHORT-CIRCUITING ========================================
-			LNX_Path pth = new LNX_Path();
+			LNX_Path pth = LNX_Path.None;
 			if ( !nm.Raycast(new LNX_NavmeshHit(this), endPoint, out pth) )
 			{
 				runningPath.AddPath( pth );
@@ -494,9 +497,11 @@ namespace LogansNavigationExtension
 			{
 				fwdBackstopVerts.Add( MyCoordinate );
 			}
+			#endregion
 
 			string dbgGetVisVrtsAt = "";
-			List<LNX_ComponentCoordinate> visibleVrts = nm.GetVisibleVertsAtVert( ref dbgGetVisVrtsAt, this, false, fwdBackstopVerts );
+			List<LNX_Path> vsblVrtPths = new List<LNX_Path>();
+			List<LNX_ComponentCoordinate> visibleVrts = nm.GetVisibleVertsFromPoint(this, out vsblVrtPths, ref dbgGetVisVrtsAt, false, fwdBackstopVerts );
 			for ( int i = 0; i < visibleVrts.Count; i++ )
 			{
 				fwdBackstopVerts.Add( visibleVrts[i] );
@@ -510,17 +515,18 @@ namespace LogansNavigationExtension
 			}
 			else
 			{
-				for (int i = 0; i < visibleVrts.Count; i++)
+				for ( int i = 0; i < visibleVrts.Count; i++ )
 				{
 					LNX_Path path_continuationToVsblVrt;
 					
 					LNX_Utils.TryProjectPathThrough(
-						nm, new LNX_NavmeshHit(-1, runningPath.EndPosition), nm.Triangles[].Verts[], out path_continuationToVsblVrt
+						nm, runningPath.EndHit, 
+						nm.Triangles[visibleVrts[i].TrianglesIndex].Verts[visibleVrts[i].ComponentIndex], 
+						out path_continuationToVsblVrt
 					);
 						
-
 					LNX_Path p = nm.Triangles[visibleVrts[i].TrianglesIndex].Verts[visibleVrts[i].ComponentIndex].Ping(
-						dt, endPoint, nm, maxAllowableDist, path_runningPlusVisibleVert, fwdBackstopVerts
+						dt, endPoint, nm, maxAllowableDist, path_continuationToVsblVrt, fwdBackstopVerts
 					);
 
 					if (p != LNX_Path.None && runningPath.GetCombinedDistance(p) < maxAllowableDist && p.TotalDistance < rtrnPath.TotalDistance)
@@ -536,47 +542,6 @@ namespace LogansNavigationExtension
 				}
 			}
 
-
-
-
-
-
-			// OLD ////////////////////////////////////////////////////////////////////////////////////////////////
-			LNX_Path path_runningPlusVisibleVert = new LNX_Path(runningPath,
-				nm.Triangles[visibleVrts[0].TrianglesIndex].Verts[visibleVrts[0].ComponentIndex]
-			);
-			rtrnPath = nm.Triangles[visibleVrts[0].TrianglesIndex].Verts[visibleVrts[0].ComponentIndex].Ping( 
-				dt, endPoint, nm, maxAllowableDist, runningPath, fwdBackstopVerts 
-			);
-
-			#endregion
-
-			if ( visibleVrts.Count > 1 )
-			{
-				for ( int i = 1; i < visibleVrts.Count; i++ )
-				{
-					path_runningPlusVisibleVert = new LNX_Path(runningPath,
-						nm.Triangles[visibleVrts[i].TrianglesIndex].Verts[visibleVrts[i].ComponentIndex]
-					);
-						
-					LNX_Path p = nm.Triangles[visibleVrts[i].TrianglesIndex].Verts[visibleVrts[i].ComponentIndex].Ping( 
-						dt, endPoint, nm, maxAllowableDist, path_runningPlusVisibleVert, fwdBackstopVerts 
-					);
-
-					if( p != LNX_Path.None && runningPath.GetCombinedDistance(p) < maxAllowableDist && p.TotalDistance < rtrnPath.TotalDistance)
-					{
-						rtrnPath = p;
-					}
-
-					if ( DateTime.Now.Subtract(dt).TotalSeconds > 30 )
-					{
-						Debug.LogWarning($"time limit reached at vert: '{this}'!");
-						return LNX_Path.None;
-					}
-				}
-			}
-
-			if( rtrnPath.TotalDistance)
 			return rtrnPath;
 		}
 

@@ -17,10 +17,14 @@ namespace LogansNavigationExtension
 		//[Header("OPTIONS")]
 		public LNX_Direction SurfaceOrientation = LNX_Direction.PositiveY;
 
+		public LayerMask MyLayerMask;
+
+		/*
 		public string LayerMaskName;
 
 		private int cachedLayerMask;
 		public int CachedLayerMask => cachedLayerMask;
+		*/
 
 		/*[HideInInspector]*/ public LNX_Triangle[] Triangles;
 
@@ -100,7 +104,8 @@ namespace LogansNavigationExtension
 
 
 		[Header("VISUAL/DEBUG")]
-		public Color color_mesh;
+		[SerializeField, Tooltip("Whether to draw the mesh visual")] private bool drawVisualizationMesh;
+		[SerializeField] private Color color_visualMesh;
 
 		private void OnEnable()
 		{
@@ -379,7 +384,9 @@ namespace LogansNavigationExtension
 			DateTime dt_methodStart = DateTime.Now;
 			DBG_CalculateTriangulation = $"{nameof(CalculateTriangulation)}()";
 
-			if (string.IsNullOrEmpty(LayerMaskName)) //todo: dws
+			//todo: dws
+			/*
+			if (string.IsNullOrEmpty(LayerMaskName))
 			{
 				Debug.LogError("LogansNavmeshExtender ERROR! You need to set an environmental layer mask in order to construct the navmesh.");
 				return;
@@ -388,6 +395,14 @@ namespace LogansNavigationExtension
 			{
 				cachedLayerMask = LayerMask.GetMask(LayerMaskName);
 			}
+			*/
+
+			Debug.Log($"{nameof(MyLayerMask)}: '{MyLayerMask.value}'");
+			if( MyLayerMask.value == 0 )
+			{
+				Debug.LogError($"LNX ERROR! You must specify an environmental mask.");
+				return;
+			}
 
 			// Make lists-------------------------
 			List<Vector3> constructedVertices_unique = new List<Vector3>(); //it doesn't look to me like I actually do anything with this...
@@ -395,7 +410,7 @@ namespace LogansNavigationExtension
 			_VisualizationMesh = new Mesh();
 
 			#region DEAL WITH TRIANGULATION -----------------------------------------------------------------------------
-			NavMeshTriangulation triangulation = NavMesh.CalculateTriangulation(); //This calculates and returns a "simple triangulation of the current navmesh..." - docs
+			NavMeshTriangulation triangulation = NavMesh.CalculateTriangulation(); //Docs: This calculates and returns a "simple triangulation of the current navmesh..."
 
 			DBG_CalculateTriangulation += $"fetched scene triangulation has '{triangulation.areas.Length}' areas, '{triangulation.vertices.Length}' " +
 				$"vertices, and '{triangulation.indices.Length}' indices.\n";
@@ -448,7 +463,7 @@ namespace LogansNavigationExtension
 			for (int i = 0; i < constructedAtomicTris.Count; i++)
 			{
 				DBG_CalculateTriangulation += $"{i} --------------------------////////////////////////////////////\n";
-				//Debug.Log($"{i} --------------------------////////////////////////////////////\n");
+				Debug.Log($"{i} --------------------------////////////////////////////////////\n");
 
 				Triangles[i] = new LNX_Triangle(i, constructedAreaIndices[i], constructedAtomicTris, this); //stack trace 5
 			}
@@ -465,7 +480,7 @@ namespace LogansNavigationExtension
 		}
 		public void RefreshMe( bool meshContinuityHasChanged ) //NEW
 		{
-			//Debug.Log($"{nameof(RefreshMe)}()---------------------------");
+			Debug.Log($"{nameof(RefreshMe)}()---------------------------");
 
 			//Debug.Log($"now looping through '{Triangles.Length}' triangles...");
 
@@ -852,6 +867,20 @@ namespace LogansNavigationExtension
 
 			_VisualizationMesh.vertices = tmpVrts; //apparently you have to assign to the mesh in this manner in
 			//order to make this update (apparently I can't just change one of the existing vertices elements)...
+		}
+
+		[ContextMenu("z call ClearGeometry()")]
+		public void ClearGeometry()
+		{
+			Debug.Log("ClearGeometry()");
+
+			Triangles = new LNX_Triangle[0];
+			deletedTriangles = new List<LNX_AtomicTriangle>();
+			_VisualizationMesh = new Mesh();
+			Bounds = new float[0];
+			V_Bounds = new Vector3[6];
+			V_BoundsCenter = Vector3.zero;
+
 		}
 
 		public void ClearModifications()
@@ -1387,16 +1416,18 @@ namespace LogansNavigationExtension
 					$"Now checking for which verts are visible from start position...\n";
 
 				string dbgvsvrtfrmPt = "";
-				List<LNX_ComponentCoordinate> visibleVerts = GetVisibleVertsFromPoint( startHit, ref dbgvsvrtfrmPt, false );
+				List<LNX_Path> visblVrtPths = new List<LNX_Path>();
+				List<LNX_ComponentCoordinate> visibleVerts = GetVisibleVertsFromPoint( startHit, out visblVrtPths, ref dbgvsvrtfrmPt, false );
 
-				Debug.Log($"GetVisibleVerts report...\n" +
+				Debug.Log($"GetVisibleVerts returned '{visibleVerts.Count}' verts. Report...\n" +
 					$"{dbgvsvrtfrmPt}");
 
-				dbgCalculatePath += $"Finished check. Decided there are '{visibleVerts.Count}' visible verts...\n" +
-					$"Pinging each visible vert...\n\n";
+				dbgCalculatePath += $"Decided there are '{visibleVerts.Count}' bisible verts. Pinging each visible vert...\n\n";
 
-				#region CONSTRUCT PATH -------------------------------------
+				#region CONSTRUCT PATHS -------------------------------------
 				LNX_Path[] paths = new LNX_Path[visibleVerts.Count];
+				int indx_runningBestPath = -1;
+				float dist_runningBestPath = float.MaxValue;
 				for( int i_visblVrts = 0; i_visblVrts < visibleVerts.Count; i_visblVrts++ )
 				{
 					dbgCalculatePath += $"for {i_visblVrts}: '{visibleVerts[i_visblVrts]}'---\n";
@@ -1405,21 +1436,30 @@ namespace LogansNavigationExtension
 					if( realPing )
 					{
 						paths[i_visblVrts] = Triangles[visibleVerts[i_visblVrts].TrianglesIndex].Verts[visibleVerts[i_visblVrts].ComponentIndex].Ping(
-						DateTime.Now, endHit, this, runningClosestDistance,  new LNX_Path(this, startHit), visibleVerts
+						DateTime.Now, endHit, this, runningClosestDistance, visblVrtPths[i_visblVrts], visibleVerts
 						);
+						if ( paths[i_visblVrts].TotalDistance < dist_runningBestPath )
+						{
+							indx_runningBestPath = i_visblVrts;
+							dist_runningBestPath = paths[i_visblVrts].TotalDistance;
+						}
 					}
 					else
 					{
 						string s = "";
 						Triangles[visibleVerts[i_visblVrts].TrianglesIndex].Verts[visibleVerts[i_visblVrts].ComponentIndex].DbgPing(
-							ref s, endHit, this, runningClosestDistance, new LNX_Path(this, startHit), visibleVerts
+							ref s, endHit, this, runningClosestDistance, visblVrtPths[i_visblVrts], visibleVerts
 						);
 						dbgCalculatePath += $"{s}\n\n";
 					}
 				}
 				#endregion
-			}
 
+				if( indx_runningBestPath > -1 )
+				{
+					outPath = paths[indx_runningBestPath];
+				}
+			}
 
 			return true;
 		}
@@ -1447,7 +1487,7 @@ namespace LogansNavigationExtension
 			if (SamplePosition(startPos_passed, out startHit, maxSampleDistance, considerOffPerimeter))
 			{
 				//startPos_passed = startHit.HitPosition; //do we really need this? dws
-				dbgCalculatePath += $"SamplePosition() hit startpos on tri '{startHit.TriIndex}', at: '{startHit.HitPosition}'\n";
+				dbgCalculatePath += $"SamplePosition() hit startpos on tri '{startHit.TriIndex}', at: '{startHit.Position}'\n";
 			}
 			else
 			{
@@ -1458,7 +1498,7 @@ namespace LogansNavigationExtension
 			if (SamplePosition(endPos_passed, out endHit, maxSampleDistance, considerOffPerimeter))
 			{
 				//endPos_passed = endHit.HitPosition; //do we really need this? dws
-				dbgCalculatePath += $"SamplePosition() hit endpos on tri '{endHit.TriIndex}', at: '{endHit.HitPosition}'\n";
+				dbgCalculatePath += $"SamplePosition() hit endpos on tri '{endHit.TriIndex}', at: '{endHit.Position}'\n";
 			}
 			else
 			{
@@ -1475,97 +1515,43 @@ namespace LogansNavigationExtension
 
 		public bool CalculatePath(LNX_Vertex startVert, LNX_Vertex endVert, out LNX_Path outPath, ref string dbgCalculatePath)
 		{
-			//TODO: implement the logic for checking if a relationship (which will have a pre-cached path)
-			// already exists, and then I can simply return based on whether the path is straight, and set 
-			// outPath to the existing relationship path
-
 			dbgCalculatePath += $"CalculatePath(startVert: '{startVert}', endVert: '{endVert}')\n";
 
 			#region SHORT-CIRCUITING ===================================
-			if (!Raycast(startVert.V_Position, endVert.V_Position, 0.01f, out outPath, true))
+			if ( startVert.IsRelationshipCollectionValid() && endVert.IsRelationshipCollectionValid() )
 			{
-				dbgCalculatePath += $"Initial raycast was false, meaning that it didn't hit an obstruction. Returning true...\n";
+				dbgCalculatePath += $"relationships valid. Getting existing relational path...\n";
+				outPath = startVert.GetPathTo( endVert );
 				return true;
 			}
-			#endregion
+			#endregion			
 
-			dbgCalculatePath += $"Initial raycast returned true, meaning it DID hit an obstruction. Trying to pathfind...\n";
-			/*
-			dbgCalculatePath += $"Pre-determined closest vert on start tri to be: '{vrt_clsestOnStrtTri}', and closest vert on end tri to be: '{vrt_clsestOnEndTri}'...\n";
-			*/
-			/* //todo: bring this back when the vertex relationships path is working
-			float runningClosestDistance = Vector3.Distance(startHit.HitPosition, vrt_clsestOnStrtTri.V_Position) +
-				vrt_clsestOnStrtTri.GetPathTo(vrt_clsestOnEndTri).TotalDistance + 
-				Vector3.Distance(vrt_clsestOnEndTri.V_Position, endHit.HitPosition);
-			*/
-			float runningClosestDistance = float.MaxValue;
-
-			dbgCalculatePath += $"pre-determined initial running closest dist to be: '{runningClosestDistance}'...\n" +
-				$"Now checking for which verts are visible from start position...\n";
-
-			List<LNX_Path> visibleVertPaths = new List<LNX_Path>();
-
-			for ( int i_tris = 0; i_tris < Triangles.Length; i_tris++ )
-			{
-				dbgCalculatePath += $"for tri{i_tris}...\n";
-				for ( int i_vrts = 0; i_vrts < 3; i_vrts++ )
-				{
-					if ( Triangles[i_tris].Verts[i_vrts] == startVert )
-					{
-						continue;
-					}
-
-					dbgCalculatePath += $"for vert{i_vrts}...\n";
-
-					LNX_Path tryPath = LNX_Path.None;
-					if ( Raycast(startVert, Triangles[i_tris].Verts[i_vrts], out tryPath) )
-					{
-						dbgCalculatePath += $"rycst succesful, adding vert path...\n";
-						visibleVertPaths.Add(tryPath);
-					}
-				}
-			}
-			dbgCalculatePath += $"Finished check. Added paths for '{visibleVertPaths.Count}' verts...\n";
-
-			return true;
+			return CalculatePath( new LNX_NavmeshHit(startVert), new LNX_NavmeshHit(endVert), out outPath, ref dbgCalculatePath );
 		}
 
 		#endregion // (END) MAIN API METHODS---------------------
-
-		public List<LNX_ComponentCoordinate> GetVisibleVertsFromPoint( LNX_NavmeshHit hit, ref string dbgString, bool includeFringeVerts = false, List<LNX_ComponentCoordinate> excludeVerts = null )
+		
+		public List<LNX_ComponentCoordinate> GetVisibleVertsFromPoint( 
+			LNX_NavmeshHit hit, ref string dbgString, bool includeFringeVerts = false, List<LNX_ComponentCoordinate> excludeVerts = null 
+		)
 		{
-			dbgString = $"GetVisibleVertsFromPoint({hit})\n";
+			dbgString = $"GetVisibleVertsFromPoint({hit}, excludeverts: '{(excludeVerts == null ? "null" : excludeVerts.Count)}')\n";
 
 			List<LNX_ComponentCoordinate> visibleVerts = new List<LNX_ComponentCoordinate>();
-			if( excludeVerts == null )
-			{
-				dbgString += $"exclude verts null...\n";
-				/*
-				visibleVerts.Add(Triangles[hit.TriIndex].Verts[0].MyCoordinate);
-				visibleVerts.Add(Triangles[hit.TriIndex].Verts[1].MyCoordinate);
-				visibleVerts.Add(Triangles[hit.TriIndex].Verts[2].MyCoordinate);
-				*/
-			}
-			else
-			{
-				dbgString += $"excludeVerts length: '{excludeVerts.Count}'...\n";
 
-			}
-
-			dbgString += $"started initial list of visible verts with '{visibleVerts.Count}' entries...\n" +
-					$"now checking all verts...\n";
+			dbgString += $"assembling list of visible verts from this hit position...\n";
 
 			for ( int i_tris = 0; i_tris < Triangles.Length; i_tris++ )
 			{
 				//dbgString += $"for tri'{i_tris}'...\n";
 				//Debug.Log($"for tri'{i_tris}'...\n");
-				/*
+				
 				if ( i_tris == hit.TriIndex )
 				{
 					dbgString += $"same tri index. Continuing...\n";
 					continue;
 				}
-				*/
+				
 
 				//dbgCalculatePath += $"for tri{i_tris}...\n";
 				for (int i_vrts = 0; i_vrts < 3; i_vrts++)
@@ -1608,7 +1594,7 @@ namespace LogansNavigationExtension
 						{
 							if ( Triangles[i_tris].Verts[i_vrts].SharesVertSpace(Triangles[visibleVerts[i_growingList].TrianglesIndex].Verts[visibleVerts[i_growingList].ComponentIndex]) )
 							{
-								dbgString += $"Vert in growing list of visible already logged at the same position as this vert[{i_tris}][{i_vrts}]. Bypassing...\n";
+								dbgString += $"There's a vert in growing list of visible already logged at the same position as this vert[{i_tris}][{i_vrts}]. Bypassing...\n";
 								//Debug.Log($"Vert in growing list of visible already logged at the same position as this vert[{i_tris}][{i_vrts}]. Bypassing...");
 
 								foundOneAtSamePos = true;
@@ -1629,9 +1615,8 @@ namespace LogansNavigationExtension
 					}
 					#endregion---------------------------------
 					//dbgString += $"none of the short-circuting worked for vert[{i_tris}][{i_vrts}]. Trying raycast...\n";
-					LNX_Path path_startHit_toVert = LNX_Path.None;
 
-					if ( !Raycast(hit, new LNX_NavmeshHit(Triangles[i_tris].Verts[i_vrts]), out path_startHit_toVert) )
+					if ( !Raycast(hit, new LNX_NavmeshHit(Triangles[i_tris].Verts[i_vrts])) )
 					{
 						dbgString += $"raycast to vert[{i_tris}][{i_vrts}] showed clear path. Adding vert to visible...\n";
 						visibleVerts.Add(Triangles[i_tris].Verts[i_vrts].MyCoordinate);
@@ -1646,79 +1631,138 @@ namespace LogansNavigationExtension
 			return visibleVerts;
 		}
 
-		public List<LNX_ComponentCoordinate> GetVisibleVertsAtVert( ref string dbgRprt, LNX_Vertex vert, bool includeFringeVerts = false, List<LNX_ComponentCoordinate> excludeVerts = null ) //todo should probably tdg this
+		public List<LNX_ComponentCoordinate> GetVisibleVertsFromPoint(
+			LNX_NavmeshHit hit, out List<LNX_Path> outPaths, ref string dbgString, bool includeFringeVerts = false, List<LNX_ComponentCoordinate> excludeVerts = null
+		)
 		{
-			dbgRprt = $"GetVisibleVertsAtVert({vert})";
-			//TODO: Bring back the following when I get the relationships to initialize with correct paths...
-			/*
-			#region SHORT-CIRCUITING ===========================================
-			if ( vert.RelationshipsCollectionIsValid )
+			dbgString = $"GetVisibleVertsFromPoint({hit}, excludeverts: '{(excludeVerts == null ? "null" : excludeVerts.Count)}')\n";
+
+			List<LNX_ComponentCoordinate> visibleVerts = new List<LNX_ComponentCoordinate>();
+			outPaths = new List<LNX_Path>();
+
+			dbgString += $"assembling list of visible verts from this hit position...\n";
+
+			for (int i_tris = 0; i_tris < Triangles.Length; i_tris++)
 			{
-				List<LNX_ComponentCoordinate> vsblVrts = new List<LNX_ComponentCoordinate>() 
-				{
-					vert.Coordinate_FirstSibling,
-					vert.Coordinate_SecondSibling,
-				};
+				//dbgString += $"for tri'{i_tris}'...\n";
+				//Debug.Log($"for tri'{i_tris}'...\n");
 
-				for ( int i_relationships = 0; i_relationships < vert.Relationships.Length; i_relationships++ )
+				if (i_tris == hit.TriIndex)
 				{
-					if( vert.Relationships[i_relationships].RelatedVertCoordinate.TrianglesIndex == vert.TriangleIndex )
-					{
-						continue;
-					}
+					dbgString += $"same tri index. Continuing...\n";
+					continue;
+				}
 
-					if(	vert.Relationships[i_relationships].PathTo.AmStraight	)
+				//dbgCalculatePath += $"for tri{i_tris}...\n";
+				for (int i_vrts = 0; i_vrts < 3; i_vrts++)
+				{
+					//Debug.Log($"for vert'{i_vrts}'...\n");
+
+					//dbgString += $"...for vrt{i_vrts}...\n";
+					//dbgString += $"for tri{i_tris}.Vert[{i_vrts}]...\n";
+
+					#region SHORT-CIRCUITING =======================================
+					if (excludeVerts != null && excludeVerts.Count > 0)
 					{
-						bool foundPosMatch = false;
-						for ( int i_vsblVrts = 0; i_vsblVrts < vsblVrts.Count; i_vsblVrts++ )
+						//dbgString += $"checking exclude verts...\n";
+						//Debug.Log($"checking exclude verts...");
+						bool foundOne = false;
+						for (int j = 0; j < excludeVerts.Count; j++)
 						{
-							if
-							(
-								Triangles[vert.Relationships[i_relationships].RelatedTriIndex].Verts[vert.Relationships[i_relationships].RelatedComponentIndex].
-								SharesVertSpace(vsblVrts[i_vsblVrts])
-							)
+							//Debug.Log($"for exclude vert'{j}'...\n");
+
+							if (Triangles[i_tris].Verts[i_vrts].SharesVertSpace(Triangles[excludeVerts[j].TrianglesIndex].Verts[excludeVerts[j].ComponentIndex]))
 							{
-								foundPosMatch = true;
+								dbgString += $"found that vert[{i_tris}][{i_vrts}] shares space with exclude vert {j}...\n";
+								//Debug.Log($"found that vert[{i_tris}][{i_vrts}] shares space with exclude vert {j}...");
+								foundOne = true;
 								break;
 							}
 						}
-						if ( !foundPosMatch )
+
+						if (foundOne)
 						{
-							vsblVrts.Add(vert.Relationships[i_relationships].RelatedVertCoordinate );
+							continue;
 						}
 					}
+
+					if ( visibleVerts.Count > 0 )
+					{
+						//dbgString += $"checking already logged visible verts...\n";
+						bool foundOneAtSamePos = false;
+						for ( int i_growingList = 0; i_growingList < visibleVerts.Count; i_growingList++ )
+						{
+							if ( Triangles[i_tris].Verts[i_vrts].SharesVertSpace(Triangles[visibleVerts[i_growingList].TrianglesIndex].Verts[visibleVerts[i_growingList].ComponentIndex]))
+							{
+								dbgString += $"There's a vert in growing list of visible already logged at the same position as this vert[{i_tris}][{i_vrts}]. Bypassing...\n";
+								//Debug.Log($"Vert in growing list of visible already logged at the same position as this vert[{i_tris}][{i_vrts}]. Bypassing...");
+
+								foundOneAtSamePos = true;
+								continue;
+							}
+						}
+
+						if (foundOneAtSamePos)
+						{
+							continue;
+						}
+					}
+
+					if ( !includeFringeVerts && IsBoundsVert(i_tris, i_vrts) )
+					{
+						dbgString += $"Found that visible vert '[{i_tris}][{i_vrts}]' was a fringe vert. Excluding from list...\n";
+						continue;
+					}
+
+					if ( Triangles[i_tris].Verts[i_vrts].V_Position == hit.Position ) //we'll want to continue because we may be using a vertex as a perspective position...
+					{
+						dbgString += $"vert was at same position as perspective hit position. continuing...\n";
+						continue;
+					}
+					#endregion---------------------------------
+					//dbgString += $"none of the short-circuting worked for vert[{i_tris}][{i_vrts}]. Trying raycast...\n";
+					LNX_Path path_startHit_toVert = LNX_Path.None;
+
+					if ( !Raycast(hit, new LNX_NavmeshHit(Triangles[i_tris].Verts[i_vrts]), out path_startHit_toVert) )
+					{
+						dbgString += $"raycast to vert[{i_tris}][{i_vrts}] showed clear path. Adding vert to visible...\n";
+						visibleVerts.Add(Triangles[i_tris].Verts[i_vrts].MyCoordinate);
+						outPaths.Add( path_startHit_toVert );
+					}
+					else
+					{
+						dbgString += $"raycast to vert[{i_tris}][{i_vrts}] hit obstruction...\n";
+					}
 				}
-
-				return vsblVrts;
 			}
-			#endregion
-			*/
 
-			List<LNX_ComponentCoordinate> forwardExcludeVerts = new List<LNX_ComponentCoordinate>();
+			return visibleVerts;
+		}
 
-			if ( excludeVerts != null && excludeVerts.Count > 0 )
+		public List<LNX_ComponentCoordinate> GetVisibleVertsFromPoint( LNX_Vertex vert, out List<LNX_Path> outPaths, ref string dbgString, bool includeFringeVerts = false, List<LNX_ComponentCoordinate> excludeVerts = null)
+		{
+			List<LNX_ComponentCoordinate> returnCoords = new List<LNX_ComponentCoordinate>();
+			outPaths = new List<LNX_Path>();
+
+			if ( vert.IsRelationshipCollectionValid() )
 			{
-				for( int i = 0; i < excludeVerts.Count; i++ )
+				dbgString += $"relationships valid. Using existing relational information...\n";
+
+				for ( int i = 0; i < vert.Relationships.Length; i++ )
 				{
-					forwardExcludeVerts.Add( excludeVerts[i] );
+					if ( vert.Relationships[i].CanSee )
+					{
+						returnCoords.Add( vert.Relationships[i].RelatedVertCoordinate );
+						outPaths.Add( vert.Relationships[i].PathTo );
+					}
 				}
 			}
-
-			if ( !forwardExcludeVerts.Contains(vert.MyCoordinate) ) 
+			else
 			{
-				forwardExcludeVerts.Add( vert.MyCoordinate );
+				returnCoords = GetVisibleVertsFromPoint( new LNX_NavmeshHit(vert), out outPaths, ref dbgString, includeFringeVerts );
 			}
 
-			dbgRprt += $"forwardExcludeVerts now: '{forwardExcludeVerts.Count}'...\n";
-			string s = "";
-
-			List<LNX_ComponentCoordinate> rslt = GetVisibleVertsFromPoint(new LNX_NavmeshHit(vert), ref s, includeFringeVerts, forwardExcludeVerts);
-			dbgRprt += s;
-
-			//Debug.Log(dbgRprt);
-
-			return rslt;
-			//return GetVisibleVertsFromPoint( new LNX_NavmeshHit(vert), ref s, forwardExcludeVerts );
+			return returnCoords;
 		}
 
 		#region DATA ===============================================================
@@ -2061,13 +2105,31 @@ namespace LogansNavigationExtension
 				$"Bounds-----\n" +
 				$"{nameof(Bounds_LowestX)}: '{Bounds_LowestX}, {nameof(Bounds_HighestX)}: '{Bounds_HighestX}'\n" +
 				$"{nameof(Bounds_LowestY)}: '{Bounds_LowestY}, {nameof(Bounds_HighestY)}: '{Bounds_HighestY}'\n" +
-				$"{nameof(Bounds_LowestZ)}: '{Bounds_LowestZ}, {nameof(Bounds_HighestZ)}: '{Bounds_HighestZ}'\n" +
-				
-				"");
+				$"{nameof(Bounds_LowestZ)}: '{Bounds_LowestZ}, {nameof(Bounds_HighestZ)}: '{Bounds_HighestZ}'\n");
 
-			for (int i = 0; i < Triangles.Length; i++)
+			if( Triangles == null )
 			{
-				Triangles[i].SayCurrentInfo(this);
+				Debug.Log($"Triangle collection was null...");
+			}
+			else
+			{
+				Debug.Log($"{nameof(Triangles)} length: '{Triangles.Length}'");
+
+				for (int i = 0; i < Triangles.Length; i++)
+				{
+					Triangles[i].SayCurrentInfo(this);
+				}
+			}
+
+			if( _VisualizationMesh == null )
+			{
+				Debug.Log($"Visualization mesh was null...");
+			}
+			else
+			{
+				Debug.Log("Visual Mesh====\n" +
+					$"{nameof(_VisualizationMesh.vertices)} length: '{_VisualizationMesh.vertices.Length}'" +
+					$"");
 			}
 		}
 
@@ -2125,5 +2187,22 @@ namespace LogansNavigationExtension
 		}
 
 		#endregion
+
+#if UNITY_EDITOR
+		private void OnDrawGizmos()
+		{
+			if ( Application.isPlaying || Triangles == null)
+			{
+				return;
+			}
+
+			if( drawVisualizationMesh )
+			{
+				Gizmos.color = color_visualMesh;
+				Gizmos.DrawMesh( _VisualizationMesh );
+			}
+		}
+#endif
+
 	}
 }

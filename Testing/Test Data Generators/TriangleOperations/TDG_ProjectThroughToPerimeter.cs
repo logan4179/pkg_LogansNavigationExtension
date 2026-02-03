@@ -26,7 +26,7 @@ namespace LogansNavigationExtension
 		{
 			_dataCapture.CaptureDataPoint(
 				Grabber_CurrentTri.transform.position, Grabber_OuterPos.transform.position,
-				CurrentTriangle.V_Center, ProjectedEdge.MidPosition, CurrentHit.HitPosition
+				CurrentTriangle.V_Center, ProjectedEdge.MidPosition, CurrentHit.Position
 			);
 		}
 
@@ -83,8 +83,8 @@ namespace LogansNavigationExtension
 				ProjectedEdge = CurrentTriangle.Edges[CurrentHit.TriIndex];
 				DrawStandardEdgeFocusGizmos( ProjectedEdge, 0.1f, $"edge{ProjectedEdge.MyCoordinate.ComponentIndex}", Color.green );
 
-				Gizmos.DrawCube( CurrentHit.HitPosition, Vector3.one * 0.025f );
-				Handles.Label(CurrentHit.HitPosition + (Vector3.up * 0.03f), "hitPosition" );
+				Gizmos.DrawCube( CurrentHit.Position, Vector3.one * 0.025f );
+				Handles.Label(CurrentHit.Position + (Vector3.up * 0.03f), "hitPosition" );
 			}
 
 			Gizmos.color = CurrentHit.Equals(LNX_NavmeshHit.None) ? Color.red : Color.green;

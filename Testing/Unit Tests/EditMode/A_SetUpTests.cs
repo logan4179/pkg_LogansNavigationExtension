@@ -74,7 +74,11 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			Assert.NotNull( _testGeneratedLnxNavmesh );
 			Debug.Log($"scene-generated navmesh created, now calculating triangulation...");
 
-			_testGeneratedLnxNavmesh.LayerMaskName = "lr_EnvSolid"; //not necessary, but just to be sure...
+			//todo: dws the following line...
+			//_testGeneratedLnxNavmesh.LayerMaskName = "lr_EnvSolid"; //not necessary, but just to be sure...
+			_testGeneratedLnxNavmesh.MyLayerMask = LayerMask.GetMask( "lr_EnvSolid" );
+
+
 			_testGeneratedLnxNavmesh.CalculateTriangulation();
 			Assert.NotNull(_testGeneratedLnxNavmesh._VisualizationMesh);
 			Debug.Log($"mesh visual. {nameof(_testGeneratedLnxNavmesh._VisualizationMesh.vertices)} length: '{_testGeneratedLnxNavmesh._VisualizationMesh.vertices.Length}', " +

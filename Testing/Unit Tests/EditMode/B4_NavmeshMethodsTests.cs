@@ -171,12 +171,12 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				LNX_NavmeshHit hit = new LNX_NavmeshHit();
 				_serializedLNXNavmesh.SamplePosition(_tdg_samplePosition._dataCapture.VectorCaptureLists[0].vectors[i], out hit, 10f);
 
-				Debug.Log($"expecting '{_tdg_samplePosition._dataCapture.VectorCaptureLists[0].vectors[i]}', hit: '{hit.HitPosition}'");
+				Debug.Log($"expecting '{_tdg_samplePosition._dataCapture.VectorCaptureLists[0].vectors[i]}', hit: '{hit.Position}'");
 
 				//Assert.AreEqual( _test_samplePosition.hitPositions[i], hit.Position ); //got rounding point issue
-				UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_samplePosition._dataCapture.VectorCaptureLists[0].vectors[i].x, hit.HitPosition.x);
-				UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_samplePosition._dataCapture.VectorCaptureLists[0].vectors[i].y, hit.HitPosition.y);
-				UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_samplePosition._dataCapture.VectorCaptureLists[0].vectors[i].z, hit.HitPosition.z);
+				UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_samplePosition._dataCapture.VectorCaptureLists[0].vectors[i].x, hit.Position.x);
+				UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_samplePosition._dataCapture.VectorCaptureLists[0].vectors[i].y, hit.Position.y);
+				UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_samplePosition._dataCapture.VectorCaptureLists[0].vectors[i].z, hit.Position.z);
 
 				UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_samplePosition._dataCapture.VectorCaptureLists[2].vectors[i].x,
 					_serializedLNXNavmesh.Triangles[hit.TriIndex].V_Center.x);
