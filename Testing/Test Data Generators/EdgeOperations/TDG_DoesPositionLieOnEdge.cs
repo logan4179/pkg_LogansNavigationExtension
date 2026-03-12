@@ -9,6 +9,7 @@ namespace LogansNavigationExtension
 	public class TDG_DoesPositionLieOnEdge : TDG_base
 	{
 		[Header("START OF DERIVED CLASS-------------------")]
+		public LNX_ComponentGrabber _EdgeGrabber;
 
 		[SerializeField] protected LNX_NavMeshDebugger _debugger;
 
@@ -23,8 +24,8 @@ namespace LogansNavigationExtension
 
 		[Header("RESULT OBJECTS")]
 		public bool CurrentProjectionResult = false;
-		[HideInInspector] LNX_Triangle CurrentTriangle;
-		[HideInInspector] LNX_Edge CurrentEdge;
+		[HideInInspector] LNX_Triangle CurrentTriangle => _EdgeGrabber.CurrentlyGrabbedTriangle;
+		[HideInInspector] LNX_Edge CurrentEdge => _EdgeGrabber.CurrentlyGrabbedEdge;
 
 
 		[Header("OTHER")]
@@ -47,7 +48,13 @@ namespace LogansNavigationExtension
 		{
 			DBG_Operation = "";
 
-			if ( AmInUnitTest || Selection.activeObject != gameObject && Selection.activeObject != transform.parent.gameObject )
+			if ( 
+				AmInUnitTest || 
+				(Selection.activeObject != gameObject && 
+				Selection.activeObject != _EdgeGrabber.gameObject
+				
+				) 
+			)
 			{
 				return;
 			}
@@ -60,14 +67,14 @@ namespace LogansNavigationExtension
 				return;
 			}
 
-			CurrentTriangle = _navmesh.GetTriangle( EdgeCoordinate );
-			CurrentEdge = _navmesh.GetEdge( EdgeCoordinate );
+			//CurrentTriangle = _navmesh.GetTriangle( EdgeCoordinate ); //todo: dws
+			//CurrentEdge = _navmesh.GetEdge( EdgeCoordinate ); //todo: dws
 
 			DrawStandardFocusTriGizmos(_navmesh.Triangles[EdgeCoordinate.TrianglesIndex], 1f, $"tri{EdgeCoordinate.TrianglesIndex}", Color.magenta );
-			DrawStandardEdgeFocusGizmos(CurrentEdge, 0.1f, "", Color.magenta);
+			DrawStandardEdgeFocusGizmos(CurrentEdge, 0.1f, "", Color.yellow);
 
 			DBG_Operation += $"Commencing edge operation...\n";
-			CurrentProjectionResult = _navmesh.GetEdge(EdgeCoordinate).DoesPositionLieOnEdge(transform.position, _navmesh.GetSurfaceNormalVector() );
+			CurrentProjectionResult = CurrentEdge.DoesPositionLieOnEdge(_EdgeGrabber.transform.position, _navmesh.GetSurfaceNormalVector() );
 
 			Gizmos.color = CurrentProjectionResult ? Color.green : Color.red;
 
@@ -114,7 +121,7 @@ namespace LogansNavigationExtension
 		[ContextMenu("z PlaceOnEdge()")]
 		public void PlaceOnEdge()
 		{
-			CurrentEdge = _navmesh.GetEdge(EdgeCoordinate);
+			//CurrentEdge = _navmesh.GetEdge(EdgeCoordinate);
 
 			if( PlaceOnEdgePercentage >= 0f )
 			{

@@ -12,9 +12,14 @@ namespace LogansNavigationExtension
 
 		[SerializeField] protected LNX_NavMeshDebugger _debugger;
 
+		public LNX_ComponentGrabber StartPointGrabber;
+		public LNX_ComponentGrabber EndPointGrabber;
+		public LNX_ComponentGrabber EdgeGrabber;
+		public LNX_Edge CurrentlyGrabbedEdge => EdgeGrabber.CurrentlyGrabbedEdge;
+		/*
 		public Transform startTrans;
 		public Transform endTrans;
-		public LNX_ComponentCoordinate EdgeCoordinate;
+		//public LNX_ComponentCoordinate EdgeCoordinate;*/
 
 		[Header("DATA CAPTURE")]
 		public List<Vector3> CapturedStartPositions = new List<Vector3>();
@@ -40,14 +45,12 @@ namespace LogansNavigationExtension
 		[ContextMenu("z CaptureDataPoint()")]
 		public void CaptureDataPoint()
 		{
-			CapturedStartPositions.Add(startTrans.position);
-			CapturedEndPositions.Add(endTrans.position);
+			CapturedStartPositions.Add(StartPointGrabber.transform.position);
+			CapturedEndPositions.Add(EndPointGrabber.transform.position);
 			CapturedProjectedPositions.Add( CurrentProjectedPosition );
 			CapturedProjectionResults.Add( CurrentProjectionResult );
-			CapturedTriangleCenterPositions.Add( _navmesh.GetTriangle(EdgeCoordinate).V_Center );
-			CapturedEdgeCenterPositions.Add(
-				_navmesh.GetTriangle(EdgeCoordinate).Edges[EdgeCoordinate.ComponentIndex].MidPosition
-			);
+			CapturedTriangleCenterPositions.Add( _navmesh.GetTriangle(EdgeGrabber.transform.position).V_Center );
+			CapturedEdgeCenterPositions.Add( CurrentlyGrabbedEdge.MidPosition );
 
 
 			DrawDataPointCapture(CapturedStartPositions[CapturedStartPositions.Count - 1], Color.magenta);
@@ -98,6 +101,7 @@ namespace LogansNavigationExtension
 			}
 			#endregion
 
+			/*
 			CapturedProjectedPositions = new List<Vector3>();
 			CapturedTriangleCenterPositions = new List<Vector3>();
 			CapturedEdgeCenterPositions = new List<Vector3>();
@@ -110,9 +114,9 @@ namespace LogansNavigationExtension
 				if ( _navmesh.SamplePosition(CapturedStartPositions[i], out hit, 2f, false) )
 				{
 
-					EdgeCoordinate = new LNX_ComponentCoordinate(hit.TriIndex, EdgeCoordinate.ComponentIndex);
+					EdgeCoordinate = new LNX_ComponentCoordinate(hit.TriIndex, CurrentlyGrabbedEdge.ComponentIndex);
 					SetDebuggerFocusToMine();
-					Debug.Log($"Succesful sample! Set new edgecoordinate to: '{EdgeCoordinate.ToString()}'");
+					Debug.Log($"Succesful sample! Set new edgecoordinate to: '{CurrentlyGrabbedEdge.ToString()}'");
 				}
 				else
 				{
@@ -134,6 +138,7 @@ namespace LogansNavigationExtension
 				$"endpos: '{CapturedEndPositions[CapturedEndPositions.Count - 1]}', " +
 				$"and projectedPos: '{CapturedProjectedPositions[CapturedProjectedPositions.Count - 1]}'..."
 			);
+			*/
 		}
 
 		[ContextMenu("z CaptureProblemPosition (override)()")]
@@ -161,73 +166,59 @@ namespace LogansNavigationExtension
 			Debug.Log($"{nameof(GoToProblem)}()...");
 		}
 
-		[ContextMenu("z SampleFocusTri()")]
-		public void SampleFocusTri()
-		{
-			Debug.Log($"{nameof(SampleFocusTri)}()...");
-
-			LNX_NavmeshHit hit = LNX_NavmeshHit.None;
-
-			if ( _navmesh.SamplePosition(startTrans.position, out hit, 2f, false) )
-			{
-				EdgeCoordinate = new LNX_ComponentCoordinate( hit.TriIndex, EdgeCoordinate.ComponentIndex );
-				SetDebuggerFocusToMine();
-				Debug.Log($"Succesful sample! Set new edgecoordinate to: '{EdgeCoordinate.ToString()}'");
-			}
-			else
-			{
-				Debug.Log($"sample unsuccesful...");
-			}
-		}
-
 		[ContextMenu("z SetDebuggerFocusToMine()")]
 		public void SetDebuggerFocusToMine()
 		{
 			Debug.Log($"{nameof(SetDebuggerFocusToMine)}()...");
 
-			_debugger.Grabber_FocusTri.transform.position = _navmesh.Triangles[EdgeCoordinate.TrianglesIndex].V_Center;
+			_debugger.Grabber_FocusTri.transform.position = _navmesh.Triangles[CurrentlyGrabbedEdge.TriangleIndex].V_Center;
 		}
 
 		protected override void OnDrawGizmos()
 		{
 			DBG_Operation = "";
 
-			if ( AmInUnitTest || Selection.activeObject != gameObject && Selection.activeObject != startTrans.gameObject)
+			if ( 
+				AmInUnitTest || 
+				(Selection.activeObject != gameObject && Selection.activeObject != StartPointGrabber.gameObject && 
+				Selection.activeGameObject != EndPointGrabber.gameObject && Selection.activeGameObject != EdgeGrabber.gameObject) 
+			)
 			{
 				return;
 			}
 
 			base.OnDrawGizmos();
 
-			if ( EdgeCoordinate.TrianglesIndex < 0 || EdgeCoordinate.ComponentIndex < 0 )
+			if ( CurrentlyGrabbedEdge == null )
 			{
-				DBG_Operation += $"{nameof(EdgeCoordinate)} OnDrawGizmos short-circuit. {nameof(EdgeCoordinate)}: '{EdgeCoordinate}'...";
+				DBG_Operation += $"OnDrawGizmos short-circuit. {nameof(CurrentlyGrabbedEdge)} is null...";
 				return;
 			}
 
-			DrawStandardFocusTriGizmos( _navmesh.Triangles[EdgeCoordinate.TrianglesIndex], 1f, $"tri{EdgeCoordinate.TrianglesIndex}", Color.magenta);
-			DrawStandardEdgeFocusGizmos( _navmesh.GetEdge(EdgeCoordinate), 0.1f, "", Color.magenta );
+			DrawStandardFocusTriGizmos( _navmesh.Triangles[CurrentlyGrabbedEdge.TriangleIndex], 1f, $"tri{CurrentlyGrabbedEdge.TriangleIndex}", Color.magenta);
+			DrawStandardEdgeFocusGizmos( CurrentlyGrabbedEdge, 0.1f, CurrentlyGrabbedEdge.ToString(), Color.yellow );
 
-			DBG_Operation += $"Commencing edge project...\n" +
-				$"projection report says:\n" +
-				$"---------------------------------\n";
+			DBG_Operation += $"using origin param: '{StartPointGrabber.transform.position}', dest param: '{EndPointGrabber.transform.position}'\n" +
+				$"Commencing edge project...\n";
+
 			CurrentProjectionResult =
-				_navmesh.GetEdge(EdgeCoordinate).DoesProjectionIntersectEdge
+				CurrentlyGrabbedEdge.DoesProjectionIntersectEdge
 				(
-					startTrans.position,
-					endTrans.position,
+					StartPointGrabber.transform.position,
+					EndPointGrabber.transform.position,
 					_navmesh.GetSurfaceNormalVector(),
 					out CurrentProjectedPosition
 				);
-			DBG_Operation += $"=============================\n";
+			DBG_Operation += $"result: '{CurrentProjectionResult}'\n" +
+				$"projection: '{CurrentProjectedPosition}'";
 
 			Gizmos.color = CurrentProjectionResult ? Color.green : Color.red;
 
-			Gizmos.DrawLine(startTrans.position, endTrans.position);
+			Gizmos.DrawLine(StartPointGrabber.transform.position, EndPointGrabber.transform.position);
 
-			Gizmos.DrawSphere(startTrans.position, Radius_ObjectDebugSpheres);
+			Gizmos.DrawSphere(StartPointGrabber.transform.position, Radius_ObjectDebugSpheres);
 			//Handles.Label(startTrans.position, "strtTrans");
-			Gizmos.DrawSphere(endTrans.position, Radius_ObjectDebugSpheres);
+			Gizmos.DrawSphere(EndPointGrabber.transform.position, Radius_ObjectDebugSpheres);
 			//Handles.Label(startTrans.position, "endTrans");
 
 			Gizmos.DrawCube( CurrentProjectedPosition, Vector3.one * Radius_ProjectPos );

@@ -27,6 +27,7 @@ namespace LogansNavigationExtension
 		public Transform Trans_drawLineTo;
 		[SerializeField] private bool recalculatedLastFrame = false;
 		public bool RecalculatedLastFrame => recalculatedLastFrame;
+		[SerializeField] bool useComponentCoordinateInsteadOfLabel = false;
 
 		[Header("OTHER")]
 		public LNX_NavmeshHit CurrentHit;
@@ -171,7 +172,29 @@ namespace LogansNavigationExtension
 		public void DrawMyGizmos(float radius)
 		{
 			Gizmos.DrawSphere( transform.position, radius );
-			Handles.Label( transform.position + V_labelOffset, DisplayName );
+			string lbl = DisplayName;
+
+			if( useComponentCoordinateInsteadOfLabel )
+			{
+				if ( Mode == LNX_Component.Vertex && CurrentlyGrabbedVert != null ) 
+				{
+					Handles.Label(transform.position + V_labelOffset, CurrentlyGrabbedVert.ToString() );
+				}
+				else if ( Mode == LNX_Component.Edge && CurrentlyGrabbedEdge != null )
+				{
+					Handles.Label(transform.position + V_labelOffset, CurrentlyGrabbedEdge.ToString());
+				}
+				else if (Mode == LNX_Component.Triangle && CurrentlyGrabbedTriangle != null)
+				{
+					Handles.Label(transform.position + V_labelOffset, CurrentlyGrabbedTriangle.ToString());
+				}
+			}
+			else
+			{
+				Handles.Label(transform.position + V_labelOffset, string.IsNullOrEmpty(lbl) ? DisplayName : lbl);
+			}
+
+			Gizmos.DrawLine( transform.position, transform.position + V_labelOffset );
 
 			if (Trans_drawLineTo != null)
 			{

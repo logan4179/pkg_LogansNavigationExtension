@@ -1,8 +1,10 @@
 using LogansNavigationExtension;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using UnityEditor;
 using UnityEngine;
-
+using UnityEngine.SceneManagement;
 
 namespace LogansNavigationExtension
 {
@@ -139,7 +141,7 @@ namespace LogansNavigationExtension
 			}
 
 			return 0;
-		}
+		} //todo: dws?
 
 		#region MATH OPERATIONS --------------------------------------
 		/// <summary>
@@ -222,27 +224,6 @@ namespace LogansNavigationExtension
 		#endregion
 
 		#region VECTOR OPERATIONS ==========================================================================
-		public static Vector3 CreateCornerPathPoint(LNX_PathPoint startPt, LNX_PathPoint endPt)
-		{
-			Vector3 resultPt = Vector3.zero;
-
-			//https://math.libretexts.org/Bookshelves/Algebra/Algebra_and_Trigonometry_1e_(OpenStax)/10%3A_Further_Applications_of_Trigonometry/10.01%3A_Non-right_Triangles_-_Law_of_Sines
-
-			Vector3 v_starPtTToEndPt = (endPt.V_Position - startPt.V_Position);
-			Vector3 v_endPtToStartPt = -v_starPtTToEndPt;
-			float dist_hypotenuse = v_endPtToStartPt.magnitude;
-			float angleA = 90f - Vector3.Angle(startPt.V_normal, v_starPtTToEndPt.normalized);
-			float angleB = 90f - Vector3.Angle(endPt.V_normal, v_endPtToStartPt.normalized);
-			float angle_opposingHypotenuse = 180f - angleA - angleB;
-
-			//note: need to convert to radians in the following, as opposed to degrees...
-			float distA = Mathf.Sin(Mathf.Deg2Rad * angleB) * (dist_hypotenuse / Mathf.Sin(Mathf.Deg2Rad * angle_opposingHypotenuse)); //This is a re-ordered algebraic equation based on trigonometry
-
-			resultPt = startPt.V_Position + Vector3.ProjectOnPlane(v_starPtTToEndPt, startPt.V_normal).normalized * distA;
-
-			return resultPt;
-		}
-
 		public static Vector3 GetCenterVector(Vector3[] corners)
 		{
 			Vector3 vCenter = Vector3.zero;
@@ -1298,7 +1279,9 @@ namespace LogansNavigationExtension
 			while (amStillProjecting)
 			{
 				string dbgprjct = "";
-				LNX_NavmeshHit edgePerimHit = nm.Triangles[runningTriIndex].ProjectThroughToPerimeter(runningStartPos, endHit.Position, ref dbgprjct, currentEdgeIndex);
+				LNX_NavmeshHit edgePerimHit = nm.Triangles[runningTriIndex].ProjectThroughToPerimeter(
+					runningStartPos, endHit.Position, ref dbgprjct, currentEdgeIndex, true
+				);
 
 				if ( edgePerimHit.ComponentIndex < 0 || edgePerimHit.ComponentIndex > 2 )
 				{
@@ -1359,7 +1342,8 @@ namespace LogansNavigationExtension
 
 			return runningTriIndex == endHit.TriIndex;
 		}
-		public static bool TryProjectPathThrough(LNX_NavMesh nm, LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, out LNX_Path outPath, ref string dbgRprt )
+		public static bool TryProjectPathThrough(LNX_NavMesh nm, LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, out LNX_Path outPath, 
+			ref string dbgRprt )		// 5 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		{
 			dbgRprt = $"ProjectPathThrough(start: '{startHit}', end: '{endHit}')\n\n";
 			outPath = new LNX_Path();
@@ -1392,7 +1376,8 @@ namespace LogansNavigationExtension
 					$"projecting through triangle...\n";
 
 				string dbgprjct = "";
-				LNX_NavmeshHit edgePerimHit = currentTri.ProjectThroughToPerimeter( currentStartPos, endHit.Position, ref dbgprjct, currentEdgeIndex );
+				LNX_NavmeshHit edgePerimHit = currentTri.ProjectThroughToPerimeter( 
+					currentStartPos, endHit.Position, ref dbgprjct, currentEdgeIndex, true );
 				dbgRprt += $"Projected through to perim with hit: '{edgePerimHit}'...\n";
 				outPath.AddPoint( edgePerimHit );
 
@@ -1414,6 +1399,7 @@ namespace LogansNavigationExtension
 				if (Vector3.Distance(edgePerimHit.Position, endHit.Position) < 0.001f)
 				{
 					//Debug.Log("close!");
+					dbgRprt += $"edgePerimHit is close enough to endHit position. Stopping while loop...\n";
 					amStillProjecting = false;
 					currentTri = nm.Triangles[endHit.TriIndex];
 				}
@@ -1795,7 +1781,41 @@ namespace LogansNavigationExtension
 		#endregion
 
 		#region FILE/DATA ===========================================
+		public static string MakePathFromString(string str, string splitterString, int endStop = 0 )
+		{
+			string rtrnString = "";
 
+			string[] lines = str.Split( splitterString ); //at this moment, this string will have forward-slash separators. After re-combining using Path.Combine(), the string will have back-slash separators...
+			for ( int i = 0; i < lines.Length - endStop; i++ )
+			{
+				rtrnString = Path.Combine(rtrnString, lines[i]);
+			}
+
+			return rtrnString;
+		}
+
+		public static string AppendDigitTilUniqueFileName( string fileNameString, string extensionString, string dirPathString )
+		{
+			string cmbnd = Path.Combine( dirPathString, fileNameString );
+
+			if ( !File.Exists($"{cmbnd}{extensionString}") )
+			{
+				return cmbnd + extensionString;
+			}
+			else
+			{
+				for ( int i = 0; i < 100; i++ )
+				{
+					string s = $"{cmbnd}{i}{extensionString}";
+					if ( !File.Exists(s) )
+					{
+						return s;
+					}
+				}
+			}
+
+			return string.Empty;
+		}
 		#endregion
 
 #if UNITY_EDITOR

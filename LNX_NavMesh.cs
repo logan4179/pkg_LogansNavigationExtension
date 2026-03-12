@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.SceneManagement;
@@ -32,8 +33,6 @@ namespace LogansNavigationExtension
 
 		//[SerializeField] private List<LNX_Triangle> deletedTriangles;
 		[SerializeField, HideInInspector] private List<LNX_AtomicTriangle> deletedTriangles;
-
-		private int addedTrianglesStartIndex = -1; //todo: what is this? Need to comment what it is
 
 		[HideInInspector] public Mesh _VisualizationMesh;
 
@@ -89,9 +88,46 @@ namespace LogansNavigationExtension
 		}
 
 		#region DATA ======================================================
+		/// <summary>
+		/// String that caches all string segments involved in data serialization in comma-separated format.<para/>
+		/// [0] = GUID,<br/>
+		/// [1] = File Name<br/>
+		/// </summary>
+		[SerializeField, HideInInspector] private string serializedDataString; //right now, I'm just using this to store the guid, but will eventually use it to also store the resource path
+
+		public string cachedGUID => serializedDataString; /*string.IsNullOrEmpty(serializedDataString) ? "" : serializedDataString.Split(',')[0];*/
+
+		/// <summary>
+		/// The cached filename of the efficiency data
+		/// </summary>
+		//public string fileName_efficiencyData => string.IsNullOrEmpty(serializedDataString) ? "" : serializedDataString.Split(",")[1];
+
+
+		/* old, dws
+		/// <summary>
+		/// String that caches all string segments involved in data serialization in comma-separated format.<para/>
+		/// [0] = GUID,<br/>
+		/// [1] = Directory path of effiency data file<br/>
+		/// [2] = File name of effiency data file<br/>
+		/// [3] = DateTime of first file save<br/>
+		/// [4] = DateTime of last file save<br/>
+		/// [5] = Number of overwrites
+		/// </summary>
+		[SerializeField, HideInInspector] private string serializedDataString; //uniqueID,sceneFolderDirPath
 		/// <summary>Used to link a navmesh with its saved data in the assets folder</summary>
-		[SerializeField, HideInInspector] private string uniqueID;
-		[HideInInspector] public string UniqueID => uniqueID;
+		//[SerializeField, HideInInspector] private string uniqueID;
+		//public string UniqueID => uniqueID;
+		public string cachedGUID => string.IsNullOrEmpty(serializedDataString) ? "" : serializedDataString.Split(',')[0];
+
+		public string DirPath_efficiencyData => string.IsNullOrEmpty(serializedDataString) ? "" : serializedDataString.Split(",")[1];
+		public string fileName_efficiencyData => string.IsNullOrEmpty(serializedDataString) ? "" : serializedDataString.Split(",")[2];
+		public string fPath_efficiencyData => string.IsNullOrEmpty(serializedDataString) ? "" : Path.Combine(DirPath_efficiencyData, fileName_efficiencyData);
+		public string firstSaveTime => string.IsNullOrEmpty(serializedDataString) ? "" : serializedDataString.Split(',')[3];
+		public string lastSaveTime => string.IsNullOrEmpty(serializedDataString) ? "" : serializedDataString.Split(',')[4];
+		public string efficiencyDataOverwriteCount => string.IsNullOrEmpty(serializedDataString) ? "" : serializedDataString.Split(',')[5];
+		*/
+
+
 		#endregion
 
 		#region EFFICIENCY ================================================
@@ -111,20 +147,109 @@ namespace LogansNavigationExtension
 		{
 			Debug.Log("lnx_navmesh.onenable()");
 
-			if ( string.IsNullOrEmpty(uniqueID) )
+
+		}
+
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+		void CheckForProblem()
+		{
+			Debug.Log("First scene loading: Before Awake is called.");
+
+			for( int i = 0; i < Triangles.Count(); i++ )
 			{
-				uniqueID = $"{DateTime.Now.Year}-{DateTime.Now.Month}-" +
-				$"{DateTime.Now.Day}-{DateTime.Now.Hour}-{DateTime.Now.Minute}-{DateTime.Now.Second}-" +
-				$"{DateTime.Now.Millisecond}";
-				
-				Debug.Log($"set uniqueID to '{uniqueID}'...");
+				for (int j = 0; j < 3; j++)
+				{
+					if( Triangles[i].Verts[j].Relationships == null )
+					{
+						//Debug.Log()
+					}
+				}
 			}
+		}
+
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+		static void OnAfterSceneLoad()
+		{
+			Debug.Log("First scene loaded: After Awake is called.");
 		}
 
 		[ContextMenu("z call TrySomething()")]
 		public void TrySomething()
 		{
-			
+			//Curious about scene path...
+			/*
+			string scnPthString = SceneManager.GetActiveScene().path;
+			Debug.Log($"scene path string from scenemanager: '{scnPthString}'..."); //Packages/com.loganland.logansnavigationextension/Testing/LNXTestingScene.unity
+			string[] lines = scnPthString.Split("/");
+			Debug.Log($"split lines via character to '{lines.Length}' entries...");
+			string dirPthScnFldrString = "";
+			for (int i = 0; i < lines.Length; i++)
+			{
+				dirPthScnFldrString = Path.Combine(dirPthScnFldrString, lines[i]);
+			}
+
+			Debug.Log($"reassembled string: '{dirPthScnFldrString}'");				//Packages\com.loganland.logansnavigationextension\Testing\LNXTestingScene.unity
+			*/
+
+			//Debug.Log(serializedDataString);
+
+
+			#region Finding assets and retrieving guids ========================
+			/*
+			//string str = "scn_";
+			//string str = "heyass"; //7442bb19a8eb4fd43a6274455f635654
+			string str = "muhStankAss"; 
+
+			string[] ids = AssetDatabase.FindAssets( str );
+			Debug.Log($"string {str}, found '{ids.Length}' entries...");
+
+			if (ids != null && ids.Length > 0 )
+			{
+				for (int i = 0; i < ids.Length; i++)
+				{
+					//Debug.Log($"{i}: {ids[i]}"); //this returns strings like ba914a2f030f0df459aaf2bcf4c8c702
+					Debug.Log($"{i}: {ids[i]}\n" +
+						$"path: '{AssetDatabase.GUIDToAssetPath(ids[i])}'");
+
+					int idInt = -1;
+
+					if( int.TryParse(ids[i], out idInt) )
+					{
+						Debug.Log($"succesful parse to '{idInt}'");
+					}
+					else
+					{
+						Debug.Log("parse was NOT succesful");
+					}
+				}
+			}
+			*/
+			#endregion
+
+			#region Finding with Resources class ================
+			/*
+			string str = "muhStankAss";
+
+			TextAsset muhAsset = Resources.Load<TextAsset>(str);
+			Debug.Log($"was null: '{muhAsset == null}'");
+
+			if( muhAsset != null )
+			{
+				Debug.Log(muhAsset.text); //works!
+
+				Debug.Log("now getting guid...");
+			}
+			*/
+			#endregion
+
+			string dirPthString = Path.Combine(LNX_Utils.MakePathFromString(SceneManager.GetActiveScene().path, "/", 1), "Resources"); //this will replace the forward slashes with back-slashes, and stop at the correct element
+			Debug.Log(dirPthString);
+			File.WriteAllText( Path.Combine(dirPthString, "asdf.json"), JsonUtility.ToJson(this, true));
+
+			/*
+			string path_foundViaGUID = AssetDatabase.GUIDToAssetPath(cachedGUID);
+			Debug.Log ( $"{path_foundViaGUID}, empty or null: '{string.IsNullOrEmpty(path_foundViaGUID)}'" );
+			*/
 		}
 
 		public Vector3 GetSurfaceNormalVector()
@@ -162,7 +287,6 @@ namespace LogansNavigationExtension
 		{
 			return Triangles[coord.TrianglesIndex];
 		}
-
 
 		public LNX_Triangle GetTriangle( LNX_Vertex vert )
 		{
@@ -384,19 +508,6 @@ namespace LogansNavigationExtension
 			DateTime dt_methodStart = DateTime.Now;
 			DBG_CalculateTriangulation = $"{nameof(CalculateTriangulation)}()";
 
-			//todo: dws
-			/*
-			if (string.IsNullOrEmpty(LayerMaskName))
-			{
-				Debug.LogError("LogansNavmeshExtender ERROR! You need to set an environmental layer mask in order to construct the navmesh.");
-				return;
-			}
-			else
-			{
-				cachedLayerMask = LayerMask.GetMask(LayerMaskName);
-			}
-			*/
-
 			Debug.Log($"{nameof(MyLayerMask)}: '{MyLayerMask.value}'");
 			if( MyLayerMask.value == 0 )
 			{
@@ -457,8 +568,8 @@ namespace LogansNavigationExtension
 			}
 			#endregion
 
-			DBG_CalculateTriangulation += $"Finished constructing '{constructedAtomicTris.Count}' atomic tris. Constructing real list...\n";
-			Debug.Log($"Finished constructing '{constructedAtomicTris.Count}' atomic tris. Constructing real list...\n");
+			DBG_CalculateTriangulation += $"Finished constructing '{constructedAtomicTris.Count}' atomic tris. Now constructing real list...\n";
+			Debug.Log($"Finished constructing '{constructedAtomicTris.Count}' atomic tris. Now constructing real list...\n");
 			Triangles = new LNX_Triangle[constructedAtomicTris.Count];
 			for (int i = 0; i < constructedAtomicTris.Count; i++)
 			{
@@ -471,16 +582,42 @@ namespace LogansNavigationExtension
 			Debug.Log($"Finished making list. method time: '{DateTime.Now.Subtract(dt_methodStart)}'");
 			DBG_CalculateTriangulation += $"Finished making list. method time: '{DateTime.Now.Subtract(dt_methodStart)}'";
 
-			RefreshMe(true);
+			Refresh( true );
 
 			DBG_CalculateTriangulation += $"End of {nameof(CalculateTriangulation)}(). Created '{Triangles.Length}' triangles, " +
 				$"and '{constructedVertices_unique.Count}' unique vertices for the mesh.\n";
 
-			UnityEditor.EditorUtility.SetDirty(this);
+			Debug.Log(DBG_CalculateTriangulation);
+			EditorUtility.SetDirty(this);
 		}
-		public void RefreshMe( bool meshContinuityHasChanged ) //NEW
+
+		private void DeleteAllRelationships()
 		{
-			Debug.Log($"{nameof(RefreshMe)}()---------------------------");
+			for (int i = 0; i < Triangles.Length; i++)
+			{
+				/*
+				Triangles[i].Verts[0].Relationships = new LNX_VertexRelationship[Triangles.Length * 3];
+				Triangles[i].Verts[1].Relationships = new LNX_VertexRelationship[Triangles.Length * 3];
+				Triangles[i].Verts[2].Relationships = new LNX_VertexRelationship[Triangles.Length * 3];
+				*/
+
+				Triangles[i].Verts[0].Relationships = new LNX_VertexRelationship[0];
+				Triangles[i].Verts[1].Relationships = new LNX_VertexRelationship[0];
+				Triangles[i].Verts[2].Relationships = new LNX_VertexRelationship[0];
+			}
+		}
+
+		[ContextMenu("z call ForceRefresh()")]
+		public void ForceRefresh() //todo: dws
+		{
+			DeleteAllRelationships();
+
+			Refresh(true);
+		}
+
+		public void Refresh( bool meshContinuityHasChanged ) //NEW
+		{
+			Debug.Log($"{nameof(Refresh)}()---------------------------");
 
 			//Debug.Log($"now looping through '{Triangles.Length}' triangles...");
 
@@ -518,10 +655,12 @@ namespace LogansNavigationExtension
 
 
 			//dt_start = DateTime.Now;
+#if UNITY_EDITOR
 			if( !Application.isPlaying && meshContinuityHasChanged )
 			{
 				ReconstructVisualizationMesh();
 			}
+#endif
 
 			//TimeSpan ts = DateTime.Now.Subtract(dt_start);
 			//Debug.Log($"{nameof(ReconstructVisualizationMesh)}() finished after timespan of '{ts}', ms: '{ts.Milliseconds}'...");
@@ -812,7 +951,7 @@ namespace LogansNavigationExtension
 		/// Not as cheap as checking a boolean flag.
 		/// </summary>
 		/// <returns></returns>
-		public bool HaveModifications()
+		public bool HaveModifications() //Todo: remember to unit test this
 		{
 			string methodReport = $"{nameof(HaveModifications)}()\n";
 
@@ -820,11 +959,6 @@ namespace LogansNavigationExtension
 			{
 				methodReport += $"Found DO have modifications. {nameof(deletedTriangles)}, count: '{deletedTriangles.Count}'\n";
 				Debug.Log( methodReport );
-				return true;
-			}
-
-			if( addedTrianglesStartIndex > -1 )
-			{
 				return true;
 			}
 
@@ -845,7 +979,7 @@ namespace LogansNavigationExtension
 			//Debug.Log($"found no modifications. returning false....");
 
 			return false;
-		} //Todo: remember to unit test this
+		}
 
 		public void MoveSelectedVerts( List<LNX_Vertex> verts, Vector3 endPos )
 		{
@@ -881,6 +1015,7 @@ namespace LogansNavigationExtension
 			V_Bounds = new Vector3[6];
 			V_BoundsCenter = Vector3.zero;
 
+			UnityEditor.EditorUtility.SetDirty(this);
 		}
 
 		public void ClearModifications()
@@ -946,7 +1081,7 @@ namespace LogansNavigationExtension
 
 			Triangles = newTriangles.ToArray();
 
-			RefreshMe( true );
+			Refresh( true );
 		}
 
 		public bool ContainsDeletion( NavMeshTriangulation nmTriangulation, int areaIndex ) //todo: definitely unit test this...
@@ -1010,7 +1145,7 @@ namespace LogansNavigationExtension
 
 			Triangles = constructedLnxTriangles.ToArray();
 
-			RefreshMe( true );
+			Refresh( true );
 		}
 		#endregion
 
@@ -1153,7 +1288,7 @@ namespace LogansNavigationExtension
 		/// Traces a line between two points on a navmesh.
 		/// </summary>
 		/// <returns>True if the ray is terminated before reaching target position. Otherwise returns false.</returns>
-		public bool Raycast(LNX_NavmeshHit lnxStartHit, LNX_NavmeshHit lnxEndHit, out LNX_Path outPath) //todo: Unit test!!!
+		public bool Raycast(LNX_NavmeshHit lnxStartHit, LNX_NavmeshHit lnxEndHit, out LNX_Path outPath)
 		{
 			#region SHORT-CIRCUITING ==================================================
 			if (lnxStartHit.TriIndex == lnxEndHit.TriIndex) //If start and end hit are on same triangle...
@@ -1167,6 +1302,30 @@ namespace LogansNavigationExtension
 			string s = "";
 
 			bool rslt = !LNX_Utils.TryProjectPathThrough(this, lnxStartHit, lnxEndHit, out outPath, ref s);
+			//Debug.Log(s);
+			return rslt;
+			//return !LNX_Utils.TryProjectPathThrough( this, lnxStartHit, lnxEndHit, out outPath, ref s );
+		}
+		public bool Raycast(LNX_NavmeshHit lnxStartHit, LNX_NavmeshHit lnxEndHit, out LNX_Path outPath, ref StringBuilder sb) // 4 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		{
+			sb.AppendLine($"Raycast( '{lnxStartHit}', '{lnxEndHit}' )");
+			#region SHORT-CIRCUITING ==================================================
+			if (lnxStartHit.TriIndex == lnxEndHit.TriIndex) //If start and end hit are on same triangle...
+			{
+				sb.AppendLine("tri indices of both hits are the same. Returning simple path...");
+				outPath = new LNX_Path(this, lnxStartHit, lnxEndHit);
+				return false;
+			}
+			#endregion
+			sb.AppendLine("no short-circuiting. Trying TryProjectPathThrough()...");
+
+			//Debug.Log($"no short circuits. Now trying TryProjectPathThrough...");
+			string s = "";
+
+			bool rslt = !LNX_Utils.TryProjectPathThrough(this, lnxStartHit, lnxEndHit, out outPath, ref s);
+			sb.AppendLine($"\nreport==========\n" +
+				$"{s}\n" +
+				$"===================");
 			//Debug.Log(s);
 			return rslt;
 			//return !LNX_Utils.TryProjectPathThrough( this, lnxStartHit, lnxEndHit, out outPath, ref s );
@@ -1381,22 +1540,24 @@ namespace LogansNavigationExtension
 		/// <param name="considerOffPerimeter"></param>
 		/// <returns></returns>
 		public bool CalculatePath(LNX_NavmeshHit startHit, LNX_NavmeshHit endHit,
-			out LNX_Path outPath, ref string dbgCalculatePath)
+			out LNX_Path outPath, ref StringBuilder dbgCalculatePath)					 // 2 <<<<<<<<<<<<<<<<<<<<<<<<<
 		{
-			dbgCalculatePath = $"CalculatePath(startHit: '{startHit}', endHit: '{endHit}'\n\n";
+			dbgCalculatePath.AppendLine($"CalculatePath(startHit: '{startHit}', endHit: '{endHit}'\n");
 
-			dbgCalculatePath += $"first, attempting to raycast to the destination...\n";
+			dbgCalculatePath.AppendLine( $"first, attempting to raycast to the destination..." );
 
-			if ( !Raycast(startHit, endHit, out outPath) )
+			if ( !Raycast(startHit, endHit, out outPath, ref dbgCalculatePath) )
 			{
-				dbgCalculatePath += $"Initial raycast was false, meaning that it did NOT hit an obstruction. Returning true...\n";
+				dbgCalculatePath.AppendLine( $"Initial raycast was false, meaning that it did NOT hit an obstruction. " +
+					$"outPath: '{outPath}'. Returning true...");
 				return true;
 			}
 			else
 			{
-				dbgCalculatePath += $"Initial raycast returned true, meaning it DID hit an obstruction. Commencing with pathfind operation...\n";
+				dbgCalculatePath.AppendLine( $"Initial raycast returned true, meaning it DID hit an obstruction. Commencing " +
+					$"with pathfind operation...");
 
-				dbgCalculatePath += $"assembling list of boundary verts...\n";
+				dbgCalculatePath.AppendLine( $"assembling list of boundary verts...");
 				
 				float runningClosestDistance = float.MaxValue;
 				/*
@@ -1412,17 +1573,17 @@ namespace LogansNavigationExtension
 				}
 				*/
 
-				dbgCalculatePath += $"pre-determined initial running closest dist to be: '{runningClosestDistance}'...\n" +
-					$"Now checking for which verts are visible from start position...\n";
+				dbgCalculatePath.AppendLine($"pre-determined initial running closest dist to be: '{runningClosestDistance}'...\n" +
+					$"Now checking for which verts are visible from start position...");
 
 				string dbgvsvrtfrmPt = "";
 				List<LNX_Path> visblVrtPths = new List<LNX_Path>();
 				List<LNX_ComponentCoordinate> visibleVerts = GetVisibleVertsFromPoint( startHit, out visblVrtPths, ref dbgvsvrtfrmPt, false );
 
-				Debug.Log($"GetVisibleVerts returned '{visibleVerts.Count}' verts. Report...\n" +
-					$"{dbgvsvrtfrmPt}");
+				//Debug.Log($"GetVisibleVerts returned '{visibleVerts.Count}' verts. Report...\n" +
+					//$"{dbgvsvrtfrmPt}");
 
-				dbgCalculatePath += $"Decided there are '{visibleVerts.Count}' bisible verts. Pinging each visible vert...\n\n";
+				dbgCalculatePath.AppendLine( $"Decided there are '{visibleVerts.Count}' visible verts. Pinging each visible vert...\n");
 
 				#region CONSTRUCT PATHS -------------------------------------
 				LNX_Path[] paths = new LNX_Path[visibleVerts.Count];
@@ -1430,7 +1591,8 @@ namespace LogansNavigationExtension
 				float dist_runningBestPath = float.MaxValue;
 				for( int i_visblVrts = 0; i_visblVrts < visibleVerts.Count; i_visblVrts++ )
 				{
-					dbgCalculatePath += $"for {i_visblVrts}: '{visibleVerts[i_visblVrts]}'---\n";
+					dbgCalculatePath.AppendLine($"for {i_visblVrts}: '{visibleVerts[i_visblVrts]}' valid?: " +
+						$"'{GetVertexAtCoordinate(visibleVerts[i_visblVrts]).IsRelationshipCollectionValid()}'---");
 					bool realPing = false;
 
 					if( realPing )
@@ -1450,7 +1612,7 @@ namespace LogansNavigationExtension
 						Triangles[visibleVerts[i_visblVrts].TrianglesIndex].Verts[visibleVerts[i_visblVrts].ComponentIndex].DbgPing(
 							ref s, endHit, this, runningClosestDistance, visblVrtPths[i_visblVrts], visibleVerts
 						);
-						dbgCalculatePath += $"{s}\n\n";
+						dbgCalculatePath.AppendLine( $"{s}\n" );
 					}
 				}
 				#endregion
@@ -1509,27 +1671,29 @@ namespace LogansNavigationExtension
 
 			dbgCalculatePath += $"finished sampling start and end point. Now using these hit points to calculate path...\n";
 
-			string s = "";
-			return CalculatePath(startHit, endHit, out outPath, ref s);
+			StringBuilder sb = new StringBuilder();
+			return CalculatePath(startHit, endHit, out outPath, ref sb );
 		}
 
-		public bool CalculatePath(LNX_Vertex startVert, LNX_Vertex endVert, out LNX_Path outPath, ref string dbgCalculatePath)
+		public bool CalculatePath(LNX_Vertex startVert, LNX_Vertex endVert, out LNX_Path outPath, ref StringBuilder dbgCalculatePath) //1 <<<<<<<<<<<<<<<<
 		{
-			dbgCalculatePath += $"CalculatePath(startVert: '{startVert}', endVert: '{endVert}')\n";
+			dbgCalculatePath.AppendLine( $"CalculatePath(startVert: '{startVert}', endVert: '{endVert}')\n" );
 
 			#region SHORT-CIRCUITING ===================================
 			if ( startVert.IsRelationshipCollectionValid() && endVert.IsRelationshipCollectionValid() )
 			{
-				dbgCalculatePath += $"relationships valid. Getting existing relational path...\n";
+				dbgCalculatePath.AppendLine( 
+					$"{ startVert.Relationships.Length} - {endVert.Relationships.Length} relationships valid. Getting " +
+					$"already-existing cached relational path...");
 				outPath = startVert.GetPathTo( endVert );
 				return true;
 			}
-			#endregion			
+			#endregion
+
+			dbgCalculatePath.AppendLine($"relationships for start and/or end vert not valid. Passing off to more atomic version of method...");
 
 			return CalculatePath( new LNX_NavmeshHit(startVert), new LNX_NavmeshHit(endVert), out outPath, ref dbgCalculatePath );
 		}
-
-		#endregion // (END) MAIN API METHODS---------------------
 		
 		public List<LNX_ComponentCoordinate> GetVisibleVertsFromPoint( 
 			LNX_NavmeshHit hit, ref string dbgString, bool includeFringeVerts = false, List<LNX_ComponentCoordinate> excludeVerts = null 
@@ -1631,8 +1795,9 @@ namespace LogansNavigationExtension
 			return visibleVerts;
 		}
 
-		public List<LNX_ComponentCoordinate> GetVisibleVertsFromPoint(
-			LNX_NavmeshHit hit, out List<LNX_Path> outPaths, ref string dbgString, bool includeFringeVerts = false, List<LNX_ComponentCoordinate> excludeVerts = null
+		public List<LNX_ComponentCoordinate> GetVisibleVertsFromPoint( // 3  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+			LNX_NavmeshHit hit, out List<LNX_Path> outPaths, ref string dbgString, 
+			bool includeFringeVerts = false, List<LNX_ComponentCoordinate> excludeVerts = null
 		)
 		{
 			dbgString = $"GetVisibleVertsFromPoint({hit}, excludeverts: '{(excludeVerts == null ? "null" : excludeVerts.Count)}')\n";
@@ -1671,7 +1836,8 @@ namespace LogansNavigationExtension
 						{
 							//Debug.Log($"for exclude vert'{j}'...\n");
 
-							if (Triangles[i_tris].Verts[i_vrts].SharesVertSpace(Triangles[excludeVerts[j].TrianglesIndex].Verts[excludeVerts[j].ComponentIndex]))
+							//explanation for following if-check: It's not enough to simply check if the currently-iterated vert is in the list of excludeVerts, we also need to make sure it does not share space with any of the exclude verts because each vert shares space with multiple other verts
+							if ( Triangles[i_tris].Verts[i_vrts].SharesVertSpace(Triangles[excludeVerts[j].TrianglesIndex].Verts[excludeVerts[j].ComponentIndex])) //todo: this check won't be necessary if we unify the verts
 							{
 								dbgString += $"found that vert[{i_tris}][{i_vrts}] shares space with exclude vert {j}...\n";
 								//Debug.Log($"found that vert[{i_tris}][{i_vrts}] shares space with exclude vert {j}...");
@@ -1690,7 +1856,7 @@ namespace LogansNavigationExtension
 					{
 						//dbgString += $"checking already logged visible verts...\n";
 						bool foundOneAtSamePos = false;
-						for ( int i_growingList = 0; i_growingList < visibleVerts.Count; i_growingList++ )
+						for ( int i_growingList = 0; i_growingList < visibleVerts.Count; i_growingList++) //todo: this check won't be necessary if we unify the verts
 						{
 							if ( Triangles[i_tris].Verts[i_vrts].SharesVertSpace(Triangles[visibleVerts[i_growingList].TrianglesIndex].Verts[visibleVerts[i_growingList].ComponentIndex]))
 							{
@@ -1714,6 +1880,7 @@ namespace LogansNavigationExtension
 						continue;
 					}
 
+					//todo: should I even do the following check? It might be okay to log the vertex that meets the following check to visible list
 					if ( Triangles[i_tris].Verts[i_vrts].V_Position == hit.Position ) //we'll want to continue because we may be using a vertex as a perspective position...
 					{
 						dbgString += $"vert was at same position as perspective hit position. continuing...\n";
@@ -1739,7 +1906,8 @@ namespace LogansNavigationExtension
 			return visibleVerts;
 		}
 
-		public List<LNX_ComponentCoordinate> GetVisibleVertsFromPoint( LNX_Vertex vert, out List<LNX_Path> outPaths, ref string dbgString, bool includeFringeVerts = false, List<LNX_ComponentCoordinate> excludeVerts = null)
+		public List<LNX_ComponentCoordinate> GetVisibleVertsFromPoint( LNX_Vertex vert, out List<LNX_Path> outPaths, ref string dbgString, 
+			bool includeFringeVerts = false, List<LNX_ComponentCoordinate> excludeVerts = null)
 		{
 			List<LNX_ComponentCoordinate> returnCoords = new List<LNX_ComponentCoordinate>();
 			outPaths = new List<LNX_Path>();
@@ -1765,19 +1933,25 @@ namespace LogansNavigationExtension
 			return returnCoords;
 		}
 
+		#endregion // (END) MAIN API METHODS---------------------
+
 		#region DATA ===============================================================
 		/// <summary>
-		/// Calculates and caches certain information that can drastically speed up certain operations like pathfinding. Note: This method can be a very
-		/// expensive call, possibly taking many seconds, and even minutes if your navmesh is big enough. Find an appropriate spot in your code to call 
-		/// it once, NOT continuously. If for some reason it's necessary to calculate this after game load/start, you can optionally call this method 
-		/// in a thread so it doesn't hang up your game.
+		/// Calculates and caches certain information that can drastically speed up operations like pathfinding.<para/>
+		/// Note: This method can be a VERY
+		/// expensive call, possibly taking many seconds, and even minutes if your navmesh is big enough. In typical applications, you shouldn't call this 
+		/// method, but instead use SaveEfficiencyDataToDisk() in the editor, before runtime, via this script's contextmenu. This will pre-cache the efficiency 
+		/// information to a JSON file so that you don't have to wait on calculating at runtime.<para/> 
+		/// If you can't pre-cache this information in the editor, and need to call this at runtime, because of a 
+		/// situation like runtime navmesh creation, find an appropriate spot in your code to call it once, and optionally in a thread so it doesn't 
+		/// hang up your game.
 		/// </summary>
 		public void CalculateEfficiencyData()
 		{
 			#region CALCULATE TRI KNOWN-VISIBILITY ----------------------------------
 			LNX_Edge[] trmnlEdges = GetTerminalEdges(false);
 
-			for (int i = 0; i < Triangles.Length; i++)
+			for ( int i = 0; i < Triangles.Length; i++ )
 			{
 				Triangles[i].ClearKnownVisible(); //These indices need to be all cleared before being calculated to 
 				//prevent problems when using 2-way assignment...
@@ -1787,7 +1961,7 @@ namespace LogansNavigationExtension
 			DateTime dt_start = DateTime.Now;
 			bool cmpltd = false;
 
-			for (int i = 0; i < Triangles.Length; i++)
+			for ( int i = 0; i < Triangles.Length; i++ )
 			{
 				Debug.Log(i);
 				Triangles[i].CalculateCompletelyVisibleTris(this, trmnlEdges);
@@ -1827,35 +2001,17 @@ namespace LogansNavigationExtension
 			#endregion
 		}
 
-		public string GetEfficiencyDataFilepath()
-		{
-			if (string.IsNullOrEmpty(uniqueID) || string.IsNullOrWhiteSpace(uniqueID))
-			{
-				uniqueID = $"lnxEfficiencyData-{DateTime.Now.Year}{DateTime.Now.Month}" +
-					$"{DateTime.Now.Day}{DateTime.Now.Hour}{DateTime.Now.Minute}{DateTime.Now.Second}" +
-					$"{DateTime.Now.Millisecond}";
-			}
-
-			string[] lines = SceneManager.GetActiveScene().path.Split("/");
-			string dirPath_sceneFolder = "";
-			for (int i = 0; i < lines.Length - 1; i++)
-			{
-				dirPath_sceneFolder = Path.Combine(dirPath_sceneFolder, lines[i]);
-			}
-			
-			return Path.Combine(dirPath_sceneFolder, $"{uniqueID}.json");
-		}
-
 		public void WriteEfficiencyData()
 		{
-			string fPath = GetEfficiencyDataFilepath();
+			string fPath = /*GetEfficiencyDataFilepath_Managed();*/ "";
 
 			LNX_NavMeshData data = new LNX_NavMeshData(this);
-			File.WriteAllText(fPath, JsonUtility.ToJson(data, true));
+			File.WriteAllText( fPath, JsonUtility.ToJson(data, true) );
 
 			Debug.Log($"Wrote data to json at: '{fPath}'");
 		}
 
+		/*
 		/// <summary>
 		/// This method can be called from the editor to calculate and pre-cache efficiency data in one 
 		/// call. Otherwise, just call CalculateEfficiencyData() in the STart() if you're not saving the data.
@@ -1866,43 +2022,111 @@ namespace LogansNavigationExtension
 			CalculateEfficiencyData();
 			WriteEfficiencyData();
 		}
+		*/
 
+#if UNITY_EDITOR
 		/// <summary>
-		/// Attempts to read in serialized navmesh data from assets. 
+		/// Managed method for saving efficiency data for this LNX_NavMesh to a json text file. Will overwrite 
+		/// existing data if it can find the existing data file.<para/>
+		/// Note: Only call this method in the Inspector via the context menu - NOT at runtime. This will 
+		/// pre-cache efficiency data to be used at runtime.
 		/// </summary>
-		/// <param name="_dataOut"></param>
-		/// <returns>Whether the retrieval of the data was succesfull AND whether the retrieved data matches 
-		/// and is valid for this LNX_NavMesh</returns>
-		public bool TryGetEfficiencyData(out LNX_NavMeshData _dataOut)
+		[ContextMenu("z call SaveEfficiencyDataToDisk()")]
+		public void SaveEfficiencyDataToDisk()
 		{
-			_dataOut = new LNX_NavMeshData();
+			Debug.Log($"SaveEfficiencyData() serializedstring: '{serializedDataString}'");
+			StringBuilder sb_report = new StringBuilder("SaveEfficiencyDataToDisk() report:\n");
 
-			string fPath = GetEfficiencyDataFilepath();
-
-			string jsonString = File.ReadAllText( fPath );
-
-			if ( string.IsNullOrEmpty(jsonString) )
+			try
 			{
-				Debug.LogError($"LNX ERROR! Json string was empty!");
-				return false;
+				sb_report.AppendLine("First, calculating efficiency data...");
+				CalculateEfficiencyData();
+
+				serializedDataString = ""; //todo: dws
+
+				bool foundWarning = false;
+				bool foundError = false;
+
+				string path_foundViaGUID = AssetDatabase.GUIDToAssetPath(cachedGUID);
+				sb_report.AppendLine($"path_foundViaGUID: '{path_foundViaGUID}'");
+
+				if ( string.IsNullOrEmpty(cachedGUID) || string.IsNullOrEmpty(path_foundViaGUID) )
+				{
+					sb_report.AppendLine("writing file as new...");
+					// 1. GENERATE DIRECTORY PATH===============================================
+					string dirPthString = Path.Combine( LNX_Utils.MakePathFromString(SceneManager.GetActiveScene().path, "/", 1), "Resources"); //this will replace the forward slashes with back-slashes, and stop at the correct element
+					sb_report.AppendLine($"made dirPthString: '{dirPthString}'");
+					
+					if( !Directory.Exists(path_foundViaGUID) )
+					{
+						sb_report.AppendLine($"dir path didn't exist. Creating directory...");
+						Directory.CreateDirectory( dirPthString );
+					}
+
+					// 2. GENERATE FILE NAME AND FILE PATH ===============================================
+					string filePthString = LNX_Utils.AppendDigitTilUniqueFileName
+						($"LNX_{SceneManager.GetActiveScene().name}_{name}_efficiencyData", ".json", dirPthString
+					);
+					sb_report.AppendLine($"made filePthString: '{filePthString}'");
+
+					if ( string.IsNullOrEmpty(filePthString) )
+					{
+						sb_report.AppendLine($"LNX ERROR! Tried to create a file with unique file path: 'LNXDATA_{SceneManager.GetActiveScene().name}_{name}.json' with 100 numeric appends, and all file names were taken...");
+						foundError = true;
+						return;
+					}
+
+					// 3. CREATE DATA OBJECT AND WRITE TO DISK ===============================================
+					LNX_NavMeshData data = new LNX_NavMeshData(this);
+					sb_report.AppendLine("a");
+					File.WriteAllText(filePthString, JsonUtility.ToJson(data, true));
+					sb_report.AppendLine("b");
+
+					sb_report.AppendLine($"Wrote data to json at: '{filePthString}'\n");
+
+					// 4. DEAL WITH THE GUID ===============================================
+
+
+					AssetDatabase.ImportAsset(filePthString);
+					sb_report.AppendLine("c");
+
+
+					string guidString = AssetDatabase.AssetPathToGUID(filePthString);
+					sb_report.AppendLine($"fetched guid string via assetdatabase: '{guidString}'");
+					if ( string.IsNullOrEmpty(guidString) )
+					{
+						Debug.LogError($"LNX ERROR! Couldn't get guid for newly created file at '{filePthString}'...");
+						Debug.Log( sb_report );
+						return;
+					}
+
+					// 5. PUT TOGETHER SERIALIZED DATA STRING ===============================================
+					serializedDataString = $"{guidString}";
+				}
+				else
+				{
+					sb_report.AppendLine("overwriting existing file...");
+
+					// 1. CREATE DATA OBJECT AND WRITE TO DISK ===============================================
+					LNX_NavMeshData data = new LNX_NavMeshData(this);
+					File.WriteAllText( path_foundViaGUID, JsonUtility.ToJson(data, true) );
+
+					sb_report.AppendLine($"Wrote data to json at: '{path_foundViaGUID}'\n");
+				}
+				
+			}
+			catch (Exception)
+			{
+				Debug.Log(sb_report.ToString());
+
+				throw;
+
+
 			}
 
-			_dataOut = JsonUtility.FromJson<LNX_NavMeshData>(jsonString);
-
-			if ( !_dataOut.AmValidForUse() )
-			{
-				Debug.LogError($"LNX ERROR! data read from JSON string was not valid! It may need to be re-calculated");
-				return false;
-			}
-
-			if ( !_dataOut.MatchesNavmesh(this) )
-			{
-				Debug.LogError($"LNX ERROR! data read from JSON string does NOT match supplied LNX_NavMesh!");
-				return false;
-			}
-
-			return true;
+			Debug.Log(sb_report.ToString());
 		}
+#endif
 
 		/// <summary>
 		/// Attempts to read in serialized navmesh data from assets. 
@@ -1943,7 +2167,7 @@ namespace LogansNavigationExtension
 		/// and is valid for this LNX_NavMesh</returns>
 		public bool TryLoadEfficiencyData()
 		{
-			string fPath = GetEfficiencyDataFilepath();
+			string fPath = /*GetEfficiencyDataFilepath_Managed();*/ "";
 
 			if ( !File.Exists(fPath) )
 			{
@@ -1955,14 +2179,9 @@ namespace LogansNavigationExtension
 
 			LNX_NavMeshData data = JsonUtility.FromJson<LNX_NavMeshData>(jsonString);
 
-			if ( !data.AmValidForUse() )
-			{
-				Debug.LogError($"LNX ERROR! data read from JSON string was not valid! It may need to be re-calculated");
-				return false;
-			}
-
 			return TryLoadEfficiencyData(data);
 		}
+
 		#endregion ------------------
 
 		public bool HaveKink()
@@ -2100,7 +2319,7 @@ namespace LogansNavigationExtension
 		public void SayCurrentInfo()
 		{
 			Debug.Log($"" +
-				$"{nameof(uniqueID)}: '{uniqueID}'\n" +
+				$"{nameof(serializedDataString)}: '{serializedDataString}'\n" +
 				$"{nameof(SurfaceOrientation)}: '{SurfaceOrientation}'\n" +
 				$"Bounds-----\n" +
 				$"{nameof(Bounds_LowestX)}: '{Bounds_LowestX}, {nameof(Bounds_HighestX)}: '{Bounds_HighestX}'\n" +
@@ -2182,6 +2401,7 @@ namespace LogansNavigationExtension
 
 			for (int i = 0; i < Triangles.Length; i++)
 			{
+				Debug.Log($"iterator tri'{i}'...");
 				Debug.Log( Triangles[i].GetRelationalString() );
 			}
 		}

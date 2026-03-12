@@ -156,7 +156,7 @@ namespace LogansNavigationExtension.CustomEditors
 					{
 						//Debug.LogWarning( "refreshing..." );
 						flag_moveHandleIsDirty = false;
-						_targetScript._LNX_NavMesh.RefreshMe( false );
+						_targetScript._LNX_NavMesh.Refresh( false );
 					}
 				}
 			}
@@ -291,16 +291,16 @@ namespace LogansNavigationExtension.CustomEditors
 
 					}
 
-					if (EditorGUI.EndChangeCheck()) //happens continuously when manipulator is dragged
+					if ( EditorGUI.EndChangeCheck() ) //happens continuously when manipulator is dragged
 					{
-						if (handleMovedThisFrame)
+						if ( handleMovedThisFrame )
 						{
 							DateTime dt_msvStart = DateTime.Now;
 							_targetScript.MoveSelectedVerts(v_moveToPos);
 							diagLag += $"moveselected took '{DateTime.Now.Subtract(dt_msvStart)}'. ";
 							_targetScript.manipulatorPos = newHandlePosition;
 
-							Undo.RecordObject(_targetScript, "Change component Positions");
+							//Undo.RecordObject(_targetScript, "Change component Positions"); //todo: should this be before the move?
 
 							flag_moveHandleIsDirty = true;
 						}
@@ -318,7 +318,7 @@ namespace LogansNavigationExtension.CustomEditors
 
 			if ( GUI.changed )
 			{
-				Debug.Log("GUI Changed");
+				Debug.Log("GUI.changed condition met");
 				EditorUtility.SetDirty( _targetScript );
 			}
 

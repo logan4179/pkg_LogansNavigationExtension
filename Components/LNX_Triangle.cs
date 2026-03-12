@@ -581,7 +581,7 @@ namespace LogansNavigationExtension
 			return false;
 		}
 
-		public LNX_NavmeshHit ProjectThroughToPerimeter( Vector3 innerPos, Vector3 outerPos, ref string dbgRprt, int indx_edgeExclude = -1 )
+		public LNX_NavmeshHit ProjectThroughToPerimeter( Vector3 innerPos, Vector3 outerPos, ref string dbgRprt, int indx_edgeExclude = -1, bool returnHitOnNextTriangle = false )
 		{
 			dbgRprt = $"ProjectThroughToPerimeter( {innerPos}, {outerPos}, {indx_edgeExclude} )\n";
 			
@@ -604,7 +604,8 @@ namespace LogansNavigationExtension
 			)
 			{
 				dbgRprt += $"method succeeded on edge 0. Here are the reports...\n";
-				return new LNX_NavmeshHit( projectedEdgePosition, v_SurfaceNormal_cached, innerPos, index_inCollection, 0 );
+				return new LNX_NavmeshHit( projectedEdgePosition, v_SurfaceNormal_cached, innerPos, 
+					(returnHitOnNextTriangle && Edges[0].SharedEdgeCoordinate != LNX_ComponentCoordinate.None) ? Edges[0].SharedEdgeCoordinate.TrianglesIndex : index_inCollection, 0 );
 			}
 			else if
 			(
@@ -614,7 +615,8 @@ namespace LogansNavigationExtension
 			)
 			{
 				dbgRprt += $"method succeeded on edge 1. Here are the reports...\n";
-				return new LNX_NavmeshHit( projectedEdgePosition, v_SurfaceNormal_cached, innerPos, index_inCollection, 1 );
+				return new LNX_NavmeshHit( projectedEdgePosition, v_SurfaceNormal_cached, innerPos,
+					(returnHitOnNextTriangle && Edges[1].SharedEdgeCoordinate != LNX_ComponentCoordinate.None) ? Edges[1].SharedEdgeCoordinate.TrianglesIndex : index_inCollection, 1);
 			}
 			else if
 			(
@@ -624,7 +626,8 @@ namespace LogansNavigationExtension
 			)
 			{
 				dbgRprt += $"method succeeded on edge 2. Here are the reports...\n";
-				return new LNX_NavmeshHit( projectedEdgePosition, v_SurfaceNormal_cached, innerPos, index_inCollection, 2 );
+				return new LNX_NavmeshHit( projectedEdgePosition, v_SurfaceNormal_cached, innerPos,
+					(returnHitOnNextTriangle && Edges[2].SharedEdgeCoordinate != LNX_ComponentCoordinate.None) ? Edges[2].SharedEdgeCoordinate.TrianglesIndex : index_inCollection, 2);
 			}
 			else
 			{
@@ -1148,18 +1151,15 @@ namespace LogansNavigationExtension
 		public string GetAnomolyString( LNX_NavMesh nm )
 		{
 			string returnString = string.Empty;
-			bool anomolyFound = false;
 
 			if( Index_inCollection < 0 )
 			{
 				returnString += $"{nameof(Index_inCollection)}: '{Index_inCollection}'\n";
-				anomolyFound = true;
 			}
 
 			if (MeshIndex_trianglesStart < 0)
 			{
 				returnString += $"{nameof(MeshIndex_trianglesStart)}: '{MeshIndex_trianglesStart}'\n";
-				anomolyFound = true;
 			}
 
 			bool correctNumberOfVerts = true;
@@ -1167,7 +1167,6 @@ namespace LogansNavigationExtension
 			if ( Verts == null || Verts.Length == 0 )
 			{
 				returnString += $"{nameof(Verts)} collection not set\n";
-				anomolyFound = true;
 				correctNumberOfVerts = false;
 			}
 			else if( Verts.Length != 2 )
@@ -1179,7 +1178,6 @@ namespace LogansNavigationExtension
 			if ( Edges == null || Edges.Length == 0)
 			{
 				returnString += $"{nameof(Edges)} collection not set\n";
-				anomolyFound = true;
 				correctNumberOfEdges = false;
 			}
 			else if(  Edges.Length != 3 )
@@ -1190,7 +1188,6 @@ namespace LogansNavigationExtension
 			if (AmKinked)
 			{
 				returnString += $"{nameof(AmKinked)} is true\n";
-				anomolyFound = true;
 			}
 
 			//Note: Add more checks as you go...
@@ -1209,7 +1206,6 @@ namespace LogansNavigationExtension
 					!string.IsNullOrWhiteSpace(v2_string)
 				)
 				{
-					anomolyFound = true;
 					returnString += $"Anomoly found in verts!\n";
 
 					if( !string.IsNullOrWhiteSpace(v0_string) )
@@ -1250,7 +1246,6 @@ namespace LogansNavigationExtension
 					!string.IsNullOrWhiteSpace(e2_string)
 				)
 				{
-					anomolyFound = true;
 					returnString += $"Anomoly found in Edges!\n";
 
 					if (!string.IsNullOrWhiteSpace(e0_string))
@@ -1300,11 +1295,14 @@ namespace LogansNavigationExtension
 		}
 		#endregion
 
+		#region OPERATORS ==================================================
 		public override string ToString()
 		{
 			return $"Tri{index_inCollection}";
 
 			//return $"Tri{index_inCollection} at {V_Center}";
 		}
+
+		#endregion
 	}
 }

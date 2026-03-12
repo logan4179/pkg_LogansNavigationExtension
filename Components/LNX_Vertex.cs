@@ -299,6 +299,12 @@ namespace LogansNavigationExtension
 			return LNX_Utils.AmInVectorCone( pos, V_ToFirstSiblingVert_flat, V_ToSecondSiblingVert_flat, v_surfaceNormal_cached, ref s );
 		}
 
+		/// <summary>
+		/// Returns a path to the supplied LNX_Vertex by fetching it from the relationships collection. This 
+		/// will NOT work if called before the relationships collection has been properly set up.
+		/// </summary>
+		/// <param name="otherVert"></param>
+		/// <returns></returns>
 		public LNX_Path GetPathTo(LNX_Vertex otherVert)
 		{
 			return GetRelationship(otherVert).PathTo;
@@ -339,7 +345,7 @@ namespace LogansNavigationExtension
 			return false;
 		}
 
-		public bool SharesVertSpace( LNX_Vertex vert )
+		public bool SharesVertSpace( LNX_Vertex vert ) //todo: this method won't be necessary if we unify the verts
 		{
 			if( SharedVertexCoordinates != null && SharedVertexCoordinates.Length > 0 )
 			{
@@ -683,14 +689,23 @@ namespace LogansNavigationExtension
 
 		public string GetRelationalString()
 		{
-			string s = $"Vert[{ComponentIndex}].{nameof(GetRelationalString)}()\n" +
-				$"{nameof(Relationships)} count: '{Relationships.Length}'\n" +
+			string s = $"Vert[{ComponentIndex}].{nameof(GetRelationalString)}()\n";
+
+			if( Relationships != null )
+			{
+				s += $"{nameof(Relationships)} count: '{Relationships.Length}'\n" +
 				$"{nameof(FirstSiblingRelationship)}: '{FirstSiblingRelationship}'\n" +
 				$"{nameof(SecondSiblingRelationship)}: '{SecondSiblingRelationship}'\n\n" +
 				$"{nameof(SharedVertexCoordinates)} count: '{SharedVertexCoordinates.Length}'\n" +
 				$"";
+			}
+			else
+			{
+				s += "relationships collection was null...\n";
+			}
 
-			if( SharedVertexCoordinates == null )
+
+			if (SharedVertexCoordinates == null)
 			{
 				s += $"{nameof(SharedVertexCoordinates)} collection is null\n";
 			}
@@ -701,6 +716,58 @@ namespace LogansNavigationExtension
 
 			return s;
 		}		
+
+		public void SayAllRelationships()
+		{
+			string s = $"{this}.{nameof(SayAllRelationships)}()\n";
+			int canSeeCount = 0;
+			int cannotSeeCount = 0;
+			int amValidCount = 0;
+
+			if( Relationships == null )
+			{
+				s += $"relationships collection is null. Returning early...";
+			}
+			else if( Relationships.Length == 0 )
+			{
+				s += $"relationships collection count is only 0. Returning early...";
+			}
+			else
+			{
+				s += $"relationships collection count is '{Relationships.Length}'. Iterating through all...\n\n";
+
+
+				for( int i = 0; i < Relationships.Length; i++ )
+				{
+					s += $"({i}) : {Relationships[i]}\n\n";
+					if(Relationships[i].CanSee )
+					{
+						canSeeCount++;
+					}
+					else
+					{
+						cannotSeeCount++;
+					}
+
+					if(Relationships[i].AmValid )
+					{
+						amValidCount++;
+					}
+				}
+			}
+
+			s += $"\nREPORT==============================\n" +
+				$"can see count: '{canSeeCount}'\n" +
+				$"can NOT see count: '{cannotSeeCount}'\n" +
+				$"amValid count: '{amValidCount}'";
+
+			Debug.Log( s );
+
+			Debug.Log($"can see count: '{canSeeCount}'\n" +
+				$"can NOT see count: '{cannotSeeCount}'\n" +
+				$"amValidCount: '{amValidCount}'"
+			);
+		}
 		#endregion
 	}
 }

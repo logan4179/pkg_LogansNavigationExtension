@@ -96,7 +96,9 @@ namespace LogansNavigationExtension
 					$"Commencing operation...\n";
 
 				ResultPaths = new List<LNX_Path>();
-				ResultCoordinates = _navmesh.GetVisibleVertsFromPoint( CurrentVert, out ResultPaths, ref DBG_Method, true, ExcludeVerts );
+				ResultCoordinates = _navmesh.GetVisibleVertsFromPoint( 
+					CurrentVert, out ResultPaths, ref DBG_Method, true, ExcludeVerts 
+				);
 
 				DBG_Operation += $"{nameof(ResultCoordinates)} count: '{ResultCoordinates.Count}'\n";
 			}

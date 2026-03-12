@@ -23,7 +23,7 @@ namespace LogansNavigationExtension.CustomEditors
 
 		private void OnEnable()
 		{
-			Debug.Log($"LNX_NavMesh was onenabled through the editor code.");
+			Debug.Log($"LNX_NavMesh was onenabled through the editor code."); //from what I can tell, this gets called when you select the object in the heirarcy, NOT when you deactivate and reactivate the object
 
 			//Force target script reference (LNX_NavMesh) to do any initializing I might want it to do below here...
 			_targetScript = (LNX_NavMesh)target;

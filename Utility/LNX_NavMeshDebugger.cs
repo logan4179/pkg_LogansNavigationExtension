@@ -80,6 +80,18 @@ namespace LogansNavigationExtension
 			FocusedTri.SayCurrentInfo(_mgr);
 		}
 
+		[ContextMenu("z call SayFocusedVertInfo()")]
+		public void SayFocusedVertInfo()
+		{
+			FocusedVert.SayCurrentInfo();
+		}
+
+		[ContextMenu("z call SayFocusedVertRelational()")]
+		public void SayFocusedVertRelational()
+		{
+			FocusedVert.SayAllRelationships();
+		}
+
 		[ContextMenu("z call SendGrabberToFocusTri()")]
 		public void SendGrabberToFocusTri()
 		{

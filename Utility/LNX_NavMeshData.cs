@@ -9,7 +9,7 @@ namespace LogansNavigationExtension
     [System.Serializable]
     public class LNX_NavMeshData
     {
-		public string UniqueID;
+		//public string GUID; //todo: I'm commenting this out, and planning to get rid of this because now that I'm using the GUID rather than saving my own unique id, this GUID exists in unity
 
 		public LNX_SerializedTriData[] Triangles;
 
@@ -18,14 +18,14 @@ namespace LogansNavigationExtension
 
 		public LNX_NavMeshData()
 		{
-			UniqueID = "";
+			//GUID = ""; //todo: dws
 			Triangles = null;
 		}
 
 		public LNX_NavMeshData( LNX_NavMesh nm )
 		{
 			Debug.Log( $"ctor. colLength: '{nm.Triangles.Length}'");
-			UniqueID = nm.UniqueID;
+			//GUID = nm.cachedGUID; //todo: dws
 
 			if ( nm.Triangles == null )
 			{
@@ -45,7 +45,7 @@ namespace LogansNavigationExtension
 
 		public void SupplyWithDataFromNavMesh(LNX_NavMesh nm)
 		{
-			UniqueID = nm.UniqueID;
+			//GUID = nm.UniqueID; //todo: dws
 
 			if (nm.Triangles == null)
 			{
@@ -76,10 +76,12 @@ namespace LogansNavigationExtension
 
 		public bool AmValidForUse()
 		{
-			if ( string.IsNullOrEmpty(UniqueID) || string.IsNullOrWhiteSpace(UniqueID) )
+			/*
+			if ( string.IsNullOrEmpty(GUID) || string.IsNullOrWhiteSpace(GUID) )
 			{
 				return false;
 			}
+			*/
 			/*
 			if( Triangles == null || Triangles.Length == 0 )
 			{
@@ -96,10 +98,12 @@ namespace LogansNavigationExtension
 		/// <returns></returns>
 		public bool MatchesNavmesh(LNX_NavMesh nm)
 		{
-			if (UniqueID != nm.UniqueID)
+			/*
+			if (GUID != nm.GUID) //todo: dws
 			{
 				return false;
 			}
+			*/
 
 			if ((Triangles == null && nm.Triangles != null) || Triangles != null && nm.Triangles == null)
 			{

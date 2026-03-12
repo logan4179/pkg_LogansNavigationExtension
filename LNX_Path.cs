@@ -1,9 +1,9 @@
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
-using static UnityEditor.PlayerSettings;
 
 namespace LogansNavigationExtension
 {
@@ -13,11 +13,12 @@ namespace LogansNavigationExtension
 		public List<LNX_NavmeshHit> PathPoints;
 
 		public Vector3 StartPoint => PathPoints[0].Position;
+		public LNX_ComponentCoordinate StartCoordinate => PathPoints[0].Coordinate;
 
 		public Vector3 EndPosition => PathPoints[PathPoints.Count - 1].Position;
+		public LNX_ComponentCoordinate EndCoordinate => PathPoints[PathPoints.Count - 1].Coordinate;
 		public LNX_NavmeshHit EndHit => PathPoints[PathPoints.Count - 1];
-		public int EndPointTriIndex => PathPoints[PathPoints.Count-1].TriIndex;
-		public int EndPointComponentIndex => PathPoints[PathPoints.Count - 1].ComponentIndex;
+
 		/// <summary>A Vector pointing in a straight line from start to end.</summary>
 		public Vector3 V_CrowFlies => PathPoints[PathPoints.Count-1].Position - PathPoints[0].Position;
 
@@ -221,45 +222,7 @@ namespace LogansNavigationExtension
 */
 		#endregion -------------------------------------------------
 
-		#region OPERATORS ======================================================
-		public static bool operator == (LNX_Path a, LNX_Path b)
-		{
-			return a.Equals(b);
-		}
-
-		public static bool operator !=(LNX_Path a, LNX_Path b)
-		{
-			return !a.Equals(b);
-		}
-
-		public override bool Equals(object obj)
-		{
-			if (!(obj is LNX_Path))
-				return false;
-
-			LNX_Path otherPath = (LNX_Path)obj;
-			if 
-			(
-				otherPath.totalDistance_cached != totalDistance_cached || 
-				otherPath.amStraight != amStraight || 
-				otherPath.PathPoints.Count != otherPath.PathPoints.Count
-			)
-			{
-				return false;
-			}
-
-			for ( int i = 0; i < PathPoints.Count; i++ )
-			{
-				if(otherPath.PathPoints[i] != PathPoints[i] )
-				{
-					return false;
-				}
-			}
-
-			return true;
-		}
-		#endregion ---------------------------------------
-
+		#region MAIN API METHODS ============================================
 		public void AddPoint( Vector3 pos, Vector3 nrml )
 		{
 			if (PathPoints == null)
@@ -343,6 +306,7 @@ namespace LogansNavigationExtension
 
 			totalDistance_cached += path.totalDistance_cached;
 		}
+		#endregion
 
 		public Vector3 GetVectorPointingToPreviousPoint( int ptIndx )
 		{
@@ -454,5 +418,62 @@ namespace LogansNavigationExtension
 				}
 			}
 		}
+
+		#region OPERATORS ======================================================
+		public static bool operator ==(LNX_Path a, LNX_Path b)
+		{
+			return a.Equals(b);
+		}
+
+		public static bool operator !=(LNX_Path a, LNX_Path b)
+		{
+			return !a.Equals(b);
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (!(obj is LNX_Path))
+				return false;
+
+			LNX_Path otherPath = (LNX_Path)obj;
+			if
+			(
+				otherPath.totalDistance_cached != totalDistance_cached ||
+				otherPath.amStraight != amStraight ||
+				otherPath.PathPoints.Count != otherPath.PathPoints.Count
+			)
+			{
+				return false;
+			}
+
+			for (int i = 0; i < PathPoints.Count; i++)
+			{
+				if (otherPath.PathPoints[i] != PathPoints[i])
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		
+		public override int GetHashCode()
+		{
+			return PathPoints.GetHashCode();
+		}
+
+		public override string ToString()
+		{
+			if( !AmValid )
+			{
+				return $"[Invalid Path]";
+			}
+
+			return $"[{StartCoordinate}] -> [{EndCoordinate}]";
+		}
+		
+		#endregion ---------------------------------------
+
 	}
 }

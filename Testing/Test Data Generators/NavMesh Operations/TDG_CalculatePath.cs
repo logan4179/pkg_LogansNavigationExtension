@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using UnityEditor;
 using UnityEngine;
 
@@ -19,7 +20,7 @@ namespace LogansNavigationExtension
 		public LNX_Vertex StartVert => Grabber_StartPos.CurrentlyGrabbedVert;
 		public LNX_Vertex EndVert => Grabber_EndPos?.CurrentlyGrabbedVert;
 
-		public TextAsset MyTextAsset;
+		public TextAsset DataAsset;
 
 		[Header("DATA")]
 		public bool CurrentOperationResult;
@@ -36,22 +37,6 @@ namespace LogansNavigationExtension
 		public Color Color_IfTrue;
 		public Color Color_IfFalse;
 
-		#region HELPERS ================================================
-		[ContextMenu("z call LoadDataObjectFromDisk()")]
-		public void LoadDataObjectFromDisk()
-		{
-			_data = new LNX_NavMeshData();
-			
-			if( _navmesh.TryGetEfficiencyData(out _data) )
-			{
-				Debug.Log($"Succesfully got efficiency data");
-			}
-			else
-			{
-				Debug.LogError($"apparently couldn't get efficiency data");
-			}
-		}
-		#endregion
 
 		[ContextMenu("z call TryIt()")]
 		public void TryIt()
@@ -73,6 +58,12 @@ namespace LogansNavigationExtension
 			*/
 
 			Debug.Log($"fwdbstpvrts null: '{fwdBackstopVerts == null}'");
+		}
+
+		[ContextMenu("z call CastTextAssetToData()")]
+		public void CastTextAssetToData()
+		{
+			_data = JsonUtility.FromJson<LNX_NavMeshData>( DataAsset.ToString() );
 		}
 
 		protected override void OnDrawGizmos()
@@ -108,6 +99,7 @@ namespace LogansNavigationExtension
 				DBG_Method = "";
 				CurrentOperationResult = false;
 
+				/*
 				if( AllowEffiencyLoading )
 				{
 					DBG_Operation += $"am allowing efficiency loading. attempting loading...\n";
@@ -123,8 +115,17 @@ namespace LogansNavigationExtension
 					}
 					DBG_Operation += $"efficiency load took '{DateTime.Now.Subtract(dt_efficiencyLoadStart).TotalSeconds}' seconds...\n";
 				}
+				*/
+				if ( _data == null || !_data.MatchesNavmesh(_navmesh) )
+				{
+					DBG_Operation += ($"LNX ERROR! Saved navmesh data seems to be invalid. You should probably " +
+						$"call {nameof(CastTextAssetToData)} Returning early...");
+					return;
+				}
 
 				DateTime dt_opStart = DateTime.Now;
+				StringBuilder sb_op = new StringBuilder();
+				string s = "";
 				int mode = 0;
 				if( mode == 0 )
 				{
@@ -132,7 +133,7 @@ namespace LogansNavigationExtension
 						$"Commencing operation...\n";
 					CurrentOperationResult = _navmesh.CalculatePath(
 						Grabber_StartPos.CurrentHit, Grabber_EndPos.CurrentHit,
-						out CurrentResultPath, ref DBG_Method
+						out CurrentResultPath, ref sb_op
 					);
 				}
 				else if( mode == 1 )
@@ -141,7 +142,7 @@ namespace LogansNavigationExtension
 						$"Commencing operation...\n";
 					CurrentOperationResult = _navmesh.CalculatePath(
 						Grabber_StartPos.transform.position, Grabber_EndPos.transform.position, 0.3f, 
-						out CurrentResultPath, ref DBG_Method
+						out CurrentResultPath, ref s
 					);
 				}
 				else if (mode == 2 )
@@ -150,7 +151,7 @@ namespace LogansNavigationExtension
 						$"Commencing operation...\n";
 					CurrentOperationResult = _navmesh.CalculatePath(
 						StartVert, EndVert,
-						out CurrentResultPath, ref DBG_Method
+						out CurrentResultPath, ref sb_op
 					);
 				}
 
