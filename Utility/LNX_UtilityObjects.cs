@@ -317,10 +317,10 @@ namespace LogansNavigationExtension
 			normal = nrml;
 		}
 
-		public LNX_NavmeshHit(Vector3 pos, Vector3 nrml, Vector3 strtPos, int triIndx, int cmpntIndx)
+		public LNX_NavmeshHit(Vector3 pos, Vector3 nrml, Vector3 strtPos, LNX_ComponentCoordinate coord )
 		{
 			hitPosition = pos;
-			coordinate = new LNX_ComponentCoordinate(triIndx, cmpntIndx);
+			coordinate = coord;
 			normal = nrml;
 			//startPosition = strtPos;
 		}
@@ -452,7 +452,7 @@ namespace LogansNavigationExtension
 		{
 			get
 			{
-				return RelatedVertCoordinate != LNX_ComponentCoordinate.None;
+				return RelatedVertCoordinate != LNX_ComponentCoordinate.None && PathTo != LNX_Path.None;
 			}
 		}
 
@@ -524,15 +524,17 @@ namespace LogansNavigationExtension
 				{
 					sb_rprt.AppendLine($"Actually calculating the path...");
 
-					//string rprt = "";
+					/*
 					StringBuilder sb_calculatePath = new StringBuilder();
 					nvMsh.CalculatePath( myVert, relatedVert, out PathTo, ref sb_calculatePath); //this is by far where most of the time is being spent
+					Debug.Log(sb_calculatePath);
 					sb_rprt.AppendLine($"created path: '{PathTo}' with '{PathTo.PathPoints.Count}' points. Here's the report...\n" +
 						$"=============================================================\n");
 					sb_rprt.AppendLine($"{sb_calculatePath.ToString()}\n" +
 						$"=============================================================\n");
+					*/
 
-					/*
+					
 					//Just to make things run smoother for now...
 					PathTo = new LNX_Path
 					(
@@ -540,7 +542,7 @@ namespace LogansNavigationExtension
 						new List<Vector3>() { nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal },
 						true
 					);
-					*/
+					
 				}
 			}
 			else

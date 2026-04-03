@@ -85,8 +85,8 @@ namespace LogansNavigationExtension
 
 
 				//RaycastResult = _navmesh.Raycast( startTrans.position, endTrans.position, 3f, out ResultPath );
-				RaycastResult = _navmesh.Raycast_dbg(startTrans.position, endTrans.position, 3f, out ResultPath, DBG_Method);
-
+				RaycastResult = _navmesh.Raycast_dbg(startTrans.position, endTrans.position, 3f, out ResultPath, ref DBG_Method);
+				Debug.Log("hay");
 
 				DBG_Operation += $"result: '{RaycastResult}'\n";
 			}

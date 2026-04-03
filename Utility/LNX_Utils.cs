@@ -1279,11 +1279,11 @@ namespace LogansNavigationExtension
 			while (amStillProjecting)
 			{
 				string dbgprjct = "";
-				LNX_NavmeshHit edgePerimHit = nm.Triangles[runningTriIndex].ProjectThroughToPerimeter(
-					runningStartPos, endHit.Position, ref dbgprjct, currentEdgeIndex, true
-				);
 
-				if ( edgePerimHit.ComponentIndex < 0 || edgePerimHit.ComponentIndex > 2 )
+				LNX_NavmeshHit edgePerimHit = LNX_NavmeshHit.None;
+
+				if( !nm.Triangles[runningTriIndex].ProjectThroughToPerimeter(
+					runningStartPos, endHit.Position, out edgePerimHit, ref dbgprjct, currentEdgeIndex, true))
 				{
 					return false;
 				}
@@ -1376,16 +1376,15 @@ namespace LogansNavigationExtension
 					$"projecting through triangle...\n";
 
 				string dbgprjct = "";
-				LNX_NavmeshHit edgePerimHit = currentTri.ProjectThroughToPerimeter( 
-					currentStartPos, endHit.Position, ref dbgprjct, currentEdgeIndex, true );
-				dbgRprt += $"Projected through to perim with hit: '{edgePerimHit}'...\n";
-				outPath.AddPoint( edgePerimHit );
-
-				if (edgePerimHit.ComponentIndex < 0 || edgePerimHit.ComponentIndex > 2)
+				LNX_NavmeshHit edgePerimHit = LNX_NavmeshHit.None;
+				if ( !currentTri.ProjectThroughToPerimeter( 
+					currentStartPos, endHit.Position, out edgePerimHit, ref dbgprjct, currentEdgeIndex, true) )
 				{
 					dbgRprt += $"after project, hit object has bad index of '{edgePerimHit.ComponentIndex}'. now returning...";
 					return false;
 				}
+				dbgRprt += $"Projected through to perim with hit: '{edgePerimHit}'...\n";
+				outPath.AddPoint( edgePerimHit );
 
 				dbgRprt += $"hit object is okay. Continuing...\n";
 
@@ -1494,18 +1493,17 @@ namespace LogansNavigationExtension
 					$"projecting through triangle...\n";
 
 				string dbgprjct = "";
-				LNX_NavmeshHit edgePerimHit = currentTri.ProjectThroughToPerimeter(currentStartPos, endHit.Position, ref dbgprjct, currentEdgeIndex);
+				LNX_NavmeshHit edgePerimHit = LNX_NavmeshHit.None;
+				if ( !currentTri.ProjectThroughToPerimeter(currentStartPos, endHit.Position, out edgePerimHit, ref dbgprjct, currentEdgeIndex) )
+				{
+					dbgRprt += $"after project, hit object has bad index of '{edgePerimHit.ComponentIndex}'. now returning...";
+					return false;
+				}
 				dbgRprt += $"Projected through to perim with hit: '{edgePerimHit}'...\n";
 
 				/*DBGRaycast += $"tri.prjctThrToPerim report----------------\n" +
 					$"{currentTri.dbg_prjctThrhToPerim}" +
 					$"end rprt------------\n";*/
-
-				if (edgePerimHit.ComponentIndex < 0 || edgePerimHit.ComponentIndex > 2)
-				{
-					dbgRprt += $"after project, hit object has bad index of '{edgePerimHit.ComponentIndex}'. now returning...";
-					return false;
-				}
 
 				dbgRprt += $"hit object is okay. Continuing...\n";
 

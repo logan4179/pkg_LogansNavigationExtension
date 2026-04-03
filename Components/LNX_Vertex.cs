@@ -203,7 +203,11 @@ namespace LogansNavigationExtension
 		public void CalculateDerivedInfo(LNX_Triangle tri, LNX_NavMesh nvmsh )
 		{
 			#region ESTABLISH SIBLING RELATIONSHIPS FIRST --------------------------------------------------			
-			Relationships = new LNX_VertexRelationship[nvmsh.Triangles.Length * 3];
+			if( Relationships == null || Relationships.Length == 0 || 
+				Relationships.Length != (nvmsh.Triangles.Length * 3) )
+			{
+				Relationships = new LNX_VertexRelationship[nvmsh.Triangles.Length * 3];
+			}
 			//First establish initial relationships sibling relationships. This is important to do 
 			//now so that the rest can raycast without error...
 			
@@ -691,27 +695,34 @@ namespace LogansNavigationExtension
 		{
 			string s = $"Vert[{ComponentIndex}].{nameof(GetRelationalString)}()\n";
 
-			if( Relationships != null )
+			try
 			{
-				s += $"{nameof(Relationships)} count: '{Relationships.Length}'\n" +
-				$"{nameof(FirstSiblingRelationship)}: '{FirstSiblingRelationship}'\n" +
-				$"{nameof(SecondSiblingRelationship)}: '{SecondSiblingRelationship}'\n\n" +
-				$"{nameof(SharedVertexCoordinates)} count: '{SharedVertexCoordinates.Length}'\n" +
-				$"";
-			}
-			else
-			{
-				s += "relationships collection was null...\n";
-			}
+				if( Relationships != null )
+				{
+					s += $"{nameof(Relationships)} count: '{Relationships.Length}'\n";
+					s += $"{nameof(FirstSiblingRelationship)}: '{FirstSiblingRelationship}'\n" +
+					$"{nameof(SecondSiblingRelationship)}: '{SecondSiblingRelationship}'\n\n" +
+					$"{nameof(SharedVertexCoordinates)} count: '{SharedVertexCoordinates.Length}'\n" +
+					$"";
+				}
+				else
+				{
+					s += "relationships collection was null...\n";
+				}
 
-
-			if (SharedVertexCoordinates == null)
-			{
-				s += $"{nameof(SharedVertexCoordinates)} collection is null\n";
+				if (SharedVertexCoordinates == null)
+				{
+					s += $"{nameof(SharedVertexCoordinates)} collection is null\n";
+				}
+				else
+				{
+					s += $"{nameof(SharedVertexCoordinates)} length: '{SharedVertexCoordinates.Length}'\n";
+				}
 			}
-			else
+			catch (Exception e )
 			{
-				s += $"{nameof(SharedVertexCoordinates)} length: '{SharedVertexCoordinates.Length}'\n";
+				Debug.LogError($"Got exception during GetRelationalString() for vert: '{ComponentIndex}'");
+				//throw;
 			}
 
 			return s;

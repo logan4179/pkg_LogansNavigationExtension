@@ -195,8 +195,26 @@ namespace LogansNavigationExtension
 		public Vector3 ClosestPointOnEdge(Vector3 pos)
 		{
 			Vector3 v_vrtToPos = pos - StartPosition;
+			Vector3 v_edge = EndPosition - StartPosition;
 
-			Vector3 v_result = StartPosition + Vector3.Project(v_vrtToPos, V_StartToEnd);
+			#region SHORT-CIRCUIT ====================================
+			//TODO: efficiency test this method with and without this check to determine how much this check costs. Note: this check 
+			// WILL be triggered in LNX_Triangle.ProjectThroughToPerimeter() in the overload that takes in LNX_Hits as parameters 
+			// when called by LNX_Utils.TryProjectPathThrough()
+			if ( v_vrtToPos.normalized == v_edge.normalized ) //this works bc both of these vectors are calcualted from 'StartPosition'
+			{
+				if ( v_vrtToPos.magnitude <= v_edge.magnitude )
+				{
+					return pos;
+				}
+				else
+				{
+					return EndPosition;
+				}
+			}
+			#endregion
+
+			Vector3 v_result = StartPosition + Vector3.Project( v_vrtToPos, v_edge.normalized );
 
 			float dist_startToRslt = Vector3.Distance(v_result, StartPosition);
 			float dist_endToRslt = Vector3.Distance(v_result, EndPosition);

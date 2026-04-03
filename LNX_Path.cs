@@ -436,21 +436,30 @@ namespace LogansNavigationExtension
 				return false;
 
 			LNX_Path otherPath = (LNX_Path)obj;
+
 			if
 			(
 				otherPath.totalDistance_cached != totalDistance_cached ||
-				otherPath.amStraight != amStraight ||
-				otherPath.PathPoints.Count != otherPath.PathPoints.Count
+				otherPath.amStraight != amStraight
 			)
 			{
 				return false;
 			}
 
-			for (int i = 0; i < PathPoints.Count; i++)
+			if( (PathPoints == null && otherPath.PathPoints != null) || 
+				(PathPoints != null && otherPath.PathPoints != null) )
 			{
-				if (otherPath.PathPoints[i] != PathPoints[i])
+				return false;
+			}
+
+			if ( PathPoints != null && otherPath.PathPoints != null )
+			{
+				for (int i = 0; i < PathPoints.Count; i++)
 				{
-					return false;
+					if (otherPath.PathPoints[i] != PathPoints[i])
+					{
+						return false;
+					}
 				}
 			}
 

@@ -86,11 +86,13 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 				Debug.Log($"projecting through to perimeter...");
 				string s = "";
-				hit = tri.ProjectThroughToPerimeter(
-					_tdg_projectThroughToPerimeter._dataCapture.VectorCaptureLists[0].vectors[i], 
-					_tdg_projectThroughToPerimeter._dataCapture.VectorCaptureLists[1].vectors[i], 
+				bool rslt = tri.ProjectThroughToPerimeter(
+					_tdg_projectThroughToPerimeter._dataCapture.VectorCaptureLists[0].vectors[i],
+					_tdg_projectThroughToPerimeter._dataCapture.VectorCaptureLists[1].vectors[i],
+					out hit,
 					ref s
 				);
+
 				Debug.Log($"projected through. hit position: '{hit.Position}'. Captured hit position is: " +
 					$"'{_tdg_projectThroughToPerimeter._dataCapture.VectorCaptureLists[4].vectors[i]}'." +
 					$"Now asserting value is as expected...");

@@ -97,36 +97,6 @@ namespace LogansNavigationExtension
 
 		public string cachedGUID => serializedDataString; /*string.IsNullOrEmpty(serializedDataString) ? "" : serializedDataString.Split(',')[0];*/
 
-		/// <summary>
-		/// The cached filename of the efficiency data
-		/// </summary>
-		//public string fileName_efficiencyData => string.IsNullOrEmpty(serializedDataString) ? "" : serializedDataString.Split(",")[1];
-
-
-		/* old, dws
-		/// <summary>
-		/// String that caches all string segments involved in data serialization in comma-separated format.<para/>
-		/// [0] = GUID,<br/>
-		/// [1] = Directory path of effiency data file<br/>
-		/// [2] = File name of effiency data file<br/>
-		/// [3] = DateTime of first file save<br/>
-		/// [4] = DateTime of last file save<br/>
-		/// [5] = Number of overwrites
-		/// </summary>
-		[SerializeField, HideInInspector] private string serializedDataString; //uniqueID,sceneFolderDirPath
-		/// <summary>Used to link a navmesh with its saved data in the assets folder</summary>
-		//[SerializeField, HideInInspector] private string uniqueID;
-		//public string UniqueID => uniqueID;
-		public string cachedGUID => string.IsNullOrEmpty(serializedDataString) ? "" : serializedDataString.Split(',')[0];
-
-		public string DirPath_efficiencyData => string.IsNullOrEmpty(serializedDataString) ? "" : serializedDataString.Split(",")[1];
-		public string fileName_efficiencyData => string.IsNullOrEmpty(serializedDataString) ? "" : serializedDataString.Split(",")[2];
-		public string fPath_efficiencyData => string.IsNullOrEmpty(serializedDataString) ? "" : Path.Combine(DirPath_efficiencyData, fileName_efficiencyData);
-		public string firstSaveTime => string.IsNullOrEmpty(serializedDataString) ? "" : serializedDataString.Split(',')[3];
-		public string lastSaveTime => string.IsNullOrEmpty(serializedDataString) ? "" : serializedDataString.Split(',')[4];
-		public string efficiencyDataOverwriteCount => string.IsNullOrEmpty(serializedDataString) ? "" : serializedDataString.Split(',')[5];
-		*/
-
 
 		#endregion
 
@@ -1424,7 +1394,7 @@ namespace LogansNavigationExtension
 			Debug.Log($"no short circuits. Now trying atomic raycast with starthit: '{lnxStartHit}', and endhit: '{lnxEndHit}'...");
 			return Raycast( lnxStartHit, lnxEndHit, out outPath );
 		}
-		public bool Raycast_dbg(Vector3 sourcePosition, Vector3 targetPosition, float maxSampleDistance, out LNX_Path outPath, string dbgRprt,
+		public bool Raycast_dbg(Vector3 sourcePosition, Vector3 targetPosition, float maxSampleDistance, out LNX_Path outPath, ref string dbgRprt,
 			bool considerOffPerimeter = false) //todo: Unit test!!!
 		{
 			dbgRprt = "";
@@ -1446,6 +1416,8 @@ namespace LogansNavigationExtension
 				return true;
 			}
 			#endregion
+
+			dbgRprt += $"sampled startHit: '{lnxStartHit}', and endHit: '{lnxEndHit}'...\n";
 
 			#region SHORT-CIRCUITING ==================================================
 			if (lnxStartHit.TriIndex == lnxEndHit.TriIndex) //If start and end hit are on same triangle...
@@ -1683,8 +1655,8 @@ namespace LogansNavigationExtension
 			if ( startVert.IsRelationshipCollectionValid() && endVert.IsRelationshipCollectionValid() )
 			{
 				dbgCalculatePath.AppendLine( 
-					$"{ startVert.Relationships.Length} - {endVert.Relationships.Length} relationships valid. Getting " +
-					$"already-existing cached relational path...");
+					$"start rels length: '{startVert.Relationships.Length}', end rels length: '{endVert.Relationships.Length}' " +
+					$"relationships valid. Getting already-existing cached relational path...");
 				outPath = startVert.GetPathTo( endVert );
 				return true;
 			}
@@ -2326,6 +2298,17 @@ namespace LogansNavigationExtension
 				$"{nameof(Bounds_LowestY)}: '{Bounds_LowestY}, {nameof(Bounds_HighestY)}: '{Bounds_HighestY}'\n" +
 				$"{nameof(Bounds_LowestZ)}: '{Bounds_LowestZ}, {nameof(Bounds_HighestZ)}: '{Bounds_HighestZ}'\n");
 
+			if( _VisualizationMesh == null )
+			{
+				Debug.Log($"Visualization mesh was null...");
+			}
+			else
+			{
+				Debug.Log("Visual Mesh====\n" +
+					$"{nameof(_VisualizationMesh.vertices)} length: '{_VisualizationMesh.vertices.Length}'" +
+					$"");
+			}
+
 			if( Triangles == null )
 			{
 				Debug.Log($"Triangle collection was null...");
@@ -2338,17 +2321,6 @@ namespace LogansNavigationExtension
 				{
 					Triangles[i].SayCurrentInfo(this);
 				}
-			}
-
-			if( _VisualizationMesh == null )
-			{
-				Debug.Log($"Visualization mesh was null...");
-			}
-			else
-			{
-				Debug.Log("Visual Mesh====\n" +
-					$"{nameof(_VisualizationMesh.vertices)} length: '{_VisualizationMesh.vertices.Length}'" +
-					$"");
 			}
 		}
 
@@ -2416,7 +2388,8 @@ namespace LogansNavigationExtension
 				return;
 			}
 
-			if( drawVisualizationMesh )
+			if( drawVisualizationMesh && _VisualizationMesh != null && _VisualizationMesh.vertices != null && 
+				_VisualizationMesh.vertices.Length > 0 )
 			{
 				Gizmos.color = color_visualMesh;
 				Gizmos.DrawMesh( _VisualizationMesh );

@@ -69,16 +69,10 @@ namespace LogansNavigationExtension
 			DBG_Operation += $"using triangle '{CurrentTriangle.Index_inCollection}'...\n" +
 				$"commencing operation...\n";
 
-			CurrentHit = CurrentTriangle.ProjectThroughToPerimeter
+			if ( !CurrentTriangle.ProjectThroughToPerimeter
 			(
-				Grabber_CurrentTri.transform.position,
-				Grabber_OuterPos.transform.position, 
-				ref DBG_Method
-			);
-
-			DBG_Operation += $"completed operation. {nameof(CurrentHit)} now: '{CurrentHit}'...\n";
-
-			if( CurrentHit.TriIndex > -1 && CurrentHit.TriIndex < 3 )
+				Grabber_CurrentTri.transform.position, Grabber_OuterPos.transform.position, out CurrentHit, ref DBG_Method)
+			)
 			{
 				ProjectedEdge = CurrentTriangle.Edges[CurrentHit.TriIndex];
 				DrawStandardEdgeFocusGizmos( ProjectedEdge, 0.1f, $"edge{ProjectedEdge.MyCoordinate.ComponentIndex}", Color.green );
@@ -86,6 +80,9 @@ namespace LogansNavigationExtension
 				Gizmos.DrawCube( CurrentHit.Position, Vector3.one * 0.025f );
 				Handles.Label(CurrentHit.Position + (Vector3.up * 0.03f), "hitPosition" );
 			}
+
+			DBG_Operation += $"completed operation. {nameof(CurrentHit)} now: '{CurrentHit}'...\n";
+
 
 			Gizmos.color = CurrentHit.Equals(LNX_NavmeshHit.None) ? Color.red : Color.green;
 
