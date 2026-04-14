@@ -263,6 +263,11 @@ namespace LogansNavigationExtension
 		}
 
 		[NonSerialized] public string dbg_doesProjectionIntersectEdge;
+
+		//TODO for following method: considering this method is supposed to find a position that's definitely 
+		//on the surface, and that it's being used by the LNX_Triangle.ProjectThroughToPerimeter() method to
+		//ultimately create an LNX_Hit object, I believe that instead of an out vector ("outPos"), it should
+		//take a reference to an LNX_Hit object, or at least have an overload that does
 		/// <summary>
 		/// Returns whether a projection from origin to direction will intersect this edge.
 		/// </summary>

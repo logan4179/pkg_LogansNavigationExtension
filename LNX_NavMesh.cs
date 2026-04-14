@@ -1266,6 +1266,16 @@ namespace LogansNavigationExtension
 				outPath = new LNX_Path(this, lnxStartHit, lnxEndHit);
 				return false;
 			}
+
+			if
+			(
+				Triangles[lnxStartHit.TriIndex].HasIndexInKnownFullyVisibleList(lnxEndHit.TriIndex) ||
+				Triangles[lnxEndHit.TriIndex].HasIndexInKnownFullyVisibleList(lnxStartHit.TriIndex)
+			)
+			{
+				outPath = new LNX_Path(this, lnxStartHit, lnxEndHit);
+				return false;
+			}
 			#endregion
 
 			//Debug.Log($"no short circuits. Now trying TryProjectPathThrough...");
@@ -1273,6 +1283,40 @@ namespace LogansNavigationExtension
 
 			bool rslt = !LNX_Utils.TryProjectPathThrough(this, lnxStartHit, lnxEndHit, out outPath, ref s);
 			//Debug.Log(s);
+			return rslt;
+			//return !LNX_Utils.TryProjectPathThrough( this, lnxStartHit, lnxEndHit, out outPath, ref s );
+		}
+		public bool Raycast_dbg(LNX_NavmeshHit lnxStartHit, LNX_NavmeshHit lnxEndHit, out LNX_Path outPath, ref LNX_MethodDebugReport rprt )
+		{
+			rprt.StartMethod($"Raycast_dbg()");
+			#region SHORT-CIRCUITING ==================================================
+			if (lnxStartHit.TriIndex == lnxEndHit.TriIndex) //If start and end hit are on same triangle...
+			{
+				outPath = new LNX_Path(this, lnxStartHit, lnxEndHit);
+				rprt.Log_And_End_Method("startHit and endHit on same tri index. Short-circuiting early...");
+				return false;
+			}
+
+			if
+			(
+				Triangles[lnxStartHit.TriIndex].HasIndexInKnownFullyVisibleList(lnxEndHit.TriIndex) ||
+				Triangles[lnxEndHit.TriIndex].HasIndexInKnownFullyVisibleList(lnxStartHit.TriIndex)
+			)
+			{
+				outPath = new LNX_Path(this, lnxStartHit, lnxEndHit);
+				rprt.Log_And_End_Method("start and end hit triangles have each other in fullyknownvisible list. Returning already-calculated relational paths...");
+				return false;
+			}
+			#endregion
+
+			//Debug.Log($"no short circuits. Now trying TryProjectPathThrough...");
+			string s = "";
+
+			rprt.Log($"no short-circuit. Now passing off to LNX_Utils.TryProjectPathThrough()...");
+
+			bool rslt = !LNX_Utils.TryProjectStraightThrough_dbg(this, lnxStartHit, lnxEndHit, out outPath, ref rprt );
+
+			rprt.EndMethod();
 			return rslt;
 			//return !LNX_Utils.TryProjectPathThrough( this, lnxStartHit, lnxEndHit, out outPath, ref s );
 		}
@@ -1354,10 +1398,11 @@ namespace LogansNavigationExtension
 			bool considerOffPerimeter = false) //todo: Unit test!!!
 		{
 			string s = "";
-			#region GET START AND END POINTS------------------------------------------
+
 			LNX_NavmeshHit lnxStartHit = LNX_NavmeshHit.None;
 			LNX_NavmeshHit lnxEndHit = LNX_NavmeshHit.None;
 
+			#region SHORT-CIRCUITING ==================================================
 			if ( !SamplePosition(sourcePosition, out lnxStartHit, maxSampleDistance, considerOffPerimeter) )
 			{
 				//DBGRaycast += $"tried samplePosition. Still didn't work. Returning early...\n";
@@ -1373,64 +1418,49 @@ namespace LogansNavigationExtension
 			}
 			#endregion
 
-			#region SHORT-CIRCUITING ==================================================
-			if (lnxStartHit.TriIndex == lnxEndHit.TriIndex) //If start and end hit are on same triangle...
-			{
-				outPath = new LNX_Path(this, lnxStartHit, lnxEndHit);
-				return false;
-			}
-
-			if
-			(
-				Triangles[lnxStartHit.TriIndex].HasIndexInKnownFullyVisibleList(lnxEndHit.TriIndex) ||
-				Triangles[lnxEndHit.TriIndex].HasIndexInKnownFullyVisibleList(lnxStartHit.TriIndex)
-			)
-			{
-				outPath = new LNX_Path( this, lnxStartHit, lnxEndHit );
-				return false;
-			}
-			#endregion
-
 			Debug.Log($"no short circuits. Now trying atomic raycast with starthit: '{lnxStartHit}', and endhit: '{lnxEndHit}'...");
 			return Raycast( lnxStartHit, lnxEndHit, out outPath );
 		}
-		public bool Raycast_dbg(Vector3 sourcePosition, Vector3 targetPosition, float maxSampleDistance, out LNX_Path outPath, ref string dbgRprt,
-			bool considerOffPerimeter = false) //todo: Unit test!!!
+
+		public bool Raycast_dbg(Vector3 sourcePosition, Vector3 targetPosition, float maxSampleDistance, out LNX_Path outPath, 
+			ref LNX_MethodDebugReport rprt, bool considerOffPerimeter = false) //todo: Unit test!!!
 		{
-			dbgRprt = "";
-			#region GET START AND END POINTS------------------------------------------
+			//rprt.Log($"tablvl: '{rprt.MethodLvl}'");
+			rprt.StartMethod($"Raycast_dbg({sourcePosition}, {targetPosition})");
+			//rprt.Log($"tablvl: '{rprt.MethodLvl}'");
+
 			LNX_NavmeshHit lnxStartHit = LNX_NavmeshHit.None;
 			LNX_NavmeshHit lnxEndHit = LNX_NavmeshHit.None;
-
+			
+			#region SHORT-CIRCUITING ==================================================
 			if (!SamplePosition(sourcePosition, out lnxStartHit, maxSampleDistance, considerOffPerimeter))
 			{
-				dbgRprt += $"Could NOT sample sourcePosition. Returning early...\n";
 				outPath = LNX_Path.None;
+
+				rprt.Log_And_End_Method($"Could NOT sample sourcePosition. Returning early...");
+
 				return true;
 			}
 
 			if (!SamplePosition(targetPosition, out lnxEndHit, maxSampleDistance, considerOffPerimeter))
 			{
-				dbgRprt += $"Could NOT sample targetPosition. Returning early...\n";
 				outPath = LNX_Path.None;
+				rprt.Log_And_End_Method($"Could NOT sample targetPosition. Returning early...");
+
 				return true;
 			}
+
+			rprt.Log($"sampled startHit: '{lnxStartHit}', and endHit: '{lnxEndHit}'...");
 			#endregion
 
-			dbgRprt += $"sampled startHit: '{lnxStartHit}', and endHit: '{lnxEndHit}'...\n";
+			rprt.Log($"no short circuits. Now passing off to deeper overload...");
+			bool rslt = Raycast_dbg( lnxStartHit, lnxEndHit, out outPath, ref rprt );
 
-			#region SHORT-CIRCUITING ==================================================
-			if (lnxStartHit.TriIndex == lnxEndHit.TriIndex) //If start and end hit are on same triangle...
-			{
-				dbgRprt += $"start hit tri index ('{lnxStartHit.TriIndex}') and end hit tri index ('{lnxEndHit.TriIndex}') " +
-					$"were the same. Short-circuiting by returning simple, 2-point path...\n";
-				outPath = new LNX_Path(this, lnxStartHit, lnxEndHit);
-				return false;
-			}
-			#endregion
+			//rprt.Log($"tablvl: '{rprt.MethodLvl}'");
+			rprt.EndMethod("Raycast_dbg()");
+			//rprt.Log($"tablvl: '{rprt.MethodLvl}'");
 
-			dbgRprt += $"no short circuits. Now trying 'atomic' raycast method with starthit: '{lnxStartHit}', and endhit: '{lnxEndHit}'...";
-			return Raycast(lnxStartHit, lnxEndHit, out outPath);
+			return rslt;
 		}
 
 		/// <summary>

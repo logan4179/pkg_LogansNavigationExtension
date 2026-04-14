@@ -1,4 +1,5 @@
 using LogansNavigationExtension;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -1345,7 +1346,7 @@ namespace LogansNavigationExtension
 		public static bool TryProjectPathThrough(LNX_NavMesh nm, LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, out LNX_Path outPath, 
 			ref string dbgRprt )		// 5 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 		{
-			dbgRprt = $"ProjectPathThrough(start: '{startHit}', end: '{endHit}')\n\n";
+			dbgRprt = $">>>LNX_Utils.ProjectPathThrough(startHit: '{startHit}', endHit: '{endHit}')\n\n";
 			outPath = new LNX_Path();
 			outPath.AddPoint( startHit );
 
@@ -1365,14 +1366,13 @@ namespace LogansNavigationExtension
 			int safetyTimeout = nm.Triangles.Length;
 			int runningWhileIterations = 0;
 
-			dbgRprt += $"starting with tri{currentTri}...\n\n" +
-				$"while-looping to build path==============\n";
+			dbgRprt += $"while-looping to build path==============\n";
 
 			bool amStillProjecting = true;
 			while (amStillProjecting)
 			{
-				dbgRprt += $"\nwhile{runningWhileIterations}...\n" +
-					$"\n(currentTri: '{currentTri.Index_inCollection}', startPt: '{LNX_UnitTestUtilities.LongVectorString(currentStartPos)}')\n" +
+				dbgRprt += $"\nwhile{runningWhileIterations}------\n" +
+					$"(currentTri: '{currentTri.Index_inCollection}', startPt: '{LNX_UnitTestUtilities.LongVectorString(currentStartPos)}')\n" +
 					$"projecting through triangle...\n";
 
 				string dbgprjct = "";
@@ -1456,6 +1456,110 @@ namespace LogansNavigationExtension
 			}
 
 			return currentTri.Index_inCollection == endHit.TriIndex;
+		}
+		public static bool TryProjectStraightThrough_dbg(LNX_NavMesh nm, LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, out LNX_Path outPath,
+			ref LNX_MethodDebugReport rprt )     // 5 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		{
+			rprt.StartMethod($"TryProjectPathThrough_dbg(startHit: '{startHit}', endHit: '{endHit}')");
+
+			outPath = new LNX_Path();
+			outPath.AddPoint(startHit);
+
+			#region SHORT-CIRCUITING =======================================
+			if (startHit.TriIndex == endHit.TriIndex)
+			{
+				rprt.Log($"tri indices the same for hit objects. Short-circuting with 2 pt path...");
+				outPath.AddPoint(endHit);
+				return true;
+			}
+			#endregion
+
+			LNX_NavmeshHit currentStartHit = startHit;
+
+			int safetyTimeout = nm.Triangles.Length;
+			int runningWhileIterations = 0;
+
+			rprt.Log($"while-looping to build path...");
+
+			bool amStillProjecting = true;
+			while (amStillProjecting)
+			{
+				rprt.Log_Untabbed($"\nwhile{runningWhileIterations}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+
+				rprt.Log($"currentStartHit: '{currentStartHit}'");
+				rprt.Log("now projecting through triangle...");
+
+				LNX_NavmeshHit edgePerimHit = LNX_NavmeshHit.None;
+				rprt.Log($"=====================================================================");
+
+				if ( 
+					!nm.Triangles[currentStartHit.TriIndex].ProjectThroughToPerimeter_dbg(
+					currentStartHit, endHit, out edgePerimHit, ref rprt, currentStartHit.ComponentIndex, true)
+				)
+				{
+					rprt.Log_And_End_Method($"ProjectThroughToPerimeter_dbg() method returned false. cutting loop short here...");
+					return false;
+				}
+				rprt.Log($"=====================================================================");
+
+
+				//rprt.Log($"Projected through to perim with hit: '{edgePerimHit}'. Adding this hit to running path...");
+				outPath.AddPoint(edgePerimHit);
+
+				LNX_Edge hitEdge = nm.Triangles[edgePerimHit.TriIndex].Edges[edgePerimHit.ComponentIndex];
+				currentStartHit = edgePerimHit;
+
+				rprt.Log($"projected to edge: '{hitEdge}' (shared edge is: '{hitEdge.SharedEdgeCoordinate}')");
+
+				if ( hitEdge.AmTerminal ) //if we've hit a wall...
+				{
+					rprt.Log_And_End_Method($"hit edge is terminal. Stopping loop and returning false...\n");
+					return false;
+				}
+				else if ( Vector3.Distance(edgePerimHit.Position, endHit.Position) < 0.001f ) //if the projection is close enough...
+				{
+					//Debug.Log("close!");
+					rprt.Log_And_End_Method($"edgePerimHit is extremely close to endHit position. Stopping loop and returning true...\n");
+					return true;
+				}
+				else if (
+					hitEdge.TriangleIndex == endHit.TriIndex ||
+					(
+						nm.Triangles[edgePerimHit.TriIndex].AmAdjacentToTri(nm.Triangles[endHit.TriIndex]) && //this is called first for short-circuiting efficiency
+						nm.Triangles[edgePerimHit.TriIndex].IsPositionOnAnyEdge(endHit.Position)
+					)
+				)
+				{
+					rprt.Log($"Decided that edge hit is on the ending triangle's edge perimeter...");
+
+					if (endHit.Position != edgePerimHit.Position) //In case the end position is on the perimeter of the destination tri...
+					{
+						rprt.Log($"the edge hit position is not the same as the endhit position. Tacking 'endHit' onto running path...");
+
+						outPath.AddPoint(endHit);
+					}
+
+					amStillProjecting = false;
+					rprt.Log_And_End_Method($"Decided AM at the end. Stopping...");
+					return true;
+				}
+				else
+				{
+					rprt.Log($"Decided NOT at the end. Continuing while loop...");
+				}
+
+				runningWhileIterations++;
+				if (runningWhileIterations > safetyTimeout)
+				{
+					Debug.LogError($"while loop went for more than '{safetyTimeout}' iterations. Breaking early...");
+					amStillProjecting = false;
+
+					return false;
+				}
+				rprt.Log_Untabbed($"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+			}
+
+			return false;
 		}
 
 		public static bool TryProjectPathThrough( LNX_NavMesh nm, LNX_Vertex startVert, LNX_Vertex endVert, out LNX_Path outPath, ref string dbgRprt)
@@ -1823,6 +1927,36 @@ namespace LogansNavigationExtension
 			Gizmos.DrawLine(tri.Verts[0].V_Position, tri.Verts[1].V_Position);
 			Gizmos.DrawLine(tri.Verts[1].V_Position, tri.Verts[2].V_Position);
 			Gizmos.DrawLine(tri.Verts[2].V_Position, tri.Verts[0].V_Position);
+		}
+
+		public static void DrawTriGizmos(LNX_Triangle tri, Color trmnlEdgeClr )
+		{
+			Color startClr = Gizmos.color;
+
+			if(tri.Edges[0].AmTerminal )
+			{
+				Gizmos.color = trmnlEdgeClr;
+			}
+			DrawEdgeGizmo(tri.Edges[0]);
+			Gizmos.color = startClr;
+
+			if (tri.Edges[1].AmTerminal)
+			{
+				Gizmos.color = trmnlEdgeClr;
+			}
+			DrawEdgeGizmo(tri.Edges[1]);
+			Gizmos.color = startClr;
+
+			if ( tri.Edges[2].AmTerminal )
+			{
+				Gizmos.color = trmnlEdgeClr;
+			}
+			DrawEdgeGizmo(tri.Edges[2]);
+		}
+
+		public static void DrawEdgeGizmo(LNX_Edge edge)
+		{
+			Gizmos.DrawLine( edge.StartPosition, edge.EndPosition );
 		}
 
 		public static void DrawTriHandles( LNX_Triangle tri, float thickness )

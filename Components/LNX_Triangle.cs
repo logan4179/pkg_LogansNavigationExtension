@@ -544,30 +544,9 @@ namespace LogansNavigationExtension
 			}
 		}
 
-		public bool IsPositionOnAnyEdge(Vector3 pos, bool flatten = false)
-		{
-			if (flatten)
-			{
-				pos = LNX_Utils.FlatVector( pos, v_SurfaceNormal_cached );
-			}
 
-			if ( Edges[0].DoesPositionLieOnEdge(pos, v_SurfaceNormal_cached) )
-			{
-				return true;
-			}
-			else if ( Edges[1].DoesPositionLieOnEdge(pos, v_SurfaceNormal_cached) )
-			{
-				return true;
-			}
-			else if ( Edges[2].DoesPositionLieOnEdge(pos, v_SurfaceNormal_cached) )
-			{
-				return true;
-			}
-
-			return false;
-		}
-
-
+		//todo: I think it's maybe a little wierd that I'm passing in two vectors (innerPos, and outerPos), as opposed to two lnxHits. It looks like where I'm using this currently, I could 
+		//just pass in two hit objects.
 		public bool ProjectThroughToPerimeter( Vector3 innerPos, Vector3 outerPos, out LNX_NavmeshHit outHit, ref string dbgRprt, int indx_edgeExclude = -1, bool returnHitOnAdjacenttTriangle = false )
 		{
 			dbgRprt = $"ProjectThroughToPerimeter( {innerPos}, {outerPos}, {indx_edgeExclude} )\n";
@@ -586,11 +565,13 @@ namespace LogansNavigationExtension
 				return false;
 			}
 
+			dbgRprt += $"\tchecking each edge...\n";
 			for (int i = 0; i < 3; i++)
 			{
+				dbgRprt += $"for edge{i}...\n";
 				if ( Edges[i].DoesPositionLieOnEdge(ftndInrPos, v_SurfaceNormal_cached) )
 				{
-					float dotProd = Vector3.Dot(Edges[0].v_Cross_flat, v_to_flat);
+					float dotProd = Vector3.Dot(Edges[i].v_Cross_flat, v_to_flat);
 					if 
 					( 
 						dotProd < 0f || //this means the projection is towards the outside of the triangle...
@@ -630,9 +611,99 @@ namespace LogansNavigationExtension
 				/*$"check2) '{Edges[2].DoesProjectionIntersectEdge(innerPos, outerPos, v_SurfaceNormal_cached, out projectedEdgePosition)}'\n" +*/
 				$"\ncheck2 (intersect report)\n{Edges[2].dbg_doesProjectionIntersectEdge}\n" +
 
-				$" returning null...";
+				$" returning false...";
 			return false;
 			
+		}
+		public bool ProjectThroughToPerimeter_dbg( LNX_NavmeshHit innerHit, LNX_NavmeshHit outerHit, out LNX_NavmeshHit perimHit, ref LNX_MethodDebugReport rprt, int indx_edgeExclude = -1, bool returnHitOnAdjacenttTriangle = false)
+		{
+			//rprt.Log($"tab lvl: {rprt.MethodLvl}");
+			rprt.StartMethod($"{this.ToString()}.ProjectThroughToPerimeter_dbg( {innerHit}, {outerHit}, {indx_edgeExclude} )");
+			//rprt.Log($"tab lvl: {rprt.MethodLvl}");
+			perimHit = LNX_NavmeshHit.None;
+
+			if( innerHit == outerHit) //short-circuit
+			{
+				rprt.Log("inner hit and outer hit determined to be the same. Short-circuiting...");
+				rprt.EndMethod("ProjectThroughToPerimeter()");
+				return false;
+			}
+
+			Vector3 projectedEdgePosition = Vector3.zero;
+
+			Vector3 ftndInrPos = LNX_Utils.FlatVector(innerHit.Position, v_SurfaceNormal_cached);
+			Vector3 ftndOuterPos = LNX_Utils.FlatVector(outerHit.Position, v_SurfaceNormal_cached);
+
+			Vector3 v_projection_flat = LNX_Utils.FlatVector(ftndOuterPos - ftndInrPos).normalized;
+
+			if (ftndInrPos == ftndOuterPos) //short-circuit
+			{
+				rprt.Log($"Found flattened positions are the same. returning early...");
+				rprt.EndMethod("ProjectThroughToPerimeter()");
+				return false;
+			}
+
+			rprt.Log($"No short-circuits. Now checking each edge...");
+			for (int i = 0; i < 3; i++)
+			{
+				rprt.Log_InnrTabbed($"for edge{i}...", 1);
+
+				rprt.Log_InnrTabbed($"first checking if innerPos lies on this edge...", 2);
+				if ( Edges[i].DoesPositionLieOnEdge(ftndInrPos, v_SurfaceNormal_cached) &&
+					v_projection_flat == Edges[i].V_StartToEnd_flattened || v_projection_flat == Edges[i].V_EndToStart_flattened //if the projection runs parallel with the edge...
+				)
+				{
+					rprt.Log_InnrTabbed("innerPos DOES lie on this edge, and runs parallel. Using LNX_Edge.ClosestPtOnEdge() operation...", 3);
+
+					perimHit = new LNX_NavmeshHit(Edges[i].ClosestPointOnEdge(innerHit.Position), v_SurfaceNormal_cached, innerHit.Position,
+						(returnHitOnAdjacenttTriangle && Edges[i].SharedEdgeCoordinate != LNX_ComponentCoordinate.None) ?
+						Edges[i].SharedEdgeCoordinate : new LNX_ComponentCoordinate(index_inCollection, i));
+					rprt.Log_InnrTabbed($"constructed perimHit: '{perimHit}'", 3);
+					rprt.EndMethod();
+					return true;
+				}
+				else
+				{
+					rprt.Log_InnrTabbed($"decided innerPos does NOT lie on edge{i}. Now checking to see if the projection intersects edge{i}...", 2);
+					rprt.Log_InnrTabbed( $"(Note: excludeEdgeIndx: '{indx_edgeExclude}')...", 2 );
+
+					if (indx_edgeExclude != i && Edges[i].DoesProjectionIntersectEdge(innerHit.Position, ftndOuterPos, v_SurfaceNormal_cached, out projectedEdgePosition))
+					{
+						rprt.Log_InnrTabbed($"method succeeded on edge{i}  at: '{projectedEdgePosition}'...", 2);
+						perimHit = new LNX_NavmeshHit(projectedEdgePosition, v_SurfaceNormal_cached, innerHit.Position,
+						(returnHitOnAdjacenttTriangle && Edges[i].SharedEdgeCoordinate != LNX_ComponentCoordinate.None) ?
+						Edges[i].SharedEdgeCoordinate : new LNX_ComponentCoordinate(index_inCollection, i));
+						rprt.Log_InnrTabbed($"constructed perimHit: '{perimHit}'", 2);
+
+						rprt.EndMethod("LNX_Triangle.ProjectThroughToPerimeter()");
+
+						return true;
+					}
+				}
+
+			}
+
+			rprt.EmptyLine();
+
+			rprt.Log($"NONE succeeded. Dumping reports...");
+
+			rprt.Log("edge0---");
+			rprt.Log($"check1 '{Edges[0].DoesPositionLieOnEdge(ftndInrPos, v_SurfaceNormal_cached)}', ");
+			rprt.Log($"check2 (intersect report){Edges[0].dbg_doesProjectionIntersectEdge}");
+
+			rprt.Log("edge1---");
+			rprt.Log($"check1 '{Edges[1].DoesPositionLieOnEdge(ftndInrPos, v_SurfaceNormal_cached)}', ");
+			rprt.Log($"check2 (intersect report){Edges[1].dbg_doesProjectionIntersectEdge}");
+
+			rprt.Log("edge2---");
+			rprt.Log($"check1 '{Edges[2].DoesPositionLieOnEdge(ftndInrPos, v_SurfaceNormal_cached)}', ");
+			rprt.Log($"check2 (intersect report){Edges[2].dbg_doesProjectionIntersectEdge}");
+
+			rprt.Log($" returning false...");
+
+			rprt.EndMethod("ProjectThroughToPerimeter()");
+			return false;
+
 		}
 		#endregion
 
@@ -988,6 +1059,29 @@ namespace LogansNavigationExtension
 			}
 
 			return new Vector3 ( genrtdX, genrtdY, genrtdZ );
+		}
+
+		public bool IsPositionOnAnyEdge(Vector3 pos, bool flatten = false)
+		{
+			if (flatten)
+			{
+				pos = LNX_Utils.FlatVector(pos, v_SurfaceNormal_cached);
+			}
+
+			if (Edges[0].DoesPositionLieOnEdge(pos, v_SurfaceNormal_cached))
+			{
+				return true;
+			}
+			else if (Edges[1].DoesPositionLieOnEdge(pos, v_SurfaceNormal_cached))
+			{
+				return true;
+			}
+			else if (Edges[2].DoesPositionLieOnEdge(pos, v_SurfaceNormal_cached))
+			{
+				return true;
+			}
+
+			return false;
 		}
 
 		/// <summary>

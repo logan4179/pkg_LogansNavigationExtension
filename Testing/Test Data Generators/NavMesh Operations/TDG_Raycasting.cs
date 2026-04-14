@@ -69,6 +69,8 @@ namespace LogansNavigationExtension
 
 		protected override void OnDrawGizmos()
 		{
+			DBG_Method = "";
+
 			if( AmInUnitTest || Selection.activeObject != gameObject && Selection.activeObject != startTrans.gameObject )
 			{
 				return;
@@ -83,10 +85,11 @@ namespace LogansNavigationExtension
 			{
 				DBG_Operation = $"using start '{startTrans.position}', and end: '{endTrans.position}'...\n";
 
-
+				mthdDbg_Report.StartReport("TDG_Raycast");
 				//RaycastResult = _navmesh.Raycast( startTrans.position, endTrans.position, 3f, out ResultPath );
-				RaycastResult = _navmesh.Raycast_dbg(startTrans.position, endTrans.position, 3f, out ResultPath, ref DBG_Method);
-				Debug.Log("hay");
+				RaycastResult = _navmesh.Raycast_dbg(startTrans.position, endTrans.position, 3f, 
+					out ResultPath, ref mthdDbg_Report);
+				mthdDbg_Report.EndReport();
 
 				DBG_Operation += $"result: '{RaycastResult}'\n";
 			}

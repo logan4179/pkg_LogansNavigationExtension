@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Net.Sockets;
 using UnityEditor;
 using UnityEditor.PackageManager.UI;
 using UnityEngine;
@@ -38,6 +39,7 @@ namespace LogansNavigationExtension
 		public bool DrawEdges = true;
 		public Color color_edgeLines = Color.white;
 		public float Thickness_edges = 1f;
+		[Range(0.02f, 0.5f)] public float Length_edgeLblsInward = 0.1f;
 		public bool drawEdgeLabels = false;
 
 		[Header("DEBUG VERTICES")]
@@ -133,23 +135,25 @@ namespace LogansNavigationExtension
 
 		private void OnDrawGizmos()
 		{
-			if ( !AmDebugging )
+			if ( !AmDebugging || _mgr == null || _mgr.Triangles != null && _mgr.Triangles.Length <= 0 )
 			{
 				return;
 			}
 
-			if ( _mgr.Triangles != null && _mgr.Triangles.Length > 0 )
+			if ( FocusedTri != null )
 			{
-				if ( FocusedTri != null )
-				{
-					DrawTriGizmos( FocusedTri, true );
-				}
-
-				for (int i = 0; i < _mgr.Triangles.Length; i++)
-				{
-					DrawTriGizmos(_mgr.Triangles[i], false);
-				}
+				//Debug.Log($"focustri: '{FocusedTri}'");
+				DrawTriGizmos( FocusedTri, true, true, true, true, false, true, false );
 			}
+
+
+			for ( int i = 0; i < _mgr.Triangles.Length; i++ )
+			{
+				DrawTriGizmos(_mgr.Triangles[i], (FocusedTri != null && i == FocusedTri.Index_inCollection) ? true : false, DrawTriLabels, 
+					drawEdgeLabels, DrawEdges, drawVertSpheres, DrawVertLables, drawNormalLines );
+			}
+			
+
 
 			if( FocusedEdge != null )
 			{
@@ -160,9 +164,29 @@ namespace LogansNavigationExtension
 			{
 
 			}
+
+
+			if (amDrawingBounds && _mgr.Bounds != null && _mgr.Bounds.Length == 6)
+			{
+				Gizmos.color = Color_boundsLines;
+
+				Gizmos.DrawWireCube(_mgr.V_BoundsCenter, _mgr.V_BoundsSize);
+				Gizmos.DrawCube(_mgr.V_Bounds[0], Vector3.one * 5f);
+				Gizmos.DrawCube(_mgr.V_Bounds[4], Vector3.one);
+
+			}
+
+			/*
+			if (AmAllowingFocus && amFocused && Grabber_FocusVert.gameObject.activeSelf && FocusedVert != null)
+			{
+				Gizmos.DrawLine(FocusedVert.V_Position, FocusedVert.V_Position + (Vector3.up * 1.2f));
+			}
+			*/
 		}
 
-		public void DrawTriGizmos(LNX_Triangle tri, bool amFocused)
+		public void DrawTriGizmos(LNX_Triangle tri, bool amFocused, bool drawTriLbls, bool drwEdgeLbls, bool drwEdgs, bool drwVrtSphrs, bool drwVrtLbls,
+			bool drwNrmlLns
+		)
 		{
 			if ( amFocused && !AmAllowingFocus )
 			{
@@ -174,14 +198,13 @@ namespace LogansNavigationExtension
 			GUIStyle gstl_label = GUIStyle.none;
 			gstl_label.normal.textColor = amKosher ? Color.white : Color.red;
 
-			if (DrawTriLabels)
+			if (drawTriLbls)
 			{
 				//Handles.Label( tri.V_center + (tri.v_normal * length_labels * 1.5f) + (tri.v_normal * 0.05f), tri.Index_parallelWithParentArray.ToString(), gstl_label );
 				Handles.Label(tri.V_Center, tri.Index_inCollection.ToString(), gstl_label);
 			}
 
 			#region EDGES -------------------------------------------------------
-			float len_edgeLables = Length_normalLines * 0.25f;
 
 			if( amFocused )
 			{
@@ -196,7 +219,7 @@ namespace LogansNavigationExtension
 			}
 
 			//Draw borders...
-			if( DrawEdges )
+			if(drwEdgs)
 			{
 				if ( amFocused )
 				{
@@ -208,16 +231,24 @@ namespace LogansNavigationExtension
 				}
 			}
 
-			if ( drawEdgeLabels )
+			if (drwEdgeLbls)
 			{
-				Handles.Label(tri.Edges[0].MidPosition + (tri.Edges[0].v_Cross * len_edgeLables), "e0", gstl_label);
-				Handles.Label(tri.Edges[1].MidPosition + (tri.Edges[1].v_Cross * len_edgeLables), "e1", gstl_label);
-				Handles.Label(tri.Edges[2].MidPosition + (tri.Edges[2].v_Cross * len_edgeLables), "e2", gstl_label);
+				Vector3 pos = tri.Edges[0].MidPosition + (tri.Edges[0].v_Cross * Length_edgeLblsInward);
+				Gizmos.DrawLine(tri.Edges[0].MidPosition, pos );
+				Handles.Label(pos, "e0", gstl_label);
+
+				pos = tri.Edges[1].MidPosition + (tri.Edges[1].v_Cross * Length_edgeLblsInward);
+				Gizmos.DrawLine(tri.Edges[1].MidPosition, pos);
+				Handles.Label(tri.Edges[1].MidPosition + (tri.Edges[1].v_Cross * Length_edgeLblsInward), "e1", gstl_label);
+
+				pos = tri.Edges[2].MidPosition + (tri.Edges[2].v_Cross * Length_edgeLblsInward);
+				Gizmos.DrawLine(tri.Edges[2].MidPosition, pos);
+				Handles.Label(tri.Edges[2].MidPosition + (tri.Edges[2].v_Cross * Length_edgeLblsInward), "e2", gstl_label);
 			}
 			#endregion
 
 			#region VERTS -----------------------------------------------
-			if ( drawVertSpheres )
+			if ( drwVrtSphrs )
 			{
 				if( amFocused && Grabber_FocusVert.gameObject.activeSelf && FocusedVert != null )
 				{
@@ -231,7 +262,7 @@ namespace LogansNavigationExtension
 				Gizmos.DrawSphere( tri.Verts[2].V_Position, radius_vertSphere );
 			}
 
-			if ( DrawVertLables )
+			if (drwVrtLbls)
 			{
 				Gizmos.color = amKosher ? color_vertSphere : Color.red;
 
@@ -242,7 +273,7 @@ namespace LogansNavigationExtension
 			}
 			#endregion
 
-			if ( drawNormalLines )
+			if (drwNrmlLns)
 			{
 				Gizmos.color = Color_normalLines;
 
@@ -252,24 +283,9 @@ namespace LogansNavigationExtension
 				Gizmos.DrawLine(tri.Verts[1].V_Position, tri.V_Center);
 				Gizmos.DrawLine(tri.Verts[2].V_Position, tri.V_Center);
 
-				Gizmos.DrawLine( tri.Edges[0].MidPosition, tri.Edges[0].MidPosition + (tri.Edges[0].v_Cross * len_edgeLables) );
-				Gizmos.DrawLine( tri.Edges[1].MidPosition, tri.Edges[1].MidPosition + (tri.Edges[1].v_Cross * len_edgeLables) );
-				Gizmos.DrawLine( tri.Edges[2].MidPosition, tri.Edges[2].MidPosition + (tri.Edges[2].v_Cross * len_edgeLables) );
-			}
-
-			if ( amDrawingBounds && _mgr.Bounds != null && _mgr.Bounds.Length == 6 )
-			{
-				Gizmos.color = Color_boundsLines;
-
-				Gizmos.DrawWireCube( _mgr.V_BoundsCenter, _mgr.V_BoundsSize );
-				Gizmos.DrawCube(_mgr.V_Bounds[0], Vector3.one * 5f);
-				Gizmos.DrawCube(_mgr.V_Bounds[4], Vector3.one);
-
-			}
-
-			if ( AmAllowingFocus && amFocused && Grabber_FocusVert.gameObject.activeSelf && FocusedVert != null )
-			{
-				Gizmos.DrawLine(FocusedVert.V_Position, FocusedVert.V_Position + (Vector3.up * 1.2f) );
+				Gizmos.DrawLine( tri.Edges[0].MidPosition, tri.Edges[0].MidPosition + (tri.Edges[0].v_Cross * Length_normalLines) );
+				Gizmos.DrawLine( tri.Edges[1].MidPosition, tri.Edges[1].MidPosition + (tri.Edges[1].v_Cross * Length_normalLines) );
+				Gizmos.DrawLine( tri.Edges[2].MidPosition, tri.Edges[2].MidPosition + (tri.Edges[2].v_Cross * Length_normalLines) );
 			}
 		}
 

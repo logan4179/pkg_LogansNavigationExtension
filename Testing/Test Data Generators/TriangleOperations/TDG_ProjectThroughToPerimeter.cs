@@ -10,23 +10,26 @@ namespace LogansNavigationExtension
     public class TDG_ProjectThroughToPerimeter : TDG_base
     {
 		public LNX_ComponentGrabber Grabber_CurrentTri;
+		public LNX_Triangle CurrentlyGrabbedTriangle => Grabber_CurrentTri.CurrentlyGrabbedTriangle;
 		public LNX_ComponentGrabber Grabber_OuterPos;
+		public Vector3 CurrentlyGrabbedOuterPos => Grabber_OuterPos.GetCurrentlyGrabbedPosition();
 
 		public LNX_Triangle CurrentTriangle => Grabber_CurrentTri.CurrentlyGrabbedTriangle;
 		public LNX_Edge ProjectedEdge;
-		public LNX_NavmeshHit CurrentHit;
+		public LNX_NavmeshHit perimHitParam;
 
 		[Header("GO TO")]
 		public TDG_TryProjectPathThrough _tdg_projectPathThrough;
 
-		//[Header("DEBUG")]
+		[Header("DEBUG")]
+		public LNX_MethodDebugReport mDbg_Report;
 
 		[ContextMenu("z call CaptureDataPoint()")]
 		public void CaptureDataPoint()
 		{
 			_dataCapture.CaptureDataPoint(
 				Grabber_CurrentTri.transform.position, Grabber_OuterPos.transform.position,
-				CurrentTriangle.V_Center, ProjectedEdge.MidPosition, CurrentHit.Position
+				CurrentTriangle.V_Center, ProjectedEdge.MidPosition, perimHitParam.Position
 			);
 		}
 
@@ -39,7 +42,8 @@ namespace LogansNavigationExtension
 
 		protected override void OnDrawGizmos()
 		{
-			if 
+			#region SHORT-CIRCUITING ===============================
+			if
 			( 
 				AmInUnitTest || 
 				Selection.activeGameObject != gameObject && 
@@ -51,40 +55,57 @@ namespace LogansNavigationExtension
 				return;
 			}
 
+			DBG_Operation = "";
+			DBG_Method = "";
+			perimHitParam = LNX_NavmeshHit.None;
+
 			if (CurrentTriangle == null)
 			{
 				DBG_Operation += $"OnDrawGizmos short-circuit. Need to sample a focus triangle...";
 				Debug.LogWarning($"Need to sample a focus triangle...");
 				return;
 			}
+			#endregion
 
 			base.OnDrawGizmos();
 
-			DBG_Operation = "";
-			DBG_Method = "";
-			CurrentHit = LNX_NavmeshHit.None;
 
 			DrawStandardFocusTriGizmos( CurrentTriangle, 1f, $"", Color.magenta);
 
 			DBG_Operation += $"using triangle '{CurrentTriangle.Index_inCollection}'...\n" +
 				$"commencing operation...\n";
 
-			if ( !CurrentTriangle.ProjectThroughToPerimeter
-			(
-				Grabber_CurrentTri.transform.position, Grabber_OuterPos.transform.position, out CurrentHit, ref DBG_Method)
+			mDbg_Report.StartReport( "RPRT=======" );
+			/*if ( CurrentTriangle.ProjectThroughToPerimeter
+				(
+					Grabber_CurrentTri.transform.position, Grabber_OuterPos.transform.position, out currentHitParam, ref DBG_Method
+				)
+			)*/
+			if (CurrentTriangle.ProjectThroughToPerimeter_dbg
+				(
+					//Grabber_CurrentTri.transform.position, Grabber_OuterPos.transform.position, out currentHitParam, ref mDbg_Report //todo: dws
+					Grabber_CurrentTri.CurrentHit, Grabber_OuterPos.CurrentHit, out perimHitParam, ref mDbg_Report
+
+				)
 			)
 			{
-				ProjectedEdge = CurrentTriangle.Edges[CurrentHit.TriIndex];
+				DBG_Operation += $"projection returned true. perimHitParam: '{perimHitParam}'...\n";
+				ProjectedEdge = CurrentTriangle.Edges[perimHitParam.ComponentIndex];
 				DrawStandardEdgeFocusGizmos( ProjectedEdge, 0.1f, $"edge{ProjectedEdge.MyCoordinate.ComponentIndex}", Color.green );
 
-				Gizmos.DrawCube( CurrentHit.Position, Vector3.one * 0.025f );
-				Handles.Label(CurrentHit.Position + (Vector3.up * 0.03f), "hitPosition" );
+				Gizmos.DrawCube( perimHitParam.Position, Vector3.one * 0.025f );
+				Handles.Label(perimHitParam.Position + (Vector3.up * 0.03f), "hitPosition" );
 			}
+			else
+			{
+				DBG_Operation += $"CurrentTriangle.ProjectThroughToPerimeter() returned false...\n";
+			}
+			mDbg_Report.EndReport();
 
-			DBG_Operation += $"completed operation. {nameof(CurrentHit)} now: '{CurrentHit}'...\n";
+			DBG_Operation += $"completed operation. {nameof(perimHitParam)} now: '{perimHitParam}'...\n";
 
 
-			Gizmos.color = CurrentHit.Equals(LNX_NavmeshHit.None) ? Color.red : Color.green;
+			Gizmos.color = perimHitParam.Equals(LNX_NavmeshHit.None) ? Color.red : Color.green;
 
 			Grabber_CurrentTri.DrawMyGizmos(Radius_ObjectDebugSpheres);
 			Grabber_OuterPos.DrawMyGizmos(Radius_ObjectDebugSpheres);
