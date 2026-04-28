@@ -74,7 +74,7 @@ namespace LogansNavigationExtension
 			DrawStandardEdgeFocusGizmos(CurrentEdge, 0.1f, "", Color.yellow);
 
 			DBG_Operation += $"Commencing edge operation...\n";
-			CurrentProjectionResult = CurrentEdge.DoesPositionLieOnEdge(_EdgeGrabber.transform.position, _navmesh.GetSurfaceNormalVector() );
+			CurrentProjectionResult = CurrentEdge.DoesPositionLieOnEdge( _EdgeGrabber.transform.position );
 
 			Gizmos.color = CurrentProjectionResult ? Color.green : Color.red;
 

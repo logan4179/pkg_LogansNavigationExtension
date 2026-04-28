@@ -172,7 +172,7 @@ namespace LogansNavigationExtension
 		{
 			if( lenA < 0f && lenB < 0f && lenC < 0f )
 			{
-				Debug.LogWarning($"You supplised this method with no valid lengths. You MUST have at least one known length to solve a triangle.");
+				Debug.LogError($"You supplied this method with no valid lengths. You MUST have at least one known length to solve a triangle.");
 				return -1f; //You MUST know a length...
 			}
 
@@ -208,6 +208,10 @@ namespace LogansNavigationExtension
 				{
 					return Mathf.Sin(angC * Mathf.Deg2Rad) * lenB / Mathf.Sin(angB * Mathf.Deg2Rad);
 				}
+			}
+			else
+			{
+				Debug.LogError($"You supplied this method with an invalid combination. You MUST have at least one known length to solve a triangle.");
 			}
 
 			return -1f;
@@ -256,15 +260,15 @@ namespace LogansNavigationExtension
 			return FlatVector( vector, vNormal );
 		}
 
-		public static Vector3 FlatVector( Vector3 vector, Vector3 nrml )
+		public static Vector3 FlatVector( Vector3 vector, Vector3 flattenDir )
 		{
-			if( nrml == Vector3.zero )
+			if( flattenDir == Vector3.zero )
 			{
 				Debug.LogError( $"LNX ERROR! You supplied a normal parameter of 0. Need a normal direction in order to flatten!" );
 				return Vector3.zero;
 			}
 
-			if ( (nrml == Vector3.up || nrml == Vector3.down) )
+			if ( (flattenDir == Vector3.up || flattenDir == Vector3.down) )
 			{
 				if( vector.y != 0f )
 				{
@@ -275,7 +279,7 @@ namespace LogansNavigationExtension
 					return vector;
 				}
 			}
-			else if (nrml == Vector3.right || nrml == Vector3.left)
+			else if (flattenDir == Vector3.right || flattenDir == Vector3.left)
 			{
 				if( vector.x != 0f )
 				{
@@ -286,7 +290,7 @@ namespace LogansNavigationExtension
 					return vector;
 				}
 			}
-			else if (nrml == Vector3.forward || nrml == Vector3.back)
+			else if (flattenDir == Vector3.forward || flattenDir == Vector3.back)
 			{
 				if( vector.z != 0f )
 				{
@@ -297,9 +301,9 @@ namespace LogansNavigationExtension
 					return vector;
 				}
 			}
-			else if ( nrml != Vector3.zero )
+			else if ( flattenDir != Vector3.zero )
 			{
-				return Vector3.ProjectOnPlane( vector, nrml );
+				return Vector3.ProjectOnPlane( vector, flattenDir );
 			}
 
 			return Vector3.zero;
@@ -1257,7 +1261,7 @@ namespace LogansNavigationExtension
 		/// <param name="endHit"></param>
 		/// <param name="outPath"></param>
 		/// <returns>True if it's able to project through from start to end, false if it hits an obstructing edge and cannot complete the path.</returns>
-		public static bool TryProjectPathThrough(LNX_NavMesh nm, LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, out LNX_Path outPath )
+		/*public static bool TryProjectPathThrough(LNX_NavMesh nm, LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, out LNX_Path outPath )
 		{ //note: started making this as cleaner/faster version. Use this when ready to efficiency test vs the overload after...
 			outPath = new LNX_Path();
 			outPath.AddPoint( startHit );
@@ -1343,183 +1347,49 @@ namespace LogansNavigationExtension
 
 			return runningTriIndex == endHit.TriIndex;
 		}
-		public static bool TryProjectPathThrough(LNX_NavMesh nm, LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, out LNX_Path outPath, 
-			ref string dbgRprt )		// 5 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		*/
+
+		public static bool TryProjectThrough(LNX_NavMesh nm, LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, out LNX_Path outPath) //<<<<<
 		{
-			dbgRprt = $">>>LNX_Utils.ProjectPathThrough(startHit: '{startHit}', endHit: '{endHit}')\n\n";
-			outPath = new LNX_Path();
-			outPath.AddPoint( startHit );
-
-			#region SHORT-CIRCUITING =======================================
-			if( startHit.TriIndex == endHit.TriIndex )
-			{
-				dbgRprt += $"tri indices the same for hit objects. Short-circuting with 2 pt path...\n";
-				outPath.AddPoint( endHit );
-				return true;
-			}
-			#endregion
-
-			LNX_Triangle currentTri = nm.Triangles[startHit.TriIndex];
-			Vector3 currentStartPos = startHit.Position;
-			int currentEdgeIndex = -1;
-
-			int safetyTimeout = nm.Triangles.Length;
-			int runningWhileIterations = 0;
-
-			dbgRprt += $"while-looping to build path==============\n";
-
-			bool amStillProjecting = true;
-			while (amStillProjecting)
-			{
-				dbgRprt += $"\nwhile{runningWhileIterations}------\n" +
-					$"(currentTri: '{currentTri.Index_inCollection}', startPt: '{LNX_UnitTestUtilities.LongVectorString(currentStartPos)}')\n" +
-					$"projecting through triangle...\n";
-
-				string dbgprjct = "";
-				LNX_NavmeshHit edgePerimHit = LNX_NavmeshHit.None;
-				if ( !currentTri.ProjectThroughToPerimeter( 
-					currentStartPos, endHit.Position, out edgePerimHit, ref dbgprjct, currentEdgeIndex, true) )
-				{
-					dbgRprt += $"after project, hit object has bad index of '{edgePerimHit.ComponentIndex}'. now returning...";
-					return false;
-				}
-				dbgRprt += $"Projected through to perim with hit: '{edgePerimHit}'...\n";
-				outPath.AddPoint( edgePerimHit );
-
-				dbgRprt += $"hit object is okay. Continuing...\n";
-
-				LNX_Edge hitEdge = currentTri.Edges[edgePerimHit.ComponentIndex];
-				currentEdgeIndex = edgePerimHit.ComponentIndex;
-				currentStartPos = edgePerimHit.Position;
-
-				dbgRprt += $"projected to edge: '{hitEdge.MyCoordinate}' at '{LNX_UnitTestUtilities.LongVectorString(edgePerimHit.Position)}'. " +
-				$"Shared edge is: '{hitEdge.SharedEdgeCoordinate}'\n";
-
-				if (Vector3.Distance(edgePerimHit.Position, endHit.Position) < 0.001f)
-				{
-					//Debug.Log("close!");
-					dbgRprt += $"edgePerimHit is close enough to endHit position. Stopping while loop...\n";
-					amStillProjecting = false;
-					currentTri = nm.Triangles[endHit.TriIndex];
-				}
-				else if (hitEdge.AmTerminal)
-				{
-					dbgRprt += $"hit edge is terminal. Stopping loop...\n";
-					dbgRprt += $"currentHit {LNX_UnitTestUtilities.LongVectorString(edgePerimHit.Position)} equals endhit " +
-						$"{LNX_UnitTestUtilities.LongVectorString(endHit.Position)}: '{edgePerimHit.Position == endHit.Position}'\n" +
-						$"flat equals: '{FlatVector(edgePerimHit.Position, nm.GetSurfaceNormalVector()) == FlatVector(endHit.Position, nm.GetSurfaceNormalVector())}'\n" +
-						$"dist: '{Vector3.Distance(edgePerimHit.Position, endHit.Position)}'\n";
-					amStillProjecting = false;
-				}
-				else
-				{
-					dbgRprt += $"edge is NOT terminal. Checking to see if we're at the end...\n";
-					dbgRprt += $"test1, Triangles[{currentTri.Index_inCollection}].AmAdjacentToTri({endHit.TriIndex}): " +
-						$"'{currentTri.AmAdjacentToTri(nm.Triangles[endHit.TriIndex])}'\n" +
-						$"";
-
-					if 
-					(
-						hitEdge.SharedEdgeCoordinate.TrianglesIndex == endHit.TriIndex ||
-						(currentTri.AmAdjacentToTri(nm.Triangles[endHit.TriIndex]) && currentTri.IsPositionOnAnyEdge(endHit.Position))
-					)
-					{
-						currentTri = nm.Triangles[endHit.TriIndex];
-
-						if( endHit.Position != edgePerimHit.Position ) //In case the end position is on the perimeter of the destination tri...
-						{
-							outPath.AddPoint( endHit );
-						}
-
-						amStillProjecting = false;
-						dbgRprt += $"Decided AM at the end. Stopping...\n";
-					}
-					else
-					{
-						currentTri = nm.Triangles[hitEdge.SharedEdgeCoordinate.TrianglesIndex];
-						currentEdgeIndex = hitEdge.SharedEdgeCoordinate.ComponentIndex;
-						currentStartPos = edgePerimHit.Position;
-
-						dbgRprt += $"Decided NOT at the end. Set new current tri to: '{currentTri.Index_inCollection}'...\n";
-					}
-				}
-
-
-				runningWhileIterations++;
-				if (runningWhileIterations > safetyTimeout)
-				{
-					Debug.LogError($"while loop went for more than '{safetyTimeout}' iterations. Breaking early...");
-					amStillProjecting = false;
-
-					return false;
-				}
-			}
-
-			return currentTri.Index_inCollection == endHit.TriIndex;
-		}
-		public static bool TryProjectStraightThrough_dbg(LNX_NavMesh nm, LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, out LNX_Path outPath,
-			ref LNX_MethodDebugReport rprt )     // 5 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		{
-			rprt.StartMethod($"TryProjectPathThrough_dbg(startHit: '{startHit}', endHit: '{endHit}')");
-
-			outPath = new LNX_Path();
+			outPath = new LNX_Path( nm );
 			outPath.AddPoint(startHit);
 
 			#region SHORT-CIRCUITING =======================================
 			if (startHit.TriIndex == endHit.TriIndex)
 			{
-				rprt.Log($"tri indices the same for hit objects. Short-circuting with 2 pt path...");
 				outPath.AddPoint(endHit);
 				return true;
 			}
 			#endregion
 
 			LNX_NavmeshHit currentStartHit = startHit;
-
 			int safetyTimeout = nm.Triangles.Length;
 			int runningWhileIterations = 0;
-
-			rprt.Log($"while-looping to build path...");
 
 			bool amStillProjecting = true;
 			while (amStillProjecting)
 			{
-				rprt.Log_Untabbed($"\nwhile{runningWhileIterations}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-
-				rprt.Log($"currentStartHit: '{currentStartHit}'");
-				rprt.Log("now projecting through triangle...");
-
 				LNX_NavmeshHit edgePerimHit = LNX_NavmeshHit.None;
-				rprt.Log($"=====================================================================");
 
-				if ( 
-					!nm.Triangles[currentStartHit.TriIndex].ProjectThroughToPerimeter_dbg(
-					currentStartHit, endHit, out edgePerimHit, ref rprt, currentStartHit.ComponentIndex, true)
+				if (
+					!nm.Triangles[currentStartHit.TriIndex].ProjectThroughToPerimeter(
+					currentStartHit, endHit, out edgePerimHit, currentStartHit.ComponentIndex, true)
 				)
 				{
-					rprt.Log_And_End_Method($"ProjectThroughToPerimeter_dbg() method returned false. cutting loop short here...");
 					return false;
 				}
-				rprt.Log($"=====================================================================");
 
-
-				//rprt.Log($"Projected through to perim with hit: '{edgePerimHit}'. Adding this hit to running path...");
 				outPath.AddPoint(edgePerimHit);
 
 				LNX_Edge hitEdge = nm.Triangles[edgePerimHit.TriIndex].Edges[edgePerimHit.ComponentIndex];
 				currentStartHit = edgePerimHit;
 
-				rprt.Log($"projected to edge: '{hitEdge}' (shared edge is: '{hitEdge.SharedEdgeCoordinate}')");
-
-				if ( hitEdge.AmTerminal ) //if we've hit a wall...
+				if (hitEdge.AmTerminal) //if we've hit a wall...
 				{
-					rprt.Log_And_End_Method($"hit edge is terminal. Stopping loop and returning false...\n");
 					return false;
 				}
-				else if ( Vector3.Distance(edgePerimHit.Position, endHit.Position) < 0.001f ) //if the projection is close enough...
+				else if (Vector3.Distance(edgePerimHit.Position, endHit.Position) < 0.001f) //if the projection is close enough...
 				{
-					//Debug.Log("close!");
-					rprt.Log_And_End_Method($"edgePerimHit is extremely close to endHit position. Stopping loop and returning true...\n");
 					return true;
 				}
 				else if (
@@ -1530,22 +1400,13 @@ namespace LogansNavigationExtension
 					)
 				)
 				{
-					rprt.Log($"Decided that edge hit is on the ending triangle's edge perimeter...");
-
 					if (endHit.Position != edgePerimHit.Position) //In case the end position is on the perimeter of the destination tri...
 					{
-						rprt.Log($"the edge hit position is not the same as the endhit position. Tacking 'endHit' onto running path...");
-
 						outPath.AddPoint(endHit);
 					}
 
 					amStillProjecting = false;
-					rprt.Log_And_End_Method($"Decided AM at the end. Stopping...");
 					return true;
-				}
-				else
-				{
-					rprt.Log($"Decided NOT at the end. Continuing while loop...");
 				}
 
 				runningWhileIterations++;
@@ -1556,15 +1417,15 @@ namespace LogansNavigationExtension
 
 					return false;
 				}
-				rprt.Log_Untabbed($"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+				//rprt.Log_Untabbed($"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 			}
 
 			return false;
 		}
 
-		public static bool TryProjectPathThrough( LNX_NavMesh nm, LNX_Vertex startVert, LNX_Vertex endVert, out LNX_Path outPath, ref string dbgRprt)
+		public static bool TryProjectThrough( LNX_NavMesh nm, LNX_Vertex startVert, LNX_Vertex endVert, out LNX_Path outPath, ref string dbgRprt)
 		{
-			return TryProjectPathThrough( nm, new LNX_NavmeshHit(startVert), new LNX_NavmeshHit(endVert), out outPath, ref dbgRprt );
+			return TryProjectThrough( nm, new LNX_NavmeshHit(startVert), new LNX_NavmeshHit(endVert), out outPath );
 		}
 
 		public static bool TryProjectThrough( LNX_NavMesh nm, LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, ref string dbgRprt )
@@ -1664,9 +1525,9 @@ namespace LogansNavigationExtension
 			return currentTri.Index_inCollection == endHit.TriIndex;
 		}
 
-		public static bool TryProjectPathThrough(LNX_NavMesh nm, LNX_NavmeshHit startHit, LNX_Vertex endVert, out LNX_Path outPath/*, ref string dbgRprt*/)
+		public static bool TryProjectThrough(LNX_NavMesh nm, LNX_NavmeshHit startHit, LNX_Vertex endVert, out LNX_Path outPath/*, ref string dbgRprt*/)
 		{
-			return TryProjectPathThrough( nm, startHit, new LNX_NavmeshHit(endVert), out outPath/*, ref dbgRprt*/ );
+			return TryProjectThrough( nm, startHit, new LNX_NavmeshHit(endVert), out outPath/*, ref dbgRprt*/ );
 		}
 		#endregion
 
@@ -1920,52 +1781,5 @@ namespace LogansNavigationExtension
 		}
 		#endregion
 
-#if UNITY_EDITOR
-		#region GIZMO DRAWING-------------------------------------
-		public static void DrawTriGizmos( LNX_Triangle tri )
-		{
-			Gizmos.DrawLine(tri.Verts[0].V_Position, tri.Verts[1].V_Position);
-			Gizmos.DrawLine(tri.Verts[1].V_Position, tri.Verts[2].V_Position);
-			Gizmos.DrawLine(tri.Verts[2].V_Position, tri.Verts[0].V_Position);
-		}
-
-		public static void DrawTriGizmos(LNX_Triangle tri, Color trmnlEdgeClr )
-		{
-			Color startClr = Gizmos.color;
-
-			if(tri.Edges[0].AmTerminal )
-			{
-				Gizmos.color = trmnlEdgeClr;
-			}
-			DrawEdgeGizmo(tri.Edges[0]);
-			Gizmos.color = startClr;
-
-			if (tri.Edges[1].AmTerminal)
-			{
-				Gizmos.color = trmnlEdgeClr;
-			}
-			DrawEdgeGizmo(tri.Edges[1]);
-			Gizmos.color = startClr;
-
-			if ( tri.Edges[2].AmTerminal )
-			{
-				Gizmos.color = trmnlEdgeClr;
-			}
-			DrawEdgeGizmo(tri.Edges[2]);
-		}
-
-		public static void DrawEdgeGizmo(LNX_Edge edge)
-		{
-			Gizmos.DrawLine( edge.StartPosition, edge.EndPosition );
-		}
-
-		public static void DrawTriHandles( LNX_Triangle tri, float thickness )
-		{
-			Handles.DrawLine(tri.Verts[0].V_Position, tri.Verts[1].V_Position, thickness );
-			Handles.DrawLine(tri.Verts[1].V_Position, tri.Verts[2].V_Position, thickness );
-			Handles.DrawLine(tri.Verts[2].V_Position, tri.Verts[0].V_Position, thickness );
-		}
-		#endregion
-#endif
 	}
 }

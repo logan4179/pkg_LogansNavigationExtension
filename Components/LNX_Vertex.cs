@@ -185,7 +185,7 @@ namespace LogansNavigationExtension
 				originalPosition = atomicTris[triIndx].VertPos2_orig;
 			}
 
-			v_surfaceNormal_cached = nvmsh.GetSurfaceNormalVector();
+			v_surfaceNormal_cached = nvmsh.GetSurfaceProjectionVector();
 
 			//v_triCenter_cached = atomicTris[triIndx].Center;
 			v_triCenter_cached = (atomicTris[triIndx].VertPos0_current + atomicTris[triIndx].VertPos1_current + atomicTris[triIndx].VertPos2_current) / 3f;
@@ -409,72 +409,112 @@ namespace LogansNavigationExtension
 		}
 		#endregion
 
-		public void DbgPing(ref string dbgString, LNX_NavmeshHit endPoint, LNX_NavMesh nm, 
-			float maxAllowableDist, LNX_Path runningPath, List<LNX_ComponentCoordinate> backstopverts = null
+		public LNX_Path Ping_dbg(LNX_NavmeshHit endPoint, LNX_NavMesh nm, float maxAllowableDist, 
+			LNX_Path runningPath, ref LNX_MethodDebugReport rprt, List<LNX_ComponentCoordinate> backstopverts = null
 		)
 		{
-			dbgString = $"{this}.Ping('{endPoint}', max: '{maxAllowableDist}', bkstps: " +
-				$"'{(backstopverts == null ? "null" : backstopverts.Count)}')\n";
+			rprt.StartMethod($"{this}.Ping('{endPoint}', max: '{maxAllowableDist}', bkstps: " +
+				$"'{(backstopverts == null ? "null" : backstopverts.Count)}')");
 
-			//LNX_Path rtrnPath = runningPath;
+			//LNX_Path rtrnPath = LNX_Path.None;
 
 			#region SHORT-CIRCUITING ========================================
-			dbgString += $"first, raycasting to see if endPoint is visible from this vert...\n";
+			rprt.Log($"first, raycasting to see if endPoint is visible from this vert...");
 			LNX_Path rcPath = new LNX_Path();
-			if (!nm.Raycast(new LNX_NavmeshHit(this), endPoint, out rcPath))
+			if ( !nm.Raycast(new LNX_NavmeshHit(this), endPoint, out rcPath) )
 			{
-				dbgString += $"endpoint WAS visible. Making path and returning...\n";
-				return;
+				rprt.Log_And_End_Method($"endpoint WAS visible. Returning path made from appending raycast path to running path...");
+				return new LNX_Path( runningPath, rcPath );
 			}
 
-			dbgString += $"endpoint NOT visible. Continuing...\n";
+			rprt.Log( $"endpoint NOT visible. Continuing...");
 			#endregion ---------------------------------------
 
 			#region ASSEMBLE NEW (FORWARD) BACKSTOP ============================================
-			dbgString += $"Now assembling a forward backstop, which will include this vertex...\n";
+			rprt.Log($"Now assembling a list for forward backstop, which will include this vertex...");
 			List<LNX_ComponentCoordinate> fwdBackstopVerts = new List<LNX_ComponentCoordinate>();
-			if (backstopverts != null && backstopverts.Count > 0)
+			if ( backstopverts != null && backstopverts.Count > 0 )
 			{
-				for (int i = 0; i < backstopverts.Count; i++)
+				for ( int i = 0; i < backstopverts.Count; i++ )
 				{
-					fwdBackstopVerts.Add(backstopverts[i]);
+					fwdBackstopVerts.Add( backstopverts[i] );
 				}
 			}
 
 			if( !fwdBackstopVerts.Contains(MyCoordinate) )
 			{
-				fwdBackstopVerts.Add(MyCoordinate);
+				fwdBackstopVerts.Add( MyCoordinate );
 			}
 
-			dbgString += $"fwd backstop count now: '{fwdBackstopVerts.Count}'...\n" +
-				$"now getting visible verts from This vert...\n";
+			rprt.Log($"backstop initialized with: '{fwdBackstopVerts.Count}' verts from previous list...");
 
-			string dbgGetVisVrtsAt = "";
-			List<LNX_Path> vsblVrtPths = new List<LNX_Path>();
-			List<LNX_ComponentCoordinate> visibleVrts = nm.GetVisibleVertsFromPoint(this, out vsblVrtPths, ref dbgGetVisVrtsAt, false, fwdBackstopVerts);
+			rprt.EmptyLine();
+			rprt.Log($"Now getting visible verts from This vert...");
 
-			if (visibleVrts.Count <= 0)
+			List<LNX_Path> vsblVrtPths = nm.GetVisibleVertsFromPoint_dbg( this, ref rprt, false, fwdBackstopVerts ); //todo: note: change this to the overload that 
+			//uses an LNX_Hit as the first parameter, and pass in runningPath.endPt as this parameter, and then efficiency test the difference. This 
+			//overload will bypass a level in the method chain.
+
+			if ( vsblVrtPths.Count <= 0 )
 			{
-				Debug.Log($"Ping() method tried to get visible verts from '{ToString()}', but failed to get any " +
+				rprt.Log_And_End_Method($"Ping() method tried to get visible verts from '{ToString()}', but failed to get any " +
 					$"that weren't part of backstop collection. Returning...");
-				return;
+				Debug.Log($"Ping() method tried to get visible verts from '{ToString()}', but failed to get any " +
+					$"that weren't part of backstop collection. Returning early with LNX_Path.None...");
+				return LNX_Path.None;
 			}
-
-			for (int i = 0; i < visibleVrts.Count; i++)
+			else
 			{
-				fwdBackstopVerts.Add(visibleVrts[i]);
+				rprt.Log($"Decided there are '{vsblVrtPths.Count}' verts (not in backstop)visible from this vert. " +
+					$"Adding them to forward backstop list...");
+
+				for ( int i = 0; i < vsblVrtPths.Count; i++ )
+				{
+					fwdBackstopVerts.Add( vsblVrtPths[i].EndCoordinate );
+				}
+
+				rprt.Log($"Finished creating fwd bckstop list. final list count: '{fwdBackstopVerts.Count}'...");
 			}
-			dbgString += $"Decided there are '{visibleVrts.Count}' visible verts (not in backstop) from this vert.\n" +
-				$"final backstop count: '{fwdBackstopVerts.Count}'...\n";
-
-
 			#endregion
+
+			LNX_Path runningBestPath = LNX_Path.None;
+
+			rprt.Log($"for all visible verts...");
+			for ( int i = 0; i < vsblVrtPths.Count; i++ )
+			{
+				rprt.Log_InnrTabbed( $"i...", 1 );
+				LNX_Path path_continuationToVsblVrt = new LNX_Path( runningPath, vsblVrtPths[i] );
+
+				rprt.Log_InnrTabbed($"pinging from visible vert[{i}]...", 1);
+
+					LNX_MethodDebugReport fwdRprt = new LNX_MethodDebugReport();
+					LNX_Path p = nm.Triangles[vsblVrtPths[i].EndTriIndex].Verts[vsblVrtPths[i].EndComponentIndex].Ping_dbg(
+						endPoint, nm, maxAllowableDist, path_continuationToVsblVrt, ref fwdRprt, fwdBackstopVerts
+					);
+
+				if( p == LNX_Path.None )
+				{
+					rprt.Log_InnrTabbed($"ping returned none path...", 1 );
+				}
+
+				if( p != LNX_Path.None && p.TotalDistance < runningBestPath.TotalDistance )
+				{
+					rprt.Log_InnrTabbed($"ping returned new best path...", 1);
+
+					runningBestPath = p;
+				}
+			}
+
+			rprt.Log_And_End_Method($"end of pinging. Returning path: '{runningBestPath}'...");
+
+			return runningBestPath;
 		}
 
-		public LNX_Path Ping( DateTime dt, LNX_NavmeshHit endPoint, LNX_NavMesh nm, float maxAllowableDist, LNX_Path runningPath,
+		public LNX_Path Ping( LNX_NavmeshHit endPoint, LNX_NavMesh nm, float maxAllowableDist, LNX_Path runningPath,
 			List<LNX_ComponentCoordinate> backstopverts = null
 		)
 		{
+			/*
 			if( DateTime.Now.Subtract(dt).TotalSeconds > 30 )
 			{
 				Debug.LogWarning($"time limit reached at vert: '{this}'!");
@@ -509,9 +549,7 @@ namespace LogansNavigationExtension
 			}
 			#endregion
 
-			string dbgGetVisVrtsAt = "";
-			List<LNX_Path> vsblVrtPths = new List<LNX_Path>();
-			List<LNX_ComponentCoordinate> visibleVrts = nm.GetVisibleVertsFromPoint(this, out vsblVrtPths, ref dbgGetVisVrtsAt, false, fwdBackstopVerts );
+			List<LNX_Path> vsblVrtPths = nm.GetVisibleVertsFromPoint(this, false, fwdBackstopVerts );
 			for ( int i = 0; i < visibleVrts.Count; i++ )
 			{
 				fwdBackstopVerts.Add( visibleVrts[i] );
@@ -529,7 +567,7 @@ namespace LogansNavigationExtension
 				{
 					LNX_Path path_continuationToVsblVrt;
 					
-					LNX_Utils.TryProjectPathThrough(
+					LNX_Utils.TryProjectThrough(
 						nm, runningPath.EndHit, 
 						nm.Triangles[visibleVrts[i].TrianglesIndex].Verts[visibleVrts[i].ComponentIndex], 
 						out path_continuationToVsblVrt
@@ -553,6 +591,8 @@ namespace LogansNavigationExtension
 			}
 
 			return rtrnPath;
+			*/
+			return LNX_Path.None;
 		}
 
 

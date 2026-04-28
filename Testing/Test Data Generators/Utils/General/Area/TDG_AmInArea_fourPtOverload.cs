@@ -119,7 +119,7 @@ namespace LogansNavigationExtension
 				Grabber_Pos.transform.position,
 				Grabber_CrnrA.transform.position, Grabber_CrnrB.transform.position,
 				Grabber_CrnrC.transform.position, Grabber_CrnrD.transform.position, 
-				_navmesh.GetSurfaceNormalVector(), false, ref DBG_Method );
+				_navmesh.GetSurfaceProjectionVector(), false, ref DBG_Method );
 
 			DBG_Operation += $"Result of AmInQuadArea(): '{CurrentOperationResult}'...\n";
 

@@ -152,8 +152,6 @@ namespace LogansNavigationExtension
 				DrawTriGizmos(_mgr.Triangles[i], (FocusedTri != null && i == FocusedTri.Index_inCollection) ? true : false, DrawTriLabels, 
 					drawEdgeLabels, DrawEdges, drawVertSpheres, DrawVertLables, drawNormalLines );
 			}
-			
-
 
 			if( FocusedEdge != null )
 			{
@@ -164,7 +162,6 @@ namespace LogansNavigationExtension
 			{
 
 			}
-
 
 			if (amDrawingBounds && _mgr.Bounds != null && _mgr.Bounds.Length == 6)
 			{
@@ -198,7 +195,7 @@ namespace LogansNavigationExtension
 			GUIStyle gstl_label = GUIStyle.none;
 			gstl_label.normal.textColor = amKosher ? Color.white : Color.red;
 
-			if (drawTriLbls)
+			if ( drawTriLbls )
 			{
 				//Handles.Label( tri.V_center + (tri.v_normal * length_labels * 1.5f) + (tri.v_normal * 0.05f), tri.Index_parallelWithParentArray.ToString(), gstl_label );
 				Handles.Label(tri.V_Center, tri.Index_inCollection.ToString(), gstl_label);
@@ -223,11 +220,11 @@ namespace LogansNavigationExtension
 			{
 				if ( amFocused )
 				{
-					LNX_Utils.DrawTriHandles( tri, Thickness_edges * Thickness_focusTri );
+					LNX_DrawingUtils.DrawTriHandles( tri, Thickness_edges * Thickness_focusTri );
 				}
 				else
 				{
-					LNX_Utils.DrawTriHandles(tri, Thickness_edges );
+					LNX_DrawingUtils.DrawTriHandles(tri, Thickness_edges );
 				}
 			}
 

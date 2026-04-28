@@ -21,9 +21,6 @@ namespace LogansNavigationExtension
 		[Header("GO TO")]
 		public TDG_TryProjectPathThrough _tdg_projectPathThrough;
 
-		[Header("DEBUG")]
-		public LNX_MethodDebugReport mDbg_Report;
-
 		[ContextMenu("z call CaptureDataPoint()")]
 		public void CaptureDataPoint()
 		{
@@ -72,10 +69,11 @@ namespace LogansNavigationExtension
 
 			DrawStandardFocusTriGizmos( CurrentTriangle, 1f, $"", Color.magenta);
 
-			DBG_Operation += $"using triangle '{CurrentTriangle.Index_inCollection}'...\n" +
+			DBG_Operation += $"Recalcluated: '{DateTime.Now}'...\n" +
+				$"using triangle '{CurrentTriangle.Index_inCollection}'...\n" +
 				$"commencing operation...\n";
 
-			mDbg_Report.StartReport( "RPRT=======" );
+			mthdDbg_Report.StartReport( "" );
 			/*if ( CurrentTriangle.ProjectThroughToPerimeter
 				(
 					Grabber_CurrentTri.transform.position, Grabber_OuterPos.transform.position, out currentHitParam, ref DBG_Method
@@ -84,7 +82,7 @@ namespace LogansNavigationExtension
 			if (CurrentTriangle.ProjectThroughToPerimeter_dbg
 				(
 					//Grabber_CurrentTri.transform.position, Grabber_OuterPos.transform.position, out currentHitParam, ref mDbg_Report //todo: dws
-					Grabber_CurrentTri.CurrentHit, Grabber_OuterPos.CurrentHit, out perimHitParam, ref mDbg_Report
+					Grabber_CurrentTri.CurrentHit, Grabber_OuterPos.CurrentHit, out perimHitParam, ref mthdDbg_Report
 
 				)
 			)
@@ -100,7 +98,7 @@ namespace LogansNavigationExtension
 			{
 				DBG_Operation += $"CurrentTriangle.ProjectThroughToPerimeter() returned false...\n";
 			}
-			mDbg_Report.EndReport();
+			mthdDbg_Report.EndReport();
 
 			DBG_Operation += $"completed operation. {nameof(perimHitParam)} now: '{perimHitParam}'...\n";
 

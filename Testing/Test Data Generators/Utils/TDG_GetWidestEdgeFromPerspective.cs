@@ -118,9 +118,9 @@ namespace LogansNavigationExtension
 				Gizmos.DrawLine(transform.position, foundEdge.StartPosition);
 				Gizmos.DrawLine(transform.position, foundEdge.EndPosition);
 
-				DBG_Operation += $"angToStart: '{Vector3.SignedAngle(CurrentTriangle.V_FlattenedCenter - transform.position,foundEdge.StartPosition - transform.position,_navmesh.GetSurfaceNormalVector())}'\n";
+				DBG_Operation += $"angToStart: '{Vector3.SignedAngle(CurrentTriangle.V_FlattenedCenter - transform.position,foundEdge.StartPosition - transform.position,_navmesh.GetSurfaceProjectionVector())}'\n";
 
-				DBG_Operation += $"angToEnd: '{Vector3.SignedAngle(CurrentTriangle.V_FlattenedCenter - transform.position,foundEdge.EndPosition - transform.position,_navmesh.GetSurfaceNormalVector())}'\n";
+				DBG_Operation += $"angToEnd: '{Vector3.SignedAngle(CurrentTriangle.V_FlattenedCenter - transform.position,foundEdge.EndPosition - transform.position,_navmesh.GetSurfaceProjectionVector())}'\n";
 			}
 
 			DBG_Operation += $"Operation complete. \n" +

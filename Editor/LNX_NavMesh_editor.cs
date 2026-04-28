@@ -93,7 +93,7 @@ namespace LogansNavigationExtension.CustomEditors
 
 			//todo: what should I do now to update all the objects???
 
-			Debug.Log($"surface orientation changed to: '{_targetScript.GetSurfaceNormalVector()}'..."); 
+			Debug.Log($"surface orientation changed to: '{_targetScript.GetSurfaceProjectionVector()}'..."); 
 		}
 
 		public void OnSceneGUI()

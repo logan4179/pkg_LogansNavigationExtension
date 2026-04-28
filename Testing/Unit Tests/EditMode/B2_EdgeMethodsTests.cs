@@ -155,7 +155,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				LNX_Edge edge = tri.GetEdge( _tdg_doesPositionLieOnEdge.CapturedEdgeCenters[i] );
 
 				bool rslt = edge.DoesPositionLieOnEdge(
-					_tdg_doesPositionLieOnEdge.CapturedPositions[i], _serializedLNXNavmesh.GetSurfaceNormalVector()
+					_tdg_doesPositionLieOnEdge.CapturedPositions[i]
 				);
 
 				Assert.AreEqual( _tdg_doesPositionLieOnEdge.CapturedResults[i], rslt );
@@ -178,17 +178,16 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 				LNX_Triangle tri = _serializedLNXNavmesh.GetTriangle( _tdg_doesProjectionIntersectEdge.CapturedTriangleCenterPositions[i] );
 				LNX_Edge edge = tri.GetEdge( _tdg_doesProjectionIntersectEdge.CapturedEdgeCenterPositions[i] );
-				Vector3 prjctPos = Vector3.zero;
+				LNX_NavmeshHit prjctHit = LNX_NavmeshHit.None;
 
 				bool rslt = edge.DoesProjectionIntersectEdge(
 					_tdg_doesProjectionIntersectEdge.CapturedStartPositions[i],
 					_tdg_doesProjectionIntersectEdge.CapturedEndPositions[i],
-					_serializedLNXNavmesh.GetSurfaceNormalVector(),
-					out prjctPos
+					out prjctHit
 				);
 
 				Assert.AreEqual( _tdg_doesProjectionIntersectEdge.CapturedProjectionResults[i], rslt );
-				Assert.AreEqual(_tdg_doesProjectionIntersectEdge.CapturedProjectedPositions[i], prjctPos );
+				Assert.AreEqual(_tdg_doesProjectionIntersectEdge.CapturedProjectedPositions[i], prjctHit.Position);
 			}
 		}
 		#endregion

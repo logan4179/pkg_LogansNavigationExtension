@@ -93,11 +93,12 @@ namespace LogansNavigationExtension
 				Grabber_EndPos.RecalculatedLastFrame
 			)
 			{
-				Debug.Log("Recalculating...");
+				Debug.Log( $"Recalculating at: '{DateTime.Now}'...");
 
 				DBG_Operation = "";
 				DBG_Method = "";
 				CurrentOperationResult = false;
+				mthdDbg_Report.Clear();
 
 				/*
 				if( AllowEffiencyLoading )
@@ -124,16 +125,15 @@ namespace LogansNavigationExtension
 				}
 
 				DateTime dt_opStart = DateTime.Now;
-				StringBuilder sb_op = new StringBuilder();
 				string s = "";
-				int mode = 0;
+				int mode = 3;
 				if( mode == 0 )
 				{
 					DBG_Operation += $"Mode0, using startHit: '{Grabber_StartPos.CurrentHit}', and endHit: '{Grabber_EndPos.CurrentHit}'...\n" +
 						$"Commencing operation...\n";
 					CurrentOperationResult = _navmesh.CalculatePath(
 						Grabber_StartPos.CurrentHit, Grabber_EndPos.CurrentHit,
-						out CurrentResultPath, ref sb_op
+						out CurrentResultPath
 					);
 				}
 				else if( mode == 1 )
@@ -142,7 +142,7 @@ namespace LogansNavigationExtension
 						$"Commencing operation...\n";
 					CurrentOperationResult = _navmesh.CalculatePath(
 						Grabber_StartPos.transform.position, Grabber_EndPos.transform.position, 0.3f, 
-						out CurrentResultPath, ref s
+						out CurrentResultPath
 					);
 				}
 				else if (mode == 2 )
@@ -151,8 +151,29 @@ namespace LogansNavigationExtension
 						$"Commencing operation...\n";
 					CurrentOperationResult = _navmesh.CalculatePath(
 						StartVert, EndVert,
-						out CurrentResultPath, ref sb_op
+						out CurrentResultPath
 					);
+				}
+				else if (mode == 3)
+				{
+					DBG_Operation += $"Mode3 (dbg version), using startHit: '{Grabber_StartPos.CurrentHit}', and endHit: '{Grabber_EndPos.CurrentHit}'...\n" +
+						$"Commencing operation...\n";
+
+					mthdDbg_Report.StartReport();
+					try
+					{
+						CurrentOperationResult = _navmesh.CalculatePath_dbg(
+							Grabber_StartPos.CurrentHit, Grabber_EndPos.CurrentHit,
+							out CurrentResultPath, ref mthdDbg_Report
+						);
+					}
+					catch (Exception)
+					{
+
+						throw;
+					}
+
+					mthdDbg_Report.EndReport();
 				}
 
 				DBG_Operation += $"calculatepath took '{DateTime.Now.Subtract(dt_opStart).TotalSeconds}' seconds...\n" +

@@ -56,7 +56,7 @@ namespace LogansNavigationExtension
 
 			DBG_Operation += $"Commencing operation...\n";
 
-			CurrentResult = LNX_Utils.TryProjectPathThrough( _navmesh,	StartVert, EndVert, out RsltPath, ref DBG_Method );
+			CurrentResult = LNX_Utils.TryProjectThrough( _navmesh,	StartVert, EndVert, out RsltPath, ref DBG_Method );
 
 			DBG_Operation += $"Operation returned: '{CurrentResult}'\n";
 

@@ -229,14 +229,21 @@ namespace LogansNavigationExtension
 			return v_result;
 		}
 
-		public bool DoesPositionLieOnEdge( Vector3 pos, Vector3 flattenDir )
+		/// <summary>
+		/// Whether a supplied position lies on this edge in a 'flattened' manor. IE: whether the position 
+		/// lies on the edge from the perspective of the surface normal direction. Note: returns false if 
+		/// the position lies on the direction of the edge, but beyond the start or end points.
+		/// </summary>
+		/// <param name="pos"></param>
+		/// <returns></returns>
+		public bool DoesPositionLieOnEdge( Vector3 pos )
 		{
 			if( pos == StartPosition || pos == EndPosition || pos == MidPosition )
 			{
 				return true;
 			}
 
-			Vector3 pos_fltnd = LNX_Utils.FlatVector(pos, flattenDir);
+			Vector3 pos_fltnd = LNX_Utils.FlatVector(pos, v_SurfaceNormal_cached);
 			if( pos_fltnd == StartPosition_flat || pos_fltnd == EndPosition_flat || pos_fltnd == MidPosition_flat )
 			{
 				return true;
@@ -245,11 +252,11 @@ namespace LogansNavigationExtension
 			if
 			( 
 				(
-					LNX_Utils.FlatVector(pos - StartPosition, flattenDir).normalized == LNX_Utils.FlatVector(V_StartToEnd, flattenDir).normalized && 
+					LNX_Utils.FlatVector(pos - StartPosition, v_SurfaceNormal_cached).normalized == LNX_Utils.FlatVector(V_StartToEnd, v_SurfaceNormal_cached).normalized && 
 					Vector3.Distance(StartPosition,pos) <= EdgeLength
 				) ||
 				(
-					LNX_Utils.FlatVector(pos - EndPosition, flattenDir).normalized == -LNX_Utils.FlatVector(V_StartToEnd, flattenDir).normalized && 
+					LNX_Utils.FlatVector(pos - EndPosition, v_SurfaceNormal_cached).normalized == -LNX_Utils.FlatVector(V_StartToEnd, v_SurfaceNormal_cached).normalized && 
 					Vector3.Distance(EndPosition,pos) <= EdgeLength
 				)
 			)
@@ -261,8 +268,6 @@ namespace LogansNavigationExtension
 				return false;
 			}
 		}
-
-		[NonSerialized] public string dbg_doesProjectionIntersectEdge;
 
 		//TODO for following method: considering this method is supposed to find a position that's definitely 
 		//on the surface, and that it's being used by the LNX_Triangle.ProjectThroughToPerimeter() method to
@@ -278,56 +283,31 @@ namespace LogansNavigationExtension
 		/// <param name="outPos"></param>
 		/// <returns></returns>
 		public bool DoesProjectionIntersectEdge( 
-			Vector3 origin, Vector3 destination, Vector3 flattenDir, out Vector3 outPos
+			Vector3 origin, Vector3 destination, out LNX_NavmeshHit outHit, bool endPointInclusive = true
 		)
 		{
-			Vector3 v_projection = LNX_Utils.FlatVector( destination - origin, flattenDir ).normalized;
-			Vector3 v_originToStart = LNX_Utils.FlatVector( StartPosition - origin, flattenDir ).normalized;
+			Vector3 v_projection = LNX_Utils.FlatVector( destination - origin, v_SurfaceNormal_cached ).normalized;
+			Vector3 v_originToStart = LNX_Utils.FlatVector( StartPosition - origin, v_SurfaceNormal_cached).normalized;
 			Vector3 v_originToEnd = LNX_Utils.FlatVector( EndPosition - origin ).normalized;
 
-			#region DIRECTIONAL SHORT-CIRCUIT TEST-------------------------------------------------
+			#region ALIGNMENT SHORT-CIRCUIT TEST-------------------------------------------------
 			//The following tests if the origin and projection direction allow for the possibilty of edge intersection...
 			Vector3 v_edgeMid_toOriginPt = LNX_Utils.FlatVector( origin - MidPosition ).normalized;
+			float dot_vCross_with_edgeMidPtToOriginPt = Vector3.Dot(v_Cross_flat, v_edgeMid_toOriginPt);
 
-			/*dbg_doesProjectionIntersectEdge += $"directional short circuit test\n" +
-				$"{nameof(v_Cross_flat)}: '{v_Cross_flat}', {nameof(v_edgeMid_toOriginPt)}: '{v_edgeMid_toOriginPt}'\n" +
-				$"side check rslt: '{Vector3.Dot(v_Cross_flat, v_edgeMid_toOriginPt)}'...\n";*/
-
-			if ( Vector3.Dot(v_Cross_flat, v_edgeMid_toOriginPt) >= 0f ) //origin is towards "inside" direction of edge...
+			if ( dot_vCross_with_edgeMidPtToOriginPt > 0f ) //origin is towards "inside" direction of edge...
 			{
-				/*dbg_doesProjectionIntersectEdge += $"origin is towards 'inside' direction of edge. now checking that " +
-					$"the projection is in correct dir:...\n" +
-					$"comparing '{v_projection}' with '{-v_Cross_flat}'. rslt: '{Vector3.Dot(v_projection, -v_Cross_flat)}'\n";*/
-
-				if ( Vector3.Dot(v_projection, -v_Cross_flat) < 0f )
+				if ( Vector3.Dot(v_projection, v_Cross_flat) > 0f ) //...and the projection is also pointed inside the triangle...
 				{
-					/*dbg_doesProjectionIntersectEdge += $"!!! Operation short-circuited bc of containment check! Returning false...\n" +
-						$"info dump: {nameof(origin)}: '{LNX_UnitTestUtilities.LongVectorString(origin)}'\n" +
-						$"dest: '{LNX_UnitTestUtilities.LongVectorString(destination)}'\n" +
-						$"{nameof(v_Cross)}: '{LNX_UnitTestUtilities.LongVectorString(v_Cross)}\n" +
-						$"{nameof(v_Cross_flat)}: '{LNX_UnitTestUtilities.LongVectorString(v_Cross_flat)}\n" +
-						$"{nameof(v_edgeMid_toOriginPt)}: '{LNX_UnitTestUtilities.LongVectorString(v_edgeMid_toOriginPt)}\n" +
-						$"";*/
-					outPos = Vector3.zero;
+					outHit = LNX_NavmeshHit.None;
 					return false; //short-circuit
 				}
 			}
-			else //origin is towards "outside" direction of edge...
+			else if ( dot_vCross_with_edgeMidPtToOriginPt < 0 ) //origin is towards "OUTSIDE" direction of edge...
 			{
-				/*dbg_doesProjectionIntersectEdge += $"origin is towards 'outside' direction of edge. now checking that " +
-					$"the projection is in correct dir:...\n" +
-					$"comparing '{v_projection}' with '{v_Cross_flat}'. rslt: '{Vector3.Dot(v_projection, v_Cross_flat)}'\n";*/
-
-				if ( Vector3.Dot(v_projection, v_Cross_flat) < 0f )
+				if ( Vector3.Dot(v_projection, v_Cross_flat) < 0f ) //...and the projection is also towards the outside direction of the triangle
 				{
-					/*dbg_doesProjectionIntersectEdge += $"!!! Operation short-circuited bc of containment check! Returning false...\n" +
-						$"info dump: {nameof(origin)}: '{LNX_UnitTestUtilities.LongVectorString(origin)}'\n" +
-						$"dest: '{LNX_UnitTestUtilities.LongVectorString(destination)}'\n" +
-						$"{nameof(v_Cross)}: '{LNX_UnitTestUtilities.LongVectorString(v_Cross)}\n" +
-						$"{nameof(v_Cross_flat)}: '{LNX_UnitTestUtilities.LongVectorString(v_Cross_flat)}\n" +
-						$"{nameof(v_edgeMid_toOriginPt)}: '{LNX_UnitTestUtilities.LongVectorString(v_edgeMid_toOriginPt)}\n" +
-						$""; */
-					outPos = Vector3.zero;
+					outHit = LNX_NavmeshHit.None;
 					return false; //short-circuit
 				}
 			}
@@ -345,11 +325,111 @@ namespace LogansNavigationExtension
 				ang_prjctTo_orgnToEnd
 			);
 
-			/*dbg_doesProjectionIntersectEdge += $"\n" +
-				$"Angular short-circuit test\n" +
-				$"trying angle short-circuit with rslts. 1: '{ang_prjctTo_orgnToStrt}', " +
-				$"2: '{ang_prjctTo_orgnToEnd}'...\n" +
-				$"chev: '{ang_chevron}', lrgst: '{lrgst}'...";*/
+			if (
+				(ang_vprjctTo_orgnToStrt > 90f && ang_prjctTo_orgnToEnd > 90f) ||
+				lrgst > ang_chevron
+			)
+			{
+				//dbg_doesProjectionIntersectEdge += $"\nOperation short-circuited bc of dot-prdct check! Returning false...\n";
+				outHit = LNX_NavmeshHit.None;
+				return false; //short-circuit
+			}
+			#endregion
+
+			if ( endPointInclusive )
+			{
+				if( DoesPositionLieOnEdge(origin) )
+				{
+					outHit = new LNX_NavmeshHit(
+						StartPosition +
+						(V_StartToEnd * LNX_Utils.CalculateTriangleEdgeLength(
+							90f,
+							180f - 90f - Vector3.Angle(V_StartToEnd_flattened, V_StartToEnd),
+							Vector3.Distance(StartPosition_flat, LNX_Utils.FlatVector(origin, v_SurfaceNormal_cached))
+							)
+						), 
+						MyCoordinate, v_SurfaceNormal_cached
+					);
+				}
+			}
+
+			#region CALCULATE OUT POS -----------------------------------------------------------
+			outHit = new LNX_NavmeshHit(
+				StartPosition + 
+				(
+					V_StartToEnd * LNX_Utils.CalculateTriangleEdgeLength
+					(
+						Vector3.Angle(v_projection, v_originToStart),
+						Vector3.Angle(-v_projection, -V_StartToEnd),
+						Vector3.Distance(origin, StartPosition)
+					)
+				),
+				MyCoordinate, v_SurfaceNormal_cached
+			); //Todo: This length isn't actually accurate at this point because we're using flattened positions in here (as well as mixing with unflattened)
+			//thought: I think I could do this if I first solve for a theoretical triangle that is flattened to the surface normal, then, using that, I could
+			//get a flattened position right below the edge. I could then use that position by solving for another theoretical triangle with that position 
+			//being used to create an assumed 90 degree angle and a length from the edge startposition, to this position, etc...
+			#endregion
+
+			return true;
+		}
+		public bool DoesProjectionIntersectEdge_dbg(
+			Vector3 origin, Vector3 destination, out LNX_NavmeshHit outHit, ref LNX_MethodDebugReport rprt, 
+			bool endPointInclusive = true
+		)
+		{
+			rprt.StartMethod($"DoesProjectionIntersectEdge_dbg(start: '{origin}', dest: '{destination}', endPtInclsv: '{endPointInclusive}')");
+			Vector3 v_projection = LNX_Utils.FlatVector(destination - origin, v_SurfaceNormal_cached).normalized;
+			Vector3 v_originToStart = LNX_Utils.FlatVector(StartPosition - origin, v_SurfaceNormal_cached).normalized;
+			Vector3 v_originToEnd = LNX_Utils.FlatVector(EndPosition - origin).normalized;
+
+			#region ALIGNMENT SHORT-CIRCUIT TEST-------------------------------------------------
+			//The following tests if the origin and projection direction allow for the possibilty of edge intersection...
+			Vector3 v_edgeMid_toOriginPt = LNX_Utils.FlatVector(origin - MidPosition).normalized;
+			float dot_vCross_with_edgeMidPtToOriginPt = Vector3.Dot(v_Cross_flat, v_edgeMid_toOriginPt);
+
+			rprt.Log("Trying alignment short-circuit test...");
+			if (dot_vCross_with_edgeMidPtToOriginPt > 0f) //origin is towards "inside" direction of edge...
+			{
+				rprt.Log("origin is towards 'inside' direction of triangle...");
+				if (Vector3.Dot(v_projection, v_Cross_flat) > 0f) //...and the projection is also pointed inside the triangle...
+				{
+					rprt.Log("projection is also towards 'inside' direction of triangle...");
+
+					outHit = LNX_NavmeshHit.None;
+					rprt.Log_And_End_Method("this means projection CANNOt intersect edge. Short-circuiting by returning false...",
+						"DoesProjectionIntersectEdge_dbg()");
+					return false; //short-circuit
+				}
+			}
+			else if (dot_vCross_with_edgeMidPtToOriginPt < 0) //origin is towards "OUTSIDE" direction of edge...
+			{
+				rprt.Log("origin is towards 'outside' direction of triangle...");
+
+				if (Vector3.Dot(v_projection, v_Cross_flat) < 0f) //...and the projection is also towards the outside direction of the triangle
+				{
+					rprt.Log("projection is also towards 'outside' direction of triangle...");
+
+					outHit = LNX_NavmeshHit.None;
+					rprt.Log_And_End_Method("this means projection CANNOt intersect edge. Short-circuiting by returning false...",
+						"DoesProjectionIntersectEdge_dbg()");
+					return false; //short-circuit
+				}
+			}
+			#endregion
+
+			#region ANGULAR SHORT-CIRCUIT TEST-------------------------------------------------------
+			float ang_vprjctTo_orgnToStrt = Vector3.Angle(v_projection, v_originToStart);
+			float ang_prjctTo_orgnToEnd = Vector3.Angle(v_projection, v_originToEnd);
+			//float ang_chevron = ang_prjctTo_orgnToStrt + ang_prjctTo_orgnToEnd; //this is cheap, but is it right?
+			float ang_chevron = Vector3.Angle(v_originToStart, v_originToEnd);
+			rprt.Log("Trying angular short-circuit test...");
+
+			float lrgst = Mathf.Max
+			(
+				ang_vprjctTo_orgnToStrt,
+				ang_prjctTo_orgnToEnd
+			);
 
 			if (
 				(ang_vprjctTo_orgnToStrt > 90f && ang_prjctTo_orgnToEnd > 90f) ||
@@ -357,28 +437,70 @@ namespace LogansNavigationExtension
 			)
 			{
 				//dbg_doesProjectionIntersectEdge += $"\nOperation short-circuited bc of dot-prdct check! Returning false...\n";
-				outPos = Vector3.zero;
+				outHit = LNX_NavmeshHit.None;
+				rprt.Log_And_End_Method("angular short-circuit test succeeded. Returning false...", 
+					"DoesProjectionIntersectEdge_dbg()");
 				return false; //short-circuit
 			}
-			else
+			#endregion
+
+			rprt.Log("No short-circuits. Continuing...");
+
+			if (endPointInclusive)
 			{
-				//dbg_doesProjectionIntersectEdge += $"no short-circuit. Method will continue...\n";
+				rprt.Log("endpoint is inclusive. Checking if origin is on edge...");
+				if (DoesPositionLieOnEdge(origin))
+				{
+					rprt.Log("origin is on edge. Projecting...");
+					outHit = new LNX_NavmeshHit(
+						StartPosition +
+						(V_StartToEnd * LNX_Utils.CalculateTriangleEdgeLength(
+							90f,
+							180f - 90f - Vector3.Angle(V_StartToEnd_flattened, V_StartToEnd),
+							Vector3.Distance(StartPosition_flat, LNX_Utils.FlatVector(origin, v_SurfaceNormal_cached))
+							)
+						),
+						MyCoordinate, v_SurfaceNormal_cached
+					);
+					rprt.Log_And_End_Method($"created projection of: '{outHit}' returning true...",
+						"DoesProjectionIntersectEdge_dbg()"); 
+					return true;
+				}
+				else if ( v_projection == V_StartToEnd_flattened || v_projection == V_EndToStart_flattened )
+				{
+					rprt.Log( $"v_projection is same direction as edge. Investigating if and where to put projection..." );
+					if( v_originToStart == V_StartToEnd_flattened &&  )
+					{
+
+					}
+				}
+				else
+				{
+					rprt.Log($"origin is NOT on edge. Continuing...");
+				}
 			}
 
-			#endregion
-
-			#region CALCULATE OUT POS -----------------------------------------------------------
-			outPos = StartPosition + 
-			(
-				V_StartToEnd * LNX_Utils.CalculateTriangleEdgeLength
+			#region CALCULATE OUT HIT -----------------------------------------------------------
+			outHit = new LNX_NavmeshHit(
+				StartPosition +
 				(
-					Vector3.Angle(v_projection, v_originToStart),
-					Vector3.Angle(-v_projection, -V_StartToEnd),
-					Vector3.Distance(origin, StartPosition)
-				)
-			); //Todo: This length isn't actually accurate at this point because we're using flattened positions in here (as well as mixing with unflattened)
+					V_StartToEnd * LNX_Utils.CalculateTriangleEdgeLength
+					(
+						Vector3.Angle(v_projection, v_originToStart),
+						Vector3.Angle(-v_projection, -V_StartToEnd),
+						Vector3.Distance(origin, StartPosition)
+					)
+				), 
+				MyCoordinate, v_SurfaceNormal_cached
+			);
+			//Todo: This length isn't actually accurate at this point because we're using flattened positions in here (as well as mixing with unflattened)
+			   //thought: I think I could do this if I first solve for a theoretical triangle that is flattened to the surface normal, then, using that, I could
+			   //get a flattened position right below the edge. I could then use that position by solving for another theoretical triangle with that position 
+			   //being used to create an assumed 90 degree angle and a length from the edge startposition, to this position, etc...
 			#endregion
 
+			rprt.Log_And_End_Method($"End of method. calculated outpos: '{outHit}'. Now returning true...",
+				"DoesProjectionIntersectEdge_dbg()");
 			return true;
 		}
 

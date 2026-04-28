@@ -722,11 +722,11 @@ namespace LogansNavigationExtension
 					{
 						if( useGizmos )
 						{
-							LNX_Utils.DrawTriGizmos( _LNX_NavMesh.Triangles[i], Color.red );
+							LNX_DrawingUtils.DrawTriGizmos( _LNX_NavMesh.Triangles[i], Color.red );
 						}
 						else
 						{
-							LNX_Utils.DrawTriHandles( _LNX_NavMesh.Triangles[i], Size_SelectedComponent );
+							LNX_DrawingUtils.DrawTriHandles( _LNX_NavMesh.Triangles[i], Size_SelectedComponent );
 
 						}
 					}
@@ -753,7 +753,7 @@ namespace LogansNavigationExtension
 
 				for ( int i = 0; i < indices_lockedTris.Count; i++ )
 				{
-					LNX_Utils.DrawTriGizmos( _LNX_NavMesh.Triangles[indices_lockedTris[i]] );
+					LNX_DrawingUtils.DrawTriGizmos( _LNX_NavMesh.Triangles[indices_lockedTris[i]] );
 
 				}
 			}
@@ -779,7 +779,7 @@ namespace LogansNavigationExtension
 				{
 					//Handles.color = Color.yellow;
 					Gizmos.color = Color.yellow;
-					LNX_Utils.DrawTriGizmos( PointingAtTri );
+					LNX_DrawingUtils.DrawTriGizmos( PointingAtTri );
 				}
 			}
 			#endregion

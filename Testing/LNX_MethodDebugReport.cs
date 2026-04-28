@@ -20,7 +20,16 @@ namespace LogansNavigationExtension
         private string currentMethodName = string.Empty;
         public string CurrentMethodName => currentMethodName;
 
-		public void StartReport( string rprtName )
+        private bool flag_limitReached = false;
+
+        public void Clear()
+        {
+			methodLvl = -1;
+			tabTxt = string.Empty;
+			rprtString = string.Empty;
+		}
+
+		public void StartReport( string rprtName = "" )
         {
             methodLvl = -1;
             tabTxt = string.Empty;
@@ -28,6 +37,7 @@ namespace LogansNavigationExtension
             //rprtString = $"{rprtName}\n" +
             //$"{{\n";
             rprtString = string.Empty;
+            flag_limitReached = false;
         }
 
         public void StartMethod( string methodName, bool addNewLineSpace = false )
@@ -36,10 +46,7 @@ namespace LogansNavigationExtension
 
             methodLvl++;
 
-            if (addNewLineSpace)
-            {
-                rprtString += "\n";
-            }
+            if (addNewLineSpace){ rprtString += "\n"; }
 
             rprtString += $"{tabTxt}{methodName}\n" +
                 $"{tabTxt}{{\n";
@@ -49,7 +56,16 @@ namespace LogansNavigationExtension
 
         public void Log( string s )
         {
-            rprtString += $"{tabTxt}{s}\n";
+            if( rprtString.Length < 50000)
+            {
+                rprtString += $"{tabTxt}{s}\n";
+            }
+            else if( !flag_limitReached )
+            {
+                Debug.LogWarning($"limit reached on report");
+                rprtString += "LIMIT REACHED ON REPORT\n";
+                flag_limitReached = true;
+            }
         }
 
 		public void EmptyLine()
@@ -60,13 +76,25 @@ namespace LogansNavigationExtension
 
         public void Log_InnrTabbed( string s, int extraTabs )
         {
+			/*
             string tempTabTxt = tabTxt;
             for ( int i = 0; i < extraTabs; i++ )
             {
                 tempTabTxt += "\t";
             }
 
-			rprtString += $"{tempTabTxt}{s}\n";
+            rprtString += $"{tempTabTxt}{s}\n";
+
+            */
+
+            //trying this out instead. Make sure it works...
+			string tempTabTxt = "";
+			for (int i = 0; i < extraTabs; i++)
+			{
+				tempTabTxt += "\t";
+			}
+			Log( $"{tempTabTxt}{s}" );
+
 		}
 
 		public void Log_Untabbed(string s)
@@ -101,6 +129,12 @@ namespace LogansNavigationExtension
 		{
 			Log(s);
 			EndMethod( currentMethodName, addNewLineSpace );
+		}
+
+		public void Log_And_End_Method(string s, string methodName, bool addNewLineSpace = false)
+		{
+			Log(s);
+			EndMethod(methodName, addNewLineSpace);
 		}
 
 		public void EndReport()

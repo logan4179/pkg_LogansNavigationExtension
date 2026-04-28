@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -37,17 +38,17 @@ namespace LogansNavigationExtension
 		public List<Vector3> CapturedEdgeCenterPositions = new List<Vector3>();
 
 		public bool CurrentProjectionResult = false;
-		public Vector3 CurrentProjectedPosition = Vector3.zero;
+		public LNX_NavmeshHit CurrentProjectedHit = LNX_NavmeshHit.None;
 
 		//[Header("DEBUG")]
-
+		public bool useDebugMethodVersion = false;
 
 		[ContextMenu("z CaptureDataPoint()")]
 		public void CaptureDataPoint()
 		{
 			CapturedStartPositions.Add(StartPointGrabber.transform.position);
 			CapturedEndPositions.Add(EndPointGrabber.transform.position);
-			CapturedProjectedPositions.Add( CurrentProjectedPosition );
+			CapturedProjectedPositions.Add( CurrentProjectedHit.Position );
 			CapturedProjectionResults.Add( CurrentProjectionResult );
 			CapturedTriangleCenterPositions.Add( _navmesh.GetTriangle(EdgeGrabber.transform.position).V_Center );
 			CapturedEdgeCenterPositions.Add( CurrentlyGrabbedEdge.MidPosition );
@@ -146,7 +147,18 @@ namespace LogansNavigationExtension
 		{
 			Debug.Log("from override");
 
-			
+			if ( CurrentlyGrabbedEdge == null )
+			{
+				Debug.LogError("currently grabbed edge is null...");
+				return;
+			}
+
+			_dataCapture_problems.CaptureDataPoint
+			(
+				StartPointGrabber.transform.position,
+				EndPointGrabber.transform.position, 
+				CurrentlyGrabbedEdge.MidPosition
+			);
 
 			Debug.Log($"{nameof(CaptureProblemPosition_override)}()...");
 		}
@@ -195,22 +207,43 @@ namespace LogansNavigationExtension
 				return;
 			}
 
+			DBG_Operation += $"{DateTime.Now}\n";
 			DrawStandardFocusTriGizmos( _navmesh.Triangles[CurrentlyGrabbedEdge.TriangleIndex], 1f, $"tri{CurrentlyGrabbedEdge.TriangleIndex}", Color.magenta);
 			DrawStandardEdgeFocusGizmos( CurrentlyGrabbedEdge, 0.1f, CurrentlyGrabbedEdge.ToString(), Color.yellow );
 
 			DBG_Operation += $"using origin param: '{StartPointGrabber.transform.position}', dest param: '{EndPointGrabber.transform.position}'\n" +
 				$"Commencing edge project...\n";
 
-			CurrentProjectionResult =
-				CurrentlyGrabbedEdge.DoesProjectionIntersectEdge
+			if( useDebugMethodVersion )
+			{
+				mthdDbg_Report.StartReport();
+
+				CurrentProjectionResult =
+				CurrentlyGrabbedEdge.DoesProjectionIntersectEdge_dbg
 				(
 					StartPointGrabber.transform.position,
 					EndPointGrabber.transform.position,
-					_navmesh.GetSurfaceNormalVector(),
-					out CurrentProjectedPosition
+					out CurrentProjectedHit,
+					ref mthdDbg_Report,
+					true
 				);
+
+				mthdDbg_Report.EndReport();
+			}
+			else
+			{
+				CurrentProjectionResult =
+					CurrentlyGrabbedEdge.DoesProjectionIntersectEdge
+					(
+						StartPointGrabber.transform.position,
+						EndPointGrabber.transform.position,
+						out CurrentProjectedHit,
+						false
+					);
+			}
+
 			DBG_Operation += $"result: '{CurrentProjectionResult}'\n" +
-				$"projection: '{CurrentProjectedPosition}'";
+				$"projection: '{CurrentProjectedHit}'";
 
 			Gizmos.color = CurrentProjectionResult ? Color.green : Color.red;
 
@@ -221,7 +254,8 @@ namespace LogansNavigationExtension
 			Gizmos.DrawSphere(EndPointGrabber.transform.position, Radius_ObjectDebugSpheres);
 			//Handles.Label(startTrans.position, "endTrans");
 
-			Gizmos.DrawCube( CurrentProjectedPosition, Vector3.one * Radius_ProjectPos );
+			Gizmos.color = Color.yellow;
+			Gizmos.DrawCube( CurrentProjectedHit.Position, Vector3.one * Radius_ProjectPos );
 		}
 
 		#region HELPERS -----------------------------------------------------

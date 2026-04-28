@@ -143,9 +143,9 @@ namespace LogansNavigationExtension
 			CurrentRslt_vert2 = false;
 
 			DBG_Operation += $"Commencing operation...\n";
-			CurrentRslt_vert0 = CurrentTriangle.Verts[0].IsInCenterSweep( transform.position, _navmesh.GetSurfaceNormalVector() );
-			CurrentRslt_vert1 = CurrentTriangle.Verts[1].IsInCenterSweep(transform.position, _navmesh.GetSurfaceNormalVector());
-			CurrentRslt_vert2 = CurrentTriangle.Verts[2].IsInCenterSweep(transform.position, _navmesh.GetSurfaceNormalVector());
+			CurrentRslt_vert0 = CurrentTriangle.Verts[0].IsInCenterSweep( transform.position, _navmesh.GetSurfaceProjectionVector() );
+			CurrentRslt_vert1 = CurrentTriangle.Verts[1].IsInCenterSweep(transform.position, _navmesh.GetSurfaceProjectionVector());
+			CurrentRslt_vert2 = CurrentTriangle.Verts[2].IsInCenterSweep(transform.position, _navmesh.GetSurfaceProjectionVector());
 
 			DBG_Operation += $"Operation complete. \n" +
 

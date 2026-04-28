@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
@@ -12,6 +13,9 @@ namespace LogansNavigationExtension
 		public LNX_Vertex CurrentVert => Grabber_Vert.CurrentlyGrabbedVert;
 
 		public List<LNX_ComponentCoordinate> ExcludeVerts;
+
+		[Header("OPTIONS")]
+		public bool UseDebugVersionOfMethod = true;
 
 		[Header("RESULTS")]
 		public LNX_NavmeshHit ResultHit;
@@ -66,14 +70,17 @@ namespace LogansNavigationExtension
 			if( CurrentVert != null )
 			{
 				Gizmos.DrawSphere( CurrentVert.V_Position, Radius_ObjectDebugSpheres );
+
+				LNX_DrawingUtils.DrawTriGizmos( _navmesh.Triangles[Grabber_Vert.CurrentHit.TriIndex], Color.yellow, 
+					false, false, true, 0.02f, true, 0.1f, false, -1f
+				);
 			}
 
 			if (Grabber_Vert.RecalculatedLastFrame)
 			{
 				ResultHit = LNX_NavmeshHit.None;
 				ResultCoordinates = new List<LNX_ComponentCoordinate>();
-				DBG_Operation = "";
-				DBG_Method = "";
+				DBG_Operation = $"starting operation at: '{System.DateTime.Now}'...\n";
 
 				if( CurrentVert == null )
 				{
@@ -95,10 +102,27 @@ namespace LogansNavigationExtension
 				DBG_Operation += $"\nsampled hit at: '{ResultHit.Position}'.\n" +
 					$"Commencing operation...\n";
 
-				ResultPaths = new List<LNX_Path>();
-				ResultCoordinates = _navmesh.GetVisibleVertsFromPoint( 
-					CurrentVert, out ResultPaths, ref DBG_Method, true, ExcludeVerts 
+				/*
+				ResultPaths = _navmesh.GetVisibleVertsFromPoint( 
+					CurrentVert, true, ExcludeVerts 
 				);
+				*/
+
+				if( UseDebugVersionOfMethod )
+				{
+					DBG_Operation += $"using debug version...\n";
+					mthdDbg_Report.StartReport();
+					ResultPaths = _navmesh.GetVisibleVertsFromPoint_dbg(
+						CurrentVert, ref mthdDbg_Report, true, ExcludeVerts
+					);
+					mthdDbg_Report.EndReport();
+				}
+				else
+				{
+					DBG_Operation += $"using regular version (as opposed to debug version)...\n";
+
+					ResultPaths = _navmesh.GetVisibleVertsFromPoint(CurrentVert, true, ExcludeVerts);
+				}
 
 				DBG_Operation += $"{nameof(ResultCoordinates)} count: '{ResultCoordinates.Count}'\n";
 			}

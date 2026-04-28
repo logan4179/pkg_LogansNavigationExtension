@@ -292,6 +292,15 @@ namespace LogansNavigationExtension
 			coordinate = coord;
 		}
 
+		public LNX_NavmeshHit(Vector3 pos, LNX_ComponentCoordinate coord, Vector3 nrml)
+		{
+			hitPosition = pos;
+			//startPosition = Vector3.zero;
+			normal = nrml;
+
+			coordinate = coord;
+		}
+
 		public LNX_NavmeshHit ( Vector3 pos, int triIndx, int cmpntIndx )
 		{
 			hitPosition = pos;
@@ -427,7 +436,7 @@ namespace LogansNavigationExtension
 		public LNX_ComponentCoordinate RelatedVertCoordinate; //todo: I think this can be made into a property returning PathTo.EndCoordinate, in which case, I won't even really need this struct anymore because I could just use the LNX_Path struct instead
 
 		public Vector3 RelatedVertPosition => PathTo.EndPosition;
-		public Vector3 OwnerVertPosition => PathTo.StartPoint;
+		public Vector3 OwnerVertPosition => PathTo.StartPosition;
 		/// <summary>
 		/// Relates this relationship to it's position in the containing collection in the 'owner' LNX_Vertex
 		/// </summary>
@@ -490,7 +499,8 @@ namespace LogansNavigationExtension
 					(
 						new List<Vector3>() { myVert.V_Position, relatedVert.V_Position },
 						new List<Vector3>() { nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal },
-						true
+						true,
+						nvMsh.GetSurfaceProjectionVector()
 					);
 				}
 				else if
@@ -517,22 +527,22 @@ namespace LogansNavigationExtension
 					(
 						pthPts,
 						pthNrmls,
-						nvMsh.GetSurfaceNormalVector()
+						nvMsh.GetSurfaceProjectionVector()
 					);
 				}
 				else
 				{
 					sb_rprt.AppendLine($"Actually calculating the path...");
 
-					/*
+					
 					StringBuilder sb_calculatePath = new StringBuilder();
-					nvMsh.CalculatePath( myVert, relatedVert, out PathTo, ref sb_calculatePath); //this is by far where most of the time is being spent
+					nvMsh.CalculatePath( myVert, relatedVert, out PathTo); //this is by far where most of the time is being spent
 					Debug.Log(sb_calculatePath);
 					sb_rprt.AppendLine($"created path: '{PathTo}' with '{PathTo.PathPoints.Count}' points. Here's the report...\n" +
 						$"=============================================================\n");
 					sb_rprt.AppendLine($"{sb_calculatePath.ToString()}\n" +
 						$"=============================================================\n");
-					*/
+					
 
 					
 					//Just to make things run smoother for now...
@@ -540,7 +550,8 @@ namespace LogansNavigationExtension
 					(
 						new List<Vector3>() { myVert.V_Position, relatedVert.V_Position },
 						new List<Vector3>() { nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal },
-						true
+						true,
+						nvMsh.GetSurfaceProjectionVector()
 					);
 					
 				}
@@ -555,6 +566,73 @@ namespace LogansNavigationExtension
 
 			Debug.Log(sb_rprt);
 		}
+
+		public LNX_VertexRelationship(LNX_Vertex myVert, LNX_Vertex relatedVert, LNX_NavMesh nvMsh, ref LNX_MethodDebugReport rprt )
+		{
+			rprt.StartMethod($"LNX_VertexRelationship ctor()");
+
+			DateTime dt_start = DateTime.Now;
+
+			RelatedVertCoordinate = relatedVert.MyCoordinate;
+			PathTo = LNX_Path.None;
+
+			if (myVert == null && relatedVert == null)
+			{
+				RelatedVertCoordinate = LNX_ComponentCoordinate.None;
+				return;
+			}
+
+			if (myVert.V_Position != relatedVert.V_Position)
+			{
+				if (myVert.MyCoordinate.TrianglesIndex == relatedVert.MyCoordinate.TrianglesIndex ||
+					relatedVert.SharesVertSpace(nvMsh.Triangles[myVert.Coordinate_FirstSibling.TrianglesIndex].Verts[myVert.Coordinate_FirstSibling.ComponentIndex]) ||
+					relatedVert.SharesVertSpace(nvMsh.Triangles[myVert.Coordinate_SecondSibling.TrianglesIndex].Verts[myVert.Coordinate_SecondSibling.ComponentIndex])
+				) //"If we're siblings". More performant than using the AreSiblings() method
+				{
+					//Debug.LogWarning($"same spot or siblings");
+					rprt.Log($"same spot or siblings, or in same spot as siblings");
+					PathTo = new LNX_Path
+					(
+						new List<Vector3>() { myVert.V_Position, relatedVert.V_Position },
+						new List<Vector3>() { nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal },
+						true,
+						nvMsh.GetSurfaceProjectionVector()
+					);
+				}
+				else
+				{
+					rprt.Log($"Actually calculating the path...");
+
+
+					StringBuilder sb_calculatePath = new StringBuilder();
+					nvMsh.CalculatePath(myVert, relatedVert, out PathTo); //this is by far where most of the time is being spent
+					Debug.Log(sb_calculatePath);
+					rprt.Log($"created path: '{PathTo}' with '{PathTo.PathPoints.Count}' points. Here's the report...\n" +
+						$"=============================================================\n");
+					rprt.Log($"{sb_calculatePath.ToString()}\n" +
+						$"=============================================================\n");
+
+
+
+					//Just to make things run smoother for now...
+					PathTo = new LNX_Path
+					(
+						new List<Vector3>() { myVert.V_Position, relatedVert.V_Position },
+						new List<Vector3>() { nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal },
+						true, nvMsh.GetSurfaceProjectionVector()
+					);
+
+				}
+			}
+			else
+			{
+				rprt.Log("verts are in same position...");
+			}
+
+			rprt.Log($"end of vertrelationship ctor. total time: '{DateTime.Now.Subtract(dt_start)}' " +
+				$"total ms: '{DateTime.Now.Subtract(dt_start).TotalMilliseconds}'");
+		}
+
 
 		/// <summary>
 		/// Use this overload only for siblings

@@ -158,7 +158,7 @@ namespace LogansNavigationExtension
 			dirtyFlag_repositionedVert = false;
 
 			AreaIndex = areaIndx;
-			v_SurfaceNormal_cached = navMesh.GetSurfaceNormalVector();
+			v_SurfaceNormal_cached = navMesh.GetSurfaceProjectionVector();
 
 			V_Center = atomicTris[parallelIndex].Center;
 
@@ -545,14 +545,14 @@ namespace LogansNavigationExtension
 		}
 
 
+
 		//todo: I think it's maybe a little wierd that I'm passing in two vectors (innerPos, and outerPos), as opposed to two lnxHits. It looks like where I'm using this currently, I could 
 		//just pass in two hit objects.
 		public bool ProjectThroughToPerimeter( Vector3 innerPos, Vector3 outerPos, out LNX_NavmeshHit outHit, ref string dbgRprt, int indx_edgeExclude = -1, bool returnHitOnAdjacenttTriangle = false )
 		{
-			dbgRprt = $"ProjectThroughToPerimeter( {innerPos}, {outerPos}, {indx_edgeExclude} )\n";
 			outHit = LNX_NavmeshHit.None;
 
-			Vector3 projectedEdgePosition = Vector3.zero;
+			LNX_NavmeshHit projectedEdgeHit = LNX_NavmeshHit.None;
 
 			Vector3 ftndInrPos = LNX_Utils.FlatVector( innerPos, v_SurfaceNormal_cached );
 			Vector3 ftndOuterPos = LNX_Utils.FlatVector( outerPos, v_SurfaceNormal_cached );
@@ -569,7 +569,7 @@ namespace LogansNavigationExtension
 			for (int i = 0; i < 3; i++)
 			{
 				dbgRprt += $"for edge{i}...\n";
-				if ( Edges[i].DoesPositionLieOnEdge(ftndInrPos, v_SurfaceNormal_cached) )
+				if ( Edges[i].DoesPositionLieOnEdge(ftndInrPos) )
 				{
 					float dotProd = Vector3.Dot(Edges[i].v_Cross_flat, v_to_flat);
 					if 
@@ -584,38 +584,69 @@ namespace LogansNavigationExtension
 						return true;
 					}
 				}
-				else if ( indx_edgeExclude != i && Edges[i].DoesProjectionIntersectEdge(innerPos, ftndOuterPos, v_SurfaceNormal_cached, out projectedEdgePosition) )
+				else if ( indx_edgeExclude != i && Edges[i].DoesProjectionIntersectEdge(innerPos, ftndOuterPos, out projectedEdgeHit) )
 				{
 					dbgRprt += $"method succeeded on edge 0. Here are the reports...\n";
-					outHit = new LNX_NavmeshHit(projectedEdgePosition, v_SurfaceNormal_cached, innerPos,
+					outHit = new LNX_NavmeshHit (projectedEdgeHit.Position, v_SurfaceNormal_cached, innerPos,
 					(returnHitOnAdjacenttTriangle && Edges[i].SharedEdgeCoordinate != LNX_ComponentCoordinate.None) ? 
 					Edges[i].SharedEdgeCoordinate : new LNX_ComponentCoordinate(index_inCollection, i));
 					return true;
 				}
 			}
 
-			dbgRprt += $"NONE succeeded.\n" +
-				//$"onEdge0: '{IsPositionOnGivenEdge(ftndInrPos, 0)}', onEdge1: '{IsPositionOnGivenEdge(ftndInrPos, 1)}', onEdge2: '{IsPositionOnGivenEdge(ftndInrPos, 2)}'\n" +
-				$"edge0\n" +
-				$" check1) '{Edges[0].DoesPositionLieOnEdge(ftndInrPos, v_SurfaceNormal_cached)}', " +
-				/*$"check2) '{Edges[0].DoesProjectionIntersectEdge(innerPos, outerPos, v_SurfaceNormal_cached, out projectedEdgePosition)}'\n" +*/
-				$"\ncheck2 (intersect report)\n{Edges[0].dbg_doesProjectionIntersectEdge}\n" +
-
-				$"edge1\n" +
-				$" check1) '{Edges[1].DoesPositionLieOnEdge(ftndInrPos, v_SurfaceNormal_cached)}', " +
-				/*$"check2) '{Edges[1].DoesProjectionIntersectEdge(innerPos, outerPos, v_SurfaceNormal_cached, out projectedEdgePosition)}'\n" +*/
-				$"\ncheck2 (intersect report)\n{Edges[1].dbg_doesProjectionIntersectEdge}\n" +
-
-				$"Edge2\n" +
-				$" check1) '{Edges[2].DoesPositionLieOnEdge(ftndInrPos, v_SurfaceNormal_cached)}' " +
-				/*$"check2) '{Edges[2].DoesProjectionIntersectEdge(innerPos, outerPos, v_SurfaceNormal_cached, out projectedEdgePosition)}'\n" +*/
-				$"\ncheck2 (intersect report)\n{Edges[2].dbg_doesProjectionIntersectEdge}\n" +
-
-				$" returning false...";
 			return false;
-			
 		}
-		public bool ProjectThroughToPerimeter_dbg( LNX_NavmeshHit innerHit, LNX_NavmeshHit outerHit, out LNX_NavmeshHit perimHit, ref LNX_MethodDebugReport rprt, int indx_edgeExclude = -1, bool returnHitOnAdjacenttTriangle = false)
+		
+		public bool ProjectThroughToPerimeter( LNX_NavmeshHit innerHit, LNX_NavmeshHit outerHit, out LNX_NavmeshHit perimHit, int indx_edgeExclude = -1, bool returnHitOnAdjacenttTriangle = false)
+		{
+			perimHit = LNX_NavmeshHit.None;
+
+			if( innerHit == outerHit) //short-circuit
+			{
+				return false;
+			}
+
+			LNX_NavmeshHit projectedEdgeHit = LNX_NavmeshHit.None;
+			Vector3 ftndInrPos = LNX_Utils.FlatVector(innerHit.Position, v_SurfaceNormal_cached);
+			Vector3 ftndOuterPos = LNX_Utils.FlatVector(outerHit.Position, v_SurfaceNormal_cached);
+			Vector3 v_projection_flat = LNX_Utils.FlatVector(ftndOuterPos - ftndInrPos).normalized;
+
+			if (ftndInrPos == ftndOuterPos) //short-circuit
+			{
+				return false;
+			}
+
+			for (int i = 0; i < 3; i++)
+			{
+				if ( Edges[i].DoesPositionLieOnEdge(ftndInrPos) &&
+					v_projection_flat == Edges[i].V_StartToEnd_flattened || v_projection_flat == Edges[i].V_EndToStart_flattened //if the projection runs parallel with the edge...
+				)
+				{
+					perimHit = new LNX_NavmeshHit(Edges[i].ClosestPointOnEdge(innerHit.Position), v_SurfaceNormal_cached, innerHit.Position,
+						(returnHitOnAdjacenttTriangle && Edges[i].SharedEdgeCoordinate != LNX_ComponentCoordinate.None) ?
+						Edges[i].SharedEdgeCoordinate : new LNX_ComponentCoordinate(index_inCollection, i));
+					return true;
+				}
+				else
+				{
+					if (indx_edgeExclude != i && Edges[i].DoesProjectionIntersectEdge(innerHit.Position, ftndOuterPos, out projectedEdgeHit))
+					{
+						perimHit = new LNX_NavmeshHit(projectedEdgeHit.Position, v_SurfaceNormal_cached, innerHit.Position,
+						(returnHitOnAdjacenttTriangle && Edges[i].SharedEdgeCoordinate != LNX_ComponentCoordinate.None) ?
+						Edges[i].SharedEdgeCoordinate : new LNX_ComponentCoordinate(index_inCollection, i));
+
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+
+		public bool ProjectThroughToPerimeter_dbg( LNX_NavmeshHit innerHit, LNX_NavmeshHit outerHit, 
+			out LNX_NavmeshHit perimHit, ref LNX_MethodDebugReport rprt, int indx_edgeExclude = -1, 
+			bool returnHitOnAdjacenttTriangle = false)
 		{
 			//rprt.Log($"tab lvl: {rprt.MethodLvl}");
 			rprt.StartMethod($"{this.ToString()}.ProjectThroughToPerimeter_dbg( {innerHit}, {outerHit}, {indx_edgeExclude} )");
@@ -630,7 +661,6 @@ namespace LogansNavigationExtension
 			}
 
 			Vector3 projectedEdgePosition = Vector3.zero;
-
 			Vector3 ftndInrPos = LNX_Utils.FlatVector(innerHit.Position, v_SurfaceNormal_cached);
 			Vector3 ftndOuterPos = LNX_Utils.FlatVector(outerHit.Position, v_SurfaceNormal_cached);
 
@@ -648,26 +678,51 @@ namespace LogansNavigationExtension
 			{
 				rprt.Log_InnrTabbed($"for edge{i}...", 1);
 
-				rprt.Log_InnrTabbed($"first checking if innerPos lies on this edge...", 2);
-				if ( Edges[i].DoesPositionLieOnEdge(ftndInrPos, v_SurfaceNormal_cached) &&
-					v_projection_flat == Edges[i].V_StartToEnd_flattened || v_projection_flat == Edges[i].V_EndToStart_flattened //if the projection runs parallel with the edge...
+				if( i == indx_edgeExclude )
+				{
+					rprt.Log_InnrTabbed($"excluding this edge because of exclude parameter...", 2);
+					continue;
+				}
+
+				bool innerPosIsOnEdgePerim = Edges[i].DoesPositionLieOnEdge( ftndInrPos );
+				rprt.Log_InnrTabbed($"innerPosIsOnEdgePerim: '{innerPosIsOnEdgePerim}'...", 2);
+
+				rprt.Log_InnrTabbed($"first checking if perimHit should be returned on this edge...", 2);
+				if ( innerPosIsOnEdgePerim && v_projection_flat == Edges[i].V_StartToEnd_flattened || v_projection_flat == Edges[i].V_EndToStart_flattened )
+				{
+						rprt.Log_InnrTabbed($"innerHit also runs parellel with this edge. Constructing perimeter hit down this edge...", 2);
+
+						perimHit = new LNX_NavmeshHit(innerHit.Position, v_SurfaceNormal_cached, innerHit.Position,
+							(returnHitOnAdjacenttTriangle && Edges[i].SharedEdgeCoordinate != LNX_ComponentCoordinate.None) ?
+							Edges[i].SharedEdgeCoordinate : new LNX_ComponentCoordinate(index_inCollection, i));
+						rprt.Log_InnrTabbed($"constructed perimHit: '{perimHit}'", 3);
+						rprt.EndMethod("ProjectThroughToPerimeter_dbg()");
+						return true;
+				}
+				else if ( Vector3.Dot(v_projection_flat, Edges[i].v_Cross_flat) < 0f ) //if the projection points toward outside of triangle...
+				{
+					rprt.Log_InnrTabbed($"projection points toward outside of triangle. Returniing ...", 2);
+
+				}
+				///////////////////////////////////
+				if ( Edges[i].DoesPositionLieOnEdge(ftndInrPos) && 
+					v_projection_flat == Edges[i].V_StartToEnd_flattened || v_projection_flat == Edges[i].V_EndToStart_flattened
 				)
 				{
-					rprt.Log_InnrTabbed("innerPos DOES lie on this edge, and runs parallel. Using LNX_Edge.ClosestPtOnEdge() operation...", 3);
+					rprt.Log_InnrTabbed("innerPos DOES lie on this edge, and IS parallel. Constructing hit lying on edge perimeter...", 3);
 
-					perimHit = new LNX_NavmeshHit(Edges[i].ClosestPointOnEdge(innerHit.Position), v_SurfaceNormal_cached, innerHit.Position,
+					perimHit = new LNX_NavmeshHit(innerHit.Position, v_SurfaceNormal_cached, innerHit.Position,
 						(returnHitOnAdjacenttTriangle && Edges[i].SharedEdgeCoordinate != LNX_ComponentCoordinate.None) ?
 						Edges[i].SharedEdgeCoordinate : new LNX_ComponentCoordinate(index_inCollection, i));
 					rprt.Log_InnrTabbed($"constructed perimHit: '{perimHit}'", 3);
-					rprt.EndMethod();
+					rprt.EndMethod("ProjectThroughToPerimeter_dbg()");
 					return true;
 				}
 				else
 				{
-					rprt.Log_InnrTabbed($"decided innerPos does NOT lie on edge{i}. Now checking to see if the projection intersects edge{i}...", 2);
-					rprt.Log_InnrTabbed( $"(Note: excludeEdgeIndx: '{indx_edgeExclude}')...", 2 );
+					rprt.Log_InnrTabbed($"decided should NOT create perimeter hit lying on this edge. Now checking to see if the projection intersects edge{i}...", 2);
 
-					if (indx_edgeExclude != i && Edges[i].DoesProjectionIntersectEdge(innerHit.Position, ftndOuterPos, v_SurfaceNormal_cached, out projectedEdgePosition))
+					if ( Edges[i].DoesProjectionIntersectEdge(innerHit.Position, ftndOuterPos, out perimHit))
 					{
 						rprt.Log_InnrTabbed($"method succeeded on edge{i}  at: '{projectedEdgePosition}'...", 2);
 						perimHit = new LNX_NavmeshHit(projectedEdgePosition, v_SurfaceNormal_cached, innerHit.Position,
@@ -675,9 +730,13 @@ namespace LogansNavigationExtension
 						Edges[i].SharedEdgeCoordinate : new LNX_ComponentCoordinate(index_inCollection, i));
 						rprt.Log_InnrTabbed($"constructed perimHit: '{perimHit}'", 2);
 
-						rprt.EndMethod("LNX_Triangle.ProjectThroughToPerimeter()");
+						rprt.EndMethod("ProjectThroughToPerimeter_dbg()");
 
 						return true;
+					}
+					else
+					{
+						rprt.Log_InnrTabbed($"decided that projection does NOT intersect edge {i}...", 2);
 					}
 				}
 
@@ -688,23 +747,21 @@ namespace LogansNavigationExtension
 			rprt.Log($"NONE succeeded. Dumping reports...");
 
 			rprt.Log("edge0---");
-			rprt.Log($"check1 '{Edges[0].DoesPositionLieOnEdge(ftndInrPos, v_SurfaceNormal_cached)}', ");
-			rprt.Log($"check2 (intersect report){Edges[0].dbg_doesProjectionIntersectEdge}");
+			rprt.Log($"check1 '{Edges[0].DoesPositionLieOnEdge(ftndInrPos)}', ");
 
 			rprt.Log("edge1---");
-			rprt.Log($"check1 '{Edges[1].DoesPositionLieOnEdge(ftndInrPos, v_SurfaceNormal_cached)}', ");
-			rprt.Log($"check2 (intersect report){Edges[1].dbg_doesProjectionIntersectEdge}");
+			rprt.Log($"check1 '{Edges[1].DoesPositionLieOnEdge(ftndInrPos)}', ");
 
 			rprt.Log("edge2---");
-			rprt.Log($"check1 '{Edges[2].DoesPositionLieOnEdge(ftndInrPos, v_SurfaceNormal_cached)}', ");
-			rprt.Log($"check2 (intersect report){Edges[2].dbg_doesProjectionIntersectEdge}");
+			rprt.Log($"check1 '{Edges[2].DoesPositionLieOnEdge(ftndInrPos)}', ");
 
 			rprt.Log($" returning false...");
 
-			rprt.EndMethod("ProjectThroughToPerimeter()");
+			rprt.EndMethod("ProjectThroughToPerimeter_dbg()");
 			return false;
 
 		}
+		
 		#endregion
 
 		#region MODIFICATION ----------------------------------------------------
@@ -1068,15 +1125,15 @@ namespace LogansNavigationExtension
 				pos = LNX_Utils.FlatVector(pos, v_SurfaceNormal_cached);
 			}
 
-			if (Edges[0].DoesPositionLieOnEdge(pos, v_SurfaceNormal_cached))
+			if (Edges[0].DoesPositionLieOnEdge(pos))
 			{
 				return true;
 			}
-			else if (Edges[1].DoesPositionLieOnEdge(pos, v_SurfaceNormal_cached))
+			else if (Edges[1].DoesPositionLieOnEdge(pos))
 			{
 				return true;
 			}
-			else if (Edges[2].DoesPositionLieOnEdge(pos, v_SurfaceNormal_cached))
+			else if (Edges[2].DoesPositionLieOnEdge(pos))
 			{
 				return true;
 			}
