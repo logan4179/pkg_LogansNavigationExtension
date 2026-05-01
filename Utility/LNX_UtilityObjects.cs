@@ -227,6 +227,7 @@ namespace LogansNavigationExtension
 		[SerializeField] private Vector3 hitPosition;
 		/// <summary>Index of the Triangle or component that was hit, depending on the context.</summary>
 		public Vector3 Position => hitPosition;
+		public Vector3 Position_flat => LNX_Utils.FlatVector( hitPosition, normal );
 
 		//private Vector3 startPosition;
 		//public Vector3 StartPosition => startPosition;

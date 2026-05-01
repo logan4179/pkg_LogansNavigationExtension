@@ -709,6 +709,7 @@ namespace LogansNavigationExtension
 			rprt.StartMethod($"{this.ToString()}.ProjectThroughToPerimeter_dbg( {innerHit}, {outerHit}, {indx_edgeExclude} )");
 			//rprt.Log($"tab lvl: {rprt.MethodLvl}");
 			perimHit = LNX_NavmeshHit.None;
+			//rprt.Log($"trictr: '{V_Center}', V_PlaneFaceNormal: '{V_PlaneFaceNormal}', srfcNrml: '{v_SurfaceNormal_cached}'");
 
 			if( innerHit == outerHit) //short-circuit
 			{
@@ -722,6 +723,7 @@ namespace LogansNavigationExtension
 			Vector3 ftndOuterPos = LNX_Utils.FlatVector(outerHit.Position, v_SurfaceNormal_cached);
 
 			Vector3 v_projection_flat = LNX_Utils.FlatVector(ftndOuterPos - ftndInrPos).normalized;
+			//rprt.Log($"using projection: '{v_projection_flat}'...");
 
 			if (ftndInrPos == ftndOuterPos) //short-circuit
 			{
@@ -731,9 +733,18 @@ namespace LogansNavigationExtension
 			}
 
 			rprt.Log($"No short-circuits. Now checking each edge...");
+			LNX_NavmeshHit bestEdgeIntersectHit = LNX_NavmeshHit.None;
 			for (int i = 0; i < 3; i++)
 			{
 				rprt.Log($"for edge{i}...");
+				/*rprt.Log("==================================================",
+					$"edge[{i}].vcross: '{Edges[i].v_Cross}', flat: '{Edges[i].v_Cross_flat}', ",
+					$"calc: '{Vector3.Cross(Edges[i].V_StartToEnd, V_PlaneFaceNormal).normalized}', shouldflip: " +
+					$"'{Vector3.Dot(Vector3.Cross(Edges[i].V_StartToEnd, V_PlaneFaceNormal).normalized, Edges[i].v_toCenter) < 0}', " +
+					$"flat calc: '{LNX_Utils.FlatVector(Vector3.Cross(Edges[i].V_StartToEnd, V_PlaneFaceNormal).normalized, v_SurfaceNormal_cached).normalized}'", 
+					$"v_toctr: '{Edges[i].v_toCenter}', cmpr dot: '{Vector3.Dot(Edges[i].v_Cross, Edges[i].v_toCenter)}'",
+					"======================================================"
+					);*/
 
 				if( i == indx_edgeExclude )
 				{
@@ -742,72 +753,36 @@ namespace LogansNavigationExtension
 				}
 
 				rprt.Log($"checking if projection intersects this edge...");
-				if ( Edges[i].DoesProjectionIntersectEdge_dbg(innerHit.Position, outerHit.Position, out perimHit, ref rprt, true) )
+				if ( Edges[i].DoesProjectionIntersectEdge_dbg(innerHit.Position, outerHit.Position, out bestEdgeIntersectHit, ref rprt, true) )
 				{
-					rprt.Log($"Projection DOES intersect this edge at: '{perimHit}'. Returning true...");
-					rprt.EndMethod("ProjectThroughToPerimeter_dbg");
-					return true;
-				}
-				/*
-				bool innerPosIsOnEdgePerim = Edges[i].DoesPositionLieOnEdge( ftndInrPos );
-				rprt.Log_InnrTabbed($"innerPosIsOnEdgePerim: '{innerPosIsOnEdgePerim}'...", 2);
+					//at this point, check if the dot of the projection and this edge's cross vector are opposite.
+					//if so, keep checking the next edges
 
-				rprt.Log_InnrTabbed($"first checking if perimHit should be returned on this edge...", 2);
-				if ( innerPosIsOnEdgePerim && v_projection_flat == Edges[i].V_StartToEnd_flattened || v_projection_flat == Edges[i].V_EndToStart_flattened )
-				{
-					rprt.Log_InnrTabbed($"innerHit also runs parellel with this edge. Constructing perimeter hit down this edge...", 2);
+					rprt.Log($"using dot: '{Vector3.Dot(v_projection_flat, Edges[i].v_Cross_flat)}'...");
 
-					perimHit = new LNX_NavmeshHit(innerHit.Position, v_SurfaceNormal_cached, innerHit.Position,
-						(returnHitOnAdjacenttTriangle && Edges[i].SharedEdgeCoordinate != LNX_ComponentCoordinate.None) ?
-						Edges[i].SharedEdgeCoordinate : new LNX_ComponentCoordinate(index_inCollection, i));
-					rprt.Log_InnrTabbed($"constructed perimHit: '{perimHit}'", 3);
-					rprt.EndMethod("ProjectThroughToPerimeter_dbg()");
-					return true;
-				}
-				else if ( Vector3.Dot(v_projection_flat, Edges[i].v_Cross_flat) < 0f ) //if the projection points toward outside of triangle...
-				{
-					rprt.Log_InnrTabbed($"projection points toward outside of triangle. Returniing ...", 2);
-
-				}
-				*/
-
-				///////////////////////////////////
-				/*
-				if ( innerPosIsOnEdgePerim && 
-					v_projection_flat == Edges[i].V_StartToEnd_flattened || v_projection_flat == Edges[i].V_EndToStart_flattened
-				)
-				{
-					rprt.Log_InnrTabbed("innerPos DOES lie on this edge, and IS parallel. Constructing hit lying on edge perimeter...", 3);
-
-					perimHit = new LNX_NavmeshHit(innerHit.Position, v_SurfaceNormal_cached, innerHit.Position,
-						(returnHitOnAdjacenttTriangle && Edges[i].SharedEdgeCoordinate != LNX_ComponentCoordinate.None) ?
-						Edges[i].SharedEdgeCoordinate : new LNX_ComponentCoordinate(index_inCollection, i));
-					rprt.Log_InnrTabbed($"constructed perimHit: '{perimHit}'", 3);
-					rprt.EndMethod("ProjectThroughToPerimeter_dbg()");
-					return true;
-				}
-				else
-				{
-					rprt.Log_InnrTabbed($"decided should NOT create perimeter hit lying on this edge. Now checking to see if the projection intersects edge{i}...", 2);
-
-					if ( Edges[i].DoesProjectionIntersectEdge(innerHit.Position, ftndOuterPos, out perimHit))
+					if (Vector3.Dot(v_projection_flat, Edges[i].v_Cross_flat) < 0f)
 					{
-						rprt.Log_InnrTabbed($"method succeeded on edge{i}  at: '{projectedEdgePosition}'...", 2);
-						perimHit = new LNX_NavmeshHit(projectedEdgePosition, v_SurfaceNormal_cached, innerHit.Position,
-						(returnHitOnAdjacenttTriangle && Edges[i].SharedEdgeCoordinate != LNX_ComponentCoordinate.None) ?
-						Edges[i].SharedEdgeCoordinate : new LNX_ComponentCoordinate(index_inCollection, i));
-						rprt.Log_InnrTabbed($"constructed perimHit: '{perimHit}'", 2);
-
-						rprt.EndMethod("ProjectThroughToPerimeter_dbg()");
-
+						rprt.Log_And_End_Method($"Projection DOES intesect this edge on an endpoint, and pointed outside the triangle" +
+							$". Returning true...",
+							"ProjectThroughToPerimeter_dbg");
+						perimHit = bestEdgeIntersectHit;
 						return true;
 					}
 					else
 					{
-						rprt.Log_InnrTabbed($"decided that projection does NOT intersect edge {i}...", 2);
-					}
+						rprt.Log($"Projection Does intersect this edge on an endpoint, but it's pointed inside the triangle...",
+							$"Caching this edge as best, but continuing in case there's a better choice...");
+						bestEdgeIntersectHit = perimHit;
+					}					
 				}
-				*/
+			}
+
+			if( bestEdgeIntersectHit != LNX_NavmeshHit.None )
+			{
+				rprt.Log_And_End_Method($"End of iterating through edges. Logged best edge intersect hit of '{bestEdgeIntersectHit}'. Returning true.",
+					"ProjectThroughToPerimeter_dbg");
+				perimHit = bestEdgeIntersectHit;
+				return true;
 			}
 
 			rprt.Log($"End of method. returning false...");

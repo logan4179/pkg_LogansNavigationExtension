@@ -138,7 +138,6 @@ namespace LogansNavigationExtension
 			}
 		}
 
-		public string DBG_vcross;
 		public void CalculateDerivedInfo( LNX_Triangle tri, LNX_NavMesh nm )
 		{
 			StartPosition = tri.Verts[StartVertCoordinate.ComponentIndex].V_Position;
@@ -389,7 +388,7 @@ namespace LogansNavigationExtension
 			if (endPointInclusive)
 			{
 				rprt.Log("endpoint is inclusive. Checking if origin is on edge...");
-				if (v_projection == V_StartToEnd_flattened) //if the vectors are pointed in the same direction...
+				if (v_projection == V_StartToEnd_flattened) //if the projection and edge are pointed in the same direction...
 				{
 					rprt.Log($"v_projection equals V_StartToEnd_flattened. Investigating further...");
 
@@ -403,7 +402,7 @@ namespace LogansNavigationExtension
 						return true;
 					}
 				}
-				else if (v_projection == V_EndToStart_flattened) //if the vectors are aligned in exactly opposite directions...
+				else if (v_projection == V_EndToStart_flattened) //if the projection and edge are aligned in exactly opposite directions...
 				{
 					rprt.Log($"v_projection equals V_EndToStart_flattened. Investigating further...");
 
@@ -822,8 +821,8 @@ namespace LogansNavigationExtension
 		{
 			return $"Edge.{nameof(SayCurrentInfo)}()\n" +
 				$"{nameof(MyCoordinate)}: '{MyCoordinate}'\n" +
-				$"{nameof(StartPosition)}: '{StartPosition}'\n" +
-				$"{nameof(v_Cross)}: '{v_Cross}'\n" +
+				$"{nameof(StartPosition)}: '{StartPosition}', (flat: '{StartPosition_flat}')\n" +
+				$"{nameof(v_Cross)}: '{v_Cross}', flat: '{v_Cross_flat}'\n" +
 				$"{nameof(SharedEdgeCoordinate)}: '{SharedEdgeCoordinate}'\n" +
 				$"{nameof(AmBoundsEdge)}: '{AmBoundsEdge(nm)}'\n" +
 				$"";

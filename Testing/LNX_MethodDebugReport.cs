@@ -68,6 +68,14 @@ namespace LogansNavigationExtension
             }
         }
 
+        public void Log(params string[] logs)
+        {
+            for (int i = 0; i < logs.Length; i++)
+            {
+                Log(logs[i]);
+            }
+        }
+
 		public void EmptyLine()
         {
             rprtString += "\n";
