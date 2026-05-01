@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -83,7 +84,8 @@ namespace LogansNavigationExtension
 
 			if ( startTrans.position != CachedLastStartPos || endTrans.position != CachedLastEndPos ) //"IF something's changed..." this is to make it a little snappier in the editor...
 			{
-				DBG_Operation = $"using start '{startTrans.position}', and end: '{endTrans.position}'...\n";
+				DBG_Operation = $"{DateTime.Now}\n" +
+					$"using start '{startTrans.position}', and end: '{endTrans.position}'...\n";
 
 				mthdDbg_Report.StartReport("TDG_Raycast");
 				//RaycastResult = _navmesh.Raycast( startTrans.position, endTrans.position, 3f, out ResultPath );

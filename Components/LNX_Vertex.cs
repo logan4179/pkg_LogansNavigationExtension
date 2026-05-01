@@ -451,7 +451,7 @@ namespace LogansNavigationExtension
 			rprt.EmptyLine();
 			rprt.Log($"Now getting visible verts from This vert...");
 
-			List<LNX_Path> vsblVrtPths = nm.GetVisibleVertsFromPoint_dbg( this, ref rprt, false, fwdBackstopVerts ); //todo: note: change this to the overload that 
+			List<LNX_Path> vsblVrtPths = nm.GetVisibleVertsFromVert_dbg( this, ref rprt, false, fwdBackstopVerts ); //todo: note: change this to the overload that 
 			//uses an LNX_Hit as the first parameter, and pass in runningPath.endPt as this parameter, and then efficiency test the difference. This 
 			//overload will bypass a level in the method chain.
 

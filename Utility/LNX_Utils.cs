@@ -380,6 +380,71 @@ namespace LogansNavigationExtension
 
 			return false;
 		}
+		public static bool AmInVectorCone_dbg(Vector3 vToPos, Vector3 vLegA, Vector3 vLegB, Vector3 nrml, ref LNX_MethodDebugReport rprt, bool includeOnPerim = false)
+		{
+			rprt.StartMethod($"AmInVectorCone({vToPos}, incldOnPerim: '{includeOnPerim}')");
+
+			#region SHORT-CIRCUITING ==========================================
+			if (vToPos == vLegA || vToPos == vLegB)
+			{
+				if (includeOnPerim)
+				{
+					rprt.Log_And_End_Method( $"was told to include perim, and I found that pos is on perim, short-circuit returning true...",
+						$"AmInVectorCone");
+
+					return true;
+				}
+				else
+				{
+					rprt.Log_And_End_Method( $"was told NOT to include perim, and I found that pos is on perim, short-circuit returning false...",
+						$"AmInVectorCone");
+
+					return false;
+				}
+			}
+
+			if (vLegA == -vLegB)
+			{
+				rprt.Log_And_End_Method($"vLegA equals -vLegB, this would make a 180 degree sweep. Short-circuit returning true...",
+					"AmInVectorCone");
+				return true; //because the "sweep cone" in this case would be a full 180 degrees, and it wouldn't matter which side.
+							 //todo: Maybe I should actually log a warning here?
+			}
+
+			if (vLegA == vLegB)
+			{
+				rprt.Log_And_End_Method($"vLegA equals vLegB, this would make a 0 degree sweep. Short-circuit returning false...",
+					"AmInVectorCone");
+				return false;
+			}
+			#endregion
+
+			rprt.Log($"no short-circuits applied. Continuing...");
+
+			float ang_crnr = Vector3.SignedAngle(vLegA, vLegB, nrml);
+			//float ang_crnr = Vector3.Angle(vLegA, vLegB);
+
+			float ang_legAToPos = Vector3.SignedAngle(vToPos, vLegA, nrml);
+			float ang_legBToPos = Vector3.SignedAngle(vToPos, vLegB, nrml);
+
+			rprt.Log($" using ang_crnr: '{ang_crnr}', ang_legAToPos: '{ang_legAToPos}', and ang_legBToPos: '{ang_legBToPos}'...");
+			rprt.Log($"now performing sign check...");
+
+			if
+			(
+				Mathf.Sign(ang_crnr) != Mathf.Sign(ang_legAToPos) &&
+				Mathf.Sign(ang_crnr) == Mathf.Sign(ang_legBToPos)
+			)
+			{
+				rprt.Log_And_End_Method($"sign check succeeded. Returning true...",
+					"AmInVectorCone");
+				return true;
+			}
+
+			rprt.EndMethod("AmInVectorCone");
+
+			return false;
+		}
 
 		/// <summary>
 		/// Determines whether two supplied lines cross each other. Note: these lines are treated as having discrete start and end points. They are NOT 
@@ -467,16 +532,27 @@ namespace LogansNavigationExtension
 		/// <param name="nrml"></param>
 		/// <param name="dbgRprt"></param>
 		/// <returns></returns>
-		public static bool AmInArea( Vector3 pos, Vector3 crnrA, Vector3 crnrB, Vector3 crnrC, Vector3 crnrD, Vector3 nrml, bool includeOnBorder, ref string dbgRprt )
+		public static bool AmInArea( Vector3 pos, Vector3 crnrA, Vector3 crnrB, Vector3 crnrC, Vector3 crnrD, Vector3 nrml, bool includeOnPerim, ref string dbgRprt )
 		{
 			dbgRprt = $"4) AmInArea('{pos}'\n" +
-				$"cA: '{crnrA}', cB: '{crnrB}', cC: '{crnrC}', cD: '{crnrD}', includeOnBorder: '{includeOnBorder}')\n";
+				$"cA: '{crnrA}', cB: '{crnrB}', cC: '{crnrC}', cD: '{crnrD}', includeOnBorder: '{includeOnPerim}')\n";
 
 			pos = FlatVector(pos, nrml);
 			crnrA = FlatVector(crnrA, nrml);
 			crnrB = FlatVector(crnrB, nrml);
 			crnrC = FlatVector(crnrC, nrml);
 			crnrD = FlatVector(crnrD, nrml);
+
+			#region SHORT-CIRCUITING ==========================
+			if (includeOnPerim &&
+				(
+					pos == crnrA || pos == crnrB || pos == crnrC || pos == crnrD
+				)
+			)
+			{
+				return true;
+			}
+			#endregion
 
 			bool usingCrnrAToCrnrC = true;
 
@@ -531,13 +607,13 @@ namespace LogansNavigationExtension
 				if ( crnrB == crnrA || crnrB == crnrC )
 				{
 					dbgRprt += $"cornerB shares space with another corner. Using triangular area check short-circuit...\n";
-					return AmInArea(pos, crnrA, crnrC, crnrD, nrml, includeOnBorder);
+					return AmInArea(pos, crnrA, crnrC, crnrD, nrml, includeOnPerim);
 				}
 
 				if ( crnrD == crnrA || crnrD == crnrC )
 				{
 					dbgRprt += $"cornerD shares space with another corner. Using triangular area check short-circuit...\n";
-					return AmInArea( pos, crnrA, crnrB, crnrC, nrml, includeOnBorder );
+					return AmInArea( pos, crnrA, crnrB, crnrC, nrml, includeOnPerim );
 				}
 			}
 			#endregion
@@ -554,22 +630,22 @@ namespace LogansNavigationExtension
 			if( v_aToB == -v_aToD) //CrnrA
 			{
 				dbgRprt += $"crnrA doesn't actually make a bend. Short-circuiting to triangular AmInArea() method instead...";
-				return AmInArea(pos, crnrB, crnrC, crnrD, nrml, includeOnBorder);
+				return AmInArea(pos, crnrB, crnrC, crnrD, nrml, includeOnPerim);
 			}
 			else if (v_aToB == -v_cToB) //CrnrB
 			{
 				dbgRprt += $"crnrB doesn't actually make a bend. Short-circuiting to triangular AmInArea() method instead...";
-				return AmInArea(pos, crnrA, crnrB, crnrC, nrml, includeOnBorder);
+				return AmInArea(pos, crnrA, crnrB, crnrC, nrml, includeOnPerim);
 			}
 			else if ( v_cToB == -v_cToD ) //CrnrC
 			{
 				dbgRprt += $"crnrC doesn't actually make a bend. Short-circuiting to triangular AmInArea() method instead...";
-				return AmInArea(pos, crnrA, crnrB, crnrD, nrml, includeOnBorder);
+				return AmInArea(pos, crnrA, crnrB, crnrD, nrml, includeOnPerim);
 			}
 			else if (v_aToD == -v_aToB) //CrnrD
 			{
 				dbgRprt += $"crnrC doesn't actually make a bend. Short-circuiting to triangular AmInArea() method instead...";
-				return AmInArea(pos, crnrA, crnrB, crnrD, nrml, includeOnBorder);
+				return AmInArea(pos, crnrA, crnrB, crnrD, nrml, includeOnPerim);
 			}
 			#endregion
 
@@ -587,8 +663,8 @@ namespace LogansNavigationExtension
 				dbgRprt += $"using conventional corner-to-corner check (a-to-c)...\n";
 				if
 				( 
-					AmInVectorCone(v_aToPos, v_aToB, v_aToD, nrml, ref s1, includeOnBorder) &&
-					AmInVectorCone(v_cToPos, v_cToB, v_cToD, nrml, ref s2, includeOnBorder)
+					AmInVectorCone(v_aToPos, v_aToB, v_aToD, nrml, ref s1, includeOnPerim) &&
+					AmInVectorCone(v_cToPos, v_cToB, v_cToD, nrml, ref s2, includeOnPerim)
 				)
 				{
 					dbgRprt += $"both vectorcone methods returned true\n" +
@@ -613,8 +689,8 @@ namespace LogansNavigationExtension
 
 				if
 				(
-					AmInVectorCone(v_bToPos, v_bToA, v_bToC, nrml, ref s1, includeOnBorder) &&
-					AmInVectorCone(v_dToPos, v_dToC, v_dToA, nrml, ref s2, includeOnBorder)
+					AmInVectorCone(v_bToPos, v_bToA, v_bToC, nrml, ref s1, includeOnPerim) &&
+					AmInVectorCone(v_dToPos, v_dToC, v_dToA, nrml, ref s2, includeOnPerim)
 				)
 				{
 					dbgRprt += $"both vectorcone methods returned true\n" +
@@ -641,6 +717,17 @@ namespace LogansNavigationExtension
 			crnrB = FlatVector( crnrB, nrml );
 			crnrC = FlatVector( crnrC, nrml );
 
+			#region SHORT-CIRCUITING ==========================
+			if (includeOnPerim &&
+				(
+					pos == crnrA || pos == crnrB || pos == crnrC
+				)
+			)
+			{
+				return true;
+			}
+			#endregion
+
 			Vector3 v_a_to_b = Vector3.Normalize( crnrB - crnrA );
 			Vector3 v_a_to_c = Vector3.Normalize( crnrC - crnrA );
 			Vector3 v_ptA_to_pos = Vector3.Normalize( pos - crnrA );
@@ -664,6 +751,52 @@ namespace LogansNavigationExtension
 				return true;
 			}
 
+			return false;
+		}
+		public static bool AmInArea_dbg(Vector3 pos, Vector3 crnrA, Vector3 crnrB, Vector3 crnrC, Vector3 nrml, bool includeOnPerim, ref LNX_MethodDebugReport rprt )
+		{
+			rprt.StartMethod($"AmInArea_dbg(pos: '{pos}', )");
+
+			pos = FlatVector(pos, nrml);
+			crnrA = FlatVector(crnrA, nrml);
+			crnrB = FlatVector(crnrB, nrml);
+			crnrC = FlatVector(crnrC, nrml);
+
+			#region SHORT-CIRCUITING ==========================
+			if( includeOnPerim &&
+				(
+					pos == crnrA || pos == crnrB || pos == crnrC
+				)
+			)
+			{
+				rprt.Log_And_End_Method($"includeOnPerim == true, and position was on one of the coners. Returning true early...", 
+					"AmInArea_dbg");
+				return true;
+			}
+			#endregion
+
+			Vector3 v_a_to_b = Vector3.Normalize(crnrB - crnrA);
+			Vector3 v_a_to_c = Vector3.Normalize(crnrC - crnrA);
+			Vector3 v_cnrA_to_pos = Vector3.Normalize(pos - crnrA);
+
+			Vector3 v_cnrB_to_pos = Vector3.Normalize(pos - crnrB);
+			Vector3 v_b_toA = -v_a_to_b;
+			Vector3 v_b_to_c = Vector3.Normalize(crnrC - crnrB);
+
+			rprt.Log($"have created necessary values. Now running AmInVectorCone() checks...");
+			if
+			(
+				AmInVectorCone_dbg(v_cnrA_to_pos, v_a_to_b, v_a_to_c, nrml, ref rprt, includeOnPerim) &&
+				AmInVectorCone_dbg(v_cnrB_to_pos, v_b_toA, v_b_to_c, nrml, ref rprt, includeOnPerim)
+			)
+			{
+				rprt.Log_And_End_Method($"checks passed. Returning true...", 
+					"AmInArea_dbg");
+				return true;
+			}
+
+			rprt.Log_And_End_Method($"checks did NOT pass. Returning false...",
+				"AmInArea_dbg");
 			return false;
 		}
 

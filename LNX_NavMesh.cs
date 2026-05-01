@@ -1104,7 +1104,6 @@ namespace LogansNavigationExtension
 		#endregion
 
 		#region MAIN API METHODS----------------------------------------------------------------
-		[NonSerialized] public string DBG_SamplePosition;
 
 		/// <summary>
 		/// Gets a point on the projection of the navmesh using the supplied position. If the supplied position is not on the 
@@ -1462,12 +1461,13 @@ namespace LogansNavigationExtension
 			ref LNX_MethodDebugReport rprt, bool considerOffPerimeter = false)
 		{
 			//rprt.Log($"tablvl: '{rprt.MethodLvl}'");
-			rprt.StartMethod($"Raycast_dbg({sourcePosition}, {targetPosition})");
-			//rprt.Log($"tablvl: '{rprt.MethodLvl}'");
+			rprt.StartMethod($"Raycast_dbg(sourcePosition: '{sourcePosition}', targetPosition: '{targetPosition}')");
 
 			LNX_NavmeshHit lnxStartHit = LNX_NavmeshHit.None;
 			LNX_NavmeshHit lnxEndHit = LNX_NavmeshHit.None;
-			
+
+			rprt.Log($"first, attempting to sample source position...");
+
 			#region SHORT-CIRCUITING ==================================================
 			if (!SamplePosition(sourcePosition, out lnxStartHit, maxSampleDistance, considerOffPerimeter))
 			{
@@ -1477,13 +1477,23 @@ namespace LogansNavigationExtension
 
 				return true;
 			}
+			else
+			{
+				rprt.Log($"succesfully sampled sourcePosition at: '{lnxStartHit}'...");
+			}
 
-			if (!SamplePosition(targetPosition, out lnxEndHit, maxSampleDistance, considerOffPerimeter))
+			rprt.Log($"now, attempting to sample target position...");
+
+			if ( !SamplePosition(targetPosition, out lnxEndHit, maxSampleDistance, considerOffPerimeter) )
 			{
 				outPath = LNX_Path.None;
 				rprt.Log_And_End_Method($"Could NOT sample targetPosition. Returning early...");
 
 				return true;
+			}
+			else
+			{
+				rprt.Log($"succesfully sampled targetPosition at: '{lnxEndHit}'...");
 			}
 
 			rprt.Log($"sampled startHit: '{lnxStartHit}', and endHit: '{lnxEndHit}'...");
@@ -1497,75 +1507,6 @@ namespace LogansNavigationExtension
 			//rprt.Log($"tablvl: '{rprt.MethodLvl}'");
 
 			return rslt;
-		}
-
-		/// <summary>
-		/// Traces a line between two points on a navmesh.
-		/// </summary>
-		/// <returns>True if the ray is terminated before reaching target position. Otherwise returns false.</returns>
-		public bool Raycast( LNX_Vertex startVert, LNX_Vertex endVert) //todo: Unit test!!!
-		{
-			//TODO: implement the logic for checking if a relationship (which will have a pre-cached path)
-			// already exists, and then I can simply return based on whether the path is straight
-
-			#region SHORT-CIRCUITING ==================================================
-			if( startVert == endVert )
-			{
-				return false;
-			}
-			if( startVert.TriangleIndex == endVert.TriangleIndex )
-			{
-				return false;
-			}
-			if  //If start and end hit are on same triangle...
-			(
-				Triangles[startVert.TriangleIndex].HasIndexInKnownFullyVisibleList(endVert.TriangleIndex) ||
-				Triangles[endVert.TriangleIndex].HasIndexInKnownFullyVisibleList(startVert.TriangleIndex)
-			)
-			{
-				//DBGRaycast += $"Short-circuiting. Start and end hits are on the same triangle surface...";
-				return false;
-			}
-			#endregion
-
-			string s = "";
-			return !LNX_Utils.TryProjectThrough( this, new LNX_NavmeshHit(startVert), new LNX_NavmeshHit(endVert), ref s );
-		}
-
-		/// <summary>
-		/// Traces a line between two points on a navmesh.
-		/// </summary>
-		/// <returns>True if the ray is terminated before reaching target position. Otherwise returns false.</returns>
-		public bool Raycast(LNX_Vertex startVert, LNX_Vertex endVert, out LNX_Path outPath ) //todo: Unit test!!!
-		{
-			//TODO: implement the logic for checking if a relationship (which will have a pre-cached path)
-			// already exists, and then I can simply return based on whether the path is straight and set 
-			//outPath to the relationship path
-
-			outPath = LNX_Path.None;
-
-			#region SHORT-CIRCUITING ==================================================
-			if (startVert == endVert)
-			{
-				return false;
-			}
-			if (startVert.TriangleIndex == endVert.TriangleIndex)
-			{
-				outPath = new LNX_Path(this, new LNX_NavmeshHit(startVert), new LNX_NavmeshHit(endVert));
-				return false;
-			}
-			if  //If start and end hit are on same triangle...
-			(
-				Triangles[startVert.TriangleIndex].HasIndexInKnownFullyVisibleList(endVert.TriangleIndex) ||
-				Triangles[endVert.TriangleIndex].HasIndexInKnownFullyVisibleList(startVert.TriangleIndex)
-			)
-			{
-				outPath = new LNX_Path (this, new LNX_NavmeshHit(startVert), new LNX_NavmeshHit(endVert) );
-				return false;
-			}
-			#endregion
-			string s = "";
-			return !LNX_Utils.TryProjectThrough(this, startVert, endVert, out outPath, ref s);
 		}
 
 		#endregion
@@ -1945,7 +1886,7 @@ namespace LogansNavigationExtension
 			return visibleVertPaths;
 		}
 
-		public List<LNX_Path> GetVisibleVertsFromPoint( LNX_Vertex vert, 
+		public List<LNX_Path> GetVisibleVertsFromVert( LNX_Vertex vert, 
 			bool includeFringeVerts = false, List<LNX_ComponentCoordinate> excludeVerts = null)
 		{
 			List<LNX_Path> returnPaths = new List<LNX_Path>();
@@ -1967,7 +1908,7 @@ namespace LogansNavigationExtension
 
 			return returnPaths;
 		}
-		public List<LNX_Path> GetVisibleVertsFromPoint_dbg(LNX_Vertex vert, ref LNX_MethodDebugReport rprt,
+		public List<LNX_Path> GetVisibleVertsFromVert_dbg(LNX_Vertex vert, ref LNX_MethodDebugReport rprt,
 			bool includeFringeVerts = false, List<LNX_ComponentCoordinate> excludeVerts = null)
 		{
 			rprt.StartMethod($"GetVisibleVertsFromPoint_dbg(vert: '{vert}')");
@@ -1991,7 +1932,7 @@ namespace LogansNavigationExtension
 				outPaths = GetVisibleVertsFromPoint_dbg(new LNX_NavmeshHit(vert.V_Position, vert.TriangleIndex, -1), ref rprt, includeFringeVerts); // <<<<<<<<<<
 			}
 
-			rprt.EndMethod();
+			rprt.EndMethod("GetVisibleVertsFromPoint_dbg");
 
 			return outPaths;
 		}

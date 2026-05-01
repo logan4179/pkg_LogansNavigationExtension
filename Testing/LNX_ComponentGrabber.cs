@@ -11,7 +11,7 @@ namespace LogansNavigationExtension
 		public string DisplayName = "";
 
 		[Header("SAMPLING")]
-        public LNX_Component Mode;
+        [Tooltip("Dictates what gets grabbed in grabbing operations")] public LNX_Component Mode;
 		public bool ConsiderClosestOffPerimeter;
 
 		[Header("REFERENCE")]
@@ -23,11 +23,13 @@ namespace LogansNavigationExtension
         [Range(0.05f, 2f), Tooltip("How easy it is to select a component")] public float Forgiveness = 0.25f;
 
 		[Header("DEBUG")]
+		[SerializeField] bool drawLabel;
+
 		public Vector3 V_labelOffset;
 		public Transform Trans_drawLineTo;
 		[SerializeField] private bool recalculatedLastFrame = false;
 		public bool RecalculatedLastFrame => recalculatedLastFrame;
-		[SerializeField] bool useComponentCoordinateInsteadOfLabel = false;
+		[SerializeField] bool drawComponentCoordinateInsteadOfLabel = false;
 
 		[Header("OTHER")]
 		public LNX_NavmeshHit CurrentHit;
@@ -116,12 +118,12 @@ namespace LogansNavigationExtension
 				}
 
 				CurrentCoordinate = _navmesh.Triangles[CurrentHit.TriIndex].Edges[bestEdge].MyCoordinate;
-				Debug.Log($"Sample succesful. Grabbed edge '{CurrentCoordinate}'...");
+				//Debug.Log($"Sample succesful. Grabbed edge '{CurrentCoordinate}'...");
 			}
 			else if( Mode == LNX_Component.Triangle )
 			{
 				CurrentCoordinate = new LNX_ComponentCoordinate(CurrentHit.TriIndex, -1 );
-				Debug.Log($"Sample succesful. Grabbed tri '{CurrentCoordinate}'...");
+				//Debug.Log($"Sample succesful. Grabbed tri '{CurrentCoordinate}'...");
 
 			}
 
@@ -183,27 +185,30 @@ namespace LogansNavigationExtension
 			Gizmos.DrawSphere( transform.position, radius );
 			string lbl = DisplayName;
 
-			if( useComponentCoordinateInsteadOfLabel )
-			{
-				if ( Mode == LNX_Component.Vertex && CurrentlyGrabbedVert != null ) 
+			if( drawLabel )
+			{ 
+				if( drawComponentCoordinateInsteadOfLabel )
 				{
-					Handles.Label(transform.position + V_labelOffset, CurrentlyGrabbedVert.ToString() );
+					if ( Mode == LNX_Component.Vertex && CurrentlyGrabbedVert != null ) 
+					{
+						Handles.Label(transform.position + V_labelOffset, CurrentlyGrabbedVert.ToString() );
+					}
+					else if ( Mode == LNX_Component.Edge && CurrentlyGrabbedEdge != null )
+					{
+						Handles.Label(transform.position + V_labelOffset, CurrentlyGrabbedEdge.ToString());
+					}
+					else if (Mode == LNX_Component.Triangle && CurrentlyGrabbedTriangle != null)
+					{
+						Handles.Label(transform.position + V_labelOffset, CurrentlyGrabbedTriangle.ToString());
+					}
 				}
-				else if ( Mode == LNX_Component.Edge && CurrentlyGrabbedEdge != null )
+				else
 				{
-					Handles.Label(transform.position + V_labelOffset, CurrentlyGrabbedEdge.ToString());
+					Handles.Label(transform.position + V_labelOffset, string.IsNullOrEmpty(lbl) ? DisplayName : lbl);
 				}
-				else if (Mode == LNX_Component.Triangle && CurrentlyGrabbedTriangle != null)
-				{
-					Handles.Label(transform.position + V_labelOffset, CurrentlyGrabbedTriangle.ToString());
-				}
-			}
-			else
-			{
-				Handles.Label(transform.position + V_labelOffset, string.IsNullOrEmpty(lbl) ? DisplayName : lbl);
-			}
 
-			Gizmos.DrawLine( transform.position, transform.position + V_labelOffset );
+				Gizmos.DrawLine( transform.position, transform.position + V_labelOffset );
+			}
 
 			if (Trans_drawLineTo != null)
 			{

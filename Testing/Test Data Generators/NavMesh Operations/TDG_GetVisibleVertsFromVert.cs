@@ -112,7 +112,7 @@ namespace LogansNavigationExtension
 				{
 					DBG_Operation += $"using debug version...\n";
 					mthdDbg_Report.StartReport();
-					ResultPaths = _navmesh.GetVisibleVertsFromPoint_dbg(
+					ResultPaths = _navmesh.GetVisibleVertsFromVert_dbg(
 						CurrentVert, ref mthdDbg_Report, true, ExcludeVerts
 					);
 					mthdDbg_Report.EndReport();
@@ -121,7 +121,7 @@ namespace LogansNavigationExtension
 				{
 					DBG_Operation += $"using regular version (as opposed to debug version)...\n";
 
-					ResultPaths = _navmesh.GetVisibleVertsFromPoint(CurrentVert, true, ExcludeVerts);
+					ResultPaths = _navmesh.GetVisibleVertsFromVert(CurrentVert, true, ExcludeVerts);
 				}
 
 				DBG_Operation += $"{nameof(ResultCoordinates)} count: '{ResultCoordinates.Count}'\n";

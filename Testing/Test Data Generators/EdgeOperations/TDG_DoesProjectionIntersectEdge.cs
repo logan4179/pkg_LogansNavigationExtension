@@ -211,7 +211,9 @@ namespace LogansNavigationExtension
 			DrawStandardFocusTriGizmos( _navmesh.Triangles[CurrentlyGrabbedEdge.TriangleIndex], 1f, $"tri{CurrentlyGrabbedEdge.TriangleIndex}", Color.magenta);
 			DrawStandardEdgeFocusGizmos( CurrentlyGrabbedEdge, 0.1f, CurrentlyGrabbedEdge.ToString(), Color.yellow );
 
-			DBG_Operation += $"using origin param: '{StartPointGrabber.transform.position}', dest param: '{EndPointGrabber.transform.position}'\n" +
+			DBG_Operation += $"using origin param: '{StartPointGrabber.transform.position}', " +
+				$"dest param: '{EndPointGrabber.transform.position}'\n" +
+				$"using edge: '{CurrentlyGrabbedEdge}'\n" +
 				$"Commencing edge project...\n";
 
 			if( useDebugMethodVersion )
@@ -243,7 +245,7 @@ namespace LogansNavigationExtension
 			}
 
 			DBG_Operation += $"result: '{CurrentProjectionResult}'\n" +
-				$"projection: '{CurrentProjectedHit}'";
+				$"projected Hit: '{CurrentProjectedHit}'";
 
 			Gizmos.color = CurrentProjectionResult ? Color.green : Color.red;
 
@@ -254,8 +256,16 @@ namespace LogansNavigationExtension
 			Gizmos.DrawSphere(EndPointGrabber.transform.position, Radius_ObjectDebugSpheres);
 			//Handles.Label(startTrans.position, "endTrans");
 
-			Gizmos.color = Color.yellow;
-			Gizmos.DrawCube( CurrentProjectedHit.Position, Vector3.one * Radius_ProjectPos );
+			if( CurrentProjectedHit != LNX_NavmeshHit.None )
+			{
+				Gizmos.color = Color.yellow;
+				Gizmos.DrawCube( CurrentProjectedHit.Position, Vector3.one * Radius_ProjectPos );
+
+				Vector3 prjctHtLnEnd = CurrentProjectedHit.Position + Vector3.up * Radius_ProjectPos * 15f;
+				Gizmos.DrawLine( CurrentProjectedHit.Position, prjctHtLnEnd );
+				Handles.Label(prjctHtLnEnd, "hit");
+			}
+
 		}
 
 		#region HELPERS -----------------------------------------------------

@@ -439,8 +439,6 @@ namespace LogansNavigationExtension
 
 		#region MAIN API METHODS----------------------------------------------------------------------
 
-		[NonSerialized] public string DBG_IsInShapeProject;
-
 		[NonSerialized] public double TotalTime_IsInShapeProject;
 		/// <summary>
 		/// Determines if a supplied position is within a theoretical sweep 
@@ -451,12 +449,7 @@ namespace LogansNavigationExtension
 		/// <returns></returns>
 		public bool IsInShapeProject( Vector3 pos, out Vector3 projectedPos ) //todo: this one doesn't return correct if triangle surface is slanted
 		{
-			//TotalTime_IsInShapeProject = 0;
-			//DateTime dt_methodStart = DateTime.Now;
-
 			//todo: currently, it doesn't set projectedPos to the correct "out" value
-			//DBG_IsInShapeProject = $"tri[{index_inCollection}].IsInShapeProject({pos})\n";
-
 			//todo: I can short-circuit here depending on distance, and it will make this and everything that relies on it way more performant...
 
 			pos = LNX_Utils.FlatVector(pos, v_SurfaceNormal_cached);
@@ -467,6 +460,73 @@ namespace LogansNavigationExtension
 				return false;
 			}
 
+			#region DETERMINE THE PROJECTED POSITION--------------------------------------
+			if (Slope == 0f)
+			{
+				projectedPos = pos;
+			}
+			else
+			{
+
+				//Trying quaternion multiplication----------------------------------------
+				/*
+				//I still feel like this is worth investigating further because it reads so much better. I believe the reason the 
+				result is a little bent looking is because I'm rotating a directional vector around an axis, which is going to 
+				affect the x and z, when I actually need the x and z to remain the same.
+				Vector3 v_fltCtr_to_fltPos = flatPos - V_FlattenedCenter;
+				Vector3 v_ctrToPos = pos - V_Center;
+
+				//projectedPos = V_Center + (Rotation * v_fltCtr_to_fltPos); //bent
+				projectedPos = V_Center + (Rotation * LNX_Utils.FlatVector(v_ctrToPos, v_projectionNormal) ); //also bent...why? looks like the exact same result
+
+				Vector3 vtry = Vector3.Project(  );
+				*/
+				//-------------------------------------------------------
+
+				//Use the law of sines...
+				// Note: This isn't currently perfect. It seems to create a point slightly below the surface of the triangle.
+				Vector3 edgePrjct = Edges[1].StartPosition + 
+					Vector3.Project(pos - Edges[1].StartPosition, Edges[1].V_StartToEnd);//this gets a point on the edge closest to the pos
+				//float lenA = Vector3.Distance(edgePrjct, flatPos); //orig
+
+				//todo: replace the following with LNX_Utils method and make sure tdgs are still showing correct results
+				float lenA = Vector3.Distance( LNX_Utils.FlatVector(edgePrjct, v_SurfaceNormal_cached), pos );
+
+				float angA = 90f * Mathf.Deg2Rad;
+				float angC = Slope * Mathf.Deg2Rad;
+				float lenC = (Mathf.Sin(angC) * lenA) / MathF.Sin(angA);
+				//projectedPos = flatPos + (v_projectionNormal * lenC);
+				projectedPos = LNX_Utils.FlooredVector(pos, edgePrjct, v_SurfaceNormal_cached) + (v_SurfaceNormal_cached * lenC);
+			}
+			#endregion
+
+			return true;
+		}
+		public bool IsInShapeProject_dbg(Vector3 pos, out Vector3 projectedPos, ref LNX_MethodDebugReport rprt ) //todo: this one doesn't return correct if triangle surface is slanted
+		{
+			rprt.StartMethod($"IsInShapeProject_dbg(pos: '{pos}')");
+
+			//todo: currently, it doesn't set projectedPos to the correct "out" value
+			//todo: I can short-circuit here depending on distance, and it will make this and everything that relies on it way more performant...
+
+			pos = LNX_Utils.FlatVector(pos, v_SurfaceNormal_cached);
+
+			rprt.Log($"Checking with LNX_Utils.AmInArea()...");
+			if 
+			( 
+				!LNX_Utils.AmInArea_dbg(
+					pos, Verts[0].V_flattenedPosition, Verts[1].V_flattenedPosition, 
+					Verts[2].V_flattenedPosition, v_SurfaceNormal_cached, true, ref rprt
+				)
+			)
+			{
+				projectedPos = Vector3.zero;
+				rprt.Log_And_End_Method($"found that position is NOT in area. Returning false...", "IsInShapeProject_dbg()");
+				return false;
+			}
+
+			rprt.Log($"LNX_Utils.AmInArea() returned true. Now calculating projected position...");
+			rprt.Log($"note: slope: '{Slope}'...");
 			#region DETERMINE THE PROJECTED POSITION--------------------------------------
 			//DBG_IsInShapeProject += $"flatpos: '{flatPos}'\n";
 
@@ -492,16 +552,15 @@ namespace LogansNavigationExtension
 				*/
 				//-------------------------------------------------------
 
-				
+
 				//Use the law of sines...
 				// Note: This isn't currently perfect. It seems to create a point slightly below the surface of the triangle.
-				Vector3 edgePrjct = Edges[1].StartPosition + 
+				Vector3 edgePrjct = Edges[1].StartPosition +
 					Vector3.Project(pos - Edges[1].StartPosition, Edges[1].V_StartToEnd);//this gets a point on the edge closest to the pos
-				DBG_IsInShapeProject += $"edjprjct: '{edgePrjct.y}'\n";
-				//float lenA = Vector3.Distance(edgePrjct, flatPos); //orig
+																						 //float lenA = Vector3.Distance(edgePrjct, flatPos); //orig
 
 				//todo: replace the following with LNX_Utils method and make sure tdgs are still showing correct results
-				float lenA = Vector3.Distance( LNX_Utils.FlatVector(edgePrjct, v_SurfaceNormal_cached), pos );
+				float lenA = Vector3.Distance(LNX_Utils.FlatVector(edgePrjct, v_SurfaceNormal_cached), pos);
 
 				float angA = 90f * Mathf.Deg2Rad;
 				float angC = Slope * Mathf.Deg2Rad;
@@ -511,13 +570,11 @@ namespace LogansNavigationExtension
 			}
 			#endregion
 
-
-			//DBG_IsInShapeProject += $"projectedPos: '{projectedPos.y}'\n";
-
-			//TotalTime_IsInShapeProject = DateTime.Now.Subtract(dt_methodStart).TotalMilliseconds;
+			rprt.Log_And_End_Method($"end of method. projectedPos: '{projectedPos}'...");		
 
 			return true;
 		}
+
 
 		public Vector3 ClosestPointOnPerimeter( Vector3 pos )
 		{
@@ -676,36 +733,47 @@ namespace LogansNavigationExtension
 			rprt.Log($"No short-circuits. Now checking each edge...");
 			for (int i = 0; i < 3; i++)
 			{
-				rprt.Log_InnrTabbed($"for edge{i}...", 1);
+				rprt.Log($"for edge{i}...");
 
 				if( i == indx_edgeExclude )
 				{
-					rprt.Log_InnrTabbed($"excluding this edge because of exclude parameter...", 2);
+					rprt.Log($"excluding this edge because of exclude parameter...");
 					continue;
 				}
 
+				rprt.Log($"checking if projection intersects this edge...");
+				if ( Edges[i].DoesProjectionIntersectEdge_dbg(innerHit.Position, outerHit.Position, out perimHit, ref rprt, true) )
+				{
+					rprt.Log($"Projection DOES intersect this edge at: '{perimHit}'. Returning true...");
+					rprt.EndMethod("ProjectThroughToPerimeter_dbg");
+					return true;
+				}
+				/*
 				bool innerPosIsOnEdgePerim = Edges[i].DoesPositionLieOnEdge( ftndInrPos );
 				rprt.Log_InnrTabbed($"innerPosIsOnEdgePerim: '{innerPosIsOnEdgePerim}'...", 2);
 
 				rprt.Log_InnrTabbed($"first checking if perimHit should be returned on this edge...", 2);
 				if ( innerPosIsOnEdgePerim && v_projection_flat == Edges[i].V_StartToEnd_flattened || v_projection_flat == Edges[i].V_EndToStart_flattened )
 				{
-						rprt.Log_InnrTabbed($"innerHit also runs parellel with this edge. Constructing perimeter hit down this edge...", 2);
+					rprt.Log_InnrTabbed($"innerHit also runs parellel with this edge. Constructing perimeter hit down this edge...", 2);
 
-						perimHit = new LNX_NavmeshHit(innerHit.Position, v_SurfaceNormal_cached, innerHit.Position,
-							(returnHitOnAdjacenttTriangle && Edges[i].SharedEdgeCoordinate != LNX_ComponentCoordinate.None) ?
-							Edges[i].SharedEdgeCoordinate : new LNX_ComponentCoordinate(index_inCollection, i));
-						rprt.Log_InnrTabbed($"constructed perimHit: '{perimHit}'", 3);
-						rprt.EndMethod("ProjectThroughToPerimeter_dbg()");
-						return true;
+					perimHit = new LNX_NavmeshHit(innerHit.Position, v_SurfaceNormal_cached, innerHit.Position,
+						(returnHitOnAdjacenttTriangle && Edges[i].SharedEdgeCoordinate != LNX_ComponentCoordinate.None) ?
+						Edges[i].SharedEdgeCoordinate : new LNX_ComponentCoordinate(index_inCollection, i));
+					rprt.Log_InnrTabbed($"constructed perimHit: '{perimHit}'", 3);
+					rprt.EndMethod("ProjectThroughToPerimeter_dbg()");
+					return true;
 				}
 				else if ( Vector3.Dot(v_projection_flat, Edges[i].v_Cross_flat) < 0f ) //if the projection points toward outside of triangle...
 				{
 					rprt.Log_InnrTabbed($"projection points toward outside of triangle. Returniing ...", 2);
 
 				}
+				*/
+
 				///////////////////////////////////
-				if ( Edges[i].DoesPositionLieOnEdge(ftndInrPos) && 
+				/*
+				if ( innerPosIsOnEdgePerim && 
 					v_projection_flat == Edges[i].V_StartToEnd_flattened || v_projection_flat == Edges[i].V_EndToStart_flattened
 				)
 				{
@@ -739,23 +807,10 @@ namespace LogansNavigationExtension
 						rprt.Log_InnrTabbed($"decided that projection does NOT intersect edge {i}...", 2);
 					}
 				}
-
+				*/
 			}
 
-			rprt.EmptyLine();
-
-			rprt.Log($"NONE succeeded. Dumping reports...");
-
-			rprt.Log("edge0---");
-			rprt.Log($"check1 '{Edges[0].DoesPositionLieOnEdge(ftndInrPos)}', ");
-
-			rprt.Log("edge1---");
-			rprt.Log($"check1 '{Edges[1].DoesPositionLieOnEdge(ftndInrPos)}', ");
-
-			rprt.Log("edge2---");
-			rprt.Log($"check1 '{Edges[2].DoesPositionLieOnEdge(ftndInrPos)}', ");
-
-			rprt.Log($" returning false...");
+			rprt.Log($"End of method. returning false...");
 
 			rprt.EndMethod("ProjectThroughToPerimeter_dbg()");
 			return false;

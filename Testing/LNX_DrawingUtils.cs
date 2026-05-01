@@ -114,6 +114,71 @@ namespace LogansNavigationExtension
 			DrawEdgeGizmo(tri.Edges[2]);
 		}
 
+		public static void DrawStandardFocusTriGizmos(LNX_Triangle tri, float raiseAmount, string lblString, Color clr, 
+			bool drawTriGizmo = false, float triGzmoRaiseAmt = 0f, bool lblAll = false, bool drawToCtrLines = true)
+		{
+			Color oldColor = Gizmos.color;
+
+			Gizmos.color = clr;
+			Vector3 vRaise = Vector3.up * raiseAmount;
+
+			if (drawToCtrLines)
+			{
+				Gizmos.DrawLine(tri.Verts[0].V_Position, tri.V_Center + vRaise);
+				Gizmos.DrawLine(tri.Verts[1].V_Position, tri.V_Center + vRaise);
+				Gizmos.DrawLine(tri.Verts[2].V_Position, tri.V_Center + vRaise);
+			}
+
+			Handles.Label(tri.V_Center + vRaise, lblString);
+
+			if (drawTriGizmo)
+			{
+				DrawTriGizmos( tri );
+			}
+
+			if (lblAll)
+			{
+				for (int i = 0; i < 3; i++)
+				{
+					Handles.Label(tri.Verts[i].V_Position + (tri.Verts[i].v_toCenter * 0.1f), $"v{i}");
+				}
+
+				for (int i = 0; i < 3; i++)
+				{
+					Handles.Label(tri.Edges[i].MidPosition + (tri.Edges[i].v_toCenter * 0.15f), $"e{i}");
+				}
+			}
+
+			Gizmos.color = oldColor;
+		}
+
+		public void DrawStandardEdgeFocusGizmos(LNX_Edge edge, float raiseAmount, string lblString, Color clr, 
+			bool drawMidPt = false)
+		{
+			Color oldColor = Gizmos.color;
+
+			Gizmos.color = clr;
+			Vector3 vRaise = Vector3.up * raiseAmount;
+
+			Handles.Label(edge.MidPosition + (vRaise * 1.3f), lblString);
+
+			Gizmos.DrawLine(edge.StartPosition, edge.StartPosition + vRaise);
+			Handles.Label(edge.StartPosition + vRaise, "eStrt");
+
+			Gizmos.DrawLine(edge.StartPosition + vRaise, edge.EndPosition + vRaise);
+			Gizmos.DrawLine(edge.EndPosition, edge.EndPosition + vRaise);
+			Handles.Label(edge.EndPosition + vRaise, "eEnd");
+
+			if (drawMidPt)
+			{
+				Gizmos.DrawLine(edge.MidPosition + vRaise, edge.MidPosition + vRaise);
+				Gizmos.DrawLine(edge.MidPosition, edge.MidPosition + vRaise);
+				Handles.Label(edge.MidPosition + vRaise, "Mid");
+			}
+
+			Gizmos.color = oldColor;
+		}
+
 		public static void DrawEdgeGizmo(LNX_Edge edge)
 		{
 			Gizmos.DrawLine(edge.StartPosition, edge.EndPosition);

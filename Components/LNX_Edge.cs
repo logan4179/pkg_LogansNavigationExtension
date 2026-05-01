@@ -156,9 +156,9 @@ namespace LogansNavigationExtension
 			above v_Cross value. If I simply flattened that value, edge projecting didn't work at very acute angles for triangles
 			with slanted surfaces, so now I'm doing this, which works better...
 			*/
-			v_Cross_flat = Vector3.Cross 
+			v_Cross_flat = LNX_Utils.FlatVector
 			( 
-				LNX_Utils.FlatVector(V_StartToEnd, tri.v_SurfaceNormal_cached).normalized, tri.v_SurfaceNormal_cached
+				v_Cross, tri.v_SurfaceNormal_cached
 			).normalized;
 		}
 
@@ -382,13 +382,73 @@ namespace LogansNavigationExtension
 			Vector3 v_projection = LNX_Utils.FlatVector(destination - origin, v_SurfaceNormal_cached).normalized;
 			Vector3 v_originToStart = LNX_Utils.FlatVector(StartPosition - origin, v_SurfaceNormal_cached).normalized;
 			Vector3 v_originToEnd = LNX_Utils.FlatVector(EndPosition - origin).normalized;
+			//todo: for efficiency testing, try caching the values of StartPosition, EndPosition, StartPosition_flat, EndPosition_flat in local
+			//variables (and possibly others that I'm not thinking of) to see if this is better than continually calling these values, because these
+			//values are all properties with their own overhead every time they're called.
+
+			if (endPointInclusive)
+			{
+				rprt.Log("endpoint is inclusive. Checking if origin is on edge...");
+				if (v_projection == V_StartToEnd_flattened) //if the vectors are pointed in the same direction...
+				{
+					rprt.Log($"v_projection equals V_StartToEnd_flattened. Investigating further...");
+
+					if (v_originToEnd == V_StartToEnd_flattened) //this means the projection and the edge are definitely in alignment in 3d space...
+					{
+						rprt.Log("v_originToEnd equals V_StartToEnd_flattened. This means projection and edge are in 3d alignment.");
+						rprt.Log("Creating outHit on end point of edge...");
+						outHit = new LNX_NavmeshHit(EndPosition, MyCoordinate, v_SurfaceNormal_cached);
+						rprt.Log_And_End_Method($"created projection of: '{outHit}' returning true...",
+							"DoesProjectionIntersectEdge_dbg()");
+						return true;
+					}
+				}
+				else if (v_projection == V_EndToStart_flattened) //if the vectors are aligned in exactly opposite directions...
+				{
+					rprt.Log($"v_projection equals V_EndToStart_flattened. Investigating further...");
+
+					if (v_originToStart == V_EndToStart_flattened) //this means the projection and the edge are definitely in alignment in 3d space...
+					{
+						rprt.Log("v_originToStart equals V_EndToStart_flattened. This means projection and edge are in 3d alignment.");
+						rprt.Log("Creating outHit on start point of edge...");
+						outHit = new LNX_NavmeshHit(StartPosition, MyCoordinate, v_SurfaceNormal_cached);
+						rprt.Log_And_End_Method($"created projection of: '{outHit}' returning true...",
+							"DoesProjectionIntersectEdge_dbg()");
+						return true;
+					}
+				}
+				else if (DoesPositionLieOnEdge(origin)) //Note: this needs to be checked after the alignment checks
+				{
+					rprt.Log("origin is on edge. Projecting...");
+					outHit = new LNX_NavmeshHit(
+						StartPosition +
+						(V_StartToEnd * LNX_Utils.CalculateTriangleEdgeLength(
+							90f,
+							180f - 90f - Vector3.Angle(V_StartToEnd_flattened, V_StartToEnd),
+							Vector3.Distance(StartPosition_flat, LNX_Utils.FlatVector(origin, v_SurfaceNormal_cached))
+							)
+						),
+						MyCoordinate, v_SurfaceNormal_cached
+					);
+					rprt.Log_And_End_Method($"created projection of: '{outHit}' returning true...",
+						"DoesProjectionIntersectEdge_dbg()");
+					return true;
+				}
+				else
+				{
+					rprt.Log($"None of the endpointinclusive checks worked. Continuing...");
+				}
+			}
+
 
 			#region ALIGNMENT SHORT-CIRCUIT TEST-------------------------------------------------
+			/*
 			//The following tests if the origin and projection direction allow for the possibilty of edge intersection...
-			Vector3 v_edgeMid_toOriginPt = LNX_Utils.FlatVector(origin - MidPosition).normalized;
+			Vector3 v_edgeMid_toOriginPt = LNX_Utils.FlatVector(origin - MidPosition_flat).normalized;
 			float dot_vCross_with_edgeMidPtToOriginPt = Vector3.Dot(v_Cross_flat, v_edgeMid_toOriginPt);
 
-			rprt.Log("Trying alignment short-circuit test...");
+			rprt.Log($"edge v_cross_flat: '{v_Cross_flat}', vcross: '{v_Cross}'");
+			rprt.Log($"Trying alignment short-circuit test using dot prod: '{dot_vCross_with_edgeMidPtToOriginPt}'...");
 			if (dot_vCross_with_edgeMidPtToOriginPt > 0f) //origin is towards "inside" direction of edge...
 			{
 				rprt.Log("origin is towards 'inside' direction of triangle...");
@@ -416,6 +476,7 @@ namespace LogansNavigationExtension
 					return false; //short-circuit
 				}
 			}
+			*/
 			#endregion
 
 			#region ANGULAR SHORT-CIRCUIT TEST-------------------------------------------------------
@@ -445,40 +506,6 @@ namespace LogansNavigationExtension
 			#endregion
 
 			rprt.Log("No short-circuits. Continuing...");
-
-			if (endPointInclusive)
-			{
-				rprt.Log("endpoint is inclusive. Checking if origin is on edge...");
-				if (DoesPositionLieOnEdge(origin))
-				{
-					rprt.Log("origin is on edge. Projecting...");
-					outHit = new LNX_NavmeshHit(
-						StartPosition +
-						(V_StartToEnd * LNX_Utils.CalculateTriangleEdgeLength(
-							90f,
-							180f - 90f - Vector3.Angle(V_StartToEnd_flattened, V_StartToEnd),
-							Vector3.Distance(StartPosition_flat, LNX_Utils.FlatVector(origin, v_SurfaceNormal_cached))
-							)
-						),
-						MyCoordinate, v_SurfaceNormal_cached
-					);
-					rprt.Log_And_End_Method($"created projection of: '{outHit}' returning true...",
-						"DoesProjectionIntersectEdge_dbg()"); 
-					return true;
-				}
-				else if ( v_projection == V_StartToEnd_flattened || v_projection == V_EndToStart_flattened )
-				{
-					rprt.Log( $"v_projection is same direction as edge. Investigating if and where to put projection..." );
-					if( v_originToStart == V_StartToEnd_flattened &&  )
-					{
-
-					}
-				}
-				else
-				{
-					rprt.Log($"origin is NOT on edge. Continuing...");
-				}
-			}
 
 			#region CALCULATE OUT HIT -----------------------------------------------------------
 			outHit = new LNX_NavmeshHit(
