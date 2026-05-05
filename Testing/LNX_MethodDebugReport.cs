@@ -11,16 +11,18 @@ namespace LogansNavigationExtension
         [SerializeField, TextArea(1,30)] private string rprtString;
         public string ReportString => rprtString;
 
-        [SerializeField, HideInInspector] private int methodLvl = 0;
+        private int methodLvl = 0;
         public int MethodLvl => methodLvl;
 
-        [SerializeField, HideInInspector] private string tabTxt = "";
+        private string tabTxt = "";
         //private string tabTxt_inMethod => tabTxt + "\t";
 
         private string currentMethodName = string.Empty;
         public string CurrentMethodName => currentMethodName;
 
         private bool flag_limitReached = false;
+
+        public int MethodLevelVerbosityLimit = -1;
 
         public void Clear()
         {
@@ -29,10 +31,11 @@ namespace LogansNavigationExtension
 			rprtString = string.Empty;
 		}
 
-		public void StartReport( string rprtName = "" )
+		public void StartReport( string rprtName = "", int mthdLvlLmt = -1 )
         {
             methodLvl = -1;
             tabTxt = string.Empty;
+            MethodLevelVerbosityLimit = mthdLvlLmt;
 
             //rprtString = $"{rprtName}\n" +
             //$"{{\n";
@@ -52,11 +55,21 @@ namespace LogansNavigationExtension
                 $"{tabTxt}{{\n";
 
             tabTxt += "\t";
+
+            if( MethodLevelVerbosityLimit > -1 && methodLvl > MethodLevelVerbosityLimit )
+            {
+                rprtString += $"{tabTxt}...\n";
+            }
         }
 
         public void Log( string s )
         {
-            if( rprtString.Length < 50000)
+			if (MethodLevelVerbosityLimit > -1 && methodLvl > MethodLevelVerbosityLimit)
+			{
+				return;
+			}
+
+			if ( rprtString.Length < 50000)
             {
                 rprtString += $"{tabTxt}{s}\n";
             }
@@ -70,7 +83,12 @@ namespace LogansNavigationExtension
 
         public void Log(params string[] logs)
         {
-            for (int i = 0; i < logs.Length; i++)
+			if (MethodLevelVerbosityLimit > -1 && methodLvl > MethodLevelVerbosityLimit)
+			{
+				return;
+			}
+
+			for (int i = 0; i < logs.Length; i++)
             {
                 Log(logs[i]);
             }
@@ -84,6 +102,10 @@ namespace LogansNavigationExtension
 
         public void Log_InnrTabbed( string s, int extraTabs )
         {
+			if (MethodLevelVerbosityLimit > -1 && methodLvl > MethodLevelVerbosityLimit)
+			{
+				return;
+			}
 			/*
             string tempTabTxt = tabTxt;
             for ( int i = 0; i < extraTabs; i++ )
@@ -95,7 +117,7 @@ namespace LogansNavigationExtension
 
             */
 
-            //trying this out instead. Make sure it works...
+			//trying this out instead. Make sure it works...
 			string tempTabTxt = "";
 			for (int i = 0; i < extraTabs; i++)
 			{
@@ -107,6 +129,11 @@ namespace LogansNavigationExtension
 
 		public void Log_Untabbed(string s)
 		{
+			if (MethodLevelVerbosityLimit > -1 && methodLvl > MethodLevelVerbosityLimit)
+			{
+				return;
+			}
+
 			rprtString += $"{s}\n";
 		}
 

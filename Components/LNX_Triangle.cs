@@ -762,10 +762,21 @@ namespace LogansNavigationExtension
 
 					if (Vector3.Dot(v_projection_flat, Edges[i].v_Cross_flat) < 0f)
 					{
-						rprt.Log_And_End_Method($"Projection DOES intesect this edge on an endpoint, and pointed outside the triangle" +
-							$". Returning true...",
-							"ProjectThroughToPerimeter_dbg");
-						perimHit = bestEdgeIntersectHit;
+						rprt.Log($"Projection DOES intesect this edge on an endpoint, and pointed outside the triangle. " +
+							$"This means no further projection is needed...");
+
+						if ( returnHitOnAdjacenttTriangle & !Edges[i].AmTerminal )
+						{
+							rprt.Log($"switching hit to adjacent triangle as instructed by returnHitOnAdjacenttTriangle parameter...");
+							perimHit = new LNX_NavmeshHit( bestEdgeIntersectHit.Position, Edges[i].SharedEdgeCoordinate, v_SurfaceNormal_cached );
+						}
+						else
+						{
+							perimHit = bestEdgeIntersectHit;
+						}
+
+						rprt.Log_And_End_Method( $"finally returning hit: '{perimHit}'...", 
+							"ProjectThroughToPerimeter_dbg" );
 						return true;
 					}
 					else

@@ -87,7 +87,7 @@ namespace LogansNavigationExtension
 				DBG_Operation = $"{DateTime.Now}\n" +
 					$"using start '{startTrans.position}', and end: '{endTrans.position}'...\n";
 
-				mthdDbg_Report.StartReport("TDG_Raycast");
+				mthdDbg_Report.StartReport("TDG_Raycast", 3);
 				//RaycastResult = _navmesh.Raycast( startTrans.position, endTrans.position, 3f, out ResultPath );
 				RaycastResult = _navmesh.Raycast_dbg(startTrans.position, endTrans.position, 3f, 
 					out ResultPath, ref mthdDbg_Report);

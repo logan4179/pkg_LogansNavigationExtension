@@ -1305,6 +1305,7 @@ namespace LogansNavigationExtension
 			rprt.StartMethod("While(amStillProjecting)...");
 			while ( amStillProjecting )
 			{
+				rprt.Log("=========================================================================");
 				rprt.Log($"while{runningWhileIterations}...");
 				LNX_NavmeshHit edgePerimHit = LNX_NavmeshHit.None;
 
@@ -1319,8 +1320,12 @@ namespace LogansNavigationExtension
 					return true;
 				}
 
-				rprt.Log($"LNX_Triangle.ProjectThroughToPerimeter() WAS succesful. Adding the perimeter hit to outPath...");
+				rprt.Log($"LNX_Triangle.ProjectThroughToPerimeter() WAS succesful. Adding the perimeter hit: '{edgePerimHit}' to outPath...");
 
+				if ( runningWhileIterations == 0 && edgePerimHit == outPath.StartHit ) //need this check, otherwise a raycast starting on a vert can create an unnecessary path point that is the same as the alread-logged starthit
+				{
+					
+				}
 				outPath.AddPoint( edgePerimHit );
 
 				LNX_Edge hitEdge = Triangles[edgePerimHit.TriIndex].Edges[edgePerimHit.ComponentIndex];
@@ -1348,12 +1353,15 @@ namespace LogansNavigationExtension
 					)
 				)
 				{
+					rprt.Log($"found that hitEdge was on same triangle as endHIt.", 
+						"This means the while-loop should end here. Adding endhit to path...");
+
 					if (endHit.Position != edgePerimHit.Position) //In case the end position is actually on the perimeter of the destination tri...
 					{
 						outPath.AddPoint(endHit);
 					}
+					rprt.Log($"Now path has: '{outPath.PathPoints.Count}' points. Returning false...");
 
-					rprt.Log($"hitEdge was on same triangle as endHIt. Returning false...");
 					rprt.EndMethod("while(amstillprojecting)");
 					rprt.EndMethod("Raycast_dbg()");
 					return false;
@@ -1807,8 +1815,8 @@ namespace LogansNavigationExtension
 				string triString = $"for tri{i_tris}";
 				if (i_tris == hit.TriIndex)
 				{
-					rprt.Log($"same tri index. Continuing...");
 					rprt.Log( $"{triString}..." );
+					rprt.Log($"same tri index. Continuing...");
 					continue;
 				}
 
@@ -1929,7 +1937,8 @@ namespace LogansNavigationExtension
 			else
 			{
 				rprt.Log($"relationships collection NOT valid. Now passing off to more atomic version to manually calculate visible verts...");
-				outPaths = GetVisibleVertsFromPoint_dbg(new LNX_NavmeshHit(vert.V_Position, vert.TriangleIndex, -1), ref rprt, includeFringeVerts); // <<<<<<<<<<
+				outPaths = GetVisibleVertsFromPoint_dbg(new LNX_NavmeshHit(vert.V_Position, vert.TriangleIndex, -1), ref rprt, includeFringeVerts, 
+					new List<LNX_ComponentCoordinate>() { vert.MyCoordinate }); // <<<<<<<<<<
 			}
 
 			rprt.EndMethod("GetVisibleVertsFromPoint_dbg");

@@ -377,7 +377,7 @@ namespace LogansNavigationExtension
 			bool endPointInclusive = true
 		)
 		{
-			rprt.StartMethod($"DoesProjectionIntersectEdge_dbg(start: '{origin}', dest: '{destination}', endPtInclsv: '{endPointInclusive}')");
+			rprt.StartMethod($"{this}.DoesProjectionIntersectEdge_dbg(start: '{origin}', dest: '{destination}', endPtInclsv: '{endPointInclusive}')");
 			Vector3 v_projection = LNX_Utils.FlatVector(destination - origin, v_SurfaceNormal_cached).normalized;
 			Vector3 v_originToStart = LNX_Utils.FlatVector(StartPosition - origin, v_SurfaceNormal_cached).normalized;
 			Vector3 v_originToEnd = LNX_Utils.FlatVector(EndPosition - origin).normalized;
@@ -387,7 +387,7 @@ namespace LogansNavigationExtension
 
 			if (endPointInclusive)
 			{
-				rprt.Log("endpoint is inclusive. Checking if origin is on edge...");
+				rprt.Log("endpoints are inclusive. Checking if origin is on edge...");
 				if (v_projection == V_StartToEnd_flattened) //if the projection and edge are pointed in the same direction...
 				{
 					rprt.Log($"v_projection equals V_StartToEnd_flattened. Investigating further...");
