@@ -11,7 +11,7 @@ namespace LogansNavigationExtension
 		public string DisplayName = "";
 
 		[Header("SAMPLING")]
-        public LNX_Component Mode;
+        [Tooltip("Dictates what gets grabbed in grabbing operations")] public LNX_Component Mode;
 		public bool ConsiderClosestOffPerimeter;
 
 		[Header("REFERENCE")]
@@ -23,14 +23,17 @@ namespace LogansNavigationExtension
         [Range(0.05f, 2f), Tooltip("How easy it is to select a component")] public float Forgiveness = 0.25f;
 
 		[Header("DEBUG")]
+		[SerializeField] bool drawLabel;
+
 		public Vector3 V_labelOffset;
 		public Transform Trans_drawLineTo;
 		[SerializeField] private bool recalculatedLastFrame = false;
 		public bool RecalculatedLastFrame => recalculatedLastFrame;
+		[SerializeField] bool drawComponentCoordinateInsteadOfLabel = false;
 
 		[Header("OTHER")]
 		public LNX_NavmeshHit CurrentHit;
-		public LNX_ComponentCoordinate CurrentCoordinate;
+		public LNX_ComponentCoordinate CurrentCoordinate; 
 
 		public LNX_Triangle CurrentlyGrabbedTriangle
 		{
@@ -85,50 +88,43 @@ namespace LogansNavigationExtension
 
 		public LNX_ComponentCoordinate GrabComponent()
         {
-
-            if (Mode == LNX_Component.None)
-            {
-                Debug.LogError($"LNX ERROR! Tried to capture a component, but component mode was set to None...");
-                return LNX_ComponentCoordinate.None;
-            }
-
 			CurrentHit = LNX_NavmeshHit.None;
-            if( _navmesh.SamplePosition(transform.position, out CurrentHit, 2f, ConsiderClosestOffPerimeter) )
-            {
-			    if (Mode == LNX_Component.Vertex)
-                {
-					CurrentCoordinate = _navmesh.Triangles[CurrentHit.TriIndex].GetClosestVertToPosition(transform.position).MyCoordinate;
-                }
-			    else if ( Mode == LNX_Component.Edge )
-			    {
-					float bestDist = Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriIndex, 0).MidPosition);
-					int bestEdge = 0;
 
-					if (Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriIndex, 1).MidPosition) < bestDist)
-					{
-						bestDist = Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriIndex, 1).MidPosition);
-						bestEdge = 1;
-					}
-
-					if (Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriIndex, 2).MidPosition) < bestDist)
-					{
-						bestDist = Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriIndex, 2).MidPosition);
-						bestEdge = 2;
-					}
-
-					CurrentCoordinate = _navmesh.Triangles[CurrentHit.TriIndex].Edges[bestEdge].MyCoordinate;
-					Debug.Log($"Sample succesful. Grabbed edge '{CurrentCoordinate}'...");
-				}
-				else if( Mode == LNX_Component.Triangle )
-				{
-					CurrentCoordinate = new LNX_ComponentCoordinate(CurrentHit.TriIndex, -1 );
-					Debug.Log($"Sample succesful. Grabbed tri '{CurrentCoordinate}'...");
-
-				}
-			}
-			else
+			if ( !_navmesh.SamplePosition(transform.position, out CurrentHit, 2f, ConsiderClosestOffPerimeter))
 			{
 				Debug.LogWarning($"LNX WARNING! GrabComponent couldn't sample navmesh at current grabber position...");
+				return LNX_ComponentCoordinate.None;
+			}
+
+			if (Mode == LNX_Component.Vertex)
+            {
+				CurrentCoordinate = _navmesh.Triangles[CurrentHit.TriIndex].GetClosestVertToPosition(transform.position).MyCoordinate;
+            }
+			else if ( Mode == LNX_Component.Edge )
+			{
+				float bestDist = Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriIndex, 0).MidPosition);
+				int bestEdge = 0;
+
+				if (Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriIndex, 1).MidPosition) < bestDist)
+				{
+					bestDist = Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriIndex, 1).MidPosition);
+					bestEdge = 1;
+				}
+
+				if (Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriIndex, 2).MidPosition) < bestDist)
+				{
+					bestDist = Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriIndex, 2).MidPosition);
+					bestEdge = 2;
+				}
+
+				CurrentCoordinate = _navmesh.Triangles[CurrentHit.TriIndex].Edges[bestEdge].MyCoordinate;
+				//Debug.Log($"Sample succesful. Grabbed edge '{CurrentCoordinate}'...");
+			}
+			else if( Mode == LNX_Component.Triangle )
+			{
+				CurrentCoordinate = new LNX_ComponentCoordinate(CurrentHit.TriIndex, -1 );
+				//Debug.Log($"Sample succesful. Grabbed tri '{CurrentCoordinate}'...");
+
 			}
 
 			return CurrentCoordinate;
@@ -168,10 +164,51 @@ namespace LogansNavigationExtension
 			}
 		}
 
+		[ContextMenu("z call SayCurrentSampledTri()")]
+		public void SayCurrentSampledTri()
+		{
+			if( CurrentlyGrabbedTriangle == null )
+			{
+				Debug.Log($"CurrentlyGrabbedTriangle null...");
+			}
+			else
+			{
+				//CurrentlyGrabbedTriangle.SayCurrentInfo(_navmesh);
+				//Debug.Log(CurrentlyGrabbedTriangle.GetAnomolyString(_navmesh));
+				CurrentlyGrabbedTriangle.GetRelationalString();
+
+			}
+		}
+
 		public void DrawMyGizmos(float radius)
 		{
 			Gizmos.DrawSphere( transform.position, radius );
-			Handles.Label( transform.position + V_labelOffset, DisplayName );
+			string lbl = DisplayName;
+
+			if( drawLabel )
+			{ 
+				if( drawComponentCoordinateInsteadOfLabel )
+				{
+					if ( Mode == LNX_Component.Vertex && CurrentlyGrabbedVert != null ) 
+					{
+						Handles.Label(transform.position + V_labelOffset, CurrentlyGrabbedVert.ToString() );
+					}
+					else if ( Mode == LNX_Component.Edge && CurrentlyGrabbedEdge != null )
+					{
+						Handles.Label(transform.position + V_labelOffset, CurrentlyGrabbedEdge.ToString());
+					}
+					else if (Mode == LNX_Component.Triangle && CurrentlyGrabbedTriangle != null)
+					{
+						Handles.Label(transform.position + V_labelOffset, CurrentlyGrabbedTriangle.ToString());
+					}
+				}
+				else
+				{
+					Handles.Label(transform.position + V_labelOffset, string.IsNullOrEmpty(lbl) ? DisplayName : lbl);
+				}
+
+				Gizmos.DrawLine( transform.position, transform.position + V_labelOffset );
+			}
 
 			if (Trans_drawLineTo != null)
 			{
@@ -191,7 +228,7 @@ namespace LogansNavigationExtension
 			if( transform.position != v_lastPos )
 			{
 				recalculatedLastFrame = true;
-				if( AutomaticallyGrab && Mode != LNX_Component.None )
+				if( AutomaticallyGrab )
 				{
 					GrabComponent();
 				}

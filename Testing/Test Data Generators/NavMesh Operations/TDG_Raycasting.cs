@@ -1,8 +1,10 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace LogansNavigationExtension
 {
@@ -69,6 +71,8 @@ namespace LogansNavigationExtension
 
 		protected override void OnDrawGizmos()
 		{
+			DBG_Method = "";
+
 			if( AmInUnitTest || Selection.activeObject != gameObject && Selection.activeObject != startTrans.gameObject )
 			{
 				return;
@@ -81,14 +85,17 @@ namespace LogansNavigationExtension
 
 			if ( startTrans.position != CachedLastStartPos || endTrans.position != CachedLastEndPos ) //"IF something's changed..." this is to make it a little snappier in the editor...
 			{
-				DBG_Operation = $"using start '{startTrans.position}', and end: '{endTrans.position}'...\n";
+				DBG_Operation = $"{DateTime.Now}\n" +
+					$"using start '{startTrans.position}', and end: '{endTrans.position}'...\n";
 
-
+				mthdDbg_Report.StartReport("TDG_Raycast", 3);
 				//RaycastResult = _navmesh.Raycast( startTrans.position, endTrans.position, 3f, out ResultPath );
-				RaycastResult = _navmesh.Raycast_dbg(startTrans.position, endTrans.position, 3f, out ResultPath, DBG_Method);
+				RaycastResult = _navmesh.Raycast_dbg(startTrans.position, endTrans.position, 3f, 
+					out ResultPath, ref mthdDbg_Report);
+				mthdDbg_Report.EndReport();
 
-
-				DBG_Operation += $"result: '{RaycastResult}'\n";
+				DBG_Operation += $"result: '{RaycastResult}'\n" +
+					$"Path: '{ResultPath.PointCount}'\n";
 			}
 
 			if( !RaycastResult )
@@ -149,7 +156,18 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call DoEet")]
 		public void DoEet()
 		{
+			string s = $"{_navmesh.Triangles[22].Verts[1].SharedVertexCoordinates.Length}\n" +
+				$"";
 
+			if( _navmesh.Triangles[22].Verts[1].SharedVertexCoordinates.Length > 0 )
+			{
+				for( int i = 0; i < _navmesh.Triangles[22].Verts[1].SharedVertexCoordinates.Length; i++ )
+				{
+					s += $"{_navmesh.Triangles[22].Verts[1].SharedVertexCoordinates[i]}\n";
+				}
+			}
+
+			Debug.Log(s);
 		}
 		#endregion
 

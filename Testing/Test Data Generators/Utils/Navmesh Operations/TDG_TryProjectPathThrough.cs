@@ -25,7 +25,6 @@ namespace LogansNavigationExtension
 
 		[Header("DEBUG")]
 		[Range(0f,0.15f)] public float triRaise = 0.1f;
-		[TextArea(1,15)] public string DBG_Method;
 
 		protected override void OnDrawGizmos()
 		{
@@ -56,7 +55,7 @@ namespace LogansNavigationExtension
 
 			DBG_Operation += $"Commencing operation...\n";
 
-			CurrentResult = LNX_Utils.TryProjectPathThrough( _navmesh,	StartVert, EndVert, out RsltPath, ref DBG_Method );
+			CurrentResult = LNX_Utils.TryProjectThrough( _navmesh,	StartVert, EndVert, out RsltPath, ref DBG_Method );
 
 			DBG_Operation += $"Operation returned: '{CurrentResult}'\n";
 

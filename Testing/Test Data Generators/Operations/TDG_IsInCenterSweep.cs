@@ -16,24 +16,16 @@ namespace LogansNavigationExtension
 		public bool CurrentRslt_vert1;
 		public bool CurrentRslt_vert2;
 
-		[Header("DATA")]
-		public List<Vector3> CapturedStartPositions = new List<Vector3>();
-		public List<Vector3> CapturedTriCenterPositions = new List<Vector3>();
+		//[Header("DATA")]
 
-        public List<bool> Results_Vert0 = new List<bool>();
-		public List<Vector3> CapturedVertPositions_vert0 = new List<Vector3>();
-
-		public List<bool> Results_Vert1 = new List<bool>();
-		public List<Vector3> CapturedVertPositions_vert1 = new List<Vector3>();
-
-		public List<bool> Results_Vert2 = new List<bool>();
-		public List<Vector3> CapturedVertPositions_vert2 = new List<Vector3>();
 
 		//[Header("DEBUG")]
 
 		[ContextMenu("z call CaptureDataPoint()")]
 		public void CaptureDataPoint()
 		{
+			//todo: implement with new data structure
+			/*
 			CapturedStartPositions.Add(transform.position);
 			CapturedTriCenterPositions.Add( CurrentTriangle.V_Center );
 
@@ -52,6 +44,7 @@ namespace LogansNavigationExtension
 
 
 			Debug.Log( $"'{CapturedStartPositions[CapturedStartPositions.Count - 1]}'" );
+			*/
 		}
 
 		#region HELPERS ---------------------------------------------------
@@ -83,28 +76,12 @@ namespace LogansNavigationExtension
 			Debug.Log( CurrentTriangle.GetAnomolyString(_navmesh) );
 		}
 
-		[ContextMenu("z call DoEet()")]
-		public void DoEet()
-		{
-			CapturedVertPositions_vert0 = new List<Vector3>();
-			CapturedVertPositions_vert1 = new List<Vector3>();
-			CapturedVertPositions_vert2 = new List<Vector3>();
 
-			for ( int i = 0; i < CapturedStartPositions.Count; i++ )
-			{
-				LNX_Triangle tri = _navmesh.GetTriangle( CapturedTriCenterPositions[i] );
-
-				CapturedVertPositions_vert0.Add(tri.Verts[0].V_Position);
-				CapturedVertPositions_vert1.Add(tri.Verts[1].V_Position);
-				CapturedVertPositions_vert2.Add(tri.Verts[2].V_Position);
-
-			}
-		}
 
 		[ContextMenu("z call SendToDataPoint")]
 		public void SendToDataPoint()
 		{
-			transform.position = CapturedStartPositions[Index_GoToProblem];
+			//transform.position = CapturedStartPositions[Index_GoToProblem];
 		}
 		#endregion
 
@@ -143,24 +120,12 @@ namespace LogansNavigationExtension
 			CurrentRslt_vert2 = false;
 
 			DBG_Operation += $"Commencing operation...\n";
-			CurrentRslt_vert0 = CurrentTriangle.Verts[0].IsInCenterSweep( transform.position, _navmesh.GetSurfaceNormalVector() );
-			CurrentRslt_vert1 = CurrentTriangle.Verts[1].IsInCenterSweep(transform.position, _navmesh.GetSurfaceNormalVector());
-			CurrentRslt_vert2 = CurrentTriangle.Verts[2].IsInCenterSweep(transform.position, _navmesh.GetSurfaceNormalVector());
 
-			DBG_Operation += $"Operation complete. \n" +
+			CurrentRslt_vert0 = CurrentTriangle.Verts[0].ProjectionIsInCenterSweep( transform.position - CurrentTriangle.Verts[0].V_Position );
+			CurrentRslt_vert1 = CurrentTriangle.Verts[1].ProjectionIsInCenterSweep(transform.position - CurrentTriangle.Verts[1].V_Position);
+			CurrentRslt_vert2 = CurrentTriangle.Verts[2].ProjectionIsInCenterSweep(transform.position - CurrentTriangle.Verts[2].V_Position);
 
-				$"rslt (vert0): '{CurrentRslt_vert0}'\n" +
-				$"rprt------\n" +
-				$"{CurrentTriangle.Verts[0].DBG_IsInCenterSweep}\n\n" +
-
-				$"rslt (vert1): '{CurrentRslt_vert1}'\n" +
-				$"rprt------\n" +
-				$"{CurrentTriangle.Verts[1].DBG_IsInCenterSweep}\n\n" +
-
-				$"rslt (vert2): '{CurrentRslt_vert2}'\n" +
-				$"rprt------\n" +
-				$"{CurrentTriangle.Verts[2].DBG_IsInCenterSweep}\n\n" +
-				$"";
+			DBG_Operation += $"Operation complete.";
 
 			Gizmos.DrawSphere( transform.position, Radius_ObjectDebugSpheres );
 

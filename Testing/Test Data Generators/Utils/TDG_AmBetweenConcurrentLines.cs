@@ -120,7 +120,7 @@ namespace LogansNavigationExtension
 			CurrentResult = LNX_Utils.AmBetweenConcurrentLines(
 				trans_posParameter.position, 
 				trans_LIneAStart.position, trans_LineAEnd.position,
-				trans_LIneBStart.position, trans_LineBEnd.position, _navmesh.GetSurfaceNormalVector(), ref DBG_Method
+				trans_LIneBStart.position, trans_LineBEnd.position, _navmesh.GetSurfaceProjectionVector(), ref DBG_Method
 			);
 
 			if( CurrentResult )

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -8,7 +9,12 @@ namespace LogansNavigationExtension
 {
     public class TDG_IsInShapeProject : TDG_base
     {
-		public LNX_Triangle CurrentTriangle;
+		public bool UseDebugVersion = true;
+
+		public LNX_ComponentGrabber _grabber_triangle;
+		public LNX_ComponentGrabber _grabber_hitPosition;
+
+		public LNX_Triangle CurrentTriangle => _grabber_triangle.CurrentlyGrabbedTriangle;
 		public Vector3 CurrentProjectedPos;
 		public bool CurrentResult;
 
@@ -17,6 +23,8 @@ namespace LogansNavigationExtension
 		public List<bool> CapturedResults = new List<bool>();
 		public List<Vector3> CapturedHitPositions = new List<Vector3>();
 		public List<Vector3> CapturedTriCenterPositions = new List<Vector3>();
+
+		
 
 		[ContextMenu("z call CaptureDataPoint()")]
 		public void CaptureDataPoint()
@@ -49,72 +57,83 @@ namespace LogansNavigationExtension
 
 		protected override void OnDrawGizmos()
 		{
-			DBG_Operation = "";
 
-			if ( Selection.activeGameObject != gameObject )
+			if ( Selection.activeGameObject != gameObject &&
+				Selection.activeGameObject != _grabber_triangle.gameObject && 
+				Selection.activeGameObject != _grabber_hitPosition.gameObject
+			)
 			{
-				DBG_Operation += $"OnDrawGizmos short-circuit. Something wrong with selection...";
+				DBG_Operation = $"OnDrawGizmos short-circuit. Something wrong with selection...";
 				return;
 			}
 
 			if ( _navmesh == null )
 			{
-				DBG_Operation += $"OnDrawGizmos short-circuit. Need to assign a navmesh...";
+				DBG_Operation = $"OnDrawGizmos short-circuit. Need to assign a navmesh...";
 				Debug.LogWarning($"Need to sample a navmesh...");
 				return;
 			}
 
 			if (CurrentTriangle == null)
 			{
-				DBG_Operation += $"OnDrawGizmos short-circuit. Need to sample a focus triangle...";
+				DBG_Operation = $"OnDrawGizmos short-circuit. Need to sample a focus triangle...";
 				Debug.LogWarning($"Need to sample a focus triangle...");
 				return;
 			}
 
 			base.OnDrawGizmos();
 
-			DBG_Operation += $"Commencing operation using triangle '{CurrentTriangle.Index_inCollection}'...\n";
+			if( _grabber_hitPosition.RecalculatedLastFrame )
+			{
+				DBG_Operation = $"{DateTime.Now}\n" +
+					$"Commencing operation using hitPos: '{_grabber_hitPosition.CurrentHit}', \n" +
+					$"and triangle '{CurrentTriangle.Index_inCollection}'...\n";
 
-			DrawStandardFocusTriGizmos(CurrentTriangle, 1f, $"tri{CurrentTriangle.Index_inCollection}", Color.magenta);
+				CurrentProjectedPos = Vector3.zero;
+				CurrentResult = false;
 
-			CurrentProjectedPos = Vector3.zero;
-			CurrentResult = false;
+				if ( UseDebugVersion )
+				{
+					mthdDbg_Report.StartReport();
+					CurrentResult = CurrentTriangle.IsInShapeProject_dbg(
+						_grabber_hitPosition.transform.position, out CurrentProjectedPos, ref mthdDbg_Report
+					);
+					mthdDbg_Report.EndReport();
+				}
+				else
+				{
+					CurrentResult = CurrentTriangle.IsInShapeProject(
+						_grabber_hitPosition.transform.position, out CurrentProjectedPos
+					);
+				}
 
-			CurrentResult = CurrentTriangle.IsInShapeProject( transform.position, out CurrentProjectedPos );
+
+				DBG_Operation += $"Operation complete. rslt: '{CurrentResult}'.";
+			}
+
+			LNX_DrawingUtils.DrawStandardFocusTriGizmos(
+				CurrentTriangle, 1f, $"tri{CurrentTriangle.Index_inCollection}", Color.magenta
+			);
 
 			Gizmos.color = CurrentResult ? Color.green : Color.red;
-			Gizmos.DrawSphere( transform.position, Radius_ObjectDebugSpheres );
+			Gizmos.DrawSphere(_grabber_hitPosition.transform.position, Radius_ObjectDebugSpheres );
 
 			if ( CurrentResult )
 			{
 				Gizmos.DrawCube( CurrentProjectedPos, Vector3.one * Radius_ProjectPos );
-				Gizmos.DrawLine( transform.position, CurrentProjectedPos );
+				Gizmos.DrawLine( _grabber_hitPosition.transform.position, CurrentProjectedPos );
 			}
 
 
-			DBG_Operation += $"Operation complete. rslt: '{CurrentResult}'. \n\n" +
-				$"triangle report----------\n" +
-				$"{CurrentTriangle.DBG_IsInShapeProject}\n";
+
 		}
 
 
 		#region HELPERS ---------------------------------------------------
-		[ContextMenu("z call SampleFocusTri()")]
-		public void SampleFocusTri()
+		[ContextMenu("z call DoEet()")]
+		public void DoEet()
 		{
-			Debug.Log($"{nameof(SampleFocusTri)}()...");
-
-			LNX_NavmeshHit hit = LNX_NavmeshHit.None;
-
-			if (_navmesh.SamplePosition(transform.position, out hit, 2f, false))
-			{
-				CurrentTriangle = _navmesh.Triangles[hit.TriIndex];
-				Debug.Log($"Succesful sample! Set new triangle to: '{hit.TriIndex}'");
-			}
-			else
-			{
-				Debug.Log($"sample unsuccesful...");
-			}
+			_grabber_hitPosition.transform.position = CurrentTriangle.Edges[0].MidPosition;
 		}
 		#endregion
 

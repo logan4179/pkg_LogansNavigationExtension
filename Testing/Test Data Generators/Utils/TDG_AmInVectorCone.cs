@@ -80,7 +80,7 @@ namespace LogansNavigationExtension
 				LNX_Utils.FlatVector(Trans_pos.position - Trans_Crnr.position).normalized,
 				LNX_Utils.FlatVector(Trans_LegA.position - Trans_Crnr.position).normalized,
 				LNX_Utils.FlatVector(Trans_LegB.position - Trans_Crnr.position).normalized,
-				Vector3.up, ref DBG_Method,
+				Vector3.up,
 				true
 			);
 

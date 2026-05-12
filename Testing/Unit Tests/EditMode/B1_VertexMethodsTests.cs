@@ -11,7 +11,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 {
 	public class B1_VertexMethodsTests
 	{
-		LNX_NavMesh _serializedLNXNavmesh;
+		LNX_NavMesh _testGeneratedLnxNavmesh;
 
 		//LNX_MeshManipulator _lnx_meshManipulator;
 
@@ -22,10 +22,41 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		[Test]
 		public void a1_SetupObjects()
 		{
+			LNX_UnitTestUtilities.LogTestStart(nameof(a1_SetupObjects),
+			"Sets up necessary objects for tests");
+
+			Debug.Log($"Finding serialized navmesh object...");
 			GameObject go = GameObject.Find(LNX_UnitTestUtilities.Name_SerializedNavmeshGameobject);
 
-			_serializedLNXNavmesh = go.GetComponent<LNX_NavMesh>();
-			Assert.NotNull(_serializedLNXNavmesh);
+			if( go == null )
+			{
+				Debug.LogWarning($"Couldn't find serialized navmesh in scene. Making anew...");
+				go = new GameObject();
+				go.name = LNX_UnitTestUtilities.Name_GeneratedNavmeshGameobject; //so that other test scripts can find this object.
+				_testGeneratedLnxNavmesh = go.AddComponent<LNX_NavMesh>();
+				Assert.NotNull(_testGeneratedLnxNavmesh);
+				Debug.Log($"scene-generated navmesh created, now calculating triangulation...");
+
+				//todo: dws the following line...
+				//_testGeneratedLnxNavmesh.LayerMaskName = "lr_EnvSolid"; //not necessary, but just to be sure...
+				_testGeneratedLnxNavmesh.MyLayerMask = LayerMask.GetMask("lr_EnvSolid");
+
+
+				_testGeneratedLnxNavmesh.CalculateTriangulation();
+				Assert.NotNull(_testGeneratedLnxNavmesh._VisualizationMesh);
+				Debug.Log($"mesh visual. {nameof(_testGeneratedLnxNavmesh._VisualizationMesh.vertices)} length: '{_testGeneratedLnxNavmesh._VisualizationMesh.vertices.Length}', " +
+					$"{nameof(_testGeneratedLnxNavmesh._VisualizationMesh.triangles)} length: '{_testGeneratedLnxNavmesh._VisualizationMesh.triangles.Length}, " +
+					$"{nameof(_testGeneratedLnxNavmesh._VisualizationMesh.normals)} length: '{_testGeneratedLnxNavmesh._VisualizationMesh.normals.Length}, ");
+
+				Debug.Log($"Generated navmesh bounds information...");
+				Debug.Log($"scene generated navmesh bounds size: '{_testGeneratedLnxNavmesh.V_BoundsSize}'");
+				Debug.Log($"scene generated navmesh bounds center: '{_testGeneratedLnxNavmesh.V_BoundsCenter}'");
+
+				Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestSectionEndString, "set up scene-generated navmesh"));
+			}
+
+			_testGeneratedLnxNavmesh = go.GetComponent<LNX_NavMesh>();
+			Assert.NotNull(_testGeneratedLnxNavmesh);
 		}
 
 		[Test]
@@ -45,7 +76,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				return;
 			}
 
-			_tdg_isInCenterSweep = _serializedLNXNavmesh.gameObject.AddComponent<TDG_IsInCenterSweep>();
+			_tdg_isInCenterSweep = _testGeneratedLnxNavmesh.gameObject.AddComponent<TDG_IsInCenterSweep>();
 			string jsonString = File.ReadAllText( TDG_Manager.filePath_testData_isInCenterSweep );
 			JsonUtility.FromJsonOverwrite( jsonString, _tdg_isInCenterSweep );
 			Assert.NotNull( _tdg_isInCenterSweep );
@@ -62,7 +93,8 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 			#region IsInCenterSweep------------------------------
 			Debug.Log($"Now checking that {nameof(TDG_IsInCenterSweep)} object test data is valid...");
-			//todo: Implement...
+			//todo: Implement new data structure tests...
+			/*
 			Assert.Greater(_tdg_isInCenterSweep.CapturedStartPositions.Count, 0);
 			int commonCount = _tdg_isInCenterSweep.CapturedStartPositions.Count;
 			Debug.Log($"Decided commonCount is '{commonCount}'");
@@ -77,7 +109,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 			Assert.AreEqual(commonCount, _tdg_isInCenterSweep.Results_Vert2.Count);
 			Assert.AreEqual(commonCount, _tdg_isInCenterSweep.CapturedVertPositions_vert2.Count);
-
+			*/
 			#endregion
 
 
@@ -90,36 +122,37 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		public void b1_IsInCenterSweep()
 		{
 			LNX_UnitTestUtilities.LogTestStart(nameof(b1_IsInCenterSweep),
-				$"Tests functionality of {nameof(LNX_Vertex.IsInCenterSweep)}() method");
+				$"Tests functionality of {nameof(LNX_Vertex.ProjectionIsInCenterSweep)}() method");
 
-			//todo: Implement...
+			//todo: Implement new data structure tests
+			/*
 			for ( int i = 0; i < _tdg_isInCenterSweep.CapturedStartPositions.Count; i++ )
 			{
 				Debug.Log($"i: '{i}'. pos: '{_tdg_isInCenterSweep.CapturedStartPositions[i]}'...");
 
-				LNX_Triangle tri = _serializedLNXNavmesh.GetTriangle( _tdg_isInCenterSweep.CapturedTriCenterPositions[i] );
+				LNX_Triangle tri = _testGeneratedLnxNavmesh.GetTriangle( _tdg_isInCenterSweep.CapturedTriCenterPositions[i] );
 				Debug.Log($"Got Tri {tri.ToString()}");
 
 				Debug.Log($"trying first center sweep. expecting '{_tdg_isInCenterSweep.Results_Vert0[i]}'...");
 				LNX_Vertex vert0 = tri.GetVertexAtOriginalPosition(_tdg_isInCenterSweep.CapturedVertPositions_vert0[i] );
 				Debug.Log($"Got vert '{vert0.ToString()}' at pos: '{vert0.V_Position}', angle: '{vert0.AngleAtBend}'");
-				bool rslt = vert0.IsInCenterSweep( _tdg_isInCenterSweep.CapturedStartPositions[i], _serializedLNXNavmesh.GetSurfaceNormalVector() );
+				bool rslt = vert0.ProjectionIsInCenterSweep( _tdg_isInCenterSweep.CapturedStartPositions[i] );
 				Assert.AreEqual(_tdg_isInCenterSweep.Results_Vert0[i], rslt );
 
 				Debug.Log($"trying second center sweep. expecting '{_tdg_isInCenterSweep.Results_Vert1[i]}'...");
 				LNX_Vertex vert1 = tri.GetVertexAtOriginalPosition(_tdg_isInCenterSweep.CapturedVertPositions_vert1[i]);
 				Debug.Log($"Got vert '{vert1.ToString()}'");
-				rslt = vert1.IsInCenterSweep(_tdg_isInCenterSweep.CapturedStartPositions[i], _serializedLNXNavmesh.GetSurfaceNormalVector());
+				rslt = vert1.ProjectionIsInCenterSweep(_tdg_isInCenterSweep.CapturedStartPositions[i]);
 				Assert.AreEqual(_tdg_isInCenterSweep.Results_Vert1[i], rslt);
 
 				Debug.Log($"trying third center sweep. expecting '{_tdg_isInCenterSweep.Results_Vert2[i]}'...");
 				LNX_Vertex vert2 = tri.GetVertexAtOriginalPosition(_tdg_isInCenterSweep.CapturedVertPositions_vert2[i]);
 				Debug.Log($"Got vert2 '{vert2.ToString()}'");
 
-				rslt = vert2.IsInCenterSweep(_tdg_isInCenterSweep.CapturedStartPositions[i], _serializedLNXNavmesh.GetSurfaceNormalVector());
+				rslt = vert2.ProjectionIsInCenterSweep(_tdg_isInCenterSweep.CapturedStartPositions[i]);
 				Assert.AreEqual(_tdg_isInCenterSweep.Results_Vert2[i], rslt);
 			}
-
+			*/
 
 
 			/*

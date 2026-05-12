@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
@@ -13,9 +14,13 @@ namespace LogansNavigationExtension
 
 		public List<LNX_ComponentCoordinate> ExcludeVerts;
 
+		[Header("OPTIONS")]
+		public bool UseDebugVersionOfMethod = true;
+
 		[Header("RESULTS")]
 		public LNX_NavmeshHit ResultHit;
 		public List<LNX_ComponentCoordinate> ResultCoordinates;
+		List<LNX_Path> ResultPaths = new List<LNX_Path>();
 
 		[Header("DEBUG")]
 		public Color Color_lines;
@@ -65,14 +70,17 @@ namespace LogansNavigationExtension
 			if( CurrentVert != null )
 			{
 				Gizmos.DrawSphere( CurrentVert.V_Position, Radius_ObjectDebugSpheres );
+
+				LNX_DrawingUtils.DrawTriGizmos( _navmesh.Triangles[Grabber_Vert.CurrentHit.TriIndex], Color.yellow, 
+					false, false, true, 0.02f, true, 0.1f, false, -1f
+				);
 			}
 
 			if (Grabber_Vert.RecalculatedLastFrame)
 			{
 				ResultHit = LNX_NavmeshHit.None;
 				ResultCoordinates = new List<LNX_ComponentCoordinate>();
-				DBG_Operation = "";
-				DBG_Method = "";
+				DBG_Operation = $"starting operation at: '{System.DateTime.Now}'...\n";
 
 				if( CurrentVert == null )
 				{
@@ -91,10 +99,30 @@ namespace LogansNavigationExtension
 					return;
 				}
 
-				DBG_Operation += $"\nsampled hit at: '{ResultHit.HitPosition}'.\n" +
+				DBG_Operation += $"\nsampled hit at: '{ResultHit.Position}'.\n" +
 					$"Commencing operation...\n";
 
-				ResultCoordinates = _navmesh.GetVisibleVertsAtVert( ref DBG_Method, CurrentVert, true, ExcludeVerts );
+				/*
+				ResultPaths = _navmesh.GetVisibleVertsFromPoint( 
+					CurrentVert, true, ExcludeVerts 
+				);
+				*/
+
+				if( UseDebugVersionOfMethod )
+				{
+					DBG_Operation += $"using debug version...\n";
+					mthdDbg_Report.StartReport();
+					ResultPaths = _navmesh.GetVisibleVertsFromVert_dbg(
+						CurrentVert, ref mthdDbg_Report, true, ExcludeVerts
+					);
+					mthdDbg_Report.EndReport();
+				}
+				else
+				{
+					DBG_Operation += $"using regular version (as opposed to debug version)...\n";
+
+					ResultPaths = _navmesh.GetVisibleVertsFromVert(CurrentVert, true, ExcludeVerts);
+				}
 
 				DBG_Operation += $"{nameof(ResultCoordinates)} count: '{ResultCoordinates.Count}'\n";
 			}
@@ -105,7 +133,7 @@ namespace LogansNavigationExtension
 			for (int i = 0; i < ResultCoordinates.Count; i++)
 			{
 				Gizmos.DrawLine(
-					ResultHit.HitPosition,
+					ResultHit.Position,
 					_navmesh.GetVertexAtCoordinate(ResultCoordinates[i]).V_Position
 				);
 

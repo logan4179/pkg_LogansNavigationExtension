@@ -37,6 +37,8 @@ namespace LogansNavigationExtension
 
 		[TextArea(1, 20)]
 		public string DBG_Method;
+		public LNX_MethodDebugReport mthdDbg_Report;
+
 
 		//[Space(10f)]
 

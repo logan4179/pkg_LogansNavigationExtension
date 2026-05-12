@@ -16,14 +16,6 @@ namespace LogansNavigationExtension
 
 		public bool AmMagnetized = false;
 
-		public bool MeshIsValidForDrawing
-		{
-			get
-			{
-				return drawMeshVisualization && _LNX_NavMesh._VisualizationMesh != null && _LNX_NavMesh._VisualizationMesh.vertices != null && _LNX_NavMesh._VisualizationMesh.vertices.Length > 0;
-
-			}
-		}
 
 		#region TRIANGLES ------------------------
 		/// <summary>
@@ -103,11 +95,9 @@ namespace LogansNavigationExtension
 
 		#region DEBUGGING ----------------------
 		[SerializeField] private bool drawTriLabels = true;
-		[SerializeField] private bool drawMeshVisualization = true;
 		[SerializeField] private Color color_selectedComponent;
 
 		[SerializeField] private bool drawNavMeshLines = true;
-		[SerializeField] private Color color_edgeLines;
 		[SerializeField] private Color color_modifiedTri;
 
 		[Range(0f, 8f)] public float thickness_edges = 0.2f;
@@ -682,27 +672,7 @@ namespace LogansNavigationExtension
 				return;
 			}
 
-			/*
-			Handles.Label( dbg_edge0_start, "e0 start" );
-			Handles.Label(dbg_edge0_mid, "e0 mid");
-			Handles.Label(dbg_edge0_end, "e0 end");
-
-			Handles.Label(dbg_edge1_start, "e1 start");
-			Handles.Label(dbg_edge1_mid, "e1 mid");
-			Handles.Label(dbg_edge1_end, "e1 end");
-
-			Handles.Label(dbg_bridgeMid0, "brdgMid0");
-			Handles.Label(dbg_bridgeMid1, "brdgMid1");
-			*/
-
 			#region TRIANGLES ------------------------------------------------
-			Gizmos.color = _LNX_NavMesh.color_mesh;
-
-			if ( drawMeshVisualization && MeshIsValidForDrawing )
-			{
-				Gizmos.DrawMesh(_LNX_NavMesh._VisualizationMesh);
-			}
-
 			if ( drawNavMeshLines || drawTriLabels || drawEdgeLabels )
 			{
 				GUIStyle gstl_label = GUIStyle.none;
@@ -720,12 +690,12 @@ namespace LogansNavigationExtension
 					}
 					else
 					{
-						if( _LNX_NavMesh.Triangles[i].HasBeenModifiedAfterCreation )
+						if( _LNX_NavMesh.Triangles[i].HasBeenModifiedAfterCreation ) //todo: shouldn't this be the second if statmenet considered?
 						{
 							Handles.color = color_modifiedTri;
 							Gizmos.color = color_modifiedTri;
 						}
-						else if(indices_selectedTris != null && indices_selectedTris.Contains(i) )
+						else if(indices_selectedTris != null && indices_selectedTris.Contains(i) ) //todo: shouldn't this be the first if statement considered?
 						{
 							Handles.color = color_selectedComponent;
 							Gizmos.color = color_selectedComponent;
@@ -733,8 +703,8 @@ namespace LogansNavigationExtension
 						}
 						else
 						{
-							Handles.color = color_edgeLines;
-							Gizmos.color = color_edgeLines;
+							Handles.color = Color.white;
+							Gizmos.color = Color.white;
 						}
 					}
 
@@ -748,15 +718,15 @@ namespace LogansNavigationExtension
 						);
 					}
 
-					if( drawNavMeshLines )
+					if( drawNavMeshLines && _LNX_NavMesh.Triangles[i].Verts != null && _LNX_NavMesh.Triangles[i].Verts.Length == 3 )
 					{
 						if( useGizmos )
 						{
-							LNX_Utils.DrawTriGizmos( _LNX_NavMesh.Triangles[i] );
+							LNX_DrawingUtils.DrawTriGizmos( _LNX_NavMesh.Triangles[i], Color.red );
 						}
 						else
 						{
-							LNX_Utils.DrawTriHandles( _LNX_NavMesh.Triangles[i], Size_SelectedComponent );
+							LNX_DrawingUtils.DrawTriHandles( _LNX_NavMesh.Triangles[i], Size_SelectedComponent );
 
 						}
 					}
@@ -783,7 +753,7 @@ namespace LogansNavigationExtension
 
 				for ( int i = 0; i < indices_lockedTris.Count; i++ )
 				{
-					LNX_Utils.DrawTriGizmos( _LNX_NavMesh.Triangles[indices_lockedTris[i]] );
+					LNX_DrawingUtils.DrawTriGizmos( _LNX_NavMesh.Triangles[indices_lockedTris[i]] );
 
 				}
 			}
@@ -809,7 +779,7 @@ namespace LogansNavigationExtension
 				{
 					//Handles.color = Color.yellow;
 					Gizmos.color = Color.yellow;
-					LNX_Utils.DrawTriGizmos( PointingAtTri );
+					LNX_DrawingUtils.DrawTriGizmos( PointingAtTri );
 				}
 			}
 			#endregion

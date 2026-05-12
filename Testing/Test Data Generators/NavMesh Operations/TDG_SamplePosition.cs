@@ -10,9 +10,11 @@ namespace LogansNavigationExtension
 {
     public class TDG_SamplePosition : TDG_base
     {
+		public LNX_ComponentGrabber _Grabber;
+		public LNX_Triangle _SampledTriangle => _Grabber.CurrentlyGrabbedTriangle;
 
 		[Header("For data")]
-		public bool SamplePositionResult;
+		public bool OperationResult;
 		LNX_NavmeshHit lnxHit = new LNX_NavmeshHit();
 
 		[Header("DEBUG")]
@@ -20,7 +22,6 @@ namespace LogansNavigationExtension
 		public Color color_fail;
 		public Color Color_sampleObject;
 		[Range(0f,0.2f)] public float size_sampleObject = 0.15f;
-		[SerializeField] private string DBG_Class;
 
 
 		protected override void OnDrawGizmos()
@@ -32,50 +33,58 @@ namespace LogansNavigationExtension
 
 			base.OnDrawGizmos();
 
-			DBG_Class = $"";
-			SamplePositionResult = false;
-			
-			lnxHit = new LNX_NavmeshHit();
-
-			if ( _navmesh.SamplePosition(transform.position, out lnxHit, 10f) )
+			if( _Grabber.RecalculatedLastFrame )
 			{
-				DBG_Operation = _navmesh.DBG_SamplePosition;
+				lnxHit = new LNX_NavmeshHit();
 
-				DBG_Class += $"samplePosition returned true with: '{lnxHit.HitPosition}', on tri: '{lnxHit.TriIndex}'\n" +
-					$"\nreport--------------------------------\n" +
-					$"{_navmesh.DBG_SamplePosition}\n";
+				DBG_Operation = $"{DateTime.Now}\n" +
+					$"Now sampling position...\n";
 
-				LNX_Triangle sampledTri = _navmesh.Triangles[lnxHit.TriIndex];
+				OperationResult = _navmesh.SamplePosition( _Grabber.transform.position, out lnxHit, 10f );
 
-				DrawStandardFocusTriGizmos(
-					sampledTri,
-					1f,
-					sampledTri.Index_inCollection.ToString(), Color.magenta
-				);
+				if ( OperationResult )
+				{
+					DBG_Operation += $"samplePosition returned true with: '{lnxHit}'\n";
 
+					LNX_Triangle sampledTri = _navmesh.Triangles[lnxHit.TriIndex];
+
+
+				}
+				else
+				{
+					DBG_Operation += $"samplePosition() returned false\n";
+				}
+			}
+
+			#region	GIZMO DRAWING ===============================
+			if ( OperationResult )
+			{
+				if( _SampledTriangle != null )
+				{
+					LNX_DrawingUtils.DrawStandardFocusTriGizmos(
+						_SampledTriangle,
+						1f,
+						_SampledTriangle.Index_inCollection.ToString(), Color.magenta
+					);
+				}
+
+
+				//Gizmos.color = color_success;
 				Gizmos.color = Color_sampleObject;
-				Gizmos.DrawLine( transform.position, lnxHit.HitPosition );
-				Gizmos.DrawCube( lnxHit.HitPosition, Vector3.one * size_sampleObject );
-				Handles.Label( lnxHit.HitPosition + (Vector3.up * 0.015f), lnxHit.HitPosition.ToString() );
-
-				Gizmos.color = color_success;
+				Gizmos.DrawLine(_Grabber.transform.position, lnxHit.Position );
+				Gizmos.DrawCube( lnxHit.Position, Vector3.one * size_sampleObject );
+				Handles.Label( lnxHit.Position + (Vector3.up * 0.015f), lnxHit.Position.ToString() );
 			}
-			else
-			{
-				DBG_Class += $"samplePosition() returned false. Report:...\n" +
-					$"{_navmesh.DBG_SamplePosition}\n";
-				Gizmos.color = color_fail;
-			}
-			DBG_Operation = _navmesh.DBG_SamplePosition;
 
+			#endregion
 
-			Gizmos.DrawSphere( transform.position, Radius_ObjectDebugSpheres );
+			//Gizmos.DrawSphere(_Grabber.transform.position, Radius_ObjectDebugSpheres );
 		}
 
 		[ContextMenu("z call CaptureDataPoint()")]
 		public void CaptureDataPoint()
 		{
-			_dataCapture.CaptureDataPoint(transform.position, lnxHit.HitPosition, _navmesh.Triangles[lnxHit.TriIndex].V_Center);
+			_dataCapture.CaptureDataPoint(_Grabber.transform.position, lnxHit.Position, _navmesh.Triangles[lnxHit.TriIndex].V_Center);
 
 			Debug.Log($"Captured ");
 		}
@@ -175,20 +184,7 @@ namespace LogansNavigationExtension
 		}
 
 		#region Helpers ------------------------------
-		[ContextMenu("z SayCurrentResult()")]
-		public void SayCurrentResult()
-		{
-			LNX_NavmeshHit lnxHit = new LNX_NavmeshHit();
-			if ( _navmesh.SamplePosition(transform.position, out lnxHit, 10f) )
-			{
-				Debug.Log($"hit pos: '{lnxHit.HitPosition}'");
 
-			}
-			else
-			{
-				DBG_Class += $"found nothing...";
-			}
-		}
 		#endregion
 	}
 }
