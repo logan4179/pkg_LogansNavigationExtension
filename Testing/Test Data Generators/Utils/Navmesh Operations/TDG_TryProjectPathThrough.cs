@@ -25,7 +25,6 @@ namespace LogansNavigationExtension
 
 		[Header("DEBUG")]
 		[Range(0f,0.15f)] public float triRaise = 0.1f;
-		[TextArea(1,15)] public string DBG_Method;
 
 		protected override void OnDrawGizmos()
 		{

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace LogansNavigationExtension
 {
@@ -93,7 +94,8 @@ namespace LogansNavigationExtension
 					out ResultPath, ref mthdDbg_Report);
 				mthdDbg_Report.EndReport();
 
-				DBG_Operation += $"result: '{RaycastResult}'\n";
+				DBG_Operation += $"result: '{RaycastResult}'\n" +
+					$"Path: '{ResultPath.PointCount}'\n";
 			}
 
 			if( !RaycastResult )
@@ -154,7 +156,18 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call DoEet")]
 		public void DoEet()
 		{
+			string s = $"{_navmesh.Triangles[22].Verts[1].SharedVertexCoordinates.Length}\n" +
+				$"";
 
+			if( _navmesh.Triangles[22].Verts[1].SharedVertexCoordinates.Length > 0 )
+			{
+				for( int i = 0; i < _navmesh.Triangles[22].Verts[1].SharedVertexCoordinates.Length; i++ )
+				{
+					s += $"{_navmesh.Triangles[22].Verts[1].SharedVertexCoordinates[i]}\n";
+				}
+			}
+
+			Debug.Log(s);
 		}
 		#endregion
 

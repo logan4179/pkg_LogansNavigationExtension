@@ -12,6 +12,7 @@ namespace LogansNavigationExtension
 	{
 		public List<LNX_NavmeshHit> PathPoints;
 
+		public int PointCount => PathPoints.Count;
 		public LNX_NavmeshHit StartHit => PathPoints[0];
 		public Vector3 StartPosition => PathPoints[0].Position;
 		public LNX_ComponentCoordinate StartCoordinate => PathPoints[0].Coordinate;
@@ -220,6 +221,42 @@ namespace LogansNavigationExtension
 					{
 						Vector3 dirNew = LNX_Utils.FlatVector(hits[i].Position - hits[i - 1].Position, v_navmeshSurfaceProjection_cached).normalized;
 						if ( dirNew != dirTo )
+						{
+							amStraight = false;
+						}
+						else
+						{
+							dirTo = dirNew;
+						}
+					}
+				}
+			}
+		}
+
+		public LNX_Path( Vector3 nvmshProjectionDir, params LNX_NavmeshHit[] hits)
+		{
+			PathPoints = hits.ToList();
+			totalDistance_cached = 0f;
+			amStraight = true;
+			v_navmeshSurfaceProjection_cached = nvmshProjectionDir;
+
+			if (hits == null || hits.Length <= 0)
+			{
+				return;
+			}
+
+			Vector3 dirTo = LNX_Utils.FlatVector(hits[1].Position - hits[0].Position, v_navmeshSurfaceProjection_cached).normalized;
+
+			for (int i = 0; i < hits.Length; i++)
+			{
+				if (i > 0)
+				{
+					totalDistance_cached += Vector3.Distance(hits[i - 1].Position, hits[i].Position);
+
+					if (amStraight) //only check the following if I still think I'm straight...
+					{
+						Vector3 dirNew = LNX_Utils.FlatVector(hits[i].Position - hits[i - 1].Position, v_navmeshSurfaceProjection_cached).normalized;
+						if (dirNew != dirTo)
 						{
 							amStraight = false;
 						}
@@ -518,7 +555,7 @@ namespace LogansNavigationExtension
 				return false;
 
 			LNX_Path otherPath = (LNX_Path)obj;
-
+			/*
 			if
 			(
 				otherPath.totalDistance_cached != totalDistance_cached ||
@@ -527,10 +564,21 @@ namespace LogansNavigationExtension
 			{
 				return false;
 			}
+			*/
 
 			if( (PathPoints == null && otherPath.PathPoints != null) || 
-				(PathPoints != null && otherPath.PathPoints != null) )
+				(PathPoints != null && otherPath.PathPoints == null) )
 			{
+				Debug.Log("failed at a");
+				return false;
+			}
+
+			if ( PathPoints != null && otherPath.PathPoints != null &&
+				PathPoints.Count != otherPath.PathPoints.Count
+			)
+			{
+				Debug.Log("failed at b");
+
 				return false;
 			}
 
@@ -540,6 +588,9 @@ namespace LogansNavigationExtension
 				{
 					if (otherPath.PathPoints[i] != PathPoints[i])
 					{
+						Debug.Log($"failed at point c on pathpoint: '{i}'");
+						Debug.Log($"PathPoints[i]: '{PathPoints[i]}' not equal to other: '{otherPath.PathPoints[i]}'");
+
 						return false;
 					}
 				}
@@ -570,7 +621,7 @@ namespace LogansNavigationExtension
 				return $"[Invalid Path]";
 			}
 
-			return $"[{StartCoordinate}] -> [{EndCoordinate}]";
+			return $"LNX_Path[{StartCoordinate}] -> [{EndCoordinate}]_srfcPrjctn:{v_navmeshSurfaceProjection_cached}";
 		}
 		
 		#endregion ---------------------------------------

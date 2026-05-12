@@ -12,7 +12,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 {
 	public class B4_NavmeshMethodsTests
 	{
-		LNX_NavMesh _serializedLNXNavmesh;
+		LNX_NavMesh _testGeneratedLnxNavmesh;
 
 		TDG_SamplePosition _tdg_samplePosition;
 
@@ -26,9 +26,35 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		{
 			GameObject go = GameObject.Find(LNX_UnitTestUtilities.Name_SerializedNavmeshGameobject);
 
-			_serializedLNXNavmesh = go.GetComponent<LNX_NavMesh>();
+			if (go == null)
+			{
+				Debug.LogWarning($"Couldn't find serialized navmesh in scene. Making anew...");
+				go = new GameObject();
+				go.name = LNX_UnitTestUtilities.Name_GeneratedNavmeshGameobject; //so that other test scripts can find this object.
+				_testGeneratedLnxNavmesh = go.AddComponent<LNX_NavMesh>();
+				Assert.NotNull(_testGeneratedLnxNavmesh);
+				Debug.Log($"scene-generated navmesh created, now calculating triangulation...");
 
-			Assert.NotNull(_serializedLNXNavmesh);
+				//todo: dws the following line...
+				//_testGeneratedLnxNavmesh.LayerMaskName = "lr_EnvSolid"; //not necessary, but just to be sure...
+				_testGeneratedLnxNavmesh.MyLayerMask = LayerMask.GetMask("lr_EnvSolid");
+
+				_testGeneratedLnxNavmesh.CalculateTriangulation();
+				Assert.NotNull(_testGeneratedLnxNavmesh._VisualizationMesh);
+				Debug.Log($"mesh visual. {nameof(_testGeneratedLnxNavmesh._VisualizationMesh.vertices)} length: '{_testGeneratedLnxNavmesh._VisualizationMesh.vertices.Length}', " +
+					$"{nameof(_testGeneratedLnxNavmesh._VisualizationMesh.triangles)} length: '{_testGeneratedLnxNavmesh._VisualizationMesh.triangles.Length}, " +
+					$"{nameof(_testGeneratedLnxNavmesh._VisualizationMesh.normals)} length: '{_testGeneratedLnxNavmesh._VisualizationMesh.normals.Length}, ");
+
+				Debug.Log($"Generated navmesh bounds information...");
+				Debug.Log($"scene generated navmesh bounds size: '{_testGeneratedLnxNavmesh.V_BoundsSize}'");
+				Debug.Log($"scene generated navmesh bounds center: '{_testGeneratedLnxNavmesh.V_BoundsCenter}'");
+
+				Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestSectionEndString, "set up scene-generated navmesh"));
+			}
+
+			_testGeneratedLnxNavmesh = go.GetComponent<LNX_NavMesh>();
+
+			Assert.NotNull(_testGeneratedLnxNavmesh);
 		}
 
 		[Test]
@@ -44,13 +70,16 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				return;
 			}
 
-			//CREATE TEST OBJECT -----------------------------
-			_tdg_samplePosition = _serializedLNXNavmesh.gameObject.AddComponent<TDG_SamplePosition>();
-			_tdg_samplePosition.AmInUnitTest = true;
-
 			string jsonString = File.ReadAllText(TDG_Manager.filePath_testData_SamplePosition);
+			Assert.IsNotEmpty(jsonString);
+			Debug.Log($"Read json string for tdg_SamplePosition. string length: '{jsonString.Length}'...");
+
+			_tdg_samplePosition = _testGeneratedLnxNavmesh.gameObject.AddComponent<TDG_SamplePosition>();
+			_tdg_samplePosition.AmInUnitTest = true;
 			JsonUtility.FromJsonOverwrite(jsonString, _tdg_samplePosition);
 			Assert.NotNull(_tdg_samplePosition);
+
+			Debug.Log($"Created Sampling test object for tdg_SamplePosition");
 			#endregion
 
 			#region CLOSEST ON PERIMETER -----------------------------
@@ -60,7 +89,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				Debug.LogError($"PROBLEM!!!!! file at test path does not exist. Cannot perform test.");
 				return;
 			}
-			_tdg_sampleClosestPtOnPerimeter = _serializedLNXNavmesh.gameObject.AddComponent<TDG_SampleClosestPtOnPerimeter>();
+			_tdg_sampleClosestPtOnPerimeter = _testGeneratedLnxNavmesh.gameObject.AddComponent<TDG_SampleClosestPtOnPerimeter>();
 			_tdg_sampleClosestPtOnPerimeter.AmInUnitTest = true;
 
 			jsonString = File.ReadAllText(TDG_Manager.filePath_testData_sampleClosestPtOnPerim);
@@ -79,7 +108,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			}
 
 			//CREATE TEST OBJECT -----------------------------
-			_tdg_raycasting = _serializedLNXNavmesh.gameObject.AddComponent<TDG_Raycasting>();
+			_tdg_raycasting = _testGeneratedLnxNavmesh.gameObject.AddComponent<TDG_Raycasting>();
 			_tdg_raycasting.AmInUnitTest = true;
 
 			jsonString = File.ReadAllText( TDG_Manager.filePath_testData_Raycasting );
@@ -97,6 +126,13 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			);
 
 			#region Sample Position--------------------------------------------------------------
+			Assert.NotNull(_tdg_samplePosition._dataCapture);
+			Assert.NotNull( _tdg_samplePosition._dataCapture.VectorCaptureLists ); //just tried to run this test after a long time. 
+			//test fails here. It almost looks like maybe I never serialized this one with the new data capture thing, but I"m 
+			//not sure...
+
+			Assert.Greater(_tdg_samplePosition._dataCapture.VectorCaptureLists.Count, 0);
+			Debug.Log($"tdg_SamplePosition");
 
 			Debug.Log($"Created Sampling test object. Counts: '{_tdg_samplePosition._dataCapture.VectorCaptureLists[0].vectors.Count}', " +
 				$"'{_tdg_samplePosition._dataCapture.VectorCaptureLists[1].vectors.Count}', and " +
@@ -111,7 +147,8 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			Assert.IsNotNull(_tdg_samplePosition._dataCapture.VectorCaptureLists[2].vectors); //captured tri centers
 			Assert.Greater(_tdg_samplePosition._dataCapture.VectorCaptureLists[2].vectors.Count, 0);
 
-			Assert.AreEqual(_tdg_samplePosition._dataCapture.VectorCaptureLists[0].vectors.Count, _tdg_samplePosition._dataCapture.VectorCaptureLists[1].vectors.Count);
+			Assert.AreEqual(_tdg_samplePosition._dataCapture.VectorCaptureLists[0].vectors.Count, 
+				_tdg_samplePosition._dataCapture.VectorCaptureLists[1].vectors.Count);
 
 			if (!File.Exists(TDG_Manager.filePath_testData_sampleClosestPtOnPerim))
 			{
@@ -169,7 +206,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			{
 				Debug.Log($"{i}...");
 				LNX_NavmeshHit hit = new LNX_NavmeshHit();
-				_serializedLNXNavmesh.SamplePosition(_tdg_samplePosition._dataCapture.VectorCaptureLists[0].vectors[i], out hit, 10f);
+				_testGeneratedLnxNavmesh.SamplePosition(_tdg_samplePosition._dataCapture.VectorCaptureLists[0].vectors[i], out hit, 10f);
 
 				Debug.Log($"expecting '{_tdg_samplePosition._dataCapture.VectorCaptureLists[0].vectors[i]}', hit: '{hit.Position}'");
 
@@ -179,11 +216,11 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_samplePosition._dataCapture.VectorCaptureLists[0].vectors[i].z, hit.Position.z);
 
 				UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_samplePosition._dataCapture.VectorCaptureLists[2].vectors[i].x,
-					_serializedLNXNavmesh.Triangles[hit.TriIndex].V_Center.x);
+					_testGeneratedLnxNavmesh.Triangles[hit.TriIndex].V_Center.x);
 				UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_samplePosition._dataCapture.VectorCaptureLists[2].vectors[i].y,
-					_serializedLNXNavmesh.Triangles[hit.TriIndex].V_Center.y);
+					_testGeneratedLnxNavmesh.Triangles[hit.TriIndex].V_Center.y);
 				UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_samplePosition._dataCapture.VectorCaptureLists[2].vectors[i].z,
-					_serializedLNXNavmesh.Triangles[hit.TriIndex].V_Center.z);
+					_testGeneratedLnxNavmesh.Triangles[hit.TriIndex].V_Center.z);
 			}
 		}
 
@@ -257,7 +294,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			{
 				Debug.Log($"{i}...");
 
-				bool rslt = _serializedLNXNavmesh.Raycast
+				bool rslt = _testGeneratedLnxNavmesh.Raycast
 				(
 					_tdg_raycasting.CapturedStartPositions[i], _tdg_raycasting.CapturedEndPositions[i], 3f
 				);

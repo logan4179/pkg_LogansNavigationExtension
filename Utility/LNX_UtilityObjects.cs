@@ -235,13 +235,23 @@ namespace LogansNavigationExtension
 		[SerializeField] private Vector3 normal;
 		public Vector3 Normal => normal;
 
-		//public float DistanceAway => Vector3.Distance(startPosition, hitPosition);
 		[SerializeField] private LNX_ComponentCoordinate coordinate;
 		public LNX_ComponentCoordinate Coordinate => coordinate;
 
 		//PROPERTIES---------------
 		public int TriIndex => coordinate.TrianglesIndex;
 		public int ComponentIndex => coordinate.ComponentIndex;
+
+		/* //this way?
+		private int triangleIndex;
+		public int TriangleIndex => triangleIndex;
+
+		private int edgeIndex;
+		public int EdgeIndex => edgeIndex;
+
+		private int vertIndex;
+		public int VertIndex => vertIndex;
+		*/
 
 		private static LNX_NavmeshHit none = new LNX_NavmeshHit(-1, Vector3.zero);
 
@@ -271,7 +281,7 @@ namespace LogansNavigationExtension
 		{
 			hitPosition = hitpos;
 			//startPosition = startPos;
-			normal = hitTriangle.v_SurfaceNormal_cached;
+			normal = hitTriangle.V_PathingNormal;
 
 			coordinate = new LNX_ComponentCoordinate(hitTriangle.Index_inCollection, -1);
 		}
@@ -280,17 +290,16 @@ namespace LogansNavigationExtension
 		{
 			hitPosition = vert.V_Position;
 			//startPosition = Vector3.zero;
-			normal = vert.CachedSurfaceNormal;
+			normal = vert.CalculatePathingNormal();
 			coordinate = vert.MyCoordinate;
 		}
 
-		public LNX_NavmeshHit(Vector3 pos, LNX_ComponentCoordinate coord)
+		public LNX_NavmeshHit(LNX_Vertex vert, Vector3 nrml )
 		{
-			hitPosition = pos;
+			hitPosition = vert.V_Position;
 			//startPosition = Vector3.zero;
-			normal = Vector3.zero;
-
-			coordinate = coord;
+			normal = nrml;
+			coordinate = vert.MyCoordinate;
 		}
 
 		public LNX_NavmeshHit(Vector3 pos, LNX_ComponentCoordinate coord, Vector3 nrml)
@@ -386,7 +395,7 @@ namespace LogansNavigationExtension
 		
 		public override string ToString()
 		{
-			return $"Hit[{coordinate} ({Position})]'";
+			return $"[coord{coordinate}_pos{Position})_nrml{normal}]'";
 		}
 		#endregion
 	}
@@ -458,6 +467,7 @@ namespace LogansNavigationExtension
 
 		#endregion
 
+
 		public bool AmValid //Started using this bc for some reason, having a static LNX_VertexRelationship.None was causing problems in in LNX_Vertex.CalculateDerivedInfo().
 		{
 			get
@@ -487,21 +497,27 @@ namespace LogansNavigationExtension
 				return;
 			}
 
-			if (myVert.V_Position != relatedVert.V_Position)
+			if (myVert.V_Position == relatedVert.V_Position)
 			{
-				if (myVert.MyCoordinate.TrianglesIndex == relatedVert.MyCoordinate.TrianglesIndex || 
-					relatedVert.SharesVertSpace(nvMsh.Triangles[myVert.Coordinate_FirstSibling.TrianglesIndex].Verts[myVert.Coordinate_FirstSibling.ComponentIndex]) ||
-					relatedVert.SharesVertSpace(nvMsh.Triangles[myVert.Coordinate_SecondSibling.TrianglesIndex].Verts[myVert.Coordinate_SecondSibling.ComponentIndex])
+				sb_rprt.AppendLine("verts are in same position...");
+
+			}
+			else
+			{
+				if (myVert.MyCoordinate.TrianglesIndex == relatedVert.MyCoordinate.TrianglesIndex ||
+					relatedVert.V_Position == nvMsh.Triangles[myVert.TriangleIndex].Verts[myVert.Index_FirstSiblingVert].V_Position ||
+					relatedVert.V_Position == nvMsh.Triangles[myVert.TriangleIndex].Verts[myVert.Index_SecondSiblingVert].V_Position ||
+					myVert.V_Position == nvMsh.Triangles[relatedVert.TriangleIndex].Verts[relatedVert.Index_FirstSiblingVert].V_Position ||
+					myVert.V_Position == nvMsh.Triangles[relatedVert.TriangleIndex].Verts[relatedVert.Index_SecondSiblingVert].V_Position
 				) //"If we're siblings". More performant than using the AreSiblings() method
 				{
 					//Debug.LogWarning($"same spot or siblings");
 					sb_rprt.AppendLine($"same spot or siblings, or in same spot as siblings");
 					PathTo = new LNX_Path
 					(
-						new List<Vector3>() { myVert.V_Position, relatedVert.V_Position },
-						new List<Vector3>() { nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal },
-						true,
-						nvMsh.GetSurfaceProjectionVector()
+						myVert.CachedSurfaceNormal,
+						new LNX_NavmeshHit(myVert, nvMsh.Triangles[myVert.TriangleIndex].V_PathingNormal),
+						new LNX_NavmeshHit(relatedVert, nvMsh.Triangles[relatedVert.TriangleIndex].V_PathingNormal)
 					);
 				}
 				else if
@@ -515,6 +531,7 @@ namespace LogansNavigationExtension
 				)
 				{
 					sb_rprt.AppendLine($"Getting reversed relational pathing...");
+					//Debug.LogWarning($"Getting reversed relational pathing");
 					List<Vector3> pthPts = new List<Vector3>();
 					List<Vector3> pthNrmls = new List<Vector3>();
 
@@ -531,41 +548,51 @@ namespace LogansNavigationExtension
 						nvMsh.GetSurfaceProjectionVector()
 					);
 				}
+				else if (
+					//The following checks if the related vert is on a triangle touching this vert, bc if so, it can
+					//simplify the relationship/path bc it's definitely a 2 point path
+					nvMsh.Triangles[relatedVert.TriangleIndex].Verts[relatedVert.Index_FirstSiblingVert].V_Position == myVert.V_Position ||
+					nvMsh.Triangles[relatedVert.TriangleIndex].Verts[relatedVert.Index_SecondSiblingVert].V_Position == myVert.V_Position
+				)
+				{
+					sb_rprt.AppendLine("using simplified path based on triangles touching");
+					PathTo = new LNX_Path
+					(
+						nvMsh.GetSurfaceProjectionVector(),
+						new LNX_NavmeshHit(myVert, nvMsh.Triangles[myVert.TriangleIndex].V_PathingNormal),
+						new LNX_NavmeshHit(relatedVert, nvMsh.Triangles[relatedVert.TriangleIndex].V_PathingNormal)
+					);
+				}
 				else
 				{
 					sb_rprt.AppendLine($"Actually calculating the path...");
 
-					
-					StringBuilder sb_calculatePath = new StringBuilder();
-					nvMsh.CalculatePath( myVert, relatedVert, out PathTo); //this is by far where most of the time is being spent
-					Debug.Log(sb_calculatePath);
-					sb_rprt.AppendLine($"created path: '{PathTo}' with '{PathTo.PathPoints.Count}' points. Here's the report...\n" +
-						$"=============================================================\n");
-					sb_rprt.AppendLine($"{sb_calculatePath.ToString()}\n" +
-						$"=============================================================\n");
-					
 
-					
+					//nvMsh.CalculatePath(myVert, relatedVert, out PathTo);
+
 					//Just to make things run smoother for now...
 					PathTo = new LNX_Path
 					(
-						new List<Vector3>() { myVert.V_Position, relatedVert.V_Position },
-						new List<Vector3>() { nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal },
-						true,
-						nvMsh.GetSurfaceProjectionVector()
+						nvMsh.GetSurfaceProjectionVector(),
+						new LNX_NavmeshHit(myVert, nvMsh.Triangles[myVert.TriangleIndex].V_PathingNormal),
+						new LNX_NavmeshHit(relatedVert, nvMsh.Triangles[relatedVert.TriangleIndex].V_PathingNormal)
 					);
-					
 				}
+			}
+
+			sb_rprt.AppendLine($"end of vertrelationship ctor. total time: '{DateTime.Now.Subtract(dt_start)}' " +
+				$"total ms: '{DateTime.Now.Subtract(dt_start).TotalMilliseconds}'");
+
+			/*
+			if( DateTime.Now.Subtract(dt_start).TotalMilliseconds > 1.5)
+			{
+				Debug.LogWarning(sb_rprt);
 			}
 			else
 			{
-				sb_rprt.AppendLine("verts are in same position...");
+				Debug.Log(sb_rprt);
 			}
-
-				sb_rprt.AppendLine($"end of vertrelationship ctor. total time: '{DateTime.Now.Subtract(dt_start)}' " +
-					$"total ms: '{DateTime.Now.Subtract(dt_start).TotalMilliseconds}'");
-
-			Debug.Log(sb_rprt);
+			*/
 		}
 
 		public LNX_VertexRelationship(LNX_Vertex myVert, LNX_Vertex relatedVert, LNX_NavMesh nvMsh, ref LNX_MethodDebugReport rprt )
@@ -614,13 +641,12 @@ namespace LogansNavigationExtension
 						$"=============================================================\n");
 
 
-
 					//Just to make things run smoother for now...
 					PathTo = new LNX_Path
 					(
 						new List<Vector3>() { myVert.V_Position, relatedVert.V_Position },
 						new List<Vector3>() { nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal },
-						true, nvMsh.GetSurfaceProjectionVector()
+						true, myVert.CachedSurfaceNormal
 					);
 
 				}
@@ -634,7 +660,33 @@ namespace LogansNavigationExtension
 				$"total ms: '{DateTime.Now.Subtract(dt_start).TotalMilliseconds}'");
 		}
 
+		public LNX_VertexRelationship( LNX_Path path )
+		{
+			StringBuilder sb_rprt = new StringBuilder();
+			sb_rprt.AppendLine($"LNX_VertexRelationship ctor (fastpath version)");
 
+			DateTime dt_start = DateTime.Now;
+
+			RelatedVertCoordinate = path.EndCoordinate;
+			PathTo = path;
+
+			sb_rprt.AppendLine($"end of vertrelationship ctor. total time: '{DateTime.Now.Subtract(dt_start)}' " +
+				$"total ms: '{DateTime.Now.Subtract(dt_start).TotalMilliseconds}'");
+
+			//Debug.LogWarning(sb_rprt);
+			/*
+			if (DateTime.Now.Subtract(dt_start).TotalMilliseconds > 1.5)
+			{
+				Debug.LogWarning(sb_rprt);
+			}
+			else
+			{
+				Debug.Log(sb_rprt);
+			}
+			*/
+		}
+
+		//todo: dws
 		/// <summary>
 		/// Use this overload only for siblings
 		/// </summary>
@@ -651,9 +703,12 @@ namespace LogansNavigationExtension
 			(
 				new List<Vector3>() { myVert.V_Position, sharedTri.Verts[siblingVertIndex].V_Position },
 				new List<Vector3>() { sharedTri.V_PathingNormal, sharedTri.V_PathingNormal },
-				sharedTri.v_SurfaceNormal_cached
+				sharedTri.V_NavmeshProjectionDirection_cached
 			);
+
+			RelatedVertCoordinate = sharedTri.Verts[siblingVertIndex].MyCoordinate;
 		}
+		
 		#endregion
 
 		/*
@@ -673,7 +728,7 @@ namespace LogansNavigationExtension
 				return false;
 
 			LNX_VertexRelationship other = (LNX_VertexRelationship)obj;
-			if ( other.RelatedVertCoordinate != RelatedVertCoordinate || other.PathTo != PathTo )
+			if ( other.RelatedVertCoordinate != RelatedVertCoordinate /*|| other.PathTo != PathTo*/ )
 			{
 				return false;
 			}
@@ -682,11 +737,12 @@ namespace LogansNavigationExtension
 				return true;
 			}
 		}
-
+		
 		public override int GetHashCode()
 		{
 			return HashCode.Combine( RelatedVertCoordinate, PathTo );
 		}
+		
 
 		public static bool operator ==(LNX_VertexRelationship a, LNX_VertexRelationship b)
 		{

@@ -133,6 +133,31 @@ namespace LogansNavigationExtension
 			Debug.Log(s);
 		}
 
+		[ContextMenu("z call SayRelationshipsCount")]
+		public void SayRelationshipsCount()
+		{
+			int relCount = 0;
+
+			for ( int i = 0; i < _mgr.Triangles.Length; i++ )
+			{
+				for( int i_vrts = 0; i_vrts < 3; i_vrts++ )
+				{
+					if (_mgr.Triangles[i].Verts[i_vrts].Relationships != null && _mgr.Triangles[i].Verts[i_vrts].Relationships.Length > 0 )
+					{
+						for (int i_rels = 0; i_rels < _mgr.Triangles[i].Verts[i_vrts].Relationships.Length; i_rels++)
+						{
+							if (_mgr.Triangles[i].Verts[i_vrts].Relationships[i_rels].PathTo != LNX_Path.None )
+							{
+								relCount++;
+							}
+						}
+					}
+				}
+			}
+
+			Debug.Log(relCount);
+		}
+
 		private void OnDrawGizmos()
 		{
 			if ( !AmDebugging || _mgr == null || _mgr.Triangles != null && _mgr.Triangles.Length <= 0 )

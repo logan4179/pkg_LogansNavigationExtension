@@ -78,7 +78,7 @@ namespace LogansNavigationExtension
 			//EndVertCoordinate = endVrt.MyCoordinate;
 
 			v_triCenter_cached = ownerTri.V_Center;
-			v_SurfaceNormal_cached = ownerTri.v_SurfaceNormal_cached;
+			v_SurfaceNormal_cached = ownerTri.V_NavmeshProjectionDirection_cached;
 
 			SharedEdgeCoordinate = LNX_ComponentCoordinate.None;
 		}
@@ -157,7 +157,7 @@ namespace LogansNavigationExtension
 			*/
 			v_Cross_flat = LNX_Utils.FlatVector
 			( 
-				v_Cross, tri.v_SurfaceNormal_cached
+				v_Cross, tri.V_NavmeshProjectionDirection_cached
 			).normalized;
 		}
 
