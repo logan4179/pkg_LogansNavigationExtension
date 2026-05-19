@@ -47,6 +47,12 @@ namespace LogansNavigationExtension
 			tryListA[0] = 123;
 			Debug.Log($"A: '{tryListA[0]}', B: '{tryListB[0]}' bcount: '{tryListB.Count}'");
 		}
+
+		[ContextMenu("z call SayVertRelational()")]
+		public void SayVertRelational()
+		{
+			CurrentVert.SayAllRelationships();
+		}
 		#endregion
 
 		protected override void OnDrawGizmos()
@@ -71,7 +77,7 @@ namespace LogansNavigationExtension
 			{
 				Gizmos.DrawSphere( CurrentVert.V_Position, Radius_ObjectDebugSpheres );
 
-				LNX_DrawingUtils.DrawTriGizmos( _navmesh.Triangles[Grabber_Vert.CurrentHit.TriIndex], Color.yellow, 
+				LNX_DrawingUtils.DrawTriGizmos( _navmesh.Triangles[Grabber_Vert.CurrentHit.TriangleIndex], Color.yellow, 
 					false, false, true, 0.02f, true, 0.1f, false, -1f
 				);
 			}

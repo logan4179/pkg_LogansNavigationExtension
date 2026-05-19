@@ -38,9 +38,9 @@ namespace LogansNavigationExtension
 
 			if( _navmesh.SamplePosition(transform.position, out lnxHit, 10f) ) //It needs to do this in order to decide which triangle to use...
 			{
-				LNX_Triangle chosenTri = _navmesh.Triangles[lnxHit.TriIndex];
+				LNX_Triangle chosenTri = _navmesh.Triangles[lnxHit.TriangleIndex];
 
-				DrawStandardFocusTriGizmos( chosenTri, 0.3f, lnxHit.TriIndex.ToString(), Color.magenta );
+				DrawStandardFocusTriGizmos( chosenTri, 0.3f, lnxHit.TriangleIndex.ToString(), Color.magenta );
 
 				v_result = chosenTri.ClosestPointOnPerimeter(transform.position);
 

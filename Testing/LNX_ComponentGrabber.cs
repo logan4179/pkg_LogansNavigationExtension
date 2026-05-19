@@ -98,31 +98,31 @@ namespace LogansNavigationExtension
 
 			if (Mode == LNX_Component.Vertex)
             {
-				CurrentCoordinate = _navmesh.Triangles[CurrentHit.TriIndex].GetClosestVertToPosition(transform.position).MyCoordinate;
+				CurrentCoordinate = _navmesh.Triangles[CurrentHit.TriangleIndex].GetClosestVertToPosition(transform.position).MyCoordinate;
             }
 			else if ( Mode == LNX_Component.Edge )
 			{
-				float bestDist = Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriIndex, 0).MidPosition);
+				float bestDist = Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriangleIndex, 0).MidPosition);
 				int bestEdge = 0;
 
-				if (Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriIndex, 1).MidPosition) < bestDist)
+				if (Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriangleIndex, 1).MidPosition) < bestDist)
 				{
-					bestDist = Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriIndex, 1).MidPosition);
+					bestDist = Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriangleIndex, 1).MidPosition);
 					bestEdge = 1;
 				}
 
-				if (Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriIndex, 2).MidPosition) < bestDist)
+				if (Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriangleIndex, 2).MidPosition) < bestDist)
 				{
-					bestDist = Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriIndex, 2).MidPosition);
+					bestDist = Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriangleIndex, 2).MidPosition);
 					bestEdge = 2;
 				}
 
-				CurrentCoordinate = _navmesh.Triangles[CurrentHit.TriIndex].Edges[bestEdge].MyCoordinate;
+				CurrentCoordinate = _navmesh.Triangles[CurrentHit.TriangleIndex].Edges[bestEdge].MyCoordinate;
 				//Debug.Log($"Sample succesful. Grabbed edge '{CurrentCoordinate}'...");
 			}
 			else if( Mode == LNX_Component.Triangle )
 			{
-				CurrentCoordinate = new LNX_ComponentCoordinate(CurrentHit.TriIndex, -1 );
+				CurrentCoordinate = new LNX_ComponentCoordinate(CurrentHit.TriangleIndex, -1 );
 				//Debug.Log($"Sample succesful. Grabbed tri '{CurrentCoordinate}'...");
 
 			}

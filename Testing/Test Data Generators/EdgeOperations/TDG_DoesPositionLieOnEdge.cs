@@ -92,7 +92,7 @@ namespace LogansNavigationExtension
 
 			if ( _navmesh.SamplePosition(transform.position, out hit, 2f, false) )
 			{
-				EdgeCoordinate = new LNX_ComponentCoordinate(hit.TriIndex, EdgeCoordinate.ComponentIndex);
+				EdgeCoordinate = new LNX_ComponentCoordinate(hit.TriangleIndex, EdgeCoordinate.ComponentIndex);
 				//SetDebuggerFocusToMine();
 				Debug.Log($"Succesful sample! Set new edgecoordinate to: '{EdgeCoordinate.ToString()}'");
 			}

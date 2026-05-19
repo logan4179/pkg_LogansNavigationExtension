@@ -46,9 +46,7 @@ namespace LogansNavigationExtension
 				{
 					DBG_Operation += $"samplePosition returned true with: '{lnxHit}'\n";
 
-					LNX_Triangle sampledTri = _navmesh.Triangles[lnxHit.TriIndex];
-
-
+					LNX_Triangle sampledTri = _navmesh.Triangles[lnxHit.TriangleIndex];
 				}
 				else
 				{
@@ -84,7 +82,9 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call CaptureDataPoint()")]
 		public void CaptureDataPoint()
 		{
-			_dataCapture.CaptureDataPoint(_Grabber.transform.position, lnxHit.Position, _navmesh.Triangles[lnxHit.TriIndex].V_Center);
+			_dataCapture.CaptureDataPoint(
+				_Grabber.transform.position, lnxHit.Position, _navmesh.Triangles[lnxHit.TriangleIndex].V_Center
+			);
 
 			Debug.Log($"Captured ");
 		}

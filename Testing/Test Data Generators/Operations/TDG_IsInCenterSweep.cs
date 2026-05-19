@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,9 +10,15 @@ namespace LogansNavigationExtension
 {
     public class TDG_IsInCenterSweep : TDG_base
 	{
-		public int CurrentTriIndex = 0;
+		public LNX_ComponentGrabber _Grabber_Pos;
+		public LNX_ComponentGrabber _Grabber_Triangle;
 
-		LNX_Triangle CurrentTriangle => _navmesh.Triangles[CurrentTriIndex];
+		[Header("PARAM")]
+		public bool IncludeOnPerim;
+
+		LNX_Triangle CurrentTriangle => _Grabber_Triangle.CurrentlyGrabbedTriangle;
+
+		[Header("RESULTS")]
 		public bool CurrentRslt_vert0;
 		public bool CurrentRslt_vert1;
 		public bool CurrentRslt_vert2;
@@ -48,35 +55,6 @@ namespace LogansNavigationExtension
 		}
 
 		#region HELPERS ---------------------------------------------------
-		[ContextMenu("z call SampleFocusTri()")]
-		public void SampleFocusTri()
-		{
-			Debug.Log($"{nameof(SampleFocusTri)}()...");
-
-			LNX_NavmeshHit hit = LNX_NavmeshHit.None;
-
-			if (_navmesh.SamplePosition(transform.position, out hit, 2f, false))
-			{
-				CurrentTriIndex = hit.TriIndex;
-				Debug.Log($"Succesful sample! Set new triangle to: '{hit.TriIndex}'");
-			}
-			else
-			{
-				Debug.Log($"sample unsuccesful...");
-			}
-		}
-
-		[ContextMenu("z call SayFocusTri()")]
-		public void SayFocusTri()
-		{
-			Debug.Log($"{nameof(SayFocusTri)}()...");
-
-			_navmesh.Triangles[CurrentTriIndex].SayCurrentInfo(_navmesh);
-
-			Debug.Log( CurrentTriangle.GetAnomolyString(_navmesh) );
-		}
-
-
 
 		[ContextMenu("z call SendToDataPoint")]
 		public void SendToDataPoint()
@@ -85,31 +63,32 @@ namespace LogansNavigationExtension
 		}
 		#endregion
 
-		[TextArea(1,10)] public string DBGAngleTo;
+		public bool UseDebugMethodVersion;
 		protected override void OnDrawGizmos()
 		{
-			DBG_Operation = "";
-
 			if ( Selection.activeObject != gameObject )
 			{
 				DBG_Operation = $"OnDrawGizmos short-circuit. Object not selected";
+				mthdDbg_Report.Clear();
 				return;
 			}
 
 			if( CurrentTriangle == null )
 			{
 				DBG_Operation = $"OnDrawGizmos short-circuit. CurrentTriangle null";
+				mthdDbg_Report.Clear();
+
 				return;
 			}
 
-			DBG_Operation += $"CurrentTriangle: '{CurrentTriangle.Index_inCollection}' at '{CurrentTriangle.V_Center}'\n";
+			if( !_Grabber_Pos.RecalculatedLastFrame && !_Grabber_Triangle.RecalculatedLastFrame )
+			{
+				return;
+			}
 
-			DBGAngleTo = $"first sibling pathpts count: '{CurrentTriangle.Verts[0].FirstSiblingRelationship.PathTo.PathPoints.Count}'\n" +
-				$"second sibling pathpts count: '{CurrentTriangle.Verts[0].SecondSiblingRelationship.PathTo.PathPoints.Count}'\n";
-
-			DBGAngleTo += $"to first sibling prop: '{CurrentTriangle.Verts[0].V_ToFirstSiblingVert}'\n" +
-				//$"calc: '{}'\n" +
-				$"";
+			DBG_Operation = $"{DateTime.Now}\n" +
+				$"using CurrentTriangle: '{CurrentTriangle.Index_inCollection}'..." +
+				$"using pos: '{transform.position}'\n";
 
 			base.OnDrawGizmos();
 
@@ -121,11 +100,40 @@ namespace LogansNavigationExtension
 
 			DBG_Operation += $"Commencing operation...\n";
 
-			CurrentRslt_vert0 = CurrentTriangle.Verts[0].ProjectionIsInCenterSweep( transform.position - CurrentTriangle.Verts[0].V_Position );
-			CurrentRslt_vert1 = CurrentTriangle.Verts[1].ProjectionIsInCenterSweep(transform.position - CurrentTriangle.Verts[1].V_Position);
-			CurrentRslt_vert2 = CurrentTriangle.Verts[2].ProjectionIsInCenterSweep(transform.position - CurrentTriangle.Verts[2].V_Position);
+			if( UseDebugMethodVersion )
+			{
+				mthdDbg_Report.StartReport();
+				mthdDbg_Report.Log("=============================================================");
+				CurrentRslt_vert0 = CurrentTriangle.Verts[0].ProjectionIsInCenterSweep_dbg(
+					transform.position - CurrentTriangle.Verts[0].V_Position, ref mthdDbg_Report,
+					IncludeOnPerim
+				);
+				mthdDbg_Report.Log("=============================================================");
+				CurrentRslt_vert1 = CurrentTriangle.Verts[1].ProjectionIsInCenterSweep_dbg(
+					transform.position - CurrentTriangle.Verts[1].V_Position, ref mthdDbg_Report, 
+					IncludeOnPerim
+				);
+				mthdDbg_Report.Log("=============================================================");
+				CurrentRslt_vert2 = CurrentTriangle.Verts[2].ProjectionIsInCenterSweep_dbg(
+					transform.position - CurrentTriangle.Verts[2].V_Position, ref mthdDbg_Report, 
+					IncludeOnPerim
+				);
+				mthdDbg_Report.EndReport();
+			}
+			else
+			{
+				CurrentRslt_vert0 = CurrentTriangle.Verts[0].ProjectionIsInCenterSweep(transform.position - CurrentTriangle.Verts[0].V_Position);
+				CurrentRslt_vert1 = CurrentTriangle.Verts[1].ProjectionIsInCenterSweep(transform.position - CurrentTriangle.Verts[1].V_Position);
+				CurrentRslt_vert2 = CurrentTriangle.Verts[2].ProjectionIsInCenterSweep(transform.position - CurrentTriangle.Verts[2].V_Position);
 
-			DBG_Operation += $"Operation complete.";
+			}
+
+			DBG_Operation += $"Operation complete.\n" +
+				$"v0 rslt: '{CurrentRslt_vert0}'\n" +
+				$"v1 rslt: '{CurrentRslt_vert1}'\n" +
+				$"v2 rslt: '{CurrentRslt_vert2}'\n" +
+
+				$"";
 
 			Gizmos.DrawSphere( transform.position, Radius_ObjectDebugSpheres );
 

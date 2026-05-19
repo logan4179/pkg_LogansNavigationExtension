@@ -13,10 +13,6 @@ namespace LogansNavigationExtension
 		public Transform startTrans;
 		public Transform endTrans;
 
-		public List<Vector3> CapturedStartPositions = new List<Vector3>();
-		public List<Vector3> CapturedEndPositions = new List<Vector3>();
-		public List<bool> CapturedRaycastResults = new List<bool>();
-
 		public bool RaycastResult = false;
 
 		[Header("PATH")]
@@ -34,10 +30,14 @@ namespace LogansNavigationExtension
 		[ContextMenu("z CaptureDataPoint()")]
 		public void CaptureDataPoint()
 		{
+			/*
 			CapturedStartPositions.Add( startTrans.position );
 			CapturedEndPositions.Add( endTrans.position );
 			CapturedRaycastResults.Add( RaycastResult );
+			*/
 			//Debug.Log($"Logged '{rslt_CurrentProjectedPtOnEdge}'...");
+
+
 		}
 
 		[ContextMenu("z CaptureProblemPosition (override)()")]
@@ -156,18 +156,7 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call DoEet")]
 		public void DoEet()
 		{
-			string s = $"{_navmesh.Triangles[22].Verts[1].SharedVertexCoordinates.Length}\n" +
-				$"";
 
-			if( _navmesh.Triangles[22].Verts[1].SharedVertexCoordinates.Length > 0 )
-			{
-				for( int i = 0; i < _navmesh.Triangles[22].Verts[1].SharedVertexCoordinates.Length; i++ )
-				{
-					s += $"{_navmesh.Triangles[22].Verts[1].SharedVertexCoordinates[i]}\n";
-				}
-			}
-
-			Debug.Log(s);
 		}
 		#endregion
 

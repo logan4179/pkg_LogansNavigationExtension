@@ -213,7 +213,10 @@ namespace LogansNavigationExtension
 				new LNX_Path(
 					v_navmeshProjectionDirection_cached,
 					new LNX_NavmeshHit(this, tri.V_PathingNormal),
-					new LNX_NavmeshHit(firstSiblingPos, Coordinate_FirstSibling, tri.V_PathingNormal)
+					new LNX_NavmeshHit(
+						firstSiblingPos, tri.V_PathingNormal, 
+						MyCoordinate.TrianglesIndex, Coordinate_FirstSibling.ComponentIndex, -1
+					)
 				)
 			);
 
@@ -221,7 +224,10 @@ namespace LogansNavigationExtension
 				new LNX_Path(
 					v_navmeshProjectionDirection_cached,
 					new LNX_NavmeshHit(this, tri.V_PathingNormal),
-					new LNX_NavmeshHit(secondSiblingPos, Coordinate_SecondSibling, tri.V_PathingNormal)
+					new LNX_NavmeshHit(
+						secondSiblingPos, tri.V_PathingNormal, 
+						MyCoordinate.TrianglesIndex, Coordinate_SecondSibling.ComponentIndex, -1
+					)
 				)
 			);
 		}
@@ -270,35 +276,6 @@ namespace LogansNavigationExtension
 			);
 			*/
 			#endregion
-		}
-
-		public void AdoptValues( LNX_Vertex vert )
-		{
-			V_Position = vert.V_Position;
-			originalPosition = vert.originalPosition;
-			v_navmeshProjectionDirection_cached = vert.v_navmeshProjectionDirection_cached;
-			v_triCenter_cached = vert.v_triCenter_cached;
-
-			MyCoordinate = vert.MyCoordinate;
-
-			Relationships = vert.Relationships;
-			SharedVertexCoordinates = vert.SharedVertexCoordinates;
-
-		}
-
-		public Vector3 CalculatePathingNormal()
-		{
-			Debug.Log($"CalculatePathingNormal() relationships count: '{Relationships.Length}'");
-			Vector3 nrml = Vector3.Cross(
-				Vector3.Normalize(V_ToFirstSiblingVert),
-				Vector3.Normalize(V_ToSecondSiblingVert)
-			).normalized;
-			if (Vector3.Dot(v_navmeshProjectionDirection_cached, nrml) > Vector3.Dot(v_navmeshProjectionDirection_cached, -nrml))
-			{
-				nrml = -nrml;
-			}
-
-			return nrml;
 		}
 
 		public void CreateRelationships( LNX_NavMesh nvmsh ) //todo: unit test
@@ -433,15 +410,46 @@ namespace LogansNavigationExtension
 
 			SharedVertexCoordinates = temp_sharedVrtCoords.ToArray();
 		}
+		
+		public Vector3 CalculatePathingNormal()
+		{
+			Debug.Log($"CalculatePathingNormal() relationships count: '{Relationships.Length}'");
+			Vector3 nrml = Vector3.Cross(
+				Vector3.Normalize(V_ToFirstSiblingVert),
+				Vector3.Normalize(V_ToSecondSiblingVert)
+			).normalized;
+			if (Vector3.Dot(v_navmeshProjectionDirection_cached, nrml) > Vector3.Dot(v_navmeshProjectionDirection_cached, -nrml))
+			{
+				nrml = -nrml;
+			}
+
+			return nrml;
+		}
+
 		public void TriIndexChanged(int newIndex)
 		{
 			MyCoordinate = new LNX_ComponentCoordinate(newIndex, MyCoordinate.ComponentIndex);
 		}
 
 		#region API METHODS ------------------------------------------------------------
-		public bool ProjectionIsInCenterSweep( Vector3 projection )
+		public bool ProjectionIsInCenterSweep( Vector3 projection, bool includeOnPerim = false )
 		{
-			return LNX_Utils.AmInVectorCone(projection, V_ToFirstSiblingVert_flat, V_ToSecondSiblingVert_flat, v_navmeshProjectionDirection_cached );
+			return LNX_Utils.AmInVectorCone(
+				projection, V_ToFirstSiblingVert_flat, V_ToSecondSiblingVert_flat, 
+				v_navmeshProjectionDirection_cached, includeOnPerim );
+		}
+		public bool ProjectionIsInCenterSweep_dbg(Vector3 projection, ref LNX_MethodDebugReport rprt, bool includeOnPerim = false)
+		{
+			rprt.StartMethod( $"v{ComponentIndex}.ProjectionIsInCenterSweep_dbg('{projection}', incldOnPrm: '{includeOnPerim}')");
+
+			rprt.Log($"Passing off to util method...");
+			bool rslt = LNX_Utils.AmInVectorCone_dbg(
+				projection, V_ToFirstSiblingVert_flat, V_ToSecondSiblingVert_flat,
+				v_navmeshProjectionDirection_cached, ref rprt, includeOnPerim);
+
+			rprt.Log_And_End_Method($"returning: '{rslt}'...");
+
+			return rslt;
 		}
 
 		/// <summary>
@@ -457,6 +465,11 @@ namespace LogansNavigationExtension
 		#endregion
 
 		#region RELATIONAL METHODS----------------------------------------------
+		/// <summary>
+		/// Checks if a supplied triangle has a vert that shares space with this vert.
+		/// </summary>
+		/// <param name="tri"></param>
+		/// <returns></returns>
 		public bool SharesVertSpaceWithTri( LNX_Triangle tri )
 		{
 			if ( tri.Index_inCollection == MyCoordinate.TrianglesIndex )
@@ -490,6 +503,34 @@ namespace LogansNavigationExtension
 			return false;
 		}
 
+		/// <summary>
+		/// Checks whether this vert has a shared vert with the triangle with the supplied index.
+		/// <para>Note: Only use this method when you know that relational information has been 
+		/// calculated, otherwise it won't likely work.</para>
+		/// </summary>
+		/// <param name="triIndx"></param>
+		/// <returns></returns>
+		public bool HasSharedVertViaTriIndex( int triIndx )
+		{
+			if ( triIndx == MyCoordinate.TrianglesIndex )
+			{
+				return true;
+			}
+
+			if (SharedVertexCoordinates != null && SharedVertexCoordinates.Length > 0)
+			{
+				for (int i = 0; i < SharedVertexCoordinates.Length; i++)
+				{
+					if (SharedVertexCoordinates[i].TrianglesIndex == triIndx )
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
 		public bool SharesVertSpace( LNX_Vertex vert ) //todo: this method won't be necessary if we unify the verts
 		{
 			if( SharedVertexCoordinates != null && SharedVertexCoordinates.Length > 0 )
@@ -504,6 +545,28 @@ namespace LogansNavigationExtension
 			}
 
 			return V_Position == vert.V_Position;
+		}
+
+		public bool SharesVertSpace_ViaRelational( int triIndx, int vrtIndx )
+		{
+			if ( Relationships == null || Relationships.Length <= 0 ||
+				SharedVertexCoordinates == null || SharedVertexCoordinates.Length <= 0
+			)
+			{
+				return false;
+			}
+
+			for ( int i = 0; i < SharedVertexCoordinates.Length; i++ )
+			{
+				if( SharedVertexCoordinates[i].TrianglesIndex == triIndx &&
+					SharedVertexCoordinates[i].ComponentIndex == vrtIndx
+				)
+				{
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		public bool AreSiblings( LNX_ComponentCoordinate otherVertCoordinate )
@@ -529,6 +592,34 @@ namespace LogansNavigationExtension
 		{
 			return Relationships[vertCoord.TrianglesIndex * 3 + (vertCoord.ComponentIndex)];
 		}
+
+		/*
+		public LNX_ComponentCoordinate GetVertCoord_viaProjectionSweep( Vector3 vProject )
+		{
+			if( SharedVertexCoordinates == null || SharedVertexCoordinates.Length <= 0 )
+			{
+				return LNX_ComponentCoordinate.None;
+			}
+
+			for ( int i = 0; i < SharedVertexCoordinates.Length; i++ )
+			{
+				Vector3 vLegA_flat = Relationships[
+					SharedVertexCoordinates[i].TrianglesIndex * 3 + (SharedVertexCoordinates[i].ComponentIndex == 0 ? 1 : 2)
+				].V_to;
+				Vector3 vLegB_flat = Vector3.zero;
+
+				for ( int i = 0; j < 3; j++ ) 
+				{
+					if
+				}
+
+				//////////////////////////////////////////////////////////////////////
+				if( Relationships[SharedVertexCoordinates[i].TrianglesIndex * 3 + 
+					(SharedVertexCoordinates[i].ComponentIndex)].V_to
+			}
+		}
+		*/
+		
 
 		public bool IsRelationshipCollectionValid()
 		{
@@ -611,7 +702,11 @@ namespace LogansNavigationExtension
 
 				for ( int i = 0; i < vsblVrtPths.Count; i++ )
 				{
-					fwdBackstopVerts.Add( vsblVrtPths[i].EndCoordinate );
+					//fwdBackstopVerts.Add( new LNX_ComponentCoordinate(vsblVrtPths[i].EndHit) );
+					fwdBackstopVerts.Add( 
+						new LNX_ComponentCoordinate(vsblVrtPths[i].EndHit.TriangleIndex, vsblVrtPths[i].EndHit.VertIndex) 
+					);
+
 				}
 
 				rprt.Log($"Finished creating fwd bckstop list. final list count: '{fwdBackstopVerts.Count}'...");
@@ -629,7 +724,7 @@ namespace LogansNavigationExtension
 				rprt.Log_InnrTabbed($"pinging from visible vert[{i}]...", 1);
 
 					LNX_MethodDebugReport fwdRprt = new LNX_MethodDebugReport();
-					LNX_Path p = nm.Triangles[vsblVrtPths[i].EndTriIndex].Verts[vsblVrtPths[i].EndComponentIndex].Ping_dbg(
+					LNX_Path p = nm.Triangles[vsblVrtPths[i].EndTriIndex].Verts[vsblVrtPths[i].EndHit.VertIndex].Ping_dbg(
 						endPoint, nm, maxAllowableDist, path_continuationToVsblVrt, ref fwdRprt, fwdBackstopVerts
 					);
 

@@ -7,18 +7,22 @@ using UnityEngine;
 
 namespace LogansNavigationExtension
 {
+	/// <summary>
+	/// Base class for the "Test Data Generator" - The thing that creates all the data for my unit tests
+	/// </summary>
     public class TDG_base : MonoBehaviour
     {
 		public string testName;
 		public string LastWriteTime;
 
-        [TextArea(1,5)] public string Description;
+        [TextArea(1,10)] public string Description;
 
 		[SerializeField] protected LNX_NavMesh _navmesh;
 
 		[Header("PROBLEMS")]
 		public int Index_GoToProblem = 0;
 		public TDG_DataCapture _dataCapture_problems;
+
 		public bool DrawProblemPoints = true;
 		//[SerializeField, Tooltip("These are meant to be positions that I'm currently experimenting with")]
         //public List<Vector3> problemPositions;
@@ -196,12 +200,18 @@ namespace LogansNavigationExtension
 	            pos, Vector3.up, clr, 2f
             );
 		}
+		public void DrawDataPointCapture(LNX_NavmeshHit hit, Color clr)
+		{
+			Debug.DrawRay(
+				hit.Position, Vector3.up, clr, 2f
+			);
+		}
 
-        /// <summary>
-        /// Logs the problem positions to the console. This can be useful for saving the values in 
-        /// a text document when refactoring a tdg
-        /// </summary>
-        [ContextMenu("z call SayProblemPositions()")]
+		/// <summary>
+		/// Logs the problem positions to the console. This can be useful for saving the values in 
+		/// a text document when refactoring a tdg
+		/// </summary>
+		[ContextMenu("z call SayProblemPositions()")]
         public void SayProblemPositions()
         {
 

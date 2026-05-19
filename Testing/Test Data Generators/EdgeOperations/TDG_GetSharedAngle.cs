@@ -108,8 +108,8 @@ namespace LogansNavigationExtension
 
 			if (_navmesh.SamplePosition(transform.position, out hit, 2f, false))
 			{
-				PerspectiveEdgeCoordinate = new LNX_ComponentCoordinate( hit.TriIndex, 0 );
-				Debug.Log($"Succesful sample! Set new triangle to: '{hit.TriIndex}'");
+				PerspectiveEdgeCoordinate = new LNX_ComponentCoordinate( hit.TriangleIndex, 0 );
+				Debug.Log($"Succesful sample! Set new triangle to: '{hit.TriangleIndex}'");
 			}
 			else
 			{

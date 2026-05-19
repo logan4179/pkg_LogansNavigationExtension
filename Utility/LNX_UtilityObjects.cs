@@ -77,6 +77,20 @@ namespace LogansNavigationExtension
 			ComponentIndex = cmptIndx;
 		}
 
+		public LNX_ComponentCoordinate(LNX_NavmeshHit hit)
+		{
+			TrianglesIndex = hit.TriangleIndex;
+			ComponentIndex = -1;
+			if (hit.VertIndex != -1)
+			{
+				ComponentIndex = hit.VertIndex;
+			}
+			else if (hit.EdgeIndex != -1)
+			{
+				ComponentIndex = hit.EdgeIndex;
+			}
+		}
+
 		public static bool operator ==(LNX_ComponentCoordinate a, LNX_ComponentCoordinate b)
 		{
 			return a.Equals(b);
@@ -227,7 +241,7 @@ namespace LogansNavigationExtension
 		[SerializeField] private Vector3 hitPosition;
 		/// <summary>Index of the Triangle or component that was hit, depending on the context.</summary>
 		public Vector3 Position => hitPosition;
-		public Vector3 Position_flat => LNX_Utils.FlatVector( hitPosition, normal );
+		//public Vector3 Position_flat => LNX_Utils.FlatVector( hitPosition, normal ); //taking this out now bc this is now wrong
 
 		//private Vector3 startPosition;
 		//public Vector3 StartPosition => startPosition;
@@ -235,37 +249,20 @@ namespace LogansNavigationExtension
 		[SerializeField] private Vector3 normal;
 		public Vector3 Normal => normal;
 
-		[SerializeField] private LNX_ComponentCoordinate coordinate;
-		public LNX_ComponentCoordinate Coordinate => coordinate;
 
-		//PROPERTIES---------------
-		public int TriIndex => coordinate.TrianglesIndex;
-		public int ComponentIndex => coordinate.ComponentIndex;
-
-		/* //this way?
-		private int triangleIndex;
+		[SerializeField] private int triangleIndex;
 		public int TriangleIndex => triangleIndex;
 
-		private int edgeIndex;
+		[SerializeField] private int edgeIndex;
 		public int EdgeIndex => edgeIndex;
 
-		private int vertIndex;
+		[SerializeField] private int vertIndex;
 		public int VertIndex => vertIndex;
-		*/
-
-		private static LNX_NavmeshHit none = new LNX_NavmeshHit(-1, Vector3.zero);
-
-		#region CONSTRUCTORS =============================================================
-		public LNX_NavmeshHit(int triIndx, Vector3 pos) //todo; i need to check where this is being called and make sure there aren't any more problems
-		{
-			hitPosition = pos;
-
-			//startPosition = Vector3.zero;
-			normal = Vector3.zero;
-
-			coordinate = new LNX_ComponentCoordinate(triIndx, -1);
-		}
 		
+
+		private static LNX_NavmeshHit none = new LNX_NavmeshHit(Vector3.zero, Vector3.zero, -1, -1, -1);
+
+		#region CONSTRUCTORS =============================================================		
 		/* //Unfortunately can't do the following bc default vectors aren't compile-time constants...
 		public LNX_NavmeshHit( Vector3 pos, int triIndx, int cmpntIndx = -1, Vector3 strtPos = Vector3.zero, Vector3 nrml = Vector3.zero )
 		{
@@ -277,81 +274,53 @@ namespace LogansNavigationExtension
 		}
 		*/
 
-		public LNX_NavmeshHit(LNX_Triangle hitTriangle, Vector3 hitpos, Vector3 startPos )
+		public LNX_NavmeshHit(LNX_Triangle hitTriangle, Vector3 hitpos, Vector3 startPos ) //todo: takw away startpos and maybe even get rid of this overload
 		{
 			hitPosition = hitpos;
-			//startPosition = startPos;
 			normal = hitTriangle.V_PathingNormal;
 
-			coordinate = new LNX_ComponentCoordinate(hitTriangle.Index_inCollection, -1);
+			triangleIndex = hitTriangle.Index_inCollection;
+			edgeIndex = -1;
+			vertIndex = -1;
 		}
 
 		public LNX_NavmeshHit ( LNX_Vertex vert )
 		{
 			hitPosition = vert.V_Position;
-			//startPosition = Vector3.zero;
 			normal = vert.CalculatePathingNormal();
-			coordinate = vert.MyCoordinate;
+			triangleIndex = vert.MyCoordinate.TrianglesIndex;
+			edgeIndex = -1;
+			vertIndex = vert.ComponentIndex;
 		}
 
 		public LNX_NavmeshHit(LNX_Vertex vert, Vector3 nrml )
 		{
 			hitPosition = vert.V_Position;
-			//startPosition = Vector3.zero;
 			normal = nrml;
-			coordinate = vert.MyCoordinate;
+			triangleIndex = vert.MyCoordinate.TrianglesIndex;
+			edgeIndex = -1;
+			vertIndex = vert.ComponentIndex;
 		}
 
-		public LNX_NavmeshHit(Vector3 pos, LNX_ComponentCoordinate coord, Vector3 nrml)
+		public LNX_NavmeshHit(LNX_Edge edge, Vector3 pos, Vector3 nrml)
 		{
 			hitPosition = pos;
-			//startPosition = Vector3.zero;
 			normal = nrml;
-
-			coordinate = coord;
+			triangleIndex = edge.MyCoordinate.TrianglesIndex;
+			edgeIndex = edge.MyCoordinate.ComponentIndex;
+			vertIndex = -1;
 		}
 
-		public LNX_NavmeshHit ( Vector3 pos, int triIndx, int cmpntIndx )
+		public LNX_NavmeshHit(Vector3 pos, Vector3 nrml, int triIndx, int vertIndx, int edgeIndx)
 		{
 			hitPosition = pos;
-			coordinate = new LNX_ComponentCoordinate( triIndx, cmpntIndx );
-
-			//startPosition = Vector3.zero;
-			normal = Vector3.zero;
-		}
-
-		public LNX_NavmeshHit(Vector3 pos, Vector3 nrml, int triIndx, int cmpntIndx)
-		{
-			hitPosition = pos;
-			coordinate = new LNX_ComponentCoordinate(triIndx, cmpntIndx);
 			normal = nrml;
 
-			//startPosition = Vector3.zero;
+			triangleIndex = triIndx;
+			edgeIndex = edgeIndx;
+			vertIndex = vertIndx;
 		}
 
-		public LNX_NavmeshHit( Vector3 pos, Vector3 nrml )
-		{
-			hitPosition = pos;
-			coordinate = new LNX_ComponentCoordinate(-1, -1);
-			normal = nrml;
-		}
-
-		public LNX_NavmeshHit(Vector3 pos, Vector3 nrml, Vector3 strtPos, LNX_ComponentCoordinate coord )
-		{
-			hitPosition = pos;
-			coordinate = coord;
-			normal = nrml;
-			//startPosition = strtPos;
-		}
-
-		public LNX_NavmeshHit(int indx, Vector3 hitpos, Vector3 originpos)
-		{
-			hitPosition = hitpos;
-			//startPosition = originpos;
-			normal = Vector3.zero;
-
-			coordinate = new LNX_ComponentCoordinate(indx, -1);
-		}
 		#endregion
 
 		public static LNX_NavmeshHit None
@@ -369,7 +338,9 @@ namespace LogansNavigationExtension
 				return false;
 
 			LNX_NavmeshHit hit = (LNX_NavmeshHit)obj;
-			if ( hit.coordinate != coordinate || hit.hitPosition != hitPosition /*|| startPosition != hit.startPosition*/ )
+			if ( hit.triangleIndex != triangleIndex || hit.hitPosition != hitPosition ||
+				hit.vertIndex != vertIndex || hit.edgeIndex != edgeIndex || hit.normal != normal
+			)
 			{
 				return false;
 			}
@@ -381,7 +352,7 @@ namespace LogansNavigationExtension
 
 		public override int GetHashCode()
 		{
-			return HashCode.Combine( hitPosition, normal, coordinate );
+			return HashCode.Combine( hitPosition, normal, triangleIndex, vertIndex, edgeIndex );
 		}
 
 		public static bool operator ==(LNX_NavmeshHit a, LNX_NavmeshHit b)
@@ -392,12 +363,15 @@ namespace LogansNavigationExtension
 		{
 			return !a.Equals(b);
 		}
-		
+		#endregion
+
 		public override string ToString()
 		{
-			return $"[coord{coordinate}_pos{Position})_nrml{normal}]'";
+			return $"hit[t{triangleIndex},v{vertIndex},e{edgeIndex}_pos{Position})_nrml{normal}]'";
 		}
-		#endregion
+
+		//public static explicit operator LNX_ComponentCoordinate(LNX_NavmeshHit hit) =>
+			//new LNX_ComponentCoordinate( hit.triangleIndex, hit.vertIndex != -1 ? hit.vertIndex : hit.edgeIndex);
 	}
 
 	[System.Serializable]
@@ -476,7 +450,8 @@ namespace LogansNavigationExtension
 			}
 		}
 
-		//private static LNX_VertexRelationship none = new LNX_VertexRelationship( null, null, null, false); //todo: dws unless I figure out why this causes problems in LNX_Vertex.CalculateDerivedInfo()
+		private static LNX_VertexRelationship none = new LNX_VertexRelationship( LNX_Path.None ); //todo: dws unless I figure out why this causes problems in LNX_Vertex.CalculateDerivedInfo()
+
 
 		#region CONSTRUCTORS ======================================================================
 
@@ -531,22 +506,21 @@ namespace LogansNavigationExtension
 				)
 				{
 					sb_rprt.AppendLine($"Getting reversed relational pathing...");
-					//Debug.LogWarning($"Getting reversed relational pathing");
-					List<Vector3> pthPts = new List<Vector3>();
-					List<Vector3> pthNrmls = new List<Vector3>();
+					//Debug.LogWarning($"Getting reversed relational pathing. related pathpoints: '{relatedVert.Relationships[myVert.Index_Relational].PathTo.PathPoints.Count}'");
+					List<LNX_NavmeshHit> pthPts = new List<LNX_NavmeshHit>();
 
-					for (int i = relatedVert.Relationships[myVert.Index_Relational].PathTo.PathPoints.Count - 1; i > 0; i--)
+					for (int i = relatedVert.Relationships[myVert.Index_Relational].PathTo.PathPoints.Count - 1; i > -1; i--)
 					{
-						pthPts.Add(relatedVert.Relationships[myVert.Index_Relational].PathTo.PathPoints[i].Position);
-						pthNrmls.Add(relatedVert.Relationships[myVert.Index_Relational].PathTo.PathPoints[i].Normal);
+						pthPts.Add( relatedVert.Relationships[myVert.Index_Relational].PathTo.PathPoints[i] );
 					}
 
 					PathTo = new LNX_Path
 					(
-						pthPts,
-						pthNrmls,
-						nvMsh.GetSurfaceProjectionVector()
+						nvMsh.GetSurfaceProjectionVector(),
+						pthPts
 					);
+
+					//Debug.Log($"reversed path created. My path points count: '{PathTo.PathPoints.Count}'");
 				}
 				else if (
 					//The following checks if the related vert is on a triangle touching this vert, bc if so, it can
@@ -621,10 +595,9 @@ namespace LogansNavigationExtension
 					rprt.Log($"same spot or siblings, or in same spot as siblings");
 					PathTo = new LNX_Path
 					(
-						new List<Vector3>() { myVert.V_Position, relatedVert.V_Position },
-						new List<Vector3>() { nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal },
-						true,
-						nvMsh.GetSurfaceProjectionVector()
+						nvMsh.GetSurfaceProjectionVector(),
+						new LNX_NavmeshHit(myVert, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal),
+						new LNX_NavmeshHit(relatedVert, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal)
 					);
 				}
 				else
@@ -640,15 +613,13 @@ namespace LogansNavigationExtension
 					rprt.Log($"{sb_calculatePath.ToString()}\n" +
 						$"=============================================================\n");
 
-
 					//Just to make things run smoother for now...
 					PathTo = new LNX_Path
 					(
-						new List<Vector3>() { myVert.V_Position, relatedVert.V_Position },
-						new List<Vector3>() { nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal },
-						true, myVert.CachedSurfaceNormal
+						nvMsh.GetSurfaceProjectionVector(),
+						new LNX_NavmeshHit(myVert, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal),
+						new LNX_NavmeshHit(relatedVert, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal)
 					);
-
 				}
 			}
 			else
@@ -667,7 +638,7 @@ namespace LogansNavigationExtension
 
 			DateTime dt_start = DateTime.Now;
 
-			RelatedVertCoordinate = path.EndCoordinate;
+			RelatedVertCoordinate = new LNX_ComponentCoordinate( path.EndHit.TriangleIndex, path.EndHit.VertIndex );
 			PathTo = path;
 
 			sb_rprt.AppendLine($"end of vertrelationship ctor. total time: '{DateTime.Now.Subtract(dt_start)}' " +
@@ -684,34 +655,10 @@ namespace LogansNavigationExtension
 				Debug.Log(sb_rprt);
 			}
 			*/
-		}
-
-		//todo: dws
-		/// <summary>
-		/// Use this overload only for siblings
-		/// </summary>
-		/// <param name="myVert"></param>
-		/// <param name="owerTri"></param>
-		/// <param name="reltdVrtIndx"></param>
-		/// <param name="nvMsh"></param>
-		public LNX_VertexRelationship(LNX_Vertex myVert, LNX_Triangle sharedTri, int siblingVertIndex)
-		{
-			StringBuilder sb_rprt = new StringBuilder();
-			sb_rprt.AppendLine($"LNX_VertexRelationship sibling ctor. myVert: '{myVert}', sharedTri: '{sharedTri}'"); RelatedVertCoordinate = new LNX_ComponentCoordinate( myVert.TriangleIndex, siblingVertIndex );
-
-			PathTo = new LNX_Path
-			(
-				new List<Vector3>() { myVert.V_Position, sharedTri.Verts[siblingVertIndex].V_Position },
-				new List<Vector3>() { sharedTri.V_PathingNormal, sharedTri.V_PathingNormal },
-				sharedTri.V_NavmeshProjectionDirection_cached
-			);
-
-			RelatedVertCoordinate = sharedTri.Verts[siblingVertIndex].MyCoordinate;
-		}
-		
+		}		
 		#endregion
 
-		/*
+		
 		public static LNX_VertexRelationship None  //todo: dws unless I figure out why this causes problems in in LNX_Vertex.CalculateDerivedInfo()
 		{
 			get
@@ -719,7 +666,7 @@ namespace LogansNavigationExtension
 				return none;
 			}
 		}
-		*/
+		
 
 		#region OPERATORS ==================================================
 		public override bool Equals(object obj)
