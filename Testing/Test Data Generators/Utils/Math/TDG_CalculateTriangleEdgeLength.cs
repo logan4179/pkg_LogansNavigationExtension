@@ -65,7 +65,7 @@ namespace LogansNavigationExtension
 			DBG_Operation += $"result: '{Result}'\n" +
 				$"when verified: '{Vector3.Distance(LNX_Utils.FlatVector(Grabber_AngB.transform.position), LNX_Utils.FlatVector(Grabber_AngC.transform.position))}'";
 
-			DBG_Operation += $"alt: '{LNX_Utils.CalculateTriangleSideLength( -1f, angA, lenB, angB, -1f, -1f )}'\n";
+			DBG_Operation += $"alt: '{LNX_Utils.CalculateTriangleEdgeLength( -1f, angA, lenB, angB, -1f, -1f )}'\n";
 
 			GUIStyle gstl = new GUIStyle();
 			gstl.normal.textColor = Color.green;

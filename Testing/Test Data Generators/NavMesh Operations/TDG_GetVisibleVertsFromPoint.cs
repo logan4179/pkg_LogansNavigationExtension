@@ -177,12 +177,12 @@ $"list equals: '{ResultPaths[0].PathPoints == NewPath.PathPoints}'");
 				{
 					Gizmos.DrawLine(
 						Grabber_Hit.CurrentHit.Position,
-						_navmesh.GetVertexAtCoordinate(ResultPaths[i].EndCoordinate).V_Position
+						ResultPaths[i].EndPosition
 					);
 
 					Gizmos.DrawLine(
-						_navmesh.GetVertexAtCoordinate(ResultPaths[i].EndCoordinate).V_Position,
-						_navmesh.GetVertexAtCoordinate(ResultPaths[i].EndCoordinate).V_Position + (Vector3.up * height)
+						ResultPaths[i].EndPosition,
+						ResultPaths[i].EndPosition + (Vector3.up * height)
 					);
 				}
 			}

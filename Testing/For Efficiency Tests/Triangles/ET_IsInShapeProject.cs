@@ -35,7 +35,7 @@ namespace LogansNavigationExtension
 
             _navmesh.SamplePosition( transform.position, out hit, 10f, false );
 
-			CurrentTri = _navmesh.Triangles[hit.TriIndex];
+			CurrentTri = _navmesh.Triangles[hit.TriangleIndex];
 			TriCenter = CurrentTri.V_Center;
 		}
 

@@ -27,8 +27,8 @@ namespace LogansNavigationExtension
 
 			if ( _navmesh.SamplePosition(transform.position, out hit, 2f, false) )
 			{
-				Index_FocusTri = hit.TriIndex;
-				Debug.Log($"Succesful sample! Set new triangle to: '{hit.TriIndex}'");
+				Index_FocusTri = hit.TriangleIndex;
+				Debug.Log($"Succesful sample! Set new triangle to: '{hit.TriangleIndex}'");
 			}
 			else
 			{

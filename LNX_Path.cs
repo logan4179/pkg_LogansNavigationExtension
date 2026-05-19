@@ -15,18 +15,14 @@ namespace LogansNavigationExtension
 		public int PointCount => PathPoints.Count;
 		public LNX_NavmeshHit StartHit => PathPoints[0];
 		public Vector3 StartPosition => PathPoints[0].Position;
-		public LNX_ComponentCoordinate StartCoordinate => PathPoints[0].Coordinate;
 
 		public Vector3 EndPosition => PathPoints[PathPoints.Count - 1].Position;
-		public LNX_ComponentCoordinate EndCoordinate => PathPoints[PathPoints.Count - 1].Coordinate;
-		public int EndTriIndex => EndCoordinate.TrianglesIndex;
-		public int EndComponentIndex => EndCoordinate.ComponentIndex;
 		public LNX_NavmeshHit EndHit => PathPoints[PathPoints.Count - 1];
+		public int EndTriIndex => PathPoints[PathPoints.Count - 1].TriangleIndex;
+
 
 		/// <summary>A Vector pointing in a straight line from start to end.</summary>
 		public Vector3 V_CrowFlies => PathPoints[PathPoints.Count-1].Position - PathPoints[0].Position;
-
-		public Vector3 V_CrowFlies_flattened => LNX_Utils.FlatVector( V_CrowFlies, v_navmeshSurfaceProjection_cached );
 
 		[SerializeField] private Vector3 v_navmeshSurfaceProjection_cached;
 
@@ -71,63 +67,6 @@ namespace LogansNavigationExtension
 			PathPoints = new List<LNX_NavmeshHit>();
 		}
 
-		public LNX_Path( List<Vector3> pts, List<Vector3>nrmls, Vector3 v_surfaceProjection )
-		{
-			amStraight = true;
-			totalDistance_cached = 0f;
-			v_navmeshSurfaceProjection_cached = v_surfaceProjection;
-
-			PathPoints = new List<LNX_NavmeshHit>();
-
-			if ( pts != null && pts.Count > 1 )
-			{
-				Vector3 dirTo = LNX_Utils.FlatVector( pts[1] - pts[0], v_surfaceProjection).normalized;
-
-				for ( int i = 0; i < pts.Count; i++ )
-				{
-					PathPoints.Add( new LNX_NavmeshHit( pts[i], nrmls[i]) );
-
-					if( i > 0 )
-					{
-						totalDistance_cached += Vector3.Distance( pts[i - 1], pts[i] );
-
-						if( amStraight ) //only check the following if I still think I'm straight...
-						{
-							Vector3 dirNew = LNX_Utils.FlatVector( pts[i] - pts[i-1], v_surfaceProjection ).normalized;
-							if( dirNew != dirTo )
-							{
-								amStraight = false;
-							}
-							else
-							{
-								dirTo = dirNew;
-							}
-						}
-					}
-				}
-			}
-		}
-
-		public LNX_Path( LNX_Path basePath )
-		{
-			amStraight = basePath.amStraight;
-			totalDistance_cached = basePath.totalDistance_cached;
-			v_navmeshSurfaceProjection_cached = basePath.v_navmeshSurfaceProjection_cached;
-
-			PathPoints = new List<LNX_NavmeshHit>();
-
-			if ( basePath.PathPoints != null && basePath.PathPoints.Count > 1 )
-			{
-				Vector3 dirTo = LNX_Utils.FlatVector( basePath.PathPoints[1].Position - basePath.PathPoints[0].Position,
-					v_navmeshSurfaceProjection_cached ).normalized;
-
-				for ( int i = 0; i < basePath.PathPoints.Count; i++ )
-				{
-					PathPoints.Add( basePath.PathPoints[i] );
-				}
-			}
-		}
-
 		public LNX_Path( LNX_Path basePathA, LNX_Path basePathB )
 		{
 			amStraight = basePathA.AmStraight && basePathB.amStraight && basePathA.V_CrowFlies == basePathB.V_CrowFlies;
@@ -158,81 +97,7 @@ namespace LogansNavigationExtension
 				}
 			}
 		}
-
-		public LNX_Path(List<Vector3> pts, List<Vector3> nrmls, bool straightness, Vector3 v_surfaceProjection)
-		{
-			amStraight = straightness;
-			totalDistance_cached = 0f;
-			v_navmeshSurfaceProjection_cached = v_surfaceProjection;
-
-			PathPoints = new List<LNX_NavmeshHit>();
-
-			if (pts != null && pts.Count > 1)
-			{
-				for (int i = 0; i < pts.Count; i++)
-				{
-					PathPoints.Add( new LNX_NavmeshHit(pts[i], nrmls[i]) );
-
-					if (i > 0)
-					{
-						totalDistance_cached += Vector3.Distance(pts[i - 1], pts[i]);
-					}
-				}
-			}
-		}
 		
-		/*
-		public LNX_Path( LNX_NavmeshHit startHit, params LNX_Vertex[] verts ) //I don't think I should use this bc it won't have correct pathing if I just pass in a collection of verts.
-		{
-			PathPoints = new List<LNX_NavmeshHit>();
-			totalDistance_cached = 0f;
-			amStraight = true;
-
-			PathPoints.Add( new LNX_NavmeshHit(startHit.HitPosition, startHit.Normal) );
-
-			for ( int i = 0; i < verts.Length; i++ )
-			{
-				PathPoints.Add( new LNX_NavmeshHit(verts[i].V_Position, verts[i].CachedSurfaceNormal) );
-			}
-		}
-		*/
-
-		public LNX_Path( LNX_NavMesh navmesh, params LNX_NavmeshHit[] hits )
-		{
-			PathPoints = hits.ToList();
-			totalDistance_cached = 0f;
-			amStraight = true;
-			v_navmeshSurfaceProjection_cached = navmesh.GetSurfaceProjectionVector();
-
-			if ( hits == null || hits.Length <= 0 )
-			{
-				return;
-			}
-
-			Vector3 dirTo = LNX_Utils.FlatVector( hits[1].Position - hits[0].Position, v_navmeshSurfaceProjection_cached ).normalized;
-
-			for ( int i = 0; i < hits.Length; i++ )
-			{
-				if ( i > 0 )
-				{
-					totalDistance_cached += Vector3.Distance( hits[i - 1].Position, hits[i].Position );
-
-					if ( amStraight ) //only check the following if I still think I'm straight...
-					{
-						Vector3 dirNew = LNX_Utils.FlatVector(hits[i].Position - hits[i - 1].Position, v_navmeshSurfaceProjection_cached).normalized;
-						if ( dirNew != dirTo )
-						{
-							amStraight = false;
-						}
-						else
-						{
-							dirTo = dirNew;
-						}
-					}
-				}
-			}
-		}
-
 		public LNX_Path( Vector3 nvmshProjectionDir, params LNX_NavmeshHit[] hits)
 		{
 			PathPoints = hits.ToList();
@@ -269,42 +134,29 @@ namespace LogansNavigationExtension
 			}
 		}
 
-		/*
-		public LNX_Path( LNX_NavMesh nm, LNX_Path path, LNX_Vertex endVert ) //I think it's possible we might not want to use this one
+		public LNX_Path(Vector3 nvmshProjectionDir, List<LNX_NavmeshHit> hits)
 		{
-			PathPoints = new List<LNX_NavmeshHit>();
+			PathPoints = hits.ToList();
 			totalDistance_cached = 0f;
+			amStraight = true;
+			v_navmeshSurfaceProjection_cached = nvmshProjectionDir;
 
-			for ( int i = 0; i < path.PathPoints.Count; i++ )
+			if (hits == null || hits.Count <= 0)
 			{
-				PathPoints.Add( path.PathPoints[i] );
-			}
-			
-			LNX_Path continuationPath;
-			string s;
-
-			if
-			( 
-				LNX_Utils.TryProjectPathThrough
-				(
-					nm, new LNX_NavmeshHit(-1, path.EndPosition), endVert, out continuationPath
-				)
-			)
-			{
-
+				return;
 			}
 
-			Vector3 dirTo = LNX_Utils.FlatVector(hits[1].HitPosition - hits[0].HitPosition, navmesh.GetSurfaceNormalVector()).normalized;
+			Vector3 dirTo = LNX_Utils.FlatVector(hits[1].Position - hits[0].Position, v_navmeshSurfaceProjection_cached).normalized;
 
-			for (int i = 0; i < hits.Length; i++)
+			for (int i = 0; i < hits.Count; i++)
 			{
 				if (i > 0)
 				{
-					totalDistance_cached += Vector3.Distance(hits[i - 1].HitPosition, hits[i].HitPosition);
+					totalDistance_cached += Vector3.Distance(hits[i - 1].Position, hits[i].Position);
 
 					if (amStraight) //only check the following if I still think I'm straight...
 					{
-						Vector3 dirNew = LNX_Utils.FlatVector(hits[i].HitPosition - hits[i - 1].HitPosition, navmesh.GetSurfaceNormalVector()).normalized;
+						Vector3 dirNew = LNX_Utils.FlatVector(hits[i].Position - hits[i - 1].Position, v_navmeshSurfaceProjection_cached).normalized;
 						if (dirNew != dirTo)
 						{
 							amStraight = false;
@@ -316,53 +168,11 @@ namespace LogansNavigationExtension
 					}
 				}
 			}
-
-
-			//////////////////////
-			PathPoints = path.PathPoints;
-			amStraight = path.amStraight;
-
-			totalDistance_cached = path.TotalDistance;
-
-			AddPoint( endVert );
 		}
-		*/
+
 		#endregion -------------------------------------------------
 
 		#region MAIN API METHODS ============================================
-		public void AddPoint( Vector3 pos, Vector3 nrml )
-		{
-			if (PathPoints == null)
-			{
-				PathPoints = new List<LNX_NavmeshHit>();
-			}
-
-			PathPoints.Add( new LNX_NavmeshHit(pos, nrml) );
-
-			if( PathPoints.Count <= 1 )
-			{
-				totalDistance_cached = 0f;
-				return;
-			}
-
-			totalDistance_cached += Vector3.Distance( PathPoints[PathPoints.Count - 1].Position, pos );
-			
-			//determine straightness
-			if ( PathPoints.Count > 1 )
-			{
-				if (amStraight) //Need to decide if path is straight...
-				{
-					Vector3 firstDir_fltnd = LNX_Utils.FlatVector( PathPoints[1].Position - PathPoints[0].Position, nrml ).normalized;
-
-					Vector3 dirNew = LNX_Utils.FlatVector( pos - PathPoints[PathPoints.Count - 2].Position, nrml ).normalized;
-
-					if (dirNew != firstDir_fltnd)
-					{
-						amStraight = false;
-					}
-				}
-			}
-		}
 
 		public void AddPoint( LNX_NavmeshHit pt )
 		{
@@ -396,34 +206,6 @@ namespace LogansNavigationExtension
 					}
 				}
 			}
-		}
-
-		public void AddPath( LNX_Path path )
-		{
-			if( PathPoints == null )
-			{
-				PathPoints = new List<LNX_NavmeshHit>();
-			}
-
-			for (int i = 0; i < path.PathPoints.Count; i++)
-			{
-				//AddPoint( path.PathPoints[i] );
-				PathPoints.Add( path.PathPoints[i] );
-
-				if (amStraight && PathPoints.Count > 1 ) //Need to decide if path is still straight...
-				{
-					Vector3 firstDir_fltnd = LNX_Utils.FlatVector(PathPoints[1].Position - PathPoints[0].Position, v_navmeshSurfaceProjection_cached).normalized;
-
-					Vector3 dirNew = LNX_Utils.FlatVector(path.PathPoints[i].Position - PathPoints[PathPoints.Count - 2].Position, v_navmeshSurfaceProjection_cached).normalized;
-
-					if (dirNew != firstDir_fltnd)
-					{
-						amStraight = false;
-					}
-				}
-			}
-
-			totalDistance_cached += path.totalDistance_cached;
 		}
 		#endregion
 
@@ -569,7 +351,6 @@ namespace LogansNavigationExtension
 			if( (PathPoints == null && otherPath.PathPoints != null) || 
 				(PathPoints != null && otherPath.PathPoints == null) )
 			{
-				Debug.Log("failed at a");
 				return false;
 			}
 
@@ -577,8 +358,6 @@ namespace LogansNavigationExtension
 				PathPoints.Count != otherPath.PathPoints.Count
 			)
 			{
-				Debug.Log("failed at b");
-
 				return false;
 			}
 
@@ -588,9 +367,6 @@ namespace LogansNavigationExtension
 				{
 					if (otherPath.PathPoints[i] != PathPoints[i])
 					{
-						Debug.Log($"failed at point c on pathpoint: '{i}'");
-						Debug.Log($"PathPoints[i]: '{PathPoints[i]}' not equal to other: '{otherPath.PathPoints[i]}'");
-
 						return false;
 					}
 				}
@@ -621,7 +397,7 @@ namespace LogansNavigationExtension
 				return $"[Invalid Path]";
 			}
 
-			return $"LNX_Path[{StartCoordinate}] -> [{EndCoordinate}]_srfcPrjctn:{v_navmeshSurfaceProjection_cached}";
+			return $"LNX_Path[{StartHit}] -> [{EndHit}]";
 		}
 		
 		#endregion ---------------------------------------

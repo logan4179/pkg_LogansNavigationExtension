@@ -182,11 +182,11 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			#region Raycasting --------------------------------------------
 			Debug.Log($"Checking raycast data...");
 
-			Assert.Greater(_tdg_raycasting.CapturedStartPositions.Count, 0);
-			int commongCount = _tdg_raycasting.CapturedStartPositions.Count;
+			Assert.Greater(_tdg_raycasting._dataCapture.VectorCaptureLists[0].vectors.Count, 0);
+			int commongCount = _tdg_raycasting._dataCapture.VectorCaptureLists[0].vectors.Count;
 
-			Assert.AreEqual( commongCount, _tdg_raycasting.CapturedEndPositions.Count );
-			Assert.AreEqual( commongCount, _tdg_raycasting.CapturedRaycastResults.Count );
+			Assert.AreEqual( commongCount, _tdg_raycasting._dataCapture.VectorCaptureLists[1].vectors.Count );
+			Assert.AreEqual( commongCount, _tdg_raycasting._dataCapture.BooleanCaptureList.booleans.Count );
 
 			#endregion
 
@@ -216,11 +216,11 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_samplePosition._dataCapture.VectorCaptureLists[0].vectors[i].z, hit.Position.z);
 
 				UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_samplePosition._dataCapture.VectorCaptureLists[2].vectors[i].x,
-					_testGeneratedLnxNavmesh.Triangles[hit.TriIndex].V_Center.x);
+					_testGeneratedLnxNavmesh.Triangles[hit.TriangleIndex].V_Center.x);
 				UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_samplePosition._dataCapture.VectorCaptureLists[2].vectors[i].y,
-					_testGeneratedLnxNavmesh.Triangles[hit.TriIndex].V_Center.y);
+					_testGeneratedLnxNavmesh.Triangles[hit.TriangleIndex].V_Center.y);
 				UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_samplePosition._dataCapture.VectorCaptureLists[2].vectors[i].z,
-					_testGeneratedLnxNavmesh.Triangles[hit.TriIndex].V_Center.z);
+					_testGeneratedLnxNavmesh.Triangles[hit.TriangleIndex].V_Center.z);
 			}
 		}
 
@@ -289,19 +289,21 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				"Checks that the LNX_Navmesh.Raycast() method works as expected");
 			//todo: will need to also test paths from raycasts...
 
-			Debug.Log($"Checking '{_tdg_raycasting.CapturedStartPositions.Count}' data points...");
-			for ( int i = 0; i < _tdg_raycasting.CapturedStartPositions.Count; i++ )
+			Debug.Log($"Checking '{_tdg_raycasting._dataCapture.VectorCaptureLists[0].vectors.Count}' data points...");
+			for ( int i = 0; i < _tdg_raycasting._dataCapture.VectorCaptureLists[0].vectors.Count; i++ )
 			{
 				Debug.Log($"{i}...");
 
 				bool rslt = _testGeneratedLnxNavmesh.Raycast
 				(
-					_tdg_raycasting.CapturedStartPositions[i], _tdg_raycasting.CapturedEndPositions[i], 3f
+					_tdg_raycasting._dataCapture.VectorCaptureLists[0].vectors[i],
+					_tdg_raycasting._dataCapture.VectorCaptureLists[1].vectors[1], 3f
 				);
 
-				Debug.Log($"operation result was '{rslt}'. Asserting equality against captured result '{_tdg_raycasting.CapturedRaycastResults[i]}'...");
+				Debug.Log($"operation result was '{rslt}'. Asserting equality against captured result " +
+					$"'{_tdg_raycasting._dataCapture.BooleanCaptureList.booleans[i]}'...");
 
-				Assert.AreEqual( _tdg_raycasting.CapturedRaycastResults[i], rslt );
+				Assert.AreEqual( _tdg_raycasting._dataCapture.BooleanCaptureList.booleans[i], rslt );
 			}
 		}
 		#endregion

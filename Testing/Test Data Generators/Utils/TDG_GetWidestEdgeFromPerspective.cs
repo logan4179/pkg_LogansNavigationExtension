@@ -50,8 +50,8 @@ namespace LogansNavigationExtension
 
 			if (_navmesh.SamplePosition(Trans_triGrabber.position, out hit, 2f, false))
 			{
-				CurrentTriIndex = hit.TriIndex;
-				Debug.Log($"Succesful sample! Set new triangle to: '{hit.TriIndex}'");
+				CurrentTriIndex = hit.TriangleIndex;
+				Debug.Log($"Succesful sample! Set new triangle to: '{hit.TriangleIndex}'");
 			}
 			else
 			{

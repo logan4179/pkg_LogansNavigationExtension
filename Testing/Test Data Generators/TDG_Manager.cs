@@ -72,6 +72,9 @@ namespace LogansNavigationExtension
 		TDG_IsInShapeProject _tdg_isInShapeProject;
 		public static string filePath_testData_isInShapeProject = $"{dirPath_testDataFolder}\\tdg_isInShapeProject_data_A.json";
 
+		TDG_IsInShapeProject _tdg_isInShapeProjectB;
+		public static string filePath_testData_isInShapeProjectB = $"{dirPath_testDataFolder}\\tdg_isInShapeProjectB_data_A.json";
+
 
 		[Header("DEBUG")]
 		public bool AmDebugging = true;

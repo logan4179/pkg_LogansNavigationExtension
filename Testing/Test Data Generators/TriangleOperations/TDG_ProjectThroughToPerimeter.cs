@@ -88,7 +88,7 @@ namespace LogansNavigationExtension
 			)
 			{
 				DBG_Operation += $"projection returned true. perimHitParam: '{perimHitParam}'...\n";
-				ProjectedEdge = CurrentTriangle.Edges[perimHitParam.ComponentIndex];
+				ProjectedEdge = CurrentTriangle.Edges[perimHitParam.EdgeIndex];
 				DrawStandardEdgeFocusGizmos( ProjectedEdge, 0.1f, $"edge{ProjectedEdge.MyCoordinate.ComponentIndex}", Color.green );
 
 				Gizmos.DrawCube( perimHitParam.Position, Vector3.one * 0.025f );

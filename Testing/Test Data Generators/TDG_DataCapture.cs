@@ -38,7 +38,7 @@ namespace LogansNavigationExtension
 			}
 
 			int firstCount = VectorCaptureLists[0].vectors.Count;
-			for (int i = 0; i < VectorCaptureLists.Count; i++)
+			for ( int i = 0; i < VectorCaptureLists.Count; i++ )
 			{
 				if(VectorCaptureLists[i].vectors.Count != firstCount )
 				{
@@ -135,11 +135,7 @@ namespace LogansNavigationExtension
 		}
 	}
 
-	[System.Serializable]
-	public class TDG_DataEntry //was thinking maybe this could somehow take the place of all the capture lists below...maybe not...
-	{
 
-	}
 
 	[System.Serializable]
 	public class TDG_VectorCaptureList
@@ -150,6 +146,17 @@ namespace LogansNavigationExtension
 		public Transform Trans_SendToVector;
 
 		public List<Vector3> vectors;
+
+		public TDG_VectorCaptureList(string name, List<Vector3> vList)
+		{
+			Name = name;
+			vectors = new List<Vector3>();
+
+			for (int i = 0; i < vList.Count; i++)
+			{
+				vectors.Add( new Vector3(vList[i].x, vList[i].y, vList[i].z) );
+			}
+		}
 	}
 
 	[System.Serializable]
@@ -157,6 +164,17 @@ namespace LogansNavigationExtension
 	{
 		public string Name;
 		public List<bool> booleans;
+
+		public TDG_BooleanCaptureList(string name, List<bool> bList)
+		{
+			Name = name;
+			booleans = new List<bool>();
+
+			for (int i = 0; i < bList.Count; i++)
+			{
+				booleans.Add(bList[i] );
+			}
+		}
 	}
 
 	[System.Serializable]
@@ -165,5 +183,13 @@ namespace LogansNavigationExtension
 		public string Name;
 		public List<LNX_ComponentCoordinate> coordinates;
 	}
+
+	[System.Serializable]
+	public class TDG_IntCaptureList
+	{
+		public string Name;
+		public List<int> Ints;
+	}
+
 }
 

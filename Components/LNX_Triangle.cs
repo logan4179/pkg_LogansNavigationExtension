@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEditor.DeviceSimulation;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.iOS;
@@ -453,8 +454,184 @@ namespace LogansNavigationExtension
 		}
 
 		#region MAIN API METHODS----------------------------------------------------------------------
+		public bool IsInShapeProject( Vector3 pos, out LNX_NavmeshHit surfaceHit ) //todo: this one doesn't return correct if triangle surface is slanted
+		{
+			//todo: currently, it doesn't set projectedPos to the correct "out" value
+			//todo: I can short-circuit here depending on distance, and it will make this and everything that relies on it way more performant...
+			surfaceHit = LNX_NavmeshHit.None;
+			pos = LNX_Utils.FlatVector(pos, v_navmeshProjectionDirection_cached);
 
-		[NonSerialized] public double TotalTime_IsInShapeProject;
+			#region CHECK IF ON EDGES =============================================
+			if ( Edges[0].DoesPositionLieOnEdge(pos, out surfaceHit) )
+			{
+				return true;
+			}
+			else if (Edges[1].DoesPositionLieOnEdge(pos, out surfaceHit))
+			{
+				return true;
+			}
+			else if (Edges[2].DoesPositionLieOnEdge(pos, out surfaceHit))
+			{
+				return true;
+			}
+			#endregion
+
+			if
+			(
+				!LNX_Utils.AmInArea(
+					pos, Verts[0].V_flattenedPosition, 
+					Verts[1].V_flattenedPosition, 
+					Verts[2].V_flattenedPosition, 
+					v_navmeshProjectionDirection_cached, false //Note: I'm purposefully leaving this false because true would cause this to do a redundant checking of the verts and edges, when that's already been checked earlier...
+				)
+			)
+			{
+				return false;
+			}
+
+			#region DETERMINE THE PROJECTED POSITION--------------------------------------
+			if (Slope == 0f)
+			{
+				surfaceHit = new LNX_NavmeshHit(this, GetProjectionBase() + pos, v_navmeshProjectionDirection_cached);
+			}
+			else
+			{
+
+				//Trying quaternion multiplication----------------------------------------
+				/*
+				//I still feel like this is worth investigating further because it reads so much better. I believe the reason the 
+				result is a little bent looking is because I'm rotating a directional vector around an axis, which is going to 
+				affect the x and z, when I actually need the x and z to remain the same.
+				Vector3 v_fltCtr_to_fltPos = flatPos - V_FlattenedCenter;
+				Vector3 v_ctrToPos = pos - V_Center;
+
+				//projectedPos = V_Center + (Rotation * v_fltCtr_to_fltPos); //bent
+				projectedPos = V_Center + (Rotation * LNX_Utils.FlatVector(v_ctrToPos, v_projectionNormal) ); //also bent...why? looks like the exact same result
+
+				Vector3 vtry = Vector3.Project(  );
+				*/
+				//-------------------------------------------------------
+
+				//Use the law of sines...
+				// Note: This isn't currently perfect. It seems to create a point slightly below the surface of the triangle.
+				Vector3 edgePrjct = Edges[1].StartPosition +
+					Vector3.Project(pos - Edges[1].StartPosition, Edges[1].V_StartToEnd);//this gets a point on the edge closest to the pos
+																						 //float lenA = Vector3.Distance(edgePrjct, flatPos); //orig
+
+				//todo: replace the following with LNX_Utils method and make sure tdgs are still showing correct results
+				float lenA = Vector3.Distance(LNX_Utils.FlatVector(edgePrjct, v_navmeshProjectionDirection_cached), pos);
+
+				float angA = 90f * Mathf.Deg2Rad;
+				float angC = Slope * Mathf.Deg2Rad;
+				float lenC = (Mathf.Sin(angC) * lenA) / MathF.Sin(angA);
+				//projectedPos = flatPos + (v_projectionNormal * lenC);
+				surfaceHit = new LNX_NavmeshHit(
+					this, LNX_Utils.FlooredVector(pos, edgePrjct, v_navmeshProjectionDirection_cached) + (v_navmeshProjectionDirection_cached * lenC),
+					v_navmeshProjectionDirection_cached
+				);
+			}
+			#endregion
+
+			return true;
+		}
+		public bool IsInShapeProject_dbg(Vector3 pos, out LNX_NavmeshHit surfaceHit, ref LNX_MethodDebugReport rprt ) //todo: this one doesn't return correct if triangle surface is slanted
+		{
+			rprt.StartMethod($"{this}.IsInShapeProject_dbg({pos})");
+			//todo: currently, it doesn't set projectedPos to the correct "out" value
+			//todo: I can short-circuit here depending on distance, and it will make this and everything that relies on it way more performant...
+			surfaceHit = LNX_NavmeshHit.None;
+			pos = LNX_Utils.FlatVector(pos, v_navmeshProjectionDirection_cached);
+			rprt.Log($"flattened pos to: '{pos}'...",
+				"First checking each edge.DoesPositionLieOnEdge()..."
+			);
+
+			#region CHECK IF ON EDGES =============================================
+			if (Edges[0].DoesPositionLieOnEdge(pos, out surfaceHit))
+			{
+				rprt.Log_And_End_Method($"found that position DOES lie on edge0. hit now: '{surfaceHit}'. Returning true...");
+				return true;
+			}
+			else if (Edges[1].DoesPositionLieOnEdge(pos, out surfaceHit))
+			{
+				rprt.Log_And_End_Method($"found that position DOES lie on edge1. hit now: '{surfaceHit}'. Returning true...");
+				return true;
+			}
+			else if (Edges[2].DoesPositionLieOnEdge(pos, out surfaceHit))
+			{
+				rprt.Log_And_End_Method($"found that position DOES lie on edge2. hit now: '{surfaceHit}'. Returning true...");
+				return true;
+			}
+			#endregion
+
+			rprt.Log($"apparently all edge checks failed. Checking if position is in triangular area created by verts...");
+
+			if
+			(
+				!LNX_Utils.AmInArea(
+					pos, Verts[0].V_flattenedPosition,
+					Verts[1].V_flattenedPosition,
+					Verts[2].V_flattenedPosition,
+					v_navmeshProjectionDirection_cached, false //Note: I'm purposefully leaving this false because true would cause this to do a redundant checking of the verts and edges, when that's already been checked earlier...
+				)
+			)
+			{
+				rprt.Log_And_End_Method($"found position was NOT in area. Returning false...");
+				return false;
+			}
+
+			rprt.Log($"position is in area. Now determining the projected position...");
+
+			#region DETERMINE THE PROJECTED POSITION--------------------------------------
+			if (Slope == 0f)
+			{
+				surfaceHit = new LNX_NavmeshHit(this, GetProjectionBase() + pos, v_navmeshProjectionDirection_cached);
+				rprt.Log($"no slope. Created surface hit: '{surfaceHit}'...");
+
+			}
+			else
+			{
+
+				//Trying quaternion multiplication----------------------------------------
+				/*
+				//I still feel like this is worth investigating further because it reads so much better. I believe the reason the 
+				result is a little bent looking is because I'm rotating a directional vector around an axis, which is going to 
+				affect the x and z, when I actually need the x and z to remain the same.
+				Vector3 v_fltCtr_to_fltPos = flatPos - V_FlattenedCenter;
+				Vector3 v_ctrToPos = pos - V_Center;
+
+				//projectedPos = V_Center + (Rotation * v_fltCtr_to_fltPos); //bent
+				projectedPos = V_Center + (Rotation * LNX_Utils.FlatVector(v_ctrToPos, v_projectionNormal) ); //also bent...why? looks like the exact same result
+
+				Vector3 vtry = Vector3.Project(  );
+				*/
+				//-------------------------------------------------------
+
+				//Use the law of sines...
+				// Note: This isn't currently perfect. It seems to create a point slightly below the surface of the triangle.
+				Vector3 edgePrjct = Edges[1].StartPosition +
+					Vector3.Project(pos - Edges[1].StartPosition, Edges[1].V_StartToEnd);//this gets a point on the edge closest to the pos
+																						 //float lenA = Vector3.Distance(edgePrjct, flatPos); //orig
+
+				//todo: replace the following with LNX_Utils method and make sure tdgs are still showing correct results
+				float lenA = Vector3.Distance(LNX_Utils.FlatVector(edgePrjct, v_navmeshProjectionDirection_cached), pos);
+
+				float angA = 90f * Mathf.Deg2Rad;
+				float angC = Slope * Mathf.Deg2Rad;
+				float lenC = (Mathf.Sin(angC) * lenA) / MathF.Sin(angA);
+				//projectedPos = flatPos + (v_projectionNormal * lenC);
+				surfaceHit = new LNX_NavmeshHit(
+					this, LNX_Utils.FlooredVector(pos, edgePrjct, v_navmeshProjectionDirection_cached) + (v_navmeshProjectionDirection_cached * lenC),
+					v_navmeshProjectionDirection_cached
+				);
+				rprt.Log($"there IS slope. Created surface hit: '{surfaceHit}'...");
+			}
+			#endregion
+
+			rprt.Log_And_End_Method($"returning true...");
+			return true;
+		}
+
+
 		/// <summary>
 		/// Determines if a supplied position is within a theoretical sweep 
 		/// (or cast) of the triangle's shape along the direction of the navmesh orientation.
@@ -478,7 +655,7 @@ namespace LogansNavigationExtension
 			#region DETERMINE THE PROJECTED POSITION--------------------------------------
 			if (Slope == 0f)
 			{
-				projectedPos = pos;
+				projectedPos = GetProjectionBase() + pos;
 			}
 			else
 			{
@@ -615,6 +792,30 @@ namespace LogansNavigationExtension
 				return vC;
 			}
 		}
+		public LNX_NavmeshHit ClosestHitOnPerimeter(Vector3 pos)
+		{
+			//Debug.Log($"Edges.length: '{Edges.Length}'");
+			LNX_NavmeshHit hit0 = Edges[0].ClosestHitOnEdge( pos );
+			LNX_NavmeshHit hit1 = Edges[1].ClosestHitOnEdge(pos);
+			LNX_NavmeshHit hit2 = Edges[2].ClosestHitOnEdge(pos);
+
+			float distTo0 = Vector3.Distance( pos, hit0.Position );
+			float distTo1 = Vector3.Distance( pos, hit1.Position );
+			float distTo2 = Vector3.Distance( pos, hit2.Position );
+
+			if ( distTo0 < distTo1 && distTo0 < distTo2 )
+			{
+				return hit0;
+			}
+			else if ( distTo1 < distTo0 && distTo1 < distTo2 )
+			{
+				return hit1;
+			}
+			else
+			{
+				return hit2;
+			}
+		}
 
 		//todo: I think it's maybe a little wierd that I'm passing in two vectors (innerPos, and outerPos), as opposed to two lnxHits. It looks like where I'm using this currently, I could 
 		//just pass in two hit objects.
@@ -648,18 +849,29 @@ namespace LogansNavigationExtension
 						v_to_flat == Edges[i].V_StartToEnd_flattened || v_to_flat == Edges[i].V_EndToStart_flattened //if the projection runs parallel with the edge...
 					) 
 					{
-						outHit = new LNX_NavmeshHit(Edges[i].ClosestPointOnEdge(innerPos), v_navmeshProjectionDirection_cached, innerPos,
+						outHit = new LNX_NavmeshHit(
+							Edges[i].ClosestPointOnEdge(innerPos), 
+							v_navmeshProjectionDirection_cached, 
 							(returnHitOnAdjacenttTriangle && Edges[i].SharedEdgeCoordinate != LNX_ComponentCoordinate.None) ? 
-							Edges[i].SharedEdgeCoordinate : new LNX_ComponentCoordinate(index_inCollection, i));
+							Edges[i].SharedEdgeCoordinate.TrianglesIndex : index_inCollection,
+							-1,
+							(returnHitOnAdjacenttTriangle && Edges[i].SharedEdgeCoordinate != LNX_ComponentCoordinate.None) ?
+							Edges[i].SharedEdgeCoordinate.ComponentIndex : i
+						);
 						return true;
 					}
 				}
 				else if ( indx_edgeExclude != i && Edges[i].DoesProjectionIntersectEdge(innerPos, ftndOuterPos, out projectedEdgeHit) )
 				{
 					dbgRprt += $"method succeeded on edge 0. Here are the reports...\n";
-					outHit = new LNX_NavmeshHit (projectedEdgeHit.Position, v_navmeshProjectionDirection_cached, innerPos,
-					(returnHitOnAdjacenttTriangle && Edges[i].SharedEdgeCoordinate != LNX_ComponentCoordinate.None) ? 
-					Edges[i].SharedEdgeCoordinate : new LNX_ComponentCoordinate(index_inCollection, i));
+					outHit = new LNX_NavmeshHit (
+						projectedEdgeHit.Position, v_navmeshProjectionDirection_cached,
+						(returnHitOnAdjacenttTriangle && Edges[i].SharedEdgeCoordinate != LNX_ComponentCoordinate.None) ? 
+						Edges[i].SharedEdgeCoordinate.TrianglesIndex : index_inCollection,
+						-1,
+						(returnHitOnAdjacenttTriangle && Edges[i].SharedEdgeCoordinate != LNX_ComponentCoordinate.None) ?
+						Edges[i].SharedEdgeCoordinate.TrianglesIndex : i
+					);
 					return true;
 				}
 			}
@@ -667,53 +879,92 @@ namespace LogansNavigationExtension
 			return false;
 		}
 		
-		public bool ProjectThroughToPerimeter( LNX_NavmeshHit innerHit, LNX_NavmeshHit outerHit, out LNX_NavmeshHit perimHit, int indx_edgeExclude = -1, bool returnHitOnAdjacenttTriangle = false)
+		public bool ProjectThroughToPerimeter( LNX_NavmeshHit innerHit, LNX_NavmeshHit outerHit, out LNX_NavmeshHit perimHit, 
+			int indx_edgeExclude = -1, bool returnHitOnAdjacenttTriangle = false)
 		{
 			perimHit = LNX_NavmeshHit.None;
 
-			if( innerHit == outerHit) //short-circuit
+			//todo: efficiency test using flat inner and outer positions in the following check. Notice that this is done lower anyway, so maybe just biting the bullet here and testing the flat positions instead would be better
+			if (innerHit == outerHit) //short-circuit
 			{
 				return false;
 			}
 
-			LNX_NavmeshHit projectedEdgeHit = LNX_NavmeshHit.None;
 			Vector3 ftndInrPos = LNX_Utils.FlatVector(innerHit.Position, v_navmeshProjectionDirection_cached);
 			Vector3 ftndOuterPos = LNX_Utils.FlatVector(outerHit.Position, v_navmeshProjectionDirection_cached);
-			Vector3 v_projection_flat = LNX_Utils.FlatVector(ftndOuterPos - ftndInrPos).normalized;
+
+			Vector3 v_projection_flat = Vector3.Normalize(ftndOuterPos - ftndInrPos);
 
 			if (ftndInrPos == ftndOuterPos) //short-circuit
 			{
 				return false;
 			}
 
+			LNX_NavmeshHit bestEdgeIntersectHit = LNX_NavmeshHit.None;
 			for (int i = 0; i < 3; i++)
 			{
-				if ( Edges[i].DoesPositionLieOnEdge(ftndInrPos) &&
-					v_projection_flat == Edges[i].V_StartToEnd_flattened || v_projection_flat == Edges[i].V_EndToStart_flattened //if the projection runs parallel with the edge...
-				)
+				if (i == indx_edgeExclude)
 				{
-					perimHit = new LNX_NavmeshHit(Edges[i].ClosestPointOnEdge(innerHit.Position), v_navmeshProjectionDirection_cached, innerHit.Position,
-						(returnHitOnAdjacenttTriangle && Edges[i].SharedEdgeCoordinate != LNX_ComponentCoordinate.None) ?
-						Edges[i].SharedEdgeCoordinate : new LNX_ComponentCoordinate(index_inCollection, i));
-					return true;
+					continue;
 				}
-				else
+
+				if (Edges[i].DoesProjectionIntersectEdge(innerHit.Position, outerHit.Position, out bestEdgeIntersectHit, true))
 				{
-					if (indx_edgeExclude != i && Edges[i].DoesProjectionIntersectEdge(innerHit.Position, ftndOuterPos, out projectedEdgeHit))
+					//at this point, check if the dot of the projection and this edge's cross vector are opposite.
+					//if so, keep checking the next edges
+					if (Vector3.Dot(v_projection_flat, Edges[i].v_Cross_flat) < 0f) //projection points toward "outside" direction of this edge...
 					{
-						perimHit = new LNX_NavmeshHit(projectedEdgeHit.Position, v_navmeshProjectionDirection_cached, innerHit.Position,
-						(returnHitOnAdjacenttTriangle && Edges[i].SharedEdgeCoordinate != LNX_ComponentCoordinate.None) ?
-						Edges[i].SharedEdgeCoordinate : new LNX_ComponentCoordinate(index_inCollection, i));
+						if (innerHit.Position == Edges[i].StartPosition) //In this case, we need to do further checking to decide which triangle to project into...
+						{
+							//note: I'm not sure the following will work bc there's no way for this method or the verts to know the angles of the adjacent triangles sharing the vert space...
+							/*
+							for ( int i_shrdVrCrds = 0; i_shrdVrCrds < Verts[Edges[i].StartVertCoordinate.ComponentIndex].SharedVertexCoordinates.Length; i_shrdVrCrds++ )
+							{
+								if ( Verts[Edges[i].StartVertCoordinate.ComponentIndex].ProjectionIsInCenterSweep(v_projection_flat) )
+								{
+
+								}
+							}
+							*/
+						}
+						else if (innerHit.Position == Edges[i].EndPosition) //In this case, we need to do further checking to decide which triangle to project into...
+						{
+
+						}
+
+						if (returnHitOnAdjacenttTriangle & !Edges[i].AmTerminal)
+						{
+							perimHit = new LNX_NavmeshHit(
+								bestEdgeIntersectHit.Position, v_navmeshProjectionDirection_cached,
+								Edges[i].SharedEdgeCoordinate.TrianglesIndex,
+								-1, //todo: there's a chance that this hit could be on a vert, and if so, this needs to be calculated correctly
+								Edges[i].SharedEdgeCoordinate.ComponentIndex
+							);
+						}
+						else
+						{
+							perimHit = bestEdgeIntersectHit;
+						}
 
 						return true;
 					}
+					else //projection points toward "inside" direction of this edge...
+					{
+						bestEdgeIntersectHit = perimHit;
+					}
 				}
+			}
+
+			if (bestEdgeIntersectHit != LNX_NavmeshHit.None)
+			{
+				perimHit = bestEdgeIntersectHit;
+				return true;
 			}
 
 			return false;
 		}
 
-
+	
 		public bool ProjectThroughToPerimeter_dbg( LNX_NavmeshHit innerHit, LNX_NavmeshHit outerHit, 
 			out LNX_NavmeshHit perimHit, ref LNX_MethodDebugReport rprt, int indx_edgeExclude = -1, 
 			bool returnHitOnAdjacenttTriangle = false)
@@ -750,14 +1001,6 @@ namespace LogansNavigationExtension
 			for (int i = 0; i < 3; i++)
 			{
 				rprt.Log($"for edge{i}...");
-				/*rprt.Log("==================================================",
-					$"edge[{i}].vcross: '{Edges[i].v_Cross}', flat: '{Edges[i].v_Cross_flat}', ",
-					$"calc: '{Vector3.Cross(Edges[i].V_StartToEnd, V_PlaneFaceNormal).normalized}', shouldflip: " +
-					$"'{Vector3.Dot(Vector3.Cross(Edges[i].V_StartToEnd, V_PlaneFaceNormal).normalized, Edges[i].v_toCenter) < 0}', " +
-					$"flat calc: '{LNX_Utils.FlatVector(Vector3.Cross(Edges[i].V_StartToEnd, V_PlaneFaceNormal).normalized, v_SurfaceNormal_cached).normalized}'", 
-					$"v_toctr: '{Edges[i].v_toCenter}', cmpr dot: '{Vector3.Dot(Edges[i].v_Cross, Edges[i].v_toCenter)}'",
-					"======================================================"
-					);*/
 
 				if( i == indx_edgeExclude )
 				{
@@ -782,16 +1025,6 @@ namespace LogansNavigationExtension
 						{
 							rprt.Log( $"inner hit position is same as edge startposition. Deciding which triangle to generate hit on..." );
 
-							//note: I'm not sure the following will work bc there's no way for this method or the verts to know the angles of the adjacent triangles sharing the vert space...
-							/*
-							for ( int i_shrdVrCrds = 0; i_shrdVrCrds < Verts[Edges[i].StartVertCoordinate.ComponentIndex].SharedVertexCoordinates.Length; i_shrdVrCrds++ )
-							{
-								if ( Verts[Edges[i].StartVertCoordinate.ComponentIndex].ProjectionIsInCenterSweep(v_projection_flat) )
-								{
-
-								}
-							}
-							*/
 						}
 						else if ( innerHit.Position == Edges[i].EndPosition) //In this case, we need to do further checking to decide which triangle to project into...
 						{
@@ -802,7 +1035,12 @@ namespace LogansNavigationExtension
 						if (returnHitOnAdjacenttTriangle & !Edges[i].AmTerminal)
 						{
 							rprt.Log($"switching hit to adjacent triangle as instructed by returnHitOnAdjacenttTriangle parameter...");
-							perimHit = new LNX_NavmeshHit(bestEdgeIntersectHit.Position, Edges[i].SharedEdgeCoordinate, v_navmeshProjectionDirection_cached);
+							perimHit = new LNX_NavmeshHit(
+								bestEdgeIntersectHit.Position, v_navmeshProjectionDirection_cached, 
+								Edges[i].SharedEdgeCoordinate.TrianglesIndex,
+								-1, //todo: there's a chance that this hit could be on a vert, and if so, this needs to be calculated correctly
+								Edges[i].SharedEdgeCoordinate.ComponentIndex
+							);
 						}
 						else
 						{
@@ -837,68 +1075,294 @@ namespace LogansNavigationExtension
 
 		}
 
-		public bool ProjectThroughToPerimeter(int vertIndex, LNX_NavmeshHit outerHit,
-			out LNX_NavmeshHit perimHit, bool returnHitOnAdjacenttTriangle = false)
+		/*
+		public bool ProjectThroughToPerimeter_dbg(LNX_NavmeshHit startHit, LNX_NavmeshHit endHit,
+			out LNX_NavmeshHit perimHit, ref LNX_MethodDebugReport rprt,
+			bool returnHitOnAdjacenttTriangle = false)
 		{
-			perimHit = new LNX_NavmeshHit();
-			//throw (NotImplementedException);
-
-			return false;
-
-		}
-		public bool ProjectThroughToPerimeter_dbg(int vertIndex, LNX_NavmeshHit outerHit,
-			out LNX_NavmeshHit perimHit, ref LNX_MethodDebugReport rprt, bool returnHitOnAdjacenttTriangle = false)
-		{
-			rprt.StartMethod($"{this.ToString()}.ProjectThroughToPerimeter_dbg( vrt{vertIndex}, {outerHit} )");
+			rprt.StartMethod($"{this.ToString()}.ProjectThroughToPerimeter_dbg( {startHit}, {endHit} )");
 			perimHit = LNX_NavmeshHit.None;
 
-			Vector3 ftndInrPos = Verts[vertIndex].V_flattenedPosition;
-			Vector3 ftndOuterPos = outerHit.Position_flat;
+			#region SHORT-CIRCUIT =======================================================================
+			if (startHit.TriangleIndex != index_inCollection) 
+			{
+				Debug.LogError($"LNX ERROR! Triangle method 'ProjectThroughToPerimeter()' was called on a triangle with a " +
+					$"cached index of: '{index_inCollection}', but was passed an innerHit parameter with a triangle index of " +
+					$"'{startHit.TriangleIndex}'. This method assumes that both these values will be the same. Returning early");
 
-			if (ftndInrPos == ftndOuterPos) //short-circuit
+				rprt.Log_And_End_Method( $"Encountered problem. innerHit tri index is not equal to the calling triangle's index. Returning early..." );
+				return false;
+			}
+
+			//todo: efficiency test using flat inner and outer positions in the following check. Notice that this is done lower anyway, so maybe just biting the bullet here and testing the flat positions instead would be better
+			if ( startHit.Position == endHit.Position ) //short-circuit
 			{
 				rprt.Log("inner hit and outer hit determined to be the same. Short-circuiting...");
 				rprt.EndMethod("ProjectThroughToPerimeter()");
 				return false;
 			}
-			
-			Vector3 v_projection_flat = Vector3.Normalize( ftndOuterPos - ftndInrPos );
-			//rprt.Log($"using projection: '{v_projection_flat}'...");
+			#endregion
 
-			rprt.Log($"No short-circuits. Now checking each edge...");
+			Vector3 ftndInrPos = LNX_Utils.FlatVector(startHit.Position, v_navmeshProjectionDirection_cached);
+			Vector3 ftndOuterPos = LNX_Utils.FlatVector(endHit.Position, v_navmeshProjectionDirection_cached);
+			if (ftndInrPos == ftndOuterPos) //short-circuit
+			{
+				rprt.Log($"Found flattened positions are the same. returning early...");
+				rprt.EndMethod("ProjectThroughToPerimeter()");
+				return false;
+			}
+
+			Vector3 v_projection_flat = Vector3.Normalize(ftndOuterPos - ftndInrPos);
+			rprt.Log($"using projection: '{v_projection_flat}'...");
+
+			#region HANDLE ENDHIT BEING ON A VERT========================================
+			int touchedVert = -1;
+			if (endHit.VertIndex != 0 &&
+				TouchesVertAtCoordinate_ViaRelational(endHit.TriangleIndex, endHit.VertIndex, out touchedVert)
+			)
+			{
+				rprt.Log($"The outerhit was on a vert touches this triangle at vert: " +
+					$"'{touchedVert}'. Can simplify derived perimHit...",
+					$"first, sweep-checking shared-coordinate-relationships at vert{touchedVert}...");
+				//todo: need to check that projection is in center sweep...
+
+				LNX_ComponentCoordinate rel = Verts[touchedVert].GetVertCoord_viaProjectionSweep( v_projection_flat );
+
+				if (rel == LNX_ComponentCoordinate.None)
+				{
+					rprt.Log($"Got 'None' relationship. Assuming this vert/projection combo is " +
+						$"directionally-terminal. Using existing endHit...");
+					perimHit = endHit;
+					rprt.Log_And_End_Method($"now returning true...");
+					return true;
+				}
+				else
+				{
+					rprt.Log_And_End_Method($"Got rel: '{rel}'. Using this to form simplified perimHit...");
+					perimHit = new LNX_NavmeshHit(
+						endHit.Position, v_navmeshProjectionDirection_cached,
+						rel.TrianglesIndex,
+						rel.ComponentIndex,
+						-1
+					);
+					rprt.Log_And_End_Method($"Created perimHit: '{perimHit}'. Now returning true...");
+					return true;
+				}
+			}
+			#endregion
+
+			#region HANDLE STARTHIT BEING ON A VERT =============================
+			if ( startHit.VertIndex != -1 )
+			{
+				rprt.Log($"startHit is on vert{startHit.VertIndex}...");
+				if ( v_projection_flat == Verts[startHit.VertIndex].V_ToFirstSiblingVert_flat )
+				{
+					rprt.Log($"projection is equal to vert[{startHit.VertIndex}].V_ToFirstSiblingVert_flat. " +
+						$"this means perimHit can be assumed...",
+						"Now checking if perimHit needs to be projected onto another triangle...");
+				
+					LNX_ComponentCoordinate rel = Verts[Verts[startHit.VertIndex].Index_FirstSiblingVert].GetVertCoord_viaProjectionSweep(v_projection_flat);
+
+					if (rel == LNX_ComponentCoordinate.None)
+					{
+						rprt.Log($"Got 'None' relationship. Assuming this vert/projection combo is " +
+							$"directionally-terminal...");
+						perimHit = new LNX_NavmeshHit(
+							Verts[Verts[startHit.VertIndex].Index_FirstSiblingVert],
+							V_PathingNormal
+						); 
+						rprt.Log_And_End_Method($"Created perimHit: '{perimHit}'. now returning true...");
+						return true;
+					}
+					else
+					{
+						rprt.Log($"Got rel: '{rel}'. Using this to form simplified perimHit...");
+						perimHit = new LNX_NavmeshHit(
+							endHit.Position, v_navmeshProjectionDirection_cached,
+							rel.TrianglesIndex,
+							rel.ComponentIndex,
+							-1
+						);
+						rprt.Log_And_End_Method($"Created perimHit: '{perimHit}'. Now returning true...");
+						return true;
+					}
+				}
+				else if ( v_projection_flat == Verts[startHit.VertIndex].V_ToSecondSiblingVert_flat )
+				{
+					rprt.Log($"projection is equal to vert[{startHit.VertIndex}].V_ToSecondSiblingVert_flat. " +
+						$"this means perimHit can be assumed...",
+						"Now checking if perimHit needs to be projected onto another triangle...");
+
+					LNX_ComponentCoordinate rel = Verts[Verts[startHit.VertIndex].Index_SecondSiblingVert].GetVertCoord_viaProjectionSweep(v_projection_flat);
+
+					if (rel == LNX_ComponentCoordinate.None)
+					{
+						rprt.Log($"Got 'None' relationship. Assuming this vert/projection combo is " +
+							$"directionally-terminal...");
+						perimHit = new LNX_NavmeshHit(
+							Verts[Verts[startHit.VertIndex].Index_SecondSiblingVert],
+							V_PathingNormal
+						);
+						rprt.Log_And_End_Method($"Created perimHit: '{perimHit}'. now returning true...");
+						return true;
+					}
+					else
+					{
+						rprt.Log($"Got rel: '{rel}'. Using this to form simplified perimHit...");
+						perimHit = new LNX_NavmeshHit(
+							endHit.Position, v_navmeshProjectionDirection_cached,
+							rel.TrianglesIndex,
+							rel.ComponentIndex,
+							-1
+						);
+						rprt.Log_And_End_Method($"Created perimHit: '{perimHit}'. Now returning true...");
+						return true;
+					}
+				}
+				else if ( Verts[startHit.VertIndex].ProjectionIsInCenterSweep_dbg(v_projection_flat, ref rprt, false) )
+				{
+					rprt.Log($"Found projection is in center sweep for this vert. Calculating perimHit via trig...");
+					float angleA_flat = Vector3.Angle(v_projection_flat, Verts[startHit.VertIndex].V_ToFirstSiblingVert_flat);
+					float angleB_flat = Verts[Verts[startHit.VertIndex].Index_FirstSiblingVert].AngleAtBend_flattened;
+					float angleC_flat = 180f - angleA_flat - angleB_flat;
+					float len_sideB = LNX_Utils.CalculateTriangleEdgeLength( 
+						angleA_flat, angleC_flat, Edges[startHit.VertIndex].EdgeLength_flat 
+					);
+					perimHit = new LNX_NavmeshHit(
+						Edges[startHit.VertIndex].V_StartToEnd *
+						LNX_Utils.CalculateTriangleEdgeLength
+						(
+							90f, 
+							90f - Edges[startHit.VertIndex].FloorAngle,
+							len_sideB
+						),
+						V_PathingNormal, //todo: actually I need the pathing normal of the adjacent triangle if this edge is not
+										 //terminal, but I don't think I can get that from here as it stands. Could make a method 
+										 //on the vert class to derive the pathing normal based on the relationships
+						Edges[startHit.VertIndex].AmTerminal ? index_inCollection : Edges[startHit.VertIndex].SharedEdgeCoordinate.TrianglesIndex,
+						-1,
+						startHit.VertIndex
+					);
+					rprt.Log_And_End_Method($"calculated perimHit: '{perimHit}'. Returning true...");
+					return true;
+				}
+				else
+				{
+					rprt.Log($"projection must be toward outside of triangle. Creating simplified perimeter hit on vertex...", 
+						"first, need to determine if projection should be on next tri. Getting coord via projection sweep...");
+
+					LNX_ComponentCoordinate rel = Verts[touchedVert].GetVertCoord_viaProjectionSweep(v_projection_flat);
+					if (rel == LNX_ComponentCoordinate.None)
+					{
+						rprt.Log($"Got 'None' relationship. Assuming this vert/projection combo is " +
+							$"directionally-terminal. Using existing endHit...");
+						perimHit = endHit;
+						rprt.Log_And_End_Method($"now returning true...");
+						return true;
+					}
+					else
+					{
+						rprt.Log_And_End_Method($"Got rel: '{rel}'. Using this to form simplified perimHit...");
+						perimHit = new LNX_NavmeshHit(
+							endHit.Position, v_navmeshProjectionDirection_cached,
+							rel.TrianglesIndex,
+							rel.ComponentIndex,
+							-1
+						);
+						rprt.Log_And_End_Method($"Created perimHit: '{perimHit}'. Now returning true...");
+						return true;
+					}
+				}
+			}
+			#endregion
+
+			rprt.Log($"No short-circuits, and hits are not on a vert on this triangle. Now checking each edge...");
+			LNX_NavmeshHit bestEdgeIntersectHit = LNX_NavmeshHit.None;
 			for (int i = 0; i < 3; i++)
 			{
 				rprt.Log($"for edge{i}...");
-				if ( Edges[i].StartVertIndex != vertIndex || Edges[i].EndVertIndex != vertIndex )
+
+				if ( startHit.EdgeIndex == i )
 				{
-					rprt.Log($"can use this edge. checking if projection intersects this edge...");
-					if ( Edges[i].DoesProjectionIntersectEdge_dbg(Verts[vertIndex].V_Position, outerHit.Position, 
-						out perimHit, ref rprt, true)
-					)
+					rprt.Log($"starHit is on this edge...");
+					bestEdgeIntersectHit = new LNX_NavmeshHit( 
+				}
+				if (Edges[i].DoesProjectionIntersectEdge_dbg(startHit.Position, endHit.Position, out bestEdgeIntersectHit, ref rprt, true))
+				{
+					rprt.Log($"Projection DOES intesect this edge at '{bestEdgeIntersectHit}'. Comparing projection direction to edge cross direction...");
+					//at this point, check if the dot of the projection and this edge's cross vector are opposite.
+					//if so, keep checking the next edges
+
+					rprt.Log($"using dot: '{Vector3.Dot(v_projection_flat, Edges[i].v_Cross_flat)}'...");
+
+					if (Vector3.Dot(v_projection_flat, Edges[i].v_Cross_flat) < 0f) //projection points toward "outside" direction of this edge...
 					{
+						rprt.Log($"Projection is pointed outside the triangle. This means no further projection is needed...");
+
+						if (startHit.Position == Edges[i].StartPosition) //In this case, we need to do further checking to decide which triangle to project into...
+						{
+							rprt.Log($"inner hit position is same as edge startposition. Deciding which triangle to generate hit on...");
+
+							//note: I'm not sure the following will work bc there's no way for this method or the verts to know the angles of the adjacent triangles sharing the vert space...
+							
+							for ( int i_shrdVrCrds = 0; i_shrdVrCrds < Verts[Edges[i].StartVertCoordinate.ComponentIndex].SharedVertexCoordinates.Length; i_shrdVrCrds++ )
+							{
+								if ( Verts[Edges[i].StartVertCoordinate.ComponentIndex].ProjectionIsInCenterSweep(v_projection_flat) )
+								{
+
+								}
+							}
+							
+						}
+						else if (startHit.Position == Edges[i].EndPosition) //In this case, we need to do further checking to decide which triangle to project into...
+						{
+							rprt.Log($"inner hit position is same as edge endposition. Deciding which triangle to generate hit on...");
+
+						}
+
+						if (returnHitOnAdjacenttTriangle & !Edges[i].AmTerminal)
+						{
+							rprt.Log($"switching hit to adjacent triangle as instructed by returnHitOnAdjacenttTriangle parameter...");
+							perimHit = new LNX_NavmeshHit(
+								bestEdgeIntersectHit.Position, v_navmeshProjectionDirection_cached,
+								Edges[i].SharedEdgeCoordinate.TrianglesIndex,
+								-1, //todo: there's a chance that this hit could be on a vert, and if so, this needs to be calculated correctly
+								Edges[i].SharedEdgeCoordinate.ComponentIndex
+							);
+						}
+						else
+						{
+							perimHit = bestEdgeIntersectHit;
+						}
+
 						rprt.Log_And_End_Method($"finally returning hit: '{perimHit}'...",
 							"ProjectThroughToPerimeter_dbg");
 						return true;
 					}
-					//asdf
-				}
-				else
-				{
-					rprt.Log($"this edge composes the vert. checking if projection goes down this edge...");
-					if( Edges[i].V_StartToEnd_flattened == v_projection_flat || 
-						Edges[i].V_EndToStart_flattened == v_projection_flat
-					)
+					else //projection points toward "inside" direction of this edge...
 					{
-						// = new LNX_NavmeshHit( Edges[i].ClosestPointOnEdge(outerHit.Position), 
+						rprt.Log($"Projection Does intersect this edge on an endpoint, but it's pointed inside the triangle...",
+							$"Caching this edge as best, but continuing in case there's a better choice...");
+						bestEdgeIntersectHit = perimHit;
 					}
 				}
+			}
+
+			if (bestEdgeIntersectHit != LNX_NavmeshHit.None)
+			{
+				rprt.Log_And_End_Method($"End of iterating through edges. Logged best edge intersect hit of '{bestEdgeIntersectHit}'. Returning true.",
+					"ProjectThroughToPerimeter_dbg");
+				perimHit = bestEdgeIntersectHit;
+				return true;
 			}
 
 			rprt.Log($"End of method. returning false...");
 
 			rprt.EndMethod("ProjectThroughToPerimeter_dbg()");
 			return false;
+
 		}
+		*/
 		#endregion
 
 		#region MODIFICATION ----------------------------------------------------
@@ -1197,6 +1661,30 @@ namespace LogansNavigationExtension
 			}
 		}
 
+		public bool TouchesVertAtCoordinate_ViaRelational( int triIndx, int vrtIndx, out int touchedVertIndex )
+		{
+			touchedVertIndex = -1;
+			if ( Verts[0].SharesVertSpace_ViaRelational(triIndx, vrtIndx) )
+			{
+				touchedVertIndex = 0;
+				return true;
+			}
+			else if (Verts[1].SharesVertSpace_ViaRelational(triIndx, vrtIndx))
+			{
+				touchedVertIndex = 1;
+
+				return true;
+			}
+			else if (Verts[2].SharesVertSpace_ViaRelational(triIndx, vrtIndx))
+			{
+				touchedVertIndex = 2;
+
+				return true;
+			}
+
+			return false;
+		}
+
 		public bool HasVertAtOriginalPosition( Vector3 pos )
 		{
 			if ( GetVertIndextAtOriginalPosition(pos) > -1 )
@@ -1233,9 +1721,9 @@ namespace LogansNavigationExtension
 		/// <returns></returns>
 		private Vector3 GetProjectionBase()
 		{
-			float genrtdX = V_Center.x;
-			float genrtdY = V_Center.y;
-			float genrtdZ = V_Center.z;
+			float genrtdX = 0f;
+			float genrtdY = 0f;
+			float genrtdZ = 0f;
 
 			if(v_navmeshProjectionDirection_cached == Vector3.up || v_navmeshProjectionDirection_cached == Vector3.down )
 			{
