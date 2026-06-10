@@ -89,7 +89,6 @@ namespace LogansNavigationExtension
 		protected override void OnDrawGizmos()
 		{
 			DBG_Operation = "";
-			DBG_Method = "";
 
 			#region	SHORT-CIRCUITING -------------------------------------------------
 			if (Selection.activeObject != gameObject && 
@@ -128,8 +127,9 @@ namespace LogansNavigationExtension
 
 			LNX_Edge rsltEdge = null;
 
+			string dbgMthd = string.Empty;
 			DBG_Operation += $"Commencing operation...\n";
-			rsltEdge = LNX_Utils.GetWidestEdgeFromPerspective(PerspectiveEdge, OtherTriangle, ref DBG_Method);
+			rsltEdge = LNX_Utils.GetWidestEdgeFromPerspective(PerspectiveEdge, OtherTriangle, ref dbgMthd);
 			DBG_Operation += $"Completed operation. Captured edge null?: '{rsltEdge == null}'\n";
 
 			if (rsltEdge != null )

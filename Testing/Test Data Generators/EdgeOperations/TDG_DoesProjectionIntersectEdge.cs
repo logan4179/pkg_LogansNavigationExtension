@@ -188,7 +188,6 @@ namespace LogansNavigationExtension
 
 		protected override void OnDrawGizmos()
 		{
-			DBG_Operation = "";
 
 			if ( 
 				AmInUnitTest || 
@@ -196,6 +195,8 @@ namespace LogansNavigationExtension
 				Selection.activeGameObject != EndPointGrabber.gameObject && Selection.activeGameObject != EdgeGrabber.gameObject) 
 			)
 			{
+				DBG_Operation = "short-circuit";
+
 				return;
 			}
 
@@ -207,45 +208,54 @@ namespace LogansNavigationExtension
 				return;
 			}
 
-			DBG_Operation += $"{DateTime.Now}\n";
-			DrawStandardFocusTriGizmos( _navmesh.Triangles[CurrentlyGrabbedEdge.TriangleIndex], 1f, $"tri{CurrentlyGrabbedEdge.TriangleIndex}", Color.magenta);
-			DrawStandardEdgeFocusGizmos( CurrentlyGrabbedEdge, 0.1f, CurrentlyGrabbedEdge.ToString(), Color.yellow );
-
-			DBG_Operation += $"using origin param: '{StartPointGrabber.transform.position}', " +
-				$"dest param: '{EndPointGrabber.transform.position}'\n" +
-				$"using edge: '{CurrentlyGrabbedEdge}'\n" +
-				$"Commencing edge project...\n";
-
-			if( useDebugMethodVersion )
+			if( 
+				StartPointGrabber.RecalculatedLastFrame ||
+				EndPointGrabber.RecalculatedLastFrame ||
+				EdgeGrabber.RecalculatedLastFrame
+			)
 			{
-				mthdDbg_Report.StartReport();
+				DBG_Operation = $"{DateTime.Now}\n";
 
-				CurrentProjectionResult =
-				CurrentlyGrabbedEdge.DoesProjectionIntersectEdge_dbg
-				(
-					StartPointGrabber.transform.position,
-					EndPointGrabber.transform.position,
-					out CurrentProjectedHit,
-					ref mthdDbg_Report,
-					true
-				);
+				DBG_Operation += $"using origin param: '{StartPointGrabber.transform.position}', " +
+					$"dest param: '{EndPointGrabber.transform.position}'\n" +
+					$"using edge: '{CurrentlyGrabbedEdge}'\n" +
+					$"Commencing edge project...\n";
 
-				mthdDbg_Report.EndReport();
-			}
-			else
-			{
-				CurrentProjectionResult =
-					CurrentlyGrabbedEdge.DoesProjectionIntersectEdge
+				if( useDebugMethodVersion )
+				{
+					DBG_Operation += $"(using debug version...)\n";
+					mthdDbg_Report.StartReport();
+
+					CurrentProjectionResult =
+					CurrentlyGrabbedEdge.DoesProjectionIntersectEdge_dbg
 					(
 						StartPointGrabber.transform.position,
 						EndPointGrabber.transform.position,
 						out CurrentProjectedHit,
-						false
+						ref mthdDbg_Report,
+						true
 					);
+
+					mthdDbg_Report.EndReport();
+				}
+				else
+				{
+					CurrentProjectionResult =
+						CurrentlyGrabbedEdge.DoesProjectionIntersectEdge
+						(
+							StartPointGrabber.transform.position,
+							EndPointGrabber.transform.position,
+							out CurrentProjectedHit,
+							false
+						);
+				}
+
+				DBG_Operation += $"result: '{CurrentProjectionResult}'\n" +
+					$"projected Hit: '{CurrentProjectedHit}'";
 			}
 
-			DBG_Operation += $"result: '{CurrentProjectionResult}'\n" +
-				$"projected Hit: '{CurrentProjectedHit}'";
+			DrawStandardFocusTriGizmos(_navmesh.Triangles[CurrentlyGrabbedEdge.TriangleIndex], 1f, $"tri{CurrentlyGrabbedEdge.TriangleIndex}", Color.magenta);
+			DrawStandardEdgeFocusGizmos(CurrentlyGrabbedEdge, 0.1f, CurrentlyGrabbedEdge.ToString(), Color.yellow);
 
 			Gizmos.color = CurrentProjectionResult ? Color.green : Color.red;
 

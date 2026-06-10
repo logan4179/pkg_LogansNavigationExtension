@@ -59,7 +59,6 @@ namespace LogansNavigationExtension
 			}
 
 			DBG_Operation = "";
-			DBG_Method = "";
 			CurrentOperationResult = false;
 
 			Gizmos.color = Color_Corners;

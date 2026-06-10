@@ -158,6 +158,16 @@ namespace LogansNavigationExtension
 			Debug.Log(relCount);
 		}
 
+		private void OnEnable()
+		{
+			Debug.Log("OE");
+		}
+
+		private void Reset()
+		{
+			Debug.Log("reset");
+		}
+
 		private void OnDrawGizmos()
 		{
 			if ( !AmDebugging || _mgr == null || _mgr.Triangles != null && _mgr.Triangles.Length <= 0 )

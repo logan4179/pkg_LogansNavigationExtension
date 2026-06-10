@@ -85,6 +85,9 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				LNX_NavmeshHit hit = LNX_NavmeshHit.None;
 
 				Debug.Log($"projecting through to perimeter...");
+				Debug.LogWarning($"I've completely changed this method's signature. Need to redo this logic...");
+				
+				/*
 				string s = "";
 				bool rslt = tri.ProjectThroughToPerimeter(
 					_tdg_projectThroughToPerimeter._dataCapture.VectorCaptureLists[0].vectors[i],
@@ -92,6 +95,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 					out hit,
 					ref s
 				);
+				*/
 
 				Debug.Log($"projected through. hit position: '{hit.Position}'. Captured hit position is: " +
 					$"'{_tdg_projectThroughToPerimeter._dataCapture.VectorCaptureLists[4].vectors[i]}'." +

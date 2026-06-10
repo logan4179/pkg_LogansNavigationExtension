@@ -301,16 +301,13 @@ namespace LogansNavigationExtension
 		/// <returns></returns>
 		public bool DoesPositionLieOnEdge( Vector3 pos )
 		{
-			if( pos == StartPosition || pos == EndPosition || pos == MidPosition )
+			if( LNX_Utils.FlatEquals(pos, StartPosition, v_navmeshProjectionDirection_cached) || 
+				LNX_Utils.FlatEquals(pos, EndPosition, v_navmeshProjectionDirection_cached))
 			{
 				return true;
 			}
 
 			Vector3 pos_fltnd = LNX_Utils.FlatVector(pos, v_navmeshProjectionDirection_cached);
-			if( pos_fltnd == StartPosition_flat || pos_fltnd == EndPosition_flat || pos_fltnd == MidPosition_flat )
-			{
-				return true;
-			}
 
 			if
 			( 
@@ -431,7 +428,7 @@ namespace LogansNavigationExtension
 		public bool DoesProjectionIntersectEdge(
 			Vector3 prjctOrigin, Vector3 prjctDestination, out LNX_NavmeshHit outHit,
 			bool includeParallel = true,
-			bool originPtInclusive = true
+			bool endPointInclusive = true
 		)
 		{
 			Vector3 v_projection = LNX_Utils.FlatVector(prjctDestination - prjctOrigin, v_navmeshProjectionDirection_cached).normalized;
@@ -454,6 +451,7 @@ namespace LogansNavigationExtension
 							EndVertIndex,
 							MyCoordinate.ComponentIndex
 						);
+
 						return true;
 					}
 				}
@@ -467,31 +465,21 @@ namespace LogansNavigationExtension
 							StartVertIndex,
 							MyCoordinate.ComponentIndex
 						);
+
 						return true;
 					}
 				}
 			}
-			else if (originPtInclusive && DoesPositionLieOnEdge(prjctOrigin)) //Note: this needs to be checked AFTER the parallel checks, not before
+			else if ( endPointInclusive ) //Note: this needs to be checked AFTER the parallel checks, not before
 			{
-				outHit = new LNX_NavmeshHit(
-					StartPosition +
-					(V_StartToEnd * LNX_Utils.CalculateTriangleEdgeLength(
-						90f,
-						180f - 90f - Vector3.Angle(V_StartToEnd_flattened, V_StartToEnd),
-						Vector3.Distance(StartPosition_flat, LNX_Utils.FlatVector(prjctOrigin, v_navmeshProjectionDirection_cached))
-						)
-					),
-					v_navmeshProjectionDirection_cached,
-					MyCoordinate.TrianglesIndex,
-					-1,
-					MyCoordinate.ComponentIndex
-				);
-
-				return true;
+				if (DoesPositionLieOnEdge(prjctOrigin, out outHit)) //Note: this needs to be checked AFTER the parallel checks, not before
+				{
+					return true;
+				}
 			}
 
 			#region ALIGNMENT SHORT-CIRCUIT TEST-------------------------------------------------
-			/* //todo: dws
+			/*
 			//The following tests if the origin and projection direction allow for the possibilty of edge intersection...
 			Vector3 v_edgeMid_toOriginPt = LNX_Utils.FlatVector(origin - MidPosition_flat).normalized;
 			float dot_vCross_with_edgeMidPtToOriginPt = Vector3.Dot(v_Cross_flat, v_edgeMid_toOriginPt);
@@ -545,6 +533,7 @@ namespace LogansNavigationExtension
 				lrgst > ang_chevron
 			)
 			{
+				//dbg_doesProjectionIntersectEdge += $"\nOperation short-circuited bc of dot-prdct check! Returning false...\n";
 				outHit = LNX_NavmeshHit.None;
 
 				return false; //short-circuit
@@ -575,11 +564,11 @@ namespace LogansNavigationExtension
 		}
 		public bool DoesProjectionIntersectEdge_dbg(
 			Vector3 prjctOrigin, Vector3 prjctDestination, out LNX_NavmeshHit outHit, ref LNX_MethodDebugReport rprt, 
-			bool includeParallel = true,
-			bool endPointInclusive = true
+			bool includeParallelCheck = true,
+			bool includeEndPtCheck = true
 		)
 		{
-			rprt.StartMethod($"{this}.DoesProjectionIntersectEdge_dbg(start: '{prjctOrigin}', dest: '{prjctDestination}', endPtInclsv: '{endPointInclusive}')");
+			rprt.StartMethod($"{this}.DoesProjectionIntersectEdge_dbg(start: '{prjctOrigin}', dest: '{prjctDestination}', endPtInclsv: '{includeEndPtCheck}')");
 			Vector3 v_projection = LNX_Utils.FlatVector(prjctDestination - prjctOrigin, v_navmeshProjectionDirection_cached).normalized;
 			Vector3 v_originToStart = LNX_Utils.FlatVector(StartPosition - prjctOrigin, v_navmeshProjectionDirection_cached).normalized;
 			Vector3 v_originToEnd = LNX_Utils.FlatVector(EndPosition - prjctOrigin, v_navmeshProjectionDirection_cached ).normalized;
@@ -587,7 +576,7 @@ namespace LogansNavigationExtension
 			//variables (and possibly others that I'm not thinking of) to see if this is better than continually calling these properties, because these
 			//values are all properties with their own overhead every time they're called.
 
-			if (includeParallel)
+			if (includeParallelCheck)
 			{
 				rprt.Log("includeParallel is true. Checking if projection runs parallelwith edge...");
 				if (v_projection == V_StartToEnd_flattened) //if the projection and edge are pointed in the same direction...
@@ -630,29 +619,17 @@ namespace LogansNavigationExtension
 					}
 				}
 			}
-			else if ( endPointInclusive && DoesPositionLieOnEdge(prjctOrigin)) //Note: this needs to be checked AFTER the parallel checks, not before
+			else if ( includeEndPtCheck ) //Note: this needs to be checked AFTER the parallel checks, not before
 			{
-				rprt.Log("origin is on edge. Projecting...");
-				outHit = new LNX_NavmeshHit(
-					StartPosition +
-					(V_StartToEnd * LNX_Utils.CalculateTriangleEdgeLength(
-						90f,
-						180f - 90f - Vector3.Angle(V_StartToEnd_flattened, V_StartToEnd),
-						Vector3.Distance(StartPosition_flat, LNX_Utils.FlatVector(prjctOrigin, v_navmeshProjectionDirection_cached))
-						)
-					), 
-					v_navmeshProjectionDirection_cached,
-					MyCoordinate.TrianglesIndex,
-					-1,
-					MyCoordinate.ComponentIndex
-				);
-				rprt.Log_And_End_Method($"created projection of: '{outHit}' returning true...",
-					"DoesProjectionIntersectEdge_dbg()");
-				return true;
+				rprt.Log($"am endpt inclusive. Running checks...");
+				if ( DoesPositionLieOnEdge(prjctOrigin, out outHit) ) //Note: this needs to be checked AFTER the parallel checks, not before
+				{
+					rprt.Log($"found that origin lies on edge. Got hit: '{outHit}'. Returning true...");
+					return true;
+				}
 			}
 
-			rprt.Log($"Inclusive/parallel checks either not enabled, or didn't work. Continuing...");
-			
+			rprt.Log($"Inclusive/parallel checks either not directed, or didn't work. Continuing...");
 
 			#region ALIGNMENT SHORT-CIRCUIT TEST-------------------------------------------------
 			/*
@@ -718,7 +695,7 @@ namespace LogansNavigationExtension
 			}
 			#endregion
 
-			rprt.Log("No short-circuits. Continuing...");
+			rprt.Log("No short-circuits. This means we can project a position via trigonometry. Proceeding...");
 
 			#region CALCULATE OUT HIT -----------------------------------------------------------
 			outHit = new LNX_NavmeshHit(
@@ -740,7 +717,7 @@ namespace LogansNavigationExtension
 			   //being used to create an assumed 90 degree angle and a length from the edge startposition, to this position, etc...
 			#endregion
 
-			rprt.Log_And_End_Method($"End of method. calculated outpos: '{outHit}'. Now returning true...",
+			rprt.Log_And_End_Method($"calculated outpos: '{outHit}'. Now returning true...",
 				"DoesProjectionIntersectEdge_dbg()");
 			return true;
 		}

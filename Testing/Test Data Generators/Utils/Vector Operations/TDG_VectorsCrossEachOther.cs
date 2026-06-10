@@ -54,7 +54,6 @@ namespace LogansNavigationExtension
 			}
 
 			DBG_Operation = "";
-			DBG_Method = "";
 
 			base.OnDrawGizmos();
 

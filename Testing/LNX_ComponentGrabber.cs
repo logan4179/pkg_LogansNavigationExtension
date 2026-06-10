@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.TerrainTools;
 using UnityEngine;
+using static UnityEditor.PlayerSettings;
 
 namespace LogansNavigationExtension
 {
@@ -20,10 +21,12 @@ namespace LogansNavigationExtension
 		[Header("STATS")]
 		public bool AutomaticallyGrab = true;
 		public LNX_Component SnapTo = LNX_Component.None;
-        [Range(0.05f, 2f), Tooltip("How easy it is to select a component")] public float Forgiveness = 0.25f;
+        [Range(0.05f, 2f), Tooltip("How easy it is to select a component")] 
+		public float Forgiveness = 0.25f;
 
 		[Header("DEBUG")]
 		[SerializeField] bool drawLabel;
+		[SerializeField] bool drawFocusTriGizmos;
 
 		public Vector3 V_labelOffset;
 		public Transform Trans_drawLineTo;
@@ -33,15 +36,17 @@ namespace LogansNavigationExtension
 
 		[Header("OTHER")]
 		public LNX_NavmeshHit CurrentHit;
-		public LNX_ComponentCoordinate CurrentCoordinate; 
+		public LNX_ComponentCoordinate CurrentCoordinate;
+		[Tooltip("Restricts sampling to a certain tri. Note: Not yet implemented")]
+		public int Index_TriRestrict = -1;
 
 		public LNX_Triangle CurrentlyGrabbedTriangle
 		{
 			get
 			{
-				if( CurrentCoordinate.TrianglesIndex > -1 )
+				if( CurrentHit.TriangleIndex > -1 )
 				{
-					return _navmesh.Triangles[CurrentCoordinate.TrianglesIndex];
+					return _navmesh.Triangles[CurrentHit.TriangleIndex];
 				}
 				else
 				{
@@ -89,17 +94,25 @@ namespace LogansNavigationExtension
 		public LNX_ComponentCoordinate GrabComponent()
         {
 			CurrentHit = LNX_NavmeshHit.None;
+			CurrentCoordinate = LNX_ComponentCoordinate.None;
 
-			if ( !_navmesh.SamplePosition(transform.position, out CurrentHit, 2f, ConsiderClosestOffPerimeter))
+			if( Index_TriRestrict != -1 )
 			{
-				Debug.LogWarning($"LNX WARNING! GrabComponent couldn't sample navmesh at current grabber position...");
+				if ( !_navmesh.Triangles[Index_TriRestrict].IsInShapeProject(transform.position, out CurrentHit))
+				{
+					return LNX_ComponentCoordinate.None;
+				}
+			}
+			else if ( !_navmesh.SamplePosition(transform.position, out CurrentHit, 2f, ConsiderClosestOffPerimeter))
+			{
+				//Debug.LogWarning($"LNX WARNING! GrabComponent couldn't sample navmesh at current grabber position...");
 				return LNX_ComponentCoordinate.None;
 			}
 
 			if (Mode == LNX_Component.Vertex)
             {
 				CurrentCoordinate = _navmesh.Triangles[CurrentHit.TriangleIndex].GetClosestVertToPosition(transform.position).MyCoordinate;
-            }
+			}
 			else if ( Mode == LNX_Component.Edge )
 			{
 				float bestDist = Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriangleIndex, 0).MidPosition);
@@ -228,10 +241,7 @@ namespace LogansNavigationExtension
 			if( transform.position != v_lastPos )
 			{
 				recalculatedLastFrame = true;
-				if( AutomaticallyGrab )
-				{
-					GrabComponent();
-				}
+
 
 				if( SnapTo == LNX_Component.Vertex )
 				{
@@ -244,10 +254,21 @@ namespace LogansNavigationExtension
 						}
 					}
 				}
+
+				if( AutomaticallyGrab )
+				{
+					GrabComponent();
+				}
 			}			
 
 			v_lastPos = transform.position;
 
+			if (drawFocusTriGizmos && CurrentlyGrabbedTriangle != null)
+			{
+				LNX_DrawingUtils.DrawTriGizmos( CurrentlyGrabbedTriangle, Color.yellow,
+					false, false, true, 0.02f, true, 0.1f, false, -1f
+				);
+			}
 			DrawMyGizmos(0.025f);
 		}
 	}

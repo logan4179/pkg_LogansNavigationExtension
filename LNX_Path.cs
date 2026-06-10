@@ -19,6 +19,20 @@ namespace LogansNavigationExtension
 		public Vector3 EndPosition => PathPoints[PathPoints.Count - 1].Position;
 		public LNX_NavmeshHit EndHit => PathPoints[PathPoints.Count - 1];
 		public int EndTriIndex => PathPoints[PathPoints.Count - 1].TriangleIndex;
+		public LNX_ComponentCoordinate EndCoordinate_vert
+		{
+			get
+			{
+				if ( PathPoints == null || PathPoints.Count <= 0 )
+				{
+					return LNX_ComponentCoordinate.None;
+				}
+				else
+				{
+					return new LNX_ComponentCoordinate( PathPoints[PathPoints.Count-1].TriangleIndex, PathPoints[PathPoints.Count-1].VertIndex );
+				}
+			}
+		}
 
 
 		/// <summary>A Vector pointing in a straight line from start to end.</summary>
@@ -47,6 +61,8 @@ namespace LogansNavigationExtension
 			}
 		}
 
+		[TextArea(1,20)] public string DBG_class;
+
 
 		private static LNX_Path none = new LNX_Path();
 
@@ -61,45 +77,84 @@ namespace LogansNavigationExtension
 		#region CONSTRUCTORS =====================================================
 		public LNX_Path( LNX_NavMesh nm )
 		{
+			DBG_class = $"ctorA\n";
 			amStraight = true;
 			totalDistance_cached = 0f;
 			v_navmeshSurfaceProjection_cached = nm.GetSurfaceProjectionVector();
 			PathPoints = new List<LNX_NavmeshHit>();
 		}
 
-		public LNX_Path( LNX_Path basePathA, LNX_Path basePathB )
+		public LNX_Path( LNX_Path basePath )
 		{
+			DBG_class = $"ctorB\n" + basePath.DBG_class;
+
+			amStraight = basePath.AmStraight;
+			totalDistance_cached = basePath.totalDistance_cached;
+			v_navmeshSurfaceProjection_cached = basePath.v_navmeshSurfaceProjection_cached;
+
+			PathPoints = new List<LNX_NavmeshHit>();
+
+			if ( basePath.PathPoints != null && basePath.PathPoints.Count > 1)
+			{
+				for (int i = 0; i < basePath.PathPoints.Count; i++)
+				{
+					AddPoint( basePath.PathPoints[i] );
+				}
+			}
+		}
+
+		public LNX_Path( LNX_Path basePathA, LNX_Path basePathB )//////////////////////
+		{
+			DBG_class = $"ctorC\n";
+
 			amStraight = basePathA.AmStraight && basePathB.amStraight && basePathA.V_CrowFlies == basePathB.V_CrowFlies;
 			totalDistance_cached = basePathA.totalDistance_cached + basePathB.totalDistance_cached;
 			v_navmeshSurfaceProjection_cached = basePathA.v_navmeshSurfaceProjection_cached;
 
 			PathPoints = new List<LNX_NavmeshHit>();
 
+			DBG_class += $"adding pathpoints from constructor paths...\n";
+
 			if ( basePathA.PathPoints != null && basePathA.PathPoints.Count > 1 )
 			{
+				DBG_class += $"basePathA points are valid with '{basePathA.PathPoints.Count}' pts...\n";
 				for ( int i = 0; i < basePathA.PathPoints.Count; i++)
 				{
-					PathPoints.Add( basePathA.PathPoints[i] );
+					DBG_class += $"for'{i}' ({basePathA.PathPoints[i]})...\n";
+					AddPoint( basePathA.PathPoints[i] );
 				}
+
+				DBG_class += $"finished adding basePathA's points. pt count: '{PointCount}'. dist: '{TotalDistance}'...\n";
 			}
 
 			if (basePathB.PathPoints != null && basePathB.PathPoints.Count > 1)
 			{
+				DBG_class += $"basePathB points are valid with '{basePathB.PathPoints.Count}' pts...\n";
+
 				for (int i = 0; i < basePathB.PathPoints.Count; i++)
 				{
-					if( i == 0 && basePathA.PathPoints != null && basePathA.PathPoints.Count > 0 && 
-						basePathB.StartHit == basePathA.EndHit)
-					{
-						continue; //don't log if same...
-					}
+					DBG_class += $"for'{i}' ({basePathB.PathPoints[i]})...\n";
 
-					PathPoints.Add(basePathB.PathPoints[i]);
+					if ( i == 0 && basePathA.PathPoints != null && basePathA.PathPoints.Count > 0 && 
+						basePathB.StartHit.Position == basePathA.EndHit.Position)
+					{
+						DBG_class += $"first pt of pathB is same as last logged point. continuing..\n";
+						continue;
+					}
+					else
+					{
+						AddPoint(basePathB.PathPoints[i]);
+					}
 				}
+				DBG_class += $"finished adding basePathA's points. pt count: '{PointCount}'. dist: '{TotalDistance}'...\n";
+
 			}
 		}
 		
 		public LNX_Path( Vector3 nvmshProjectionDir, params LNX_NavmeshHit[] hits)
 		{
+			DBG_class = $"ctorD\n";
+
 			PathPoints = hits.ToList();
 			totalDistance_cached = 0f;
 			amStraight = true;
@@ -136,6 +191,8 @@ namespace LogansNavigationExtension
 
 		public LNX_Path(Vector3 nvmshProjectionDir, List<LNX_NavmeshHit> hits)
 		{
+			DBG_class = $"ctorE\n";
+
 			PathPoints = hits.ToList();
 			totalDistance_cached = 0f;
 			amStraight = true;
@@ -176,6 +233,7 @@ namespace LogansNavigationExtension
 
 		public void AddPoint( LNX_NavmeshHit pt )
 		{
+			DBG_class += $"AddPoint('{pt}')\n";
 			if (PathPoints == null)
 			{
 				PathPoints = new List<LNX_NavmeshHit>();
@@ -185,24 +243,45 @@ namespace LogansNavigationExtension
 
 			if (PathPoints.Count <= 1)
 			{
+				DBG_class += $"pathpoints count <= 1...\n";
 				totalDistance_cached = 0f;
 				return;
 			}
 
-			totalDistance_cached += Vector3.Distance( PathPoints[PathPoints.Count - 1].Position, pt.Position );
+			totalDistance_cached += Vector3.Distance( PathPoints[PathPoints.Count - 2].Position, pt.Position );
+			DBG_class += $"adding dist: '{Vector3.Distance(PathPoints[PathPoints.Count - 2].Position, pt.Position)}', new totalDist: '{totalDistance_cached}'\n";
 
 			//determine straightness
-			if (PathPoints.Count > 1)
+			if ( PathPoints.Count > 1 )
 			{
 				if (amStraight) //Need to decide if path is still straight...
 				{
 					Vector3 firstDir_fltnd = LNX_Utils.FlatVector(PathPoints[1].Position - PathPoints[0].Position, pt.Normal).normalized; //todo: can get rid of these two variables, and just do the if statement with these expressions. Want to efficiency test doing this
 
 					Vector3 dirNew = LNX_Utils.FlatVector(pt.Position - PathPoints[PathPoints.Count - 2].Position, pt.Normal).normalized;//<<
+					DBG_class += $"determining straightness using firstDir: '{LNX_UnitTestUtilities.LongVectorString(firstDir_fltnd)}', " +
+						$"newDir: '{LNX_UnitTestUtilities.LongVectorString(dirNew)}'\n";
 
+					/*
 					if (dirNew != firstDir_fltnd)
 					{
+						// todo: issue: for some reason, this check sometimes gets erroneously triggered due to the vectors being slighly
+						// different (by like a 10,000th of a percentage, extremely small floating point precision difference). My tests
+						// show that when this happens, using Vector3.Angle() to test directionality instead seems a little more reliable
+						// at considering the two angles to be the same. I wonder if LNX_Triangle.ProjectOnPerimeter() is still not perfect
+						// and perhaps producing a projection that is just a little off. Using the following angle check instead seems pretty
+						// okay for now. Perhaps one day I should revisit this and improve it?
+						DBG_class += $"decided not equal. angDiff: '{Vector3.Angle(firstDir_fltnd, dirNew)}'. Changing amStraight to false...\n";
 						amStraight = false;
+					}*/
+					if( Vector3.Angle(firstDir_fltnd, dirNew) > 0f )
+					{
+						DBG_class += $"decided not equal. angDiff: '{Vector3.Angle(firstDir_fltnd, dirNew)}'. Changing amStraight to false...\n";
+						amStraight = false;
+					}
+					else
+					{
+						DBG_class += $"decided AM equal...\n";
 					}
 				}
 			}
@@ -293,28 +372,39 @@ namespace LogansNavigationExtension
 			return totalDistance_cached + pth.totalDistance_cached;
 		}
 
-		public void DrawMyGizmos( float pointSize, float lblHeight )
+		public void DrawMyGizmos( float pointSize, float lblHeight, bool drawFullLabels = false )
 		{
 			if( PathPoints == null || PathPoints.Count <= 0 )
 			{
 				return;
 			}
 
+			Vector3 vRise = v_navmeshSurfaceProjection_cached * 0.015f;
 			for ( int i = 0; i < PathPoints.Count; i++ )
 			{
 				Gizmos.DrawSphere( PathPoints[i].Position, pointSize );
 
 				Gizmos.DrawLine(
-					PathPoints[i].Position, PathPoints[i].Position + (PathPoints[i].Normal * lblHeight)
-				);
-				Handles.Label(
-					PathPoints[i].Position + (PathPoints[i].Normal * lblHeight), $"{i}" 
+					PathPoints[i].Position + vRise, PathPoints[i].Position + (PathPoints[i].Normal * lblHeight)
 				);
 
-				if( i > 0 )
+				if( drawFullLabels )
+				{
+					Handles.Label(
+						PathPoints[i].Position + (PathPoints[i].Normal * lblHeight * 1.01f), $"{i}\n{PathPoints[i]}" 
+					);
+				}
+				else
+				{
+					Handles.Label(
+						PathPoints[i].Position + (PathPoints[i].Normal * lblHeight * 1.01f), $"{i}"
+					);
+				}
+
+				if (i > 0)
 				{
 					Handles.DrawDottedLine(
-						PathPoints[i-1].Position, PathPoints[i].Position, 8f
+						PathPoints[i - 1].Position + vRise, PathPoints[i].Position + vRise, 8f
 					);
 				}
 			}
@@ -397,7 +487,7 @@ namespace LogansNavigationExtension
 				return $"[Invalid Path]";
 			}
 
-			return $"LNX_Path[{StartHit}] -> [{EndHit}]";
+			return $"LNX_Path{StartHit}_->_{EndHit}";
 		}
 		
 		#endregion ---------------------------------------

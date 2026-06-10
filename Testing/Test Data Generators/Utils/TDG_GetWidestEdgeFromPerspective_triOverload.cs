@@ -60,7 +60,6 @@ namespace LogansNavigationExtension
 		protected override void OnDrawGizmos()
 		{
 			DBG_Operation = "";
-			DBG_Method = "";
 
 			if (
 				Selection.activeObject != gameObject && 
@@ -103,8 +102,9 @@ namespace LogansNavigationExtension
 
 			Index_CurrentEdge = -1;
 
+			string dbgMthd = string.Empty;
 			DBG_Operation += $"Commencing operation...\n";
-			LNX_Edge foundEdge = LNX_Utils.GetWidestEdgeFromPerspective(PerspectiveTriangle, OtherTriangle, ref DBG_Method);
+			LNX_Edge foundEdge = LNX_Utils.GetWidestEdgeFromPerspective(PerspectiveTriangle, OtherTriangle, ref dbgMthd);
 			DBG_Operation += $"Completed operation. found edge null?: '{foundEdge == null}'\n";
 
 			if (foundEdge != null)

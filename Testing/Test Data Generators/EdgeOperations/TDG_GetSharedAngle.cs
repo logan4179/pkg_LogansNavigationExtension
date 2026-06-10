@@ -94,8 +94,6 @@ namespace LogansNavigationExtension
 				DBG_Operation += $"{i},";
 				DrawStandardFocusTriGizmos(_navmesh.Triangles[PerspectiveTriangle.KnownFullyVisibleTriangleIndices[i]], prspctvRaise * 0.1f, $"tri{PerspectiveTriangle.Index_inCollection}", Color.green);
 			}
-
-			DBG_Triangle = PerspectiveTriangle.DBG_FullyVisible;
 		}
 
 		#region HELPERS ---------------------------------------------------

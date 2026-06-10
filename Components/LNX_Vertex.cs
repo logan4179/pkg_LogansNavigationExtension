@@ -56,6 +56,10 @@ namespace LogansNavigationExtension
 			}
 		}
 
+		public float FloorAngle_toFirstSiblingVert => Vector3.Angle( V_ToFirstSiblingVert, V_ToFirstSiblingVert_flat );
+		public float FloorAngle_toSecondSiblingVert => Vector3.Angle(V_ToSecondSiblingVert, V_ToSecondSiblingVert_flat);
+
+
 		/// <summary>
 		/// Signed angle going from V_ToFirstSiblingVert to V_ToSecondSiblingVert. You can use -SignedAngle (negative) to 
 		/// get the signed angle from V_ToSecondSiblingVert to V_ToFirstSiblingVert.
@@ -80,8 +84,6 @@ namespace LogansNavigationExtension
 		{
 			get {  return V_Position != originalPosition; }
 		}
-
-
 
 		//public bool AmOnTerminalEdge; //todo: Implement
 
@@ -158,6 +160,13 @@ namespace LogansNavigationExtension
 		public float DistToSecondSiblingVert_path => SecondSiblingRelationship.PathDistance;
 		public float DistToFirstSiblingVert_straight => FirstSiblingRelationship.V_to.magnitude;
 		public float DistToSecondSiblingVert_straight => SecondSiblingRelationship.V_to.magnitude;
+
+		#region EDGE =======================================================================
+		/// <summary>Index of 'first' edge (based on index in the edges array) on the containing triangle, that forms this vertex. Note: This index will be the same as the first sibling vertex index </summary>
+		public int Index_FirstFormingEdge => MyCoordinate.ComponentIndex == 0 ? 1 : 0;
+		/// <summary>Index of 'second' edge (based on index in the edges array) on the containing triangle, that forms this vertex. Note: This index will be the same as the second sibling vertex index </summary>
+		public int Index_SecondFormingEdge => MyCoordinate.ComponentIndex == 2 ? 1 : 2;
+		#endregion
 
 		/// <summary>Collection of vertices sharing the same space as this one.</summary>
 		public LNX_ComponentCoordinate[] SharedVertexCoordinates;
@@ -447,7 +456,7 @@ namespace LogansNavigationExtension
 				projection, V_ToFirstSiblingVert_flat, V_ToSecondSiblingVert_flat,
 				v_navmeshProjectionDirection_cached, ref rprt, includeOnPerim);
 
-			rprt.Log_And_End_Method($"returning: '{rslt}'...");
+			rprt.Log_And_End_Method($"returning: '{rslt}'...", "ProjectionIsInCenterSweep_dbg()");
 
 			return rslt;
 		}
@@ -593,33 +602,97 @@ namespace LogansNavigationExtension
 			return Relationships[vertCoord.TrianglesIndex * 3 + (vertCoord.ComponentIndex)];
 		}
 
-		/*
-		public LNX_ComponentCoordinate GetVertCoord_viaProjectionSweep( Vector3 vProject )
+
+		public LNX_ComponentCoordinate GetVertCoord_viaProjectionSweep(
+			Vector3 vProject, bool checkSelf )
 		{
-			if( SharedVertexCoordinates == null || SharedVertexCoordinates.Length <= 0 )
+			vProject = LNX_Utils.FlatVector(vProject, v_navmeshProjectionDirection_cached);
+
+			#region SHORT-CIRCUIT ================================================
+			if (checkSelf && ProjectionIsInCenterSweep(vProject, true))
+			{
+				return MyCoordinate;
+			}
+
+			if (SharedVertexCoordinates == null || SharedVertexCoordinates.Length <= 0)
 			{
 				return LNX_ComponentCoordinate.None;
 			}
+			#endregion
 
-			for ( int i = 0; i < SharedVertexCoordinates.Length; i++ )
+			for (int i = 0; i < SharedVertexCoordinates.Length; i++)
 			{
 				Vector3 vLegA_flat = Relationships[
-					SharedVertexCoordinates[i].TrianglesIndex * 3 + (SharedVertexCoordinates[i].ComponentIndex == 0 ? 1 : 2)
-				].V_to;
-				Vector3 vLegB_flat = Vector3.zero;
+					SharedVertexCoordinates[i].TrianglesIndex * 3 +
+					(SharedVertexCoordinates[i].ComponentIndex == 0 ? 1 : 0) //todo: I don't think these are calculating the component index correclty
+				].V_to.normalized;
+				Vector3 vLegB_flat = Relationships[
+					SharedVertexCoordinates[i].TrianglesIndex * 3 +
+					(SharedVertexCoordinates[i].ComponentIndex == 2 ? 1 : 2)
+				].V_to.normalized;
 
-				for ( int i = 0; j < 3; j++ ) 
+				if ( LNX_Utils.AmInVectorCone(vProject, vLegA_flat, vLegB_flat, v_navmeshProjectionDirection_cached, true) )
 				{
-					if
+					return SharedVertexCoordinates[i];
 				}
-
-				//////////////////////////////////////////////////////////////////////
-				if( Relationships[SharedVertexCoordinates[i].TrianglesIndex * 3 + 
-					(SharedVertexCoordinates[i].ComponentIndex)].V_to
 			}
+
+			return LNX_ComponentCoordinate.None;
 		}
-		*/
-		
+		public LNX_ComponentCoordinate GetVertCoord_viaProjectionSweep_dbg(
+			Vector3 vProject, bool checkSelf, ref LNX_MethodDebugReport rprt )
+		{
+			rprt.StartMethod($"{this}.GetVertCoord_viaProjectionSweep_dbg(vPrjct: '{vProject}', chckSlf: '{checkSelf}')");
+
+			vProject = LNX_Utils.FlatVector(vProject, v_navmeshProjectionDirection_cached);
+			
+			#region SHORT-CIRCUIT ================================================
+			if (checkSelf && ProjectionIsInCenterSweep(vProject, true))
+			{
+				rprt.Log_And_End_Method($"projection is in vert's own center sweep. Returning true...");
+				return MyCoordinate;
+			}
+
+			if (SharedVertexCoordinates == null || SharedVertexCoordinates.Length <= 0)
+			{
+				rprt.Log_And_End_Method($"This vert has no sharedvertcoords. Returning false...");
+				return LNX_ComponentCoordinate.None;
+			}
+			#endregion
+
+			rprt.Log($"no short-circuits. Checking all shared coordinates...");
+
+			for (int i = 0; i < SharedVertexCoordinates.Length; i++)
+			{
+				rprt.Log($"for '{i}', (coord: '{SharedVertexCoordinates[i]}')...",
+					"calculating 'leg' projections...");
+
+				Vector3 vLegA_flat = Relationships[
+					SharedVertexCoordinates[i].TrianglesIndex * 3 + 
+					(SharedVertexCoordinates[i].ComponentIndex == 0 ? 1 : 0) //todo: I don't think these are calculating the component index correclty
+				].V_to.normalized;
+				Vector3 vLegB_flat = Relationships[
+					SharedVertexCoordinates[i].TrianglesIndex * 3 + 
+					(SharedVertexCoordinates[i].ComponentIndex == 2 ? 1 : 2)
+				].V_to.normalized;
+
+				rprt.Log($"using legA: '{vLegA_flat}', legB: '{vLegB_flat}'...");
+
+				if ( LNX_Utils.AmInVectorCone(vProject, vLegA_flat, vLegB_flat, v_navmeshProjectionDirection_cached, true) )
+				{
+					rprt.Log_And_End_Method( $"Decided projection IS in vector cone. Returning coord: '{SharedVertexCoordinates[i]}'..." );
+					return SharedVertexCoordinates[i];
+				}
+				else
+				{
+					rprt.Log($"decided projection is NOT in vector cone...");
+				}
+			}
+
+			rprt.Log_And_End_Method($"end of method. Returning false with 'None' component coordinate...");
+
+			return LNX_ComponentCoordinate.None;
+		}
 
 		public bool IsRelationshipCollectionValid()
 		{
@@ -646,17 +719,39 @@ namespace LogansNavigationExtension
 		)
 		{
 			rprt.StartMethod($"{this}.Ping('{endPoint}', max: '{maxAllowableDist}', bkstps: " +
-				$"'{(backstopverts == null ? "null" : backstopverts.Count)}')");
+				$"'{(backstopverts == null ? "null" : backstopverts.Count)}')", $"{TriangleIndex}.{ComponentIndex}");
+
+			rprt.Log($"Note: runningPath: '{runningPath}', pts count: '{runningPath.PointCount}'...", 
+				$"runningpath dist: '{runningPath.TotalDistance}'");
 
 			//LNX_Path rtrnPath = LNX_Path.None;
 
 			#region SHORT-CIRCUITING ========================================
-			rprt.Log($"first, raycasting to see if endPoint is visible from this vert...");
-			LNX_Path rcPath = new LNX_Path();
-			if ( !nm.Raycast(new LNX_NavmeshHit(this, nm.Triangles[TriangleIndex].V_PathingNormal), endPoint, out rcPath) )
+			if( maxAllowableDist > 0f )
 			{
-				rprt.Log_And_End_Method($"endpoint WAS visible. Returning path made from appending raycast path to running path...");
-				return new LNX_Path( runningPath, rcPath );
+				rprt.Log($"first, checking distance...");
+				Debug.Log
+				if( runningPath.TotalDistance + Vector3.Distance(V_Position, endPoint.Position) > maxAllowableDist )
+				{
+					rprt.Log_And_End_Method($"runningpath dist plus straight line distance too far. Short-circuiting...");
+					return LNX_Path.None;
+				}
+			}
+
+			rprt.Log($"Now raycasting to see if endPoint is visible from this vert...");
+			LNX_Path rcPath = new LNX_Path();
+
+			//rprt.StartAbbreviatedMethod($"Raycast({this}, {endPoint})");
+			bool rcastRslt = nm.Raycast_dbg(new LNX_NavmeshHit(this, nm.Triangles[TriangleIndex].V_PathingNormal), endPoint, out rcPath, ref rprt);
+			//rprt.EndAbbreviatedMethod($"Raycast({this}, {endPoint})");
+
+			if ( !rcastRslt )
+			{
+				LNX_Path p = new LNX_Path(runningPath, rcPath);
+				rprt.Log_And_End_Method($"endpoint WAS visible. Returning path with dist: '{p.TotalDistance}' made from appending raycast path to running path...");
+
+				//return new LNX_Path( runningPath, rcPath );
+				return p;
 			}
 
 			rprt.Log( $"endpoint NOT visible. Continuing...");
@@ -681,32 +776,29 @@ namespace LogansNavigationExtension
 			rprt.Log($"backstop initialized with: '{fwdBackstopVerts.Count}' verts from previous list...");
 
 			rprt.EmptyLine();
-			rprt.Log($"Now getting visible verts from This vert...");
+			rprt.Log($"Now getting visible verts from This vert, avoiding backstop verts...");
 
-			List<LNX_Path> vsblVrtPths = nm.GetVisibleVertsFromVert_dbg( this, ref rprt, false, fwdBackstopVerts ); //todo: note: change this to the overload that 
-			//uses an LNX_Hit as the first parameter, and pass in runningPath.endPt as this parameter, and then efficiency test the difference. This 
-			//overload will bypass a level in the method chain.
+			rprt.StartAbbreviatedMethod($"GetVisibleVertsFromVert_dbg({this})");
+			List<LNX_Path> vsblVrtPths = nm.GetVisibleVertsFromVert_dbg( 
+				this, ref rprt, false, fwdBackstopVerts, maxAllowableDist - runningPath.TotalDistance 
+			); 
+			rprt.EndAbbreviatedMethod($"GetVisibleVertsFromVert_dbg({this})");
 
 			if ( vsblVrtPths.Count <= 0 )
 			{
 				rprt.Log_And_End_Method($"Ping() method tried to get visible verts from '{ToString()}', but failed to get any " +
-					$"that weren't part of backstop collection. Returning...");
-				Debug.Log($"Ping() method tried to get visible verts from '{ToString()}', but failed to get any " +
-					$"that weren't part of backstop collection. Returning early with LNX_Path.None...");
+					$"that weren't part of backstop collection. Returning 'None' path...");
+
 				return LNX_Path.None;
 			}
 			else
 			{
-				rprt.Log($"Decided there are '{vsblVrtPths.Count}' verts (not in backstop)visible from this vert. " +
-					$"Adding them to forward backstop list...");
+				rprt.Log($"Got '{vsblVrtPths.Count}' verts visible from this vert that were NOT already in the backstop.",
+					$"Now adding these to forward backstop list...");
 
 				for ( int i = 0; i < vsblVrtPths.Count; i++ )
 				{
-					//fwdBackstopVerts.Add( new LNX_ComponentCoordinate(vsblVrtPths[i].EndHit) );
-					fwdBackstopVerts.Add( 
-						new LNX_ComponentCoordinate(vsblVrtPths[i].EndHit.TriangleIndex, vsblVrtPths[i].EndHit.VertIndex) 
-					);
-
+					fwdBackstopVerts.Add( vsblVrtPths[i].EndCoordinate_vert );
 				}
 
 				rprt.Log($"Finished creating fwd bckstop list. final list count: '{fwdBackstopVerts.Count}'...");
@@ -714,34 +806,55 @@ namespace LogansNavigationExtension
 			#endregion
 
 			LNX_Path runningBestPath = LNX_Path.None;
+			float runningBestDistance = float.MaxValue; todo: set to maxallowabledist?
 
-			rprt.Log($"for all visible verts...");
+			rprt.Log($"now calling ping() for all visible verts...");
 			for ( int i = 0; i < vsblVrtPths.Count; i++ )
 			{
-				rprt.Log_InnrTabbed( $"i...", 1 );
+				rprt.Log( $"for{i} ({vsblVrtPths[i].EndCoordinate_vert})..." );
+
+				/*
+				if( (runningPath.TotalDistance + vsblVrtPths[i].TotalDistance) > maxAllowableDist )
+				{
+					rprt.Log($"path distances are already too long. Ignoring this one and continuing...");
+					continue;
+				}
+				*/
+
+				rprt.Log($"first, generating continuation path...");
+
 				LNX_Path path_continuationToVsblVrt = new LNX_Path( runningPath, vsblVrtPths[i] );
 
-				rprt.Log_InnrTabbed($"pinging from visible vert[{i}]...", 1);
+				rprt.Log($"pinging from visible vert: '{vsblVrtPths[i].EndCoordinate_vert}'...");
 
-					LNX_MethodDebugReport fwdRprt = new LNX_MethodDebugReport();
-					LNX_Path p = nm.Triangles[vsblVrtPths[i].EndTriIndex].Verts[vsblVrtPths[i].EndHit.VertIndex].Ping_dbg(
-						endPoint, nm, maxAllowableDist, path_continuationToVsblVrt, ref fwdRprt, fwdBackstopVerts
-					);
-
-				if( p == LNX_Path.None )
+				todo: note: should I pass runingBestDist here instead of maxallowabledist considering maxallowabledist is now -1 at beginning?
+				LNX_Path p = nm.Triangles[vsblVrtPths[i].EndTriIndex].Verts[vsblVrtPths[i].EndHit.VertIndex].Ping_dbg(
+					endPoint, nm, maxAllowableDist, path_continuationToVsblVrt, ref rprt, fwdBackstopVerts
+				);
+				
+				
+				if ( p == LNX_Path.None )
 				{
-					rprt.Log_InnrTabbed($"ping returned none path...", 1 );
+					rprt.Log($"ping returned 'None' path..." );
 				}
-
-				if( p != LNX_Path.None && p.TotalDistance < runningBestPath.TotalDistance )
+				else
 				{
-					rprt.Log_InnrTabbed($"ping returned new best path...", 1);
+					rprt.Log($"got path with distance: '{p.TotalDistance}'. Checking against runningbest: '{runningBestDistance}'...");
 
-					runningBestPath = p;
+					if ( p.TotalDistance < runningBestDistance )
+					{
+						rprt.Log($"decided this is the new best path...");
+						runningBestPath = p;
+						runningBestDistance = p.TotalDistance;
+					}
+					else
+					{
+						rprt.Log($"decided NOT new best path based on distance...");
+					}
 				}
 			}
 
-			rprt.Log_And_End_Method($"end of pinging. Returning path: '{runningBestPath}'...");
+			rprt.Log_And_End_Method($"end of ping for: '{this}'. Returning path: '{runningBestPath}'...");
 
 			return runningBestPath;
 		}

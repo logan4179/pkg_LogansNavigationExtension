@@ -25,7 +25,6 @@ namespace LogansNavigationExtension
 			}
 
 			DBG_Operation = "";
-			DBG_Method = "";
 			CurrentOperationResult = 0;
 
 			DBG_Operation += $"Commencing operation...\n";

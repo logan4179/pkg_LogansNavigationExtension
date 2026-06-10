@@ -1,0 +1,204 @@
+using System;
+using System.Collections.Generic;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.AI;
+
+namespace LogansNavigationExtension
+{
+    public class TDG_CalculatePath_vertOverload : TDG_base
+    {
+		#region VARIABLES =============================
+		[Header("REFERENCE")]
+		public LNX_ComponentGrabber Grabber_StartPos;
+		public LNX_ComponentGrabber Grabber_EndPos;
+
+		public LNX_Triangle StartTriangle => Grabber_StartPos.CurrentlyGrabbedTriangle;
+		public LNX_Triangle EndTriangle => Grabber_EndPos.CurrentlyGrabbedTriangle;
+
+		public LNX_Vertex StartVert => Grabber_StartPos.CurrentlyGrabbedVert;
+		public LNX_Vertex EndVert => Grabber_EndPos?.CurrentlyGrabbedVert;
+
+		public TextAsset DataAsset;
+
+		[Header("DATA")]
+		public bool CurrentOperationResult;
+		public LNX_Path CurrentResultPath;
+		public LNX_NavMeshData _data;
+
+		[Header("DEBUG PATH")]
+		public Color Color_PathPoints;
+		[Range(0f, 0.05f)] public float Size_PathPoints;
+		[Range(0f, 0.25f)] public float Height_PathPtLabels;
+
+		[Header("DEBUG")]
+		public bool AllowEffiencyLoading;
+		public bool UseDbgVersion = false;
+		public Color Color_IfTrue;
+		public Color Color_IfFalse;
+
+		#endregion
+
+		[ContextMenu("z call TryIt()")]
+		public void TryIt()
+		{
+			//List<LNX_ComponentCoordinate> backstopverts = new List<LNX_ComponentCoordinate>();
+			List<LNX_ComponentCoordinate> backstopverts = null;
+
+			//List<LNX_ComponentCoordinate> fwdBackstopVerts = new List<LNX_ComponentCoordinate>();
+			List<LNX_ComponentCoordinate> fwdBackstopVerts = new List<LNX_ComponentCoordinate>(backstopverts); //todo: can I do this instead of the following loop?
+
+			/*
+			if (backstopverts != null && backstopverts.Count > 0)
+			{
+				for (int i = 0; i < backstopverts.Count; i++)
+				{
+					fwdBackstopVerts.Add(backstopverts[i]);
+				}
+			}
+			*/
+
+			Debug.Log($"fwdbstpvrts null: '{fwdBackstopVerts == null}'");
+		}
+
+		[ContextMenu("z call CastTextAssetToData()")]
+		public void CastTextAssetToData()
+		{
+			_data = JsonUtility.FromJson<LNX_NavMeshData>(DataAsset.ToString());
+		}
+
+		protected override void OnDrawGizmos()
+		{
+			if
+			(
+				AmInUnitTest ||
+				!SelectionIsOneOfTheFollowing(
+					gameObject,
+					Grabber_StartPos.gameObject,
+					Grabber_EndPos.gameObject
+				)
+			)
+			{
+				return;
+			}
+
+			base.OnDrawGizmos();
+
+			DrawStandardFocusTriGizmos(StartTriangle, 0.01f, "", Color.magenta, true, 0.01f, false, false);
+			DrawStandardFocusTriGizmos(EndTriangle, 0.01f, "", Color.magenta, true, 0.01f, false, false);
+
+
+			//DBG_Operation += $"Commencing operation...\n";
+
+			if (
+				Grabber_StartPos.RecalculatedLastFrame ||
+				Grabber_EndPos.RecalculatedLastFrame
+			)
+			{
+
+				DBG_Operation = $"{DateTime.Now}\n";
+				CurrentOperationResult = false;
+				mthdDbg_Report.Clear();
+
+				if( StartVert == null )
+				{
+					DBG_Operation += $"startvert is null. Returning early...\n";
+					return;
+				}
+
+				if (EndVert == null)
+				{
+					DBG_Operation += $"EndVert is null. Returning early...\n";
+					return;
+				}
+
+				if ( AllowEffiencyLoading )
+				{
+					DBG_Operation += $"am allowing efficiency loading. attempting loading...\n";
+					DateTime dt_efficiencyLoadStart = DateTime.Now;
+					if( !_data.MatchesNavmesh(_navmesh) )
+					{
+						Debug.LogError($"LNX ERROR! {nameof(AllowEffiencyLoading)} is turned on, but saved navmesh data seems to be " +
+							$"invalid. Returning early...");
+						return;
+					}
+					else
+					{
+						_navmesh.TryLoadEfficiencyData(_data);
+					}
+					DBG_Operation += $"efficiency load took '{DateTime.Now.Subtract(dt_efficiencyLoadStart).TotalSeconds}' seconds...\n";
+				
+					if (_data == null || !_data.MatchesNavmesh(_navmesh))
+					{
+						DBG_Operation += ($"LNX ERROR! Saved navmesh data seems to be invalid. You should probably " +
+							$"call {nameof(CastTextAssetToData)} Returning early...");
+						return;
+					}
+				}
+
+				DateTime dt_opStart = DateTime.Now;
+
+				if ( !UseDbgVersion )
+				{
+					DBG_Operation += $"Using StartVert: '{StartVert}', and EndVert: '{EndVert}'...\n" +
+						$"Commencing operation...\n";
+					CurrentOperationResult = _navmesh.CalculatePath(
+						StartVert, EndVert,
+						out CurrentResultPath
+					);
+				}
+				else
+				{
+					DBG_Operation += $"(dbg version) Using startHit: '{Grabber_StartPos.CurrentHit}', and endHit: '{Grabber_EndPos.CurrentHit}'...\n" +
+						$"Commencing operation...\n";
+
+					mthdDbg_Report.StartReport();
+					try
+					{
+						CurrentOperationResult = _navmesh.CalculatePath_dbg(
+							StartVert, EndVert,
+							out CurrentResultPath, ref mthdDbg_Report
+						);
+					}
+					catch (Exception)
+					{
+
+						throw;
+					}
+
+					mthdDbg_Report.EndReport();
+				}
+
+				DBG_Operation += $"calculatepath took '{DateTime.Now.Subtract(dt_opStart).TotalSeconds}' seconds...\n" +
+					$"Result: '{CurrentOperationResult}'\n";
+			}
+
+
+			if (CurrentOperationResult)
+			{
+				Gizmos.color = Color_IfTrue;
+			}
+			else
+			{
+				Gizmos.color = Color_IfFalse;
+			}
+
+			#region Draw Basic Gizmo Objects --------------------------------------------------------------------
+			Grabber_StartPos.DrawMyGizmos(Radius_ObjectDebugSpheres);
+			Grabber_EndPos.DrawMyGizmos(Radius_ObjectDebugSpheres);
+			//Debug.Log(System.DateTime.Now);
+			#endregion
+
+			#region Draw Path --------------------------------------------------
+			Color oldclr = Gizmos.color;
+			Color oldHandlesColor = Handles.color;
+			Gizmos.color = Color_PathPoints;
+			Handles.color = Color_PathPoints;
+			CurrentResultPath.DrawMyGizmos(Size_PathPoints, Height_PathPtLabels);
+
+			Gizmos.color = oldclr;
+			Handles.color = oldHandlesColor;
+			#endregion
+		}
+	}
+}

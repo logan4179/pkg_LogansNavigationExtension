@@ -83,7 +83,6 @@ namespace LogansNavigationExtension
 			}
 
 			DBG_Operation = "";
-			DBG_Method = "";
 			CurrentOperationResult = false;
 
 			base.OnDrawGizmos();
@@ -132,7 +131,8 @@ namespace LogansNavigationExtension
 					$"edges aligned?: '{LNX_Utils.AreEdgesAlignedFromTheirPerspectives(CurrentStartEdge, CurrentEndEdge)}'\n" +
 					$"\nCommencing operation...\n";
 
-				CurrentOperationResult = LNX_Utils.DoesEdgeObstructEdgePath(CurrentObstructEdge, CurrentStartEdge, CurrentEndEdge, ref DBG_Method);
+				string dbgMthd = string.Empty;
+				CurrentOperationResult = LNX_Utils.DoesEdgeObstructEdgePath(CurrentObstructEdge, CurrentStartEdge, CurrentEndEdge, ref dbgMthd);
 			}
 			else
 			{

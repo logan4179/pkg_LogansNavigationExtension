@@ -115,12 +115,11 @@ namespace LogansNavigationExtension
 
 			DBG_Operation += $"Commencing operation...\n";
 
-
-			DBG_Method = "";
+			string dbgMthd = string.Empty;
 			CurrentResult = LNX_Utils.AmBetweenConcurrentLines(
 				trans_posParameter.position, 
 				trans_LIneAStart.position, trans_LineAEnd.position,
-				trans_LIneBStart.position, trans_LineBEnd.position, _navmesh.GetSurfaceProjectionVector(), ref DBG_Method
+				trans_LIneBStart.position, trans_LineBEnd.position, _navmesh.GetSurfaceProjectionVector(), ref dbgMthd
 			);
 
 			if( CurrentResult )

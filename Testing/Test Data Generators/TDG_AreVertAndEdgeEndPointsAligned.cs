@@ -44,7 +44,6 @@ namespace LogansNavigationExtension
 			}
 
 			DBG_Operation = "";
-			DBG_Method = "";
 			CurrentOperationResult = false;
 
 			Gizmos.color = Color_Corners;
@@ -70,7 +69,8 @@ namespace LogansNavigationExtension
 
 			DBG_Operation += $"\nCommencing operation...\n";
 
-			CurrentOperationResult = LNX_Utils.AreVertAndEdgeEndPointsAligned(GrabbedVert, GrabbedEdge, ref DBG_Method );
+			string dbgMthd = string.Empty;
+			CurrentOperationResult = LNX_Utils.AreVertAndEdgeEndPointsAligned(GrabbedVert, GrabbedEdge, ref dbgMthd);
 
 			DBG_Operation += $"\nResult of AreVertAndEdgeEndPointsAligned(): '{CurrentOperationResult}'...\n";
 

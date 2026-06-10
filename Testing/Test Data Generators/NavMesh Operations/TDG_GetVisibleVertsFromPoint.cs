@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -15,7 +16,7 @@ namespace LogansNavigationExtension
 
 		[Header("DEBUG")]
 		public Color Color_lines;
-
+		public bool UseDbgVersion = true;
 
 		#region HELPERS -------------------------------------
 		[ContextMenu("z call GoToDataPoint")]
@@ -24,70 +25,39 @@ namespace LogansNavigationExtension
 
 		}
 
-		public LNX_Path NewPath;
 		[ContextMenu("z call DoEet")]
 		public void DoEet()
 		{
-			/*
-			List<int> tryListA = new List<int>() { 0, 1, 2, 3, 4 };
-			List<int> tryListB = tryListA.GetRange(0, tryListA.Count);
-			tryListA[0] = 123;
-			Debug.Log($"A: '{tryListA[0]}', B: '{tryListB[0]}' bcount: '{tryListB.Count}'");
-			*/
+			ResultCoordinates = new List<LNX_ComponentCoordinate>();
+			ResultPaths = new List<LNX_Path>();
 
-			/*
-			//the following test strangely proved that resultant path lists were the same objects...
-			NewPath = new LNX_Path();
+			DBG_Operation = $"{DateTime.Now}\n";
+			mthdDbg_Report.Clear();
 
-			//Debug.Log($"before. == '{NewPath == ResultPaths[0]}'");
-			Debug.Log($"before resultpath count: '{ResultPaths[0].PathPoints.Count}'");
+			if (Grabber_Hit.CurrentHit == LNX_NavmeshHit.None)
+			{
+				DBG_Operation += $"was NOT able to sample hit from this position. Returning early...\n";
+				return;
+			}
 
-			NewPath = ResultPaths[0];
-			Debug.Log($"afterA newpath count: '{NewPath.PathPoints.Count}', resultpath count: " +
-				$"'{ResultPaths[0].PathPoints.Count}', object equals: '{object.Equals(ResultPaths[0], NewPath)}'," +
-				$"list equals: '{ResultPaths[0].PathPoints == NewPath.PathPoints}'");
+			DBG_Operation += $"\nGrabber_Hit.CurrentHit: '{Grabber_Hit.CurrentHit.Position}'. Commencing operation...\n";
 
-			//NewPath.AddPath(ResultPaths[1]);
-			//NewPath.AddPoint( LNX_NavmeshHit.None );
+			if (!UseDbgVersion)
+			{
+				ResultPaths = _navmesh.GetVisibleVertsFromPoint(Grabber_Hit.CurrentHit, false, excludeCoords);
+			}
+			else
+			{
+				DBG_Operation += $"using debug version...\n";
+				mthdDbg_Report.StartReport();
+				ResultPaths = _navmesh.GetVisibleVertsFromPoint_dbg(Grabber_Hit.CurrentHit, ref mthdDbg_Report, false, excludeCoords);
+				mthdDbg_Report.EndReport();
+			}
 
-			//Debug.Log($"after == '{NewPath == ResultPaths[0]}'");
-			Debug.Log($"afterB newpath count: '{NewPath.PathPoints.Count}', resultpath count: " +
-				$"'{ResultPaths[0].PathPoints.Count}', object equals: '{object.Equals(ResultPaths[0], NewPath)}'," +
-				$"list equals: '{ResultPaths[0].PathPoints == NewPath.PathPoints}'");
-			*/
 
-			/*
-			Debug.Log($"before newpath count: '{NewPath.PathPoints.Count}', resultpath count: " +
-	$"'{ResultPaths[0].PathPoints.Count}', object equals: '{object.Equals(ResultPaths[0], NewPath)}'," +
-	$"list equals: '{ResultPaths[0].PathPoints == NewPath.PathPoints}'");
-
-			NewPath = new LNX_Path(ResultPaths[0]); //this doesn't seem to result in same objects
-
-			Debug.Log($"afterB newpath count: '{NewPath.PathPoints.Count}', resultpath count: " +
-	$"'{ResultPaths[0].PathPoints.Count}', object equals: '{object.Equals(ResultPaths[0], NewPath)}'," +
-	$"list equals: '{ResultPaths[0].PathPoints == NewPath.PathPoints}'");
-			*/
-
-			/*
-			Debug.Log($"before newpath count: '{NewPath.PathPoints.Count}', resultpath count: " +
-$"'{ResultPaths[0].PathPoints.Count}', object equals: '{object.Equals(ResultPaths[0], NewPath)}'," +
-$"list equals: '{ResultPaths[0].PathPoints == NewPath.PathPoints}'");
-
-			NewPath = ResultPaths[0] + ResultPaths[1]; //seems to work!
-
-			Debug.Log($"after newpath count: '{NewPath.PathPoints.Count}', resultpath count: " +
-$"'{ResultPaths[0].PathPoints.Count}', object equals: '{object.Equals(ResultPaths[0], NewPath)}'," +
-$"list equals: '{ResultPaths[0].PathPoints == NewPath.PathPoints}'");
-			*/
-
-			/*
-			NewPath = new LNX_Path( ResultPaths[0] );
-			Debug.Log($"afterB newpath count: '{NewPath.PathPoints.Count}', resultpath count: " +
-				$"'{ResultPaths[0].PathPoints.Count}', object equals: '{object.Equals(ResultPaths[0], NewPath)}'," +
-				$"list equals: '{ResultPaths[0].PathPoints == NewPath.PathPoints}'");
-			*/
-
-			//NewPath = ResultPaths[0] + ResultPaths[1];
+			DBG_Operation += $"{nameof(ResultCoordinates)} count: '{ResultCoordinates.Count}'\n" +
+				$"{nameof(ResultPaths)} count: '{ResultPaths.Count}'\n" +
+				$"";
 		}
 
 		#endregion
@@ -115,8 +85,7 @@ $"list equals: '{ResultPaths[0].PathPoints == NewPath.PathPoints}'");
 				ResultCoordinates = new List<LNX_ComponentCoordinate>();
 				ResultPaths = new List<LNX_Path>();
 
-				DBG_Operation = "";
-				DBG_Method = "";
+				DBG_Operation = $"{DateTime.Now}\n";
 				mthdDbg_Report.Clear();
 
 				if( Grabber_Hit.CurrentHit == LNX_NavmeshHit.None )
@@ -127,24 +96,18 @@ $"list equals: '{ResultPaths[0].PathPoints == NewPath.PathPoints}'");
 
 				DBG_Operation += $"\nGrabber_Hit.CurrentHit: '{Grabber_Hit.CurrentHit.Position}'. Commencing operation...\n";
 
-				int mthdMode = 1;
-
-				DBG_Method += $"using mode: '{mthdMode}'...";
-
-				if (mthdMode == 0)
+				if ( !UseDbgVersion )
 				{
 					ResultPaths = _navmesh.GetVisibleVertsFromPoint(Grabber_Hit.CurrentHit, false, excludeCoords);
 				}
-				else if (mthdMode == 1)
+				else
 				{
+					DBG_Operation += $"using debug version...\n";
 					mthdDbg_Report.StartReport();
 					ResultPaths = _navmesh.GetVisibleVertsFromPoint_dbg(Grabber_Hit.CurrentHit, ref mthdDbg_Report, false, excludeCoords);
 					mthdDbg_Report.EndReport();
 				}
-				else if (mthdMode == 2)
-				{
 
-				}
 
 				DBG_Operation += $"{nameof(ResultCoordinates)} count: '{ResultCoordinates.Count}'\n" +
 					$"{nameof(ResultPaths)} count: '{ResultPaths.Count}'\n" +

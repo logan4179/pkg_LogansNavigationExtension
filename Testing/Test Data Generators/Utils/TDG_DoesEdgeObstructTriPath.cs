@@ -71,7 +71,6 @@ namespace LogansNavigationExtension
 			}
 
 			DBG_Operation = "";
-			DBG_Method = "";
 
 			base.OnDrawGizmos();
 
@@ -86,9 +85,10 @@ namespace LogansNavigationExtension
 
 			DBG_Operation += $"Commencing operation...\n";
 
+			string dbgMthd = string.Empty;
 			CurrentResult = LNX_Utils.DoesEdgeObstructTriPath(
 				ObstructEdge, TriA, TriB,
-				ref DBG_Method
+				ref dbgMthd
 			);
 
 			DBG_Operation += $"Operation returned: '{CurrentResult}'\n";

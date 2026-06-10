@@ -16,10 +16,9 @@ namespace LogansNavigationExtension
 
 		[Header("OPTIONS")]
 		public bool UseDebugVersionOfMethod = true;
+		public bool AutoGenerate = true;
 
 		[Header("RESULTS")]
-		public LNX_NavmeshHit ResultHit;
-		public List<LNX_ComponentCoordinate> ResultCoordinates;
 		List<LNX_Path> ResultPaths = new List<LNX_Path>();
 
 		[Header("DEBUG")]
@@ -53,6 +52,51 @@ namespace LogansNavigationExtension
 		{
 			CurrentVert.SayAllRelationships();
 		}
+
+		[ContextMenu("z call GetVisible()")]
+		public void GetVisible()
+		{
+			ResultPaths = new List<LNX_Path>();
+			DBG_Operation = $"starting operation at: '{System.DateTime.Now}'...\n";
+
+			if( Grabber_Vert.CurrentHit == LNX_NavmeshHit.None )
+			{
+				DBG_Operation += "currently grabber has 'None' hit. Something's wrong...\n";
+				return;
+			}
+
+			if (CurrentVert == null)
+			{
+				DBG_Operation += $"CurrentVert is null. Something's wrong...\n";
+				return;
+			}
+
+			DBG_Operation += $"using currentvert: '{CurrentVert}'...\n" +
+				$"Commencing operation...\n";
+			DateTime dtStart;
+			double totalMs = 0;
+			if (UseDebugVersionOfMethod)
+			{
+				DBG_Operation += $"using debug version...\n";
+				mthdDbg_Report.StartReport();
+				dtStart = DateTime.Now; ;
+				ResultPaths = _navmesh.GetVisibleVertsFromVert_dbg(
+					CurrentVert, ref mthdDbg_Report, true, ExcludeVerts
+				);
+				totalMs = DateTime.Now.Subtract(dtStart).TotalMilliseconds;
+				mthdDbg_Report.EndReport();
+			}
+			else
+			{
+				DBG_Operation += $"using regular version (as opposed to debug version)...\n";
+				dtStart = DateTime.Now; ;
+				ResultPaths = _navmesh.GetVisibleVertsFromVert(CurrentVert, true, ExcludeVerts);
+				totalMs = DateTime.Now.Subtract(dtStart).TotalMilliseconds;
+			}
+
+			DBG_Operation += $"{nameof(ResultPaths)} count: '{ResultPaths.Count}'\n" +
+				$"operation took: '{totalMs}' ms...";
+		}
 		#endregion
 
 		protected override void OnDrawGizmos()
@@ -82,70 +126,24 @@ namespace LogansNavigationExtension
 				);
 			}
 
-			if (Grabber_Vert.RecalculatedLastFrame)
+			if (Grabber_Vert.RecalculatedLastFrame && AutoGenerate )
 			{
-				ResultHit = LNX_NavmeshHit.None;
-				ResultCoordinates = new List<LNX_ComponentCoordinate>();
-				DBG_Operation = $"starting operation at: '{System.DateTime.Now}'...\n";
-
-				if( CurrentVert == null )
-				{
-					DBG_Operation += $"CurrentVert is null. Something's wrong...\n";
-					return;
-				}
-				else
-				{
-					DBG_Operation += $"using currentvert: '{CurrentVert}'...\n";
-				}
-
-					DBG_Operation += "Attempting to sample hit on Navmesh surface...\n";
-				if (!_navmesh.SamplePosition(Grabber_Vert.transform.position, out ResultHit, 3f, false, true))
-				{
-					DBG_Operation += $"was NOT able to sample hit from this position. Returning early...\n";
-					return;
-				}
-
-				DBG_Operation += $"\nsampled hit at: '{ResultHit.Position}'.\n" +
-					$"Commencing operation...\n";
-
-				/*
-				ResultPaths = _navmesh.GetVisibleVertsFromPoint( 
-					CurrentVert, true, ExcludeVerts 
-				);
-				*/
-
-				if( UseDebugVersionOfMethod )
-				{
-					DBG_Operation += $"using debug version...\n";
-					mthdDbg_Report.StartReport();
-					ResultPaths = _navmesh.GetVisibleVertsFromVert_dbg(
-						CurrentVert, ref mthdDbg_Report, true, ExcludeVerts
-					);
-					mthdDbg_Report.EndReport();
-				}
-				else
-				{
-					DBG_Operation += $"using regular version (as opposed to debug version)...\n";
-
-					ResultPaths = _navmesh.GetVisibleVertsFromVert(CurrentVert, true, ExcludeVerts);
-				}
-
-				DBG_Operation += $"{nameof(ResultCoordinates)} count: '{ResultCoordinates.Count}'\n";
+				GetVisible();
 			}
-
 
 			Gizmos.color = Color_lines;
 			float height = 0.5f;
-			for (int i = 0; i < ResultCoordinates.Count; i++)
+			for (int i = 0; i < ResultPaths.Count; i++)
 			{
 				Gizmos.DrawLine(
-					ResultHit.Position,
-					_navmesh.GetVertexAtCoordinate(ResultCoordinates[i]).V_Position
+					CurrentVert.V_Position,
+					_navmesh.Triangles[ResultPaths[i].EndTriIndex].Verts[ResultPaths[i].EndHit.VertIndex].V_Position
 				);
 
 				Gizmos.DrawLine(
-					_navmesh.GetVertexAtCoordinate(ResultCoordinates[i]).V_Position,
-					_navmesh.GetVertexAtCoordinate(ResultCoordinates[i]).V_Position + (Vector3.up * height)
+					_navmesh.Triangles[ResultPaths[i].EndTriIndex].Verts[ResultPaths[i].EndHit.VertIndex].V_Position,
+					_navmesh.Triangles[ResultPaths[i].EndTriIndex].Verts[ResultPaths[i].EndHit.VertIndex].V_Position + 
+					(Vector3.up * height)
 				);
 			}
 

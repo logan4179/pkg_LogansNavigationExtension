@@ -18,6 +18,8 @@ namespace LogansNavigationExtension
         [TextArea(1,10)] public string Description;
 
 		[SerializeField] protected LNX_NavMesh _navmesh;
+		public bool AutoCalculate = true;
+
 
 		[Header("PROBLEMS")]
 		public int Index_GoToProblem = 0;
@@ -39,8 +41,8 @@ namespace LogansNavigationExtension
 		[TextArea(1, 20)]
 		public string DBG_Operation;
 
-		[TextArea(1, 20)]
-		public string DBG_Method;
+		//[TextArea(1, 20)]
+		//public string DBG_Method;
 		public LNX_MethodDebugReport mthdDbg_Report;
 
 

@@ -53,7 +53,6 @@ namespace LogansNavigationExtension
 			}
 
 			DBG_Operation = "";
-			DBG_Method = "";
 			perimHitParam = LNX_NavmeshHit.None;
 
 			if (CurrentTriangle == null)
@@ -79,6 +78,8 @@ namespace LogansNavigationExtension
 					Grabber_CurrentTri.transform.position, Grabber_OuterPos.transform.position, out currentHitParam, ref DBG_Method
 				)
 			)*/
+
+			/*
 			if (CurrentTriangle.ProjectThroughToPerimeter_dbg
 				(
 					//Grabber_CurrentTri.transform.position, Grabber_OuterPos.transform.position, out currentHitParam, ref mDbg_Report //todo: dws
@@ -98,6 +99,8 @@ namespace LogansNavigationExtension
 			{
 				DBG_Operation += $"CurrentTriangle.ProjectThroughToPerimeter() returned false...\n";
 			}
+			*/
+
 			mthdDbg_Report.EndReport();
 
 			DBG_Operation += $"completed operation. {nameof(perimHitParam)} now: '{perimHitParam}'...\n";

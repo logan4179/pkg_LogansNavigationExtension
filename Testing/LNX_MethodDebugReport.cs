@@ -5,104 +5,190 @@ using UnityEngine.AI;
 
 namespace LogansNavigationExtension
 {
-    [System.Serializable]
-    public class LNX_MethodDebugReport //must be class instead of struct, bc passing by reference
-    {
-        [SerializeField, TextArea(1,30)] private string rprtString;
-        public string ReportString => rprtString;
+	[System.Serializable]
+	public class LNX_MethodDebugReport //must be class instead of struct, bc passing by reference
+	{
+		[SerializeField, TextArea(1, 30)] private string rprtString;
+		public string ReportString => rprtString;
 
-        private int methodLvl = 0;
-        public int MethodLvl => methodLvl;
+		private List<LNXMDR_MethodSignature> methodSignatures;
 
-        private string tabTxt = "";
-        //private string tabTxt_inMethod => tabTxt + "\t";
+		public int MethodLvl => methodSignatures.Count;
 
-        private string currentMethodName = string.Empty;
-        public string CurrentMethodName => currentMethodName;
+		public LNXMDR_MethodSignature CurrentMethodSignature => methodSignatures[methodSignatures.Count - 1];
+		public string CurrentMethodName => CurrentMethodSignature.MethodName;
+		public string CurrentMethodTabText => methodSignatures.Count > 0 ? CurrentMethodSignature.MethodTabTxt : "";
+		public string CurrentInnerTabText => methodSignatures.Count > 0 ? CurrentMethodSignature.InnerTabTxt : "";
 
-        private bool flag_limitReached = false;
+		private bool flag_limitReached = false;
 
-        public int MethodLevelVerbosityLimit = -1;
+		public int MethodLevelVerbosityLimit = -1;
 
-        public void Clear()
-        {
-			methodLvl = -1;
-			tabTxt = string.Empty;
+		private bool flag_amInAbbreviateMethod = false;
+
+		public void Clear()
+		{
 			rprtString = string.Empty;
+			methodSignatures = new List<LNXMDR_MethodSignature>();
+			flag_limitReached = false;
+			flag_amInAbbreviateMethod = false;
 		}
 
-		public void StartReport( string rprtName = "", int mthdLvlLmt = -1 )
-        {
-            methodLvl = -1;
-            tabTxt = string.Empty;
-            MethodLevelVerbosityLimit = mthdLvlLmt;
+		public void StartReport(string rprtName = "")
+		{
+			//rprtString = $"{rprtName}\n" +
+			//$"{{\n";
+			rprtString = string.Empty;
+			flag_limitReached = false;
+			flag_amInAbbreviateMethod = false;
 
-            //rprtString = $"{rprtName}\n" +
-            //$"{{\n";
-            rprtString = string.Empty;
-            flag_limitReached = false;
-        }
+			methodSignatures = new List<LNXMDR_MethodSignature>();
+		}
 
-        public void StartMethod( string methodName, bool addNewLineSpace = false )
-        {
-            currentMethodName = methodName;
+		public void StartReport(string rprtName, int mthdLvlLmt)
+		{
+			MethodLevelVerbosityLimit = mthdLvlLmt;
 
-            methodLvl++;
+			//rprtString = $"{rprtName}\n" +
+			//$"{{\n";
+			rprtString = string.Empty;
+			flag_limitReached = false;
+			methodSignatures = new List<LNXMDR_MethodSignature>();
+		}
 
-            if (addNewLineSpace){ rprtString += "\n"; }
-
-            rprtString += $"{tabTxt}{methodName}\n" +
-                $"{tabTxt}{{\n";
-
-            tabTxt += "\t";
-
-            if( MethodLevelVerbosityLimit > -1 && methodLvl > MethodLevelVerbosityLimit )
-            {
-                rprtString += $"{tabTxt}...\n";
-            }
-        }
-
-        public void Log( string s )
-        {
-			if (MethodLevelVerbosityLimit > -1 && methodLvl > MethodLevelVerbosityLimit)
+		public void StartMethod(string methodName, string tabStarter = "|")
+		{
+			if
+			(
+				flag_limitReached || flag_amInAbbreviateMethod ||
+				(MethodLevelVerbosityLimit > -1 && MethodLvl > MethodLevelVerbosityLimit)
+			)
 			{
 				return;
 			}
 
-			if ( rprtString.Length < 50000)
-            {
-                rprtString += $"{tabTxt}{s}\n";
-            }
-            else if( !flag_limitReached )
-            {
-                Debug.LogWarning($"limit reached on report");
-                rprtString += "LIMIT REACHED ON REPORT\n";
-                flag_limitReached = true;
-            }
-        }
+			methodSignatures.Add( new LNXMDR_MethodSignature(methodName, tabStarter, CurrentInnerTabText) );
 
-        public void Log(params string[] logs)
-        {
-			if (MethodLevelVerbosityLimit > -1 && methodLvl > MethodLevelVerbosityLimit)
+			rprtString += $"{CurrentMethodTabText}{methodName}\n" +
+				$"{CurrentMethodTabText}{{\n";
+		}
+
+		public void StartAbbreviatedMethod(string methodName)
+		{
+			if
+			(
+				flag_limitReached || flag_amInAbbreviateMethod ||
+				(MethodLevelVerbosityLimit > -1 && MethodLvl > MethodLevelVerbosityLimit)
+			)
+			{
+				return;
+			}
+
+			StartMethod(methodName, "");
+
+			rprtString += $"{CurrentInnerTabText}...[abbreviated]...\n";
+
+			flag_amInAbbreviateMethod = true; //this needs to be last so that the other stuff can work...
+
+		}
+
+		public void EndAbbreviatedMethod(string methodName)
+		{
+			if (flag_limitReached)
+			{
+				return;
+			}
+
+			if( !flag_amInAbbreviateMethod )
+			{
+				Debug.LogWarning($"EndAbbreviatedMethod() was called, but wasn't in abbreviated method");
+			}
+			flag_amInAbbreviateMethod = false;
+
+			EndMethod(methodName);
+		}
+
+		public void EndMethod(string methodName = "")
+		{
+			if (flag_amInAbbreviateMethod || flag_limitReached )
+			{
+				return;
+			}
+
+			rprtString += $"{CurrentMethodTabText}}}{(methodName == string.Empty ? "" : $" <-end of {methodName}")}\n";
+
+			methodSignatures.RemoveAt(methodSignatures.Count - 1);
+		}
+
+		public void Log(string s, bool includeConsole = false, bool abbreviationOverride = false)
+		{
+			if
+			(
+				flag_limitReached ||
+				(MethodLevelVerbosityLimit > -1 && MethodLvl > MethodLevelVerbosityLimit) ||
+				(flag_amInAbbreviateMethod && abbreviationOverride == false)
+			)
+			{
+				return;
+			}
+
+			if (rprtString.Length < 50000)
+			{
+				rprtString += $"{CurrentInnerTabText}{s}\n";
+			}
+			else if (!flag_limitReached)
+			{
+				Debug.LogWarning($"limit reached on report");
+				rprtString += "LIMIT REACHED ON REPORT\n";
+				flag_limitReached = true;
+			}
+
+			if (includeConsole)
+			{
+				Debug.Log(s);
+			}
+		}
+
+		public void Log(params string[] logs)
+		{
+			if
+			(
+				flag_limitReached || flag_amInAbbreviateMethod ||
+				(MethodLevelVerbosityLimit > -1 && MethodLvl > MethodLevelVerbosityLimit)
+			)
 			{
 				return;
 			}
 
 			for (int i = 0; i < logs.Length; i++)
-            {
-                Log(logs[i]);
-            }
-        }
+			{
+				Log(logs[i]);
+			}
+		}
+
 
 		public void EmptyLine()
-        {
-            rprtString += "\n";
+		{
+			if
+			(
+				flag_limitReached || flag_amInAbbreviateMethod ||
+				(MethodLevelVerbosityLimit > -1 && MethodLvl > MethodLevelVerbosityLimit)
+			)
+			{
+				return;
+			}
+
+			rprtString += "\n";
 
 		}
 
-        public void Log_InnrTabbed( string s, int extraTabs )
-        {
-			if (MethodLevelVerbosityLimit > -1 && methodLvl > MethodLevelVerbosityLimit)
+		public void Log_InnrTabbed(string s, int extraTabs)
+		{
+			if
+			(
+				flag_limitReached || flag_amInAbbreviateMethod ||
+				(MethodLevelVerbosityLimit > -1 && MethodLvl > MethodLevelVerbosityLimit)
+			)
 			{
 				return;
 			}
@@ -123,13 +209,17 @@ namespace LogansNavigationExtension
 			{
 				tempTabTxt += "\t";
 			}
-			Log( $"{tempTabTxt}{s}" );
+			Log($"{tempTabTxt}{s}");
 
 		}
 
 		public void Log_Untabbed(string s)
 		{
-			if (MethodLevelVerbosityLimit > -1 && methodLvl > MethodLevelVerbosityLimit)
+			if
+			(
+				flag_limitReached || flag_amInAbbreviateMethod ||
+				(MethodLevelVerbosityLimit > -1 && MethodLvl > MethodLevelVerbosityLimit)
+			)
 			{
 				return;
 			}
@@ -137,44 +227,38 @@ namespace LogansNavigationExtension
 			rprtString += $"{s}\n";
 		}
 
-		public void EndMethod( string methodName = "", bool addNewLineSpace = false)
-        {
-            tabTxt = "";
-
-            if( methodLvl > 0 )
-            {
-                for (int i = 0; i < methodLvl; i++)
-                {
-                    tabTxt += "\t";
-                }
-            }
-
-            rprtString += $"{tabTxt}}}{(methodName == string.Empty ? "" : $" <-end of {methodName}")}\n";
-			//rprtString += "\n"; //in order to make a space to separate methods
-
-			if (addNewLineSpace)
-			{
-				rprtString += "\n";
-			}
-
-			methodLvl--;
-        }
-
-		public void Log_And_End_Method(string s, bool addNewLineSpace = false)
+		public void Log_And_End_Method(string s)
 		{
 			Log(s);
-			EndMethod( currentMethodName, addNewLineSpace );
+			EndMethod("");
 		}
 
-		public void Log_And_End_Method(string s, string methodName, bool addNewLineSpace = false)
+		public void Log_And_End_Method(string s, string methodName)
 		{
 			Log(s);
-			EndMethod(methodName, addNewLineSpace);
+			EndMethod(methodName);
 		}
 
 		public void EndReport()
 		{
 			//rprtString += $"}}";
+		}
+	}
+
+	public struct LNXMDR_MethodSignature
+	{
+		public string MethodName;
+		public string tabStarter;
+		public string MethodTabTxt;
+		public string InnerTabTxt;
+
+		public LNXMDR_MethodSignature(string mthdName, string tbStrtr, string crntTbTxt)
+		{
+			MethodName = mthdName;
+			tabStarter = tbStrtr;
+			MethodTabTxt = crntTbTxt;
+			InnerTabTxt = MethodTabTxt + tbStrtr + "\t";
+
 		}
 	}
 }

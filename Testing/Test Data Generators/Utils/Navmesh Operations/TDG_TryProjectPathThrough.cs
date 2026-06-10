@@ -10,6 +10,9 @@ namespace LogansNavigationExtension
 		//TODO: NEED TO CREATE DATA AND FULLY INTEGRATE THIS INTO THE TDG MANAGER CLASS
 		//todo: can get rid of a lot of the code here by implementing component grabbers, and datacapturers, etc
 
+		[Header("REFERENCE")]
+		public LNX_NavMesh _NavMesh;
+
 		[Header("START OF DERIVED CLASS-------------------")]
 		public LNX_ComponentGrabber Grabber_StartVert;
 		public LNX_ComponentGrabber Grabber_EndVert;
@@ -40,7 +43,6 @@ namespace LogansNavigationExtension
 			}
 
 			DBG_Operation = "";
-			DBG_Method = "";
 
 			base.OnDrawGizmos();
 
@@ -55,7 +57,7 @@ namespace LogansNavigationExtension
 
 			DBG_Operation += $"Commencing operation...\n";
 
-			CurrentResult = LNX_Utils.TryProjectThrough( _navmesh,	StartVert, EndVert, out RsltPath, ref DBG_Method );
+			//CurrentResult = _navmesh.TryProjectThrough( StartVert, EndVert, out RsltPath, ref DBG_Method );
 
 			DBG_Operation += $"Operation returned: '{CurrentResult}'\n";
 

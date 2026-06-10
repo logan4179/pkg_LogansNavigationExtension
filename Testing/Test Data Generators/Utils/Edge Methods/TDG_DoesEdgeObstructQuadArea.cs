@@ -49,7 +49,6 @@ namespace LogansNavigationExtension
 			}
 
 			DBG_Operation = "";
-			DBG_Method = "";
 
 			base.OnDrawGizmos();
 
@@ -75,10 +74,11 @@ namespace LogansNavigationExtension
 
 			DBG_Operation += $"Commencing operation...\n";
 
+			string dbgMthd = string.Empty;
 			CurrentResult = LNX_Utils.DoesEdgeObstructQuadArea( 
 				ObstructEdge, Grabber_crnrA.transform.position, Grabber_crnrB.transform.position, 
 				Grabber_crnrC.transform.position, Grabber_crnrD.transform.position, 
-				true, ref DBG_Method 
+				true, ref dbgMthd
 			);
 
 			DBG_Operation += $"Operation returned: '{CurrentResult}'\n";

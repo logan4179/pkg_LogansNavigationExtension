@@ -73,8 +73,6 @@ namespace LogansNavigationExtension
 				DBG_Operation += $"known fully visible tris list length: '{Indices_knownFullyVisibleTriangles.Length}'...\n";
 			}
 
-			DBG_Method = FocusTri.DBG_FullyVisible;
-
 			Color oldClr = Gizmos.color;
 			Gizmos.color = Color_visibleTris;
 			for ( int i = 0; i < Indices_knownFullyVisibleTriangles.Length; i++ )

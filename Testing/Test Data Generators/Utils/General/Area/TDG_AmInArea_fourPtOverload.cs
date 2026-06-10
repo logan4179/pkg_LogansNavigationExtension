@@ -110,16 +110,16 @@ namespace LogansNavigationExtension
 			}
 
 			DBG_Operation = "";
-			DBG_Method = "";
 			CurrentOperationResult = false;
 
 			DBG_Operation += $"Commencing operation...\n";
 
+			string dbgMthd = string.Empty;
 			CurrentOperationResult = LNX_Utils.AmInArea(
 				Grabber_Pos.transform.position,
 				Grabber_CrnrA.transform.position, Grabber_CrnrB.transform.position,
 				Grabber_CrnrC.transform.position, Grabber_CrnrD.transform.position, 
-				_navmesh.GetSurfaceProjectionVector(), false, ref DBG_Method );
+				_navmesh.GetSurfaceProjectionVector(), false, ref dbgMthd);
 
 			DBG_Operation += $"Result of AmInQuadArea(): '{CurrentOperationResult}'...\n";
 

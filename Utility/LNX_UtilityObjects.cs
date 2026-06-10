@@ -367,7 +367,7 @@ namespace LogansNavigationExtension
 
 		public override string ToString()
 		{
-			return $"hit[t{triangleIndex},v{vertIndex},e{edgeIndex}_pos{Position})_nrml{normal}]'";
+			return $"[t{triangleIndex}v{vertIndex}e{edgeIndex}_pos{Position}]";
 		}
 
 		//public static explicit operator LNX_ComponentCoordinate(LNX_NavmeshHit hit) =>
@@ -450,7 +450,8 @@ namespace LogansNavigationExtension
 			}
 		}
 
-		private static LNX_VertexRelationship none = new LNX_VertexRelationship( LNX_Path.None ); //todo: dws unless I figure out why this causes problems in LNX_Vertex.CalculateDerivedInfo()
+		//private static LNX_VertexRelationship none = new LNX_VertexRelationship( LNX_Path.None ); //todo: dws unless I figure out why this causes problems in LNX_Vertex.CalculateDerivedInfo()
+		private static LNX_VertexRelationship none = new LNX_VertexRelationship(-1, -1, LNX_Path.None); //todo: dws unless I figure out why this causes problems in LNX_Vertex.CalculateDerivedInfo()
 
 
 		#region CONSTRUCTORS ======================================================================
@@ -591,8 +592,7 @@ namespace LogansNavigationExtension
 					relatedVert.SharesVertSpace(nvMsh.Triangles[myVert.Coordinate_SecondSibling.TrianglesIndex].Verts[myVert.Coordinate_SecondSibling.ComponentIndex])
 				) //"If we're siblings". More performant than using the AreSiblings() method
 				{
-					//Debug.LogWarning($"same spot or siblings");
-					rprt.Log($"same spot or siblings, or in same spot as siblings");
+					rprt.Log($"Siblings, or in same spot as siblings");
 					PathTo = new LNX_Path
 					(
 						nvMsh.GetSurfaceProjectionVector(),
@@ -602,17 +602,12 @@ namespace LogansNavigationExtension
 				}
 				else
 				{
-					rprt.Log($"Actually calculating the path...");
+					rprt.Log($"Not siblings. Can't derive path. Actually calculating the path...");
 
-
-					StringBuilder sb_calculatePath = new StringBuilder();
-					nvMsh.CalculatePath(myVert, relatedVert, out PathTo); //this is by far where most of the time is being spent
-					Debug.Log(sb_calculatePath);
-					rprt.Log($"created path: '{PathTo}' with '{PathTo.PathPoints.Count}' points. Here's the report...\n" +
-						$"=============================================================\n");
-					rprt.Log($"{sb_calculatePath.ToString()}\n" +
-						$"=============================================================\n");
-
+					nvMsh.CalculatePath_dbg(myVert, relatedVert, out PathTo, ref rprt ); //this is by far where most of the time is being spent
+					rprt.Log($"created path: '{PathTo}'",
+						$"path has '{PathTo.PathPoints.Count}' points...\n");
+					/*
 					//Just to make things run smoother for now...
 					PathTo = new LNX_Path
 					(
@@ -620,6 +615,7 @@ namespace LogansNavigationExtension
 						new LNX_NavmeshHit(myVert, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal),
 						new LNX_NavmeshHit(relatedVert, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal)
 					);
+					*/
 				}
 			}
 			else
@@ -655,7 +651,13 @@ namespace LogansNavigationExtension
 				Debug.Log(sb_rprt);
 			}
 			*/
-		}		
+		}
+
+		public LNX_VertexRelationship( int triIndex, int vertIndex, LNX_Path path )
+		{
+			RelatedVertCoordinate = new LNX_ComponentCoordinate(triIndex, vertIndex);
+			PathTo = path;
+		}
 		#endregion
 
 		
@@ -701,17 +703,24 @@ namespace LogansNavigationExtension
 		}
 		#endregion
 
+
 		public override string ToString()
+		{
+			return $"{(PathTo.PathPoints.Count > 0 ? $"([{PathTo.StartHit.TriangleIndex}][{PathTo.StartHit.VertIndex}]" : "[?]")}->" +
+				$"{RelatedVertCoordinate})";
+		}
+
+		public string GetInfoString()
 		{
 			string s = $"Related: '{RelatedVertCoordinate}'\n" +
 				$"{nameof(CanSee)}: '{CanSee}'\n" +
 				$"";
 
-			if( PathTo.PathPoints == null )
+			if (PathTo.PathPoints == null)
 			{
 				s += "PathPoints collection is null...";
 			}
-			else if ( PathTo.PathPoints.Count <= 0 )
+			else if (PathTo.PathPoints.Count <= 0)
 			{
 				s += $"PathPoints collection count is '{PathTo.PathPoints.Count}'";
 			}

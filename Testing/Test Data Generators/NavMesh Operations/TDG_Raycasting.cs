@@ -10,8 +10,8 @@ namespace LogansNavigationExtension
 {
     public class TDG_Raycasting : TDG_base
     {
-		public Transform startTrans;
-		public Transform endTrans;
+		public LNX_ComponentGrabber startTrans;
+		public LNX_ComponentGrabber endTrans;
 
 		public bool RaycastResult = false;
 
@@ -24,8 +24,6 @@ namespace LogansNavigationExtension
 
 		//[Header("DEBUG")]
 
-		[HideInInspector] public Vector3 CachedLastStartPos;
-		[HideInInspector] public Vector3 CachedLastEndPos;
 
 		[ContextMenu("z CaptureDataPoint()")]
 		public void CaptureDataPoint()
@@ -45,7 +43,7 @@ namespace LogansNavigationExtension
 		{
 			Debug.Log("from override");
 
-			_dataCapture_problems.CaptureDataPoint( startTrans.position, endTrans.position );
+			//_dataCapture_problems.CaptureDataPoint( startTrans.position, endTrans.position );
 
 			Debug.Log($"{nameof(CaptureProblemPosition_override)}()...");
 		}
@@ -62,16 +60,42 @@ namespace LogansNavigationExtension
 			Debug.Log($"{nameof(GoToProblem)}()...");
 		}
 
-		[ContextMenu("z SayPositions()")]
-		public void SayPositions()
+		[ContextMenu("z call RunRaycast()")]
+		public void RunRaycast()
 		{
+			mthdDbg_Report.Clear();
+			ResultPath = LNX_Path.None;
 
-			Debug.Log($"startpos: '{LNX_UnitTestUtilities.LongVectorString(startTrans.position)}' endpos: '{endTrans.position}'");
+			DBG_Operation = $"{DateTime.Now}\n";
+
+			if (startTrans.CurrentHit == LNX_NavmeshHit.None)
+			{
+				DBG_Operation += $"start hit is none. Returning early...\n";
+				return;
+			}
+
+			if (endTrans.CurrentHit == LNX_NavmeshHit.None)
+			{
+				DBG_Operation += $"end hit is none. Returning early...\n";
+				return;
+			}
+
+			DBG_Operation += $"using strtHit: '{startTrans.CurrentHit}', endHit: '{endTrans.CurrentHit}'\n";
+
+			mthdDbg_Report.StartReport("TDG_Raycast");
+
+			RaycastResult = _navmesh.Raycast_dbg(startTrans.CurrentHit, endTrans.CurrentHit,
+				out ResultPath, ref mthdDbg_Report);
+
+			mthdDbg_Report.EndReport();
+
+			DBG_Operation += $"result: '{RaycastResult}'\n" +
+				$"Path: '{(ResultPath.PathPoints == null ? "null" : ResultPath.PointCount)}'\n" +
+				$"path dist: '{ResultPath.TotalDistance}'\n";
 		}
 
 		protected override void OnDrawGizmos()
 		{
-			DBG_Method = "";
 
 			if( AmInUnitTest || Selection.activeObject != gameObject && Selection.activeObject != startTrans.gameObject )
 			{
@@ -83,19 +107,9 @@ namespace LogansNavigationExtension
 
 			//RaycastResult = _navmesh.Raycast(startTrans.position, endTrans.position, 3f); //for without path
 
-			if ( startTrans.position != CachedLastStartPos || endTrans.position != CachedLastEndPos ) //"IF something's changed..." this is to make it a little snappier in the editor...
+			if ( AutoCalculate && (startTrans.RecalculatedLastFrame || endTrans.RecalculatedLastFrame) ) //"IF something's changed..." this is to make it a little snappier in the editor...
 			{
-				DBG_Operation = $"{DateTime.Now}\n" +
-					$"using start '{startTrans.position}', and end: '{endTrans.position}'...\n";
-
-				mthdDbg_Report.StartReport("TDG_Raycast", 3);
-				//RaycastResult = _navmesh.Raycast( startTrans.position, endTrans.position, 3f, out ResultPath );
-				RaycastResult = _navmesh.Raycast_dbg(startTrans.position, endTrans.position, 3f, 
-					out ResultPath, ref mthdDbg_Report);
-				mthdDbg_Report.EndReport();
-
-				DBG_Operation += $"result: '{RaycastResult}'\n" +
-					$"Path: '{ResultPath.PointCount}'\n";
+				RunRaycast();
 			}
 
 			if( !RaycastResult )
@@ -103,27 +117,6 @@ namespace LogansNavigationExtension
 				Color oldClr = Gizmos.color;
 				Gizmos.color = Color_PathPoints;
 				Handles.color = Color_PathPoints;
-
-				/*
-				for ( int i = 0; i < ResultPath.PathPoints.Count; i++ )
-				{
-					Gizmos.DrawSphere( ResultPath.PathPoints[i].V_Position, Size_PathPoints );
-
-					Gizmos.DrawLine(
-						ResultPath.PathPoints[i].V_Position, ResultPath.PathPoints[i].V_Position + (Vector3.up * Height_PathPtLabels)
-					);
-					Handles.Label(
-						ResultPath.PathPoints[i].V_Position + (Vector3.up * Height_PathPtLabels), $"{i}"
-					);
-
-					if (i > 0)
-					{
-						Handles.DrawDottedLine(
-							ResultPath.PathPoints[i-1].V_Position, ResultPath.PathPoints[i].V_Position, 8f
-						);
-					}
-				}
-				*/
 
 				ResultPath.DrawMyGizmos( Size_PathPoints, Height_PathPtLabels );
 
@@ -133,15 +126,12 @@ namespace LogansNavigationExtension
 
 			Gizmos.color = RaycastResult ? Color.red : Color.green;
 
-			Gizmos.DrawLine(startTrans.position, endTrans.position);
+			Gizmos.DrawLine(startTrans.transform.position, endTrans.transform.position);
 
-			Gizmos.DrawSphere(startTrans.position, Radius_ObjectDebugSpheres);
+			Gizmos.DrawSphere(startTrans.transform.position, Radius_ObjectDebugSpheres);
 			//Handles.Label(startTrans.position, "strtTrans");
-			Gizmos.DrawSphere(endTrans.position, Radius_ObjectDebugSpheres);
+			Gizmos.DrawSphere(endTrans.transform.position, Radius_ObjectDebugSpheres);
 			//Handles.Label(startTrans.position, "endTrans");
-
-			CachedLastStartPos = startTrans.position;
-			CachedLastEndPos = endTrans.position;
 		}
 
 		#region HELPERS -------------------------------------
