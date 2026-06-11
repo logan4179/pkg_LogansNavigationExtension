@@ -37,6 +37,8 @@ namespace LogansNavigationExtension
 		[Range(0f, 0.3f)] public float Radius_ObjectDebugSpheres = 0.2f;
 		[Range(0f, 0.15f)] public float Radius_ProjectPos = 0.1f;
 		[HideInInspector] public bool AmInUnitTest = false;
+		public bool UseDebugVersion = false;
+
 
 		[TextArea(1, 20)]
 		public string DBG_Operation;

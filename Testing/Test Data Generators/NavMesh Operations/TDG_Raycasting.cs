@@ -24,7 +24,6 @@ namespace LogansNavigationExtension
 
 		//[Header("DEBUG")]
 
-
 		[ContextMenu("z CaptureDataPoint()")]
 		public void CaptureDataPoint()
 		{
@@ -82,16 +81,34 @@ namespace LogansNavigationExtension
 
 			DBG_Operation += $"using strtHit: '{startTrans.CurrentHit}', endHit: '{endTrans.CurrentHit}'\n";
 
-			mthdDbg_Report.StartReport("TDG_Raycast");
+			DateTime dt_opStart;
+			double totalMS;
+			if( UseDebugVersion )
+			{
+				DBG_Operation += $"using debug version...\n";
+				mthdDbg_Report.StartReport("TDG_Raycast");
+				dt_opStart = DateTime.Now;
+				RaycastResult = _navmesh.Raycast_dbg(startTrans.CurrentHit, endTrans.CurrentHit,
+					out ResultPath, ref mthdDbg_Report);
+				totalMS = DateTime.Now.Subtract(dt_opStart).TotalMilliseconds;
+				mthdDbg_Report.EndReport();
+			}
+			else
+			{
+				DBG_Operation += $"using real version...\n";
 
-			RaycastResult = _navmesh.Raycast_dbg(startTrans.CurrentHit, endTrans.CurrentHit,
-				out ResultPath, ref mthdDbg_Report);
+				dt_opStart = DateTime.Now;
+				RaycastResult = _navmesh.Raycast(
+					startTrans.CurrentHit, endTrans.CurrentHit,out ResultPath
+				);
+				totalMS = DateTime.Now.Subtract(dt_opStart).TotalMilliseconds;
 
-			mthdDbg_Report.EndReport();
+			}
 
 			DBG_Operation += $"result: '{RaycastResult}'\n" +
 				$"Path: '{(ResultPath.PathPoints == null ? "null" : ResultPath.PointCount)}'\n" +
-				$"path dist: '{ResultPath.TotalDistance}'\n";
+				$"path dist: '{ResultPath.TotalDistance}'\n" +
+				$"total ms: '{totalMS}'\n";
 		}
 
 		protected override void OnDrawGizmos()

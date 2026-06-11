@@ -714,26 +714,107 @@ namespace LogansNavigationExtension
 		}
 		#endregion
 
-		public LNX_Path Ping_dbg(LNX_NavmeshHit endPoint, LNX_NavMesh nm, float maxAllowableDist, 
+		
+		public LNX_Path Ping( LNX_NavmeshHit endPoint, LNX_NavMesh nm, float maxAllowableDist, LNX_Path runningPath,
+			List<LNX_ComponentCoordinate> backstopverts = null
+		)
+		{
+			#region SHORT-CIRCUITING ========================================
+			if (maxAllowableDist > 0f)
+			{
+				if (runningPath.TotalDistance + Vector3.Distance(V_Position, endPoint.Position) > maxAllowableDist)
+				{
+					return LNX_Path.None;
+				}
+			}
+
+			LNX_Path rcPath = new LNX_Path();
+
+			if ( !nm.Raycast(new LNX_NavmeshHit(this, nm.Triangles[TriangleIndex].V_PathingNormal), endPoint, out rcPath) )
+			{
+				return new LNX_Path(runningPath, rcPath);
+			}
+
+			#endregion ---------------------------------------
+
+			#region ASSEMBLE NEW (FORWARD) BACKSTOP ============================================
+			List<LNX_ComponentCoordinate> fwdBackstopVerts = new List<LNX_ComponentCoordinate>();
+			if (backstopverts != null && backstopverts.Count > 0)
+			{
+				for (int i = 0; i < backstopverts.Count; i++)
+				{
+					fwdBackstopVerts.Add(backstopverts[i]);
+				}
+			}
+
+			if (!fwdBackstopVerts.Contains(MyCoordinate))
+			{
+				fwdBackstopVerts.Add(MyCoordinate);
+			}
+
+			List<LNX_Path> vsblVrtPths = nm.GetVisibleVertsFromVert(
+				this, false, fwdBackstopVerts, maxAllowableDist - runningPath.TotalDistance
+			);
+
+			if (vsblVrtPths.Count <= 0)
+			{
+				return LNX_Path.None;
+			}
+			else
+			{
+				for (int i = 0; i < vsblVrtPths.Count; i++)
+				{
+					fwdBackstopVerts.Add(vsblVrtPths[i].EndCoordinate_vert);
+				}
+			}
+			#endregion
+
+			LNX_Path runningBestPath = LNX_Path.None;
+			float runningBestDistance = maxAllowableDist;
+
+			for (int i = 0; i < vsblVrtPths.Count; i++)
+			{
+				LNX_Path path_continuationToVsblVrt = new LNX_Path(runningPath, vsblVrtPths[i]);
+
+				LNX_Path p = nm.Triangles[vsblVrtPths[i].EndTriIndex].Verts[vsblVrtPths[i].EndHit.VertIndex].Ping(
+					endPoint, nm, runningBestDistance, path_continuationToVsblVrt, fwdBackstopVerts
+				);
+
+
+				if (p != LNX_Path.None)
+				{
+					if (runningBestDistance > 0 && p.TotalDistance < runningBestDistance)
+					{
+						runningBestPath = p;
+						runningBestDistance = p.TotalDistance;
+					}
+				}
+			}
+
+			return runningBestPath;
+		}
+
+		public LNX_Path Ping_dbg(LNX_NavmeshHit endPoint, LNX_NavMesh nm, float maxAllowableDist,
 			LNX_Path runningPath, ref LNX_MethodDebugReport rprt, List<LNX_ComponentCoordinate> backstopverts = null
 		)
 		{
 			rprt.StartMethod($"{this}.Ping('{endPoint}', max: '{maxAllowableDist}', bkstps: " +
 				$"'{(backstopverts == null ? "null" : backstopverts.Count)}')", $"{TriangleIndex}.{ComponentIndex}");
 
-			rprt.Log($"Note: runningPath: '{runningPath}', pts count: '{runningPath.PointCount}'...", 
+			rprt.Log($"Note: runningPath: '{runningPath}', pts count: '{runningPath.PointCount}'...",
 				$"runningpath dist: '{runningPath.TotalDistance}'");
 
 			//LNX_Path rtrnPath = LNX_Path.None;
 
 			#region SHORT-CIRCUITING ========================================
-			if( maxAllowableDist > 0f )
+			if (maxAllowableDist > 0f)
 			{
 				rprt.Log($"first, checking distance...");
-				Debug.Log
-				if( runningPath.TotalDistance + Vector3.Distance(V_Position, endPoint.Position) > maxAllowableDist )
+
+				if (runningPath.TotalDistance + Vector3.Distance(V_Position, endPoint.Position) > maxAllowableDist)
 				{
 					rprt.Log_And_End_Method($"runningpath dist plus straight line distance too far. Short-circuiting...");
+					Debug.Log($"runningpath dist plus straight line distance too far. Short-circuiting...");
 					return LNX_Path.None;
 				}
 			}
@@ -741,36 +822,39 @@ namespace LogansNavigationExtension
 			rprt.Log($"Now raycasting to see if endPoint is visible from this vert...");
 			LNX_Path rcPath = new LNX_Path();
 
-			//rprt.StartAbbreviatedMethod($"Raycast({this}, {endPoint})");
+			rprt.StartAbbreviatedMethod($"Raycast({this}, {endPoint})");
 			bool rcastRslt = nm.Raycast_dbg(new LNX_NavmeshHit(this, nm.Triangles[TriangleIndex].V_PathingNormal), endPoint, out rcPath, ref rprt);
-			//rprt.EndAbbreviatedMethod($"Raycast({this}, {endPoint})");
+			rprt.EndAbbreviatedMethod($"Raycast({this}, {endPoint})");
 
-			if ( !rcastRslt )
+			if (!rcastRslt)
 			{
+				/*
 				LNX_Path p = new LNX_Path(runningPath, rcPath);
 				rprt.Log_And_End_Method($"endpoint WAS visible. Returning path with dist: '{p.TotalDistance}' made from appending raycast path to running path...");
-
-				//return new LNX_Path( runningPath, rcPath );
 				return p;
+				*/
+				rprt.Log_And_End_Method($"endpoint WAS visible. Returning path made from appending raycast path to running path...");
+
+				return new LNX_Path(runningPath, rcPath);
 			}
 
-			rprt.Log( $"endpoint NOT visible. Continuing...");
+			rprt.Log($"endpoint NOT visible. Continuing...");
 			#endregion ---------------------------------------
 
 			#region ASSEMBLE NEW (FORWARD) BACKSTOP ============================================
 			rprt.Log($"Now assembling a list for forward backstop, which will include this vertex...");
 			List<LNX_ComponentCoordinate> fwdBackstopVerts = new List<LNX_ComponentCoordinate>();
-			if ( backstopverts != null && backstopverts.Count > 0 )
+			if (backstopverts != null && backstopverts.Count > 0)
 			{
-				for ( int i = 0; i < backstopverts.Count; i++ )
+				for (int i = 0; i < backstopverts.Count; i++)
 				{
-					fwdBackstopVerts.Add( backstopverts[i] );
+					fwdBackstopVerts.Add(backstopverts[i]);
 				}
 			}
 
-			if( !fwdBackstopVerts.Contains(MyCoordinate) )
+			if (!fwdBackstopVerts.Contains(MyCoordinate))
 			{
-				fwdBackstopVerts.Add( MyCoordinate );
+				fwdBackstopVerts.Add(MyCoordinate);
 			}
 
 			rprt.Log($"backstop initialized with: '{fwdBackstopVerts.Count}' verts from previous list...");
@@ -778,13 +862,13 @@ namespace LogansNavigationExtension
 			rprt.EmptyLine();
 			rprt.Log($"Now getting visible verts from This vert, avoiding backstop verts...");
 
-			rprt.StartAbbreviatedMethod($"GetVisibleVertsFromVert_dbg({this})");
-			List<LNX_Path> vsblVrtPths = nm.GetVisibleVertsFromVert_dbg( 
-				this, ref rprt, false, fwdBackstopVerts, maxAllowableDist - runningPath.TotalDistance 
-			); 
+			rprt.StartAbbreviatedMethod($"GetVisibleVertsFromVert_dbg({this}, maxDist: '{maxAllowableDist - runningPath.TotalDistance}')");
+			List<LNX_Path> vsblVrtPths = nm.GetVisibleVertsFromVert_dbg(
+				this, ref rprt, false, fwdBackstopVerts, maxAllowableDist - runningPath.TotalDistance
+			);
 			rprt.EndAbbreviatedMethod($"GetVisibleVertsFromVert_dbg({this})");
 
-			if ( vsblVrtPths.Count <= 0 )
+			if (vsblVrtPths.Count <= 0)
 			{
 				rprt.Log_And_End_Method($"Ping() method tried to get visible verts from '{ToString()}', but failed to get any " +
 					$"that weren't part of backstop collection. Returning 'None' path...");
@@ -796,9 +880,9 @@ namespace LogansNavigationExtension
 				rprt.Log($"Got '{vsblVrtPths.Count}' verts visible from this vert that were NOT already in the backstop.",
 					$"Now adding these to forward backstop list...");
 
-				for ( int i = 0; i < vsblVrtPths.Count; i++ )
+				for (int i = 0; i < vsblVrtPths.Count; i++)
 				{
-					fwdBackstopVerts.Add( vsblVrtPths[i].EndCoordinate_vert );
+					fwdBackstopVerts.Add(vsblVrtPths[i].EndCoordinate_vert);
 				}
 
 				rprt.Log($"Finished creating fwd bckstop list. final list count: '{fwdBackstopVerts.Count}'...");
@@ -806,12 +890,12 @@ namespace LogansNavigationExtension
 			#endregion
 
 			LNX_Path runningBestPath = LNX_Path.None;
-			float runningBestDistance = float.MaxValue; todo: set to maxallowabledist?
+			float runningBestDistance = maxAllowableDist;
 
-			rprt.Log($"now calling ping() for all visible verts...");
-			for ( int i = 0; i < vsblVrtPths.Count; i++ )
+			rprt.Log($"now calling ping() for all visible verts with starting runningbestdist: '{runningBestDistance}'...");
+			for (int i = 0; i < vsblVrtPths.Count; i++)
 			{
-				rprt.Log( $"for{i} ({vsblVrtPths[i].EndCoordinate_vert})..." );
+				rprt.Log($"for{i} ({vsblVrtPths[i].EndCoordinate_vert})...");
 
 				/*
 				if( (runningPath.TotalDistance + vsblVrtPths[i].TotalDistance) > maxAllowableDist )
@@ -823,25 +907,25 @@ namespace LogansNavigationExtension
 
 				rprt.Log($"first, generating continuation path...");
 
-				LNX_Path path_continuationToVsblVrt = new LNX_Path( runningPath, vsblVrtPths[i] );
+				LNX_Path path_continuationToVsblVrt = new LNX_Path(runningPath, vsblVrtPths[i]);
 
 				rprt.Log($"pinging from visible vert: '{vsblVrtPths[i].EndCoordinate_vert}'...");
 
-				todo: note: should I pass runingBestDist here instead of maxallowabledist considering maxallowabledist is now -1 at beginning?
+				//todo: note: should I pass runingBestDist here instead of maxallowabledist considering maxallowabledist is now -1 at beginning?
 				LNX_Path p = nm.Triangles[vsblVrtPths[i].EndTriIndex].Verts[vsblVrtPths[i].EndHit.VertIndex].Ping_dbg(
-					endPoint, nm, maxAllowableDist, path_continuationToVsblVrt, ref rprt, fwdBackstopVerts
+					endPoint, nm, runningBestDistance, path_continuationToVsblVrt, ref rprt, fwdBackstopVerts
 				);
-				
-				
-				if ( p == LNX_Path.None )
+
+
+				if (p == LNX_Path.None)
 				{
-					rprt.Log($"ping returned 'None' path..." );
+					rprt.Log($"ping returned 'None' path...");
 				}
 				else
 				{
 					rprt.Log($"got path with distance: '{p.TotalDistance}'. Checking against runningbest: '{runningBestDistance}'...");
 
-					if ( p.TotalDistance < runningBestDistance )
+					if (runningBestDistance > 0 && p.TotalDistance < runningBestDistance)
 					{
 						rprt.Log($"decided this is the new best path...");
 						runningBestPath = p;
@@ -857,91 +941,6 @@ namespace LogansNavigationExtension
 			rprt.Log_And_End_Method($"end of ping for: '{this}'. Returning path: '{runningBestPath}'...");
 
 			return runningBestPath;
-		}
-
-		public LNX_Path Ping( LNX_NavmeshHit endPoint, LNX_NavMesh nm, float maxAllowableDist, LNX_Path runningPath,
-			List<LNX_ComponentCoordinate> backstopverts = null
-		)
-		{
-			/*
-			if( DateTime.Now.Subtract(dt).TotalSeconds > 30 )
-			{
-				Debug.LogWarning($"time limit reached at vert: '{this}'!");
-				return LNX_Path.None;
-			}
-
-			#region SHORT-CIRCUITING ========================================
-			LNX_Path pth = LNX_Path.None;
-			if ( !nm.Raycast(new LNX_NavmeshHit(this), endPoint, out pth) )
-			{
-				runningPath.AddPath( pth );
-				return runningPath;
-			}
-			#endregion ---------------------------------------
-
-			LNX_Path rtrnPath = runningPath;
-
-			#region ASSEMBLE NEW(FORWARD) BACKSTOP ============================================
-			List<LNX_ComponentCoordinate> fwdBackstopVerts = new List<LNX_ComponentCoordinate>();
-
-			if ( backstopverts != null && backstopverts.Count > 0 )
-			{
-				for ( int i = 0; i < backstopverts.Count; i++ )
-				{
-					fwdBackstopVerts.Add( backstopverts[i] );
-				}
-			}
-
-			if ( !fwdBackstopVerts.Contains(MyCoordinate) )
-			{
-				fwdBackstopVerts.Add( MyCoordinate );
-			}
-			#endregion
-
-			List<LNX_Path> vsblVrtPths = nm.GetVisibleVertsFromPoint(this, false, fwdBackstopVerts );
-			for ( int i = 0; i < visibleVrts.Count; i++ )
-			{
-				fwdBackstopVerts.Add( visibleVrts[i] );
-			}
-
-			if( visibleVrts.Count <= 0 )
-			{
-				Debug.Log($"Ping() method tried to get visible verts from '{ToString()}', but failed to get any " +
-					$"that weren't part of backstop collection. Returning...");
-				return LNX_Path.None;
-			}
-			else
-			{
-				for ( int i = 0; i < visibleVrts.Count; i++ )
-				{
-					LNX_Path path_continuationToVsblVrt;
-					
-					LNX_Utils.TryProjectThrough(
-						nm, runningPath.EndHit, 
-						nm.Triangles[visibleVrts[i].TrianglesIndex].Verts[visibleVrts[i].ComponentIndex], 
-						out path_continuationToVsblVrt
-					);
-						
-					LNX_Path p = nm.Triangles[visibleVrts[i].TrianglesIndex].Verts[visibleVrts[i].ComponentIndex].Ping(
-						dt, endPoint, nm, maxAllowableDist, path_continuationToVsblVrt, fwdBackstopVerts
-					);
-
-					if (p != LNX_Path.None && runningPath.GetCombinedDistance(p) < maxAllowableDist && p.TotalDistance < rtrnPath.TotalDistance)
-					{
-						rtrnPath = p;
-					}
-
-					if (DateTime.Now.Subtract(dt).TotalSeconds > 30)
-					{
-						Debug.LogWarning($"time limit reached at vert: '{this}'!");
-						return LNX_Path.None;
-					}
-				}
-			}
-
-			return rtrnPath;
-			*/
-			return LNX_Path.None;
 		}
 
 

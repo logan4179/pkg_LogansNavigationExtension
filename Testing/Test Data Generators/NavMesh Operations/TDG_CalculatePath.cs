@@ -118,13 +118,13 @@ namespace LogansNavigationExtension
 
 			DateTime dt_opStart = DateTime.Now;
 			string s = "";
-			int mode = 3;
+			int mode = 2;
 			if (mode == 0)
 			{
-				DBG_Operation += $"Mode0, using startHit: '{Grabber_StartPos.CurrentHit}', and endHit: '{Grabber_EndPos.CurrentHit}'...\n" +
+				DBG_Operation += $"Mode0, using StartVert: '{StartVert}', and EndVert: '{EndVert}'...\n" +
 					$"Commencing operation...\n";
 				CurrentOperationResult = _navmesh.CalculatePath(
-					Grabber_StartPos.CurrentHit, Grabber_EndPos.CurrentHit,
+					StartVert, EndVert,
 					out CurrentResultPath
 				);
 			}
@@ -139,10 +139,10 @@ namespace LogansNavigationExtension
 			}
 			else if (mode == 2)
 			{
-				DBG_Operation += $"Mode2, using StartVert: '{StartVert}', and EndVert: '{EndVert}'...\n" +
+				DBG_Operation += $"Mode2, using startHit: '{Grabber_StartPos.CurrentHit}', and endHit: '{Grabber_EndPos.CurrentHit}'...\n" +
 					$"Commencing operation...\n";
 				CurrentOperationResult = _navmesh.CalculatePath(
-					StartVert, EndVert,
+					Grabber_StartPos.CurrentHit, Grabber_EndPos.CurrentHit,
 					out CurrentResultPath
 				);
 			}

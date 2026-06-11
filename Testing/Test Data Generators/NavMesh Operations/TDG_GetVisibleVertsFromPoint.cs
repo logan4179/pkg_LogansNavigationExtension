@@ -16,7 +16,6 @@ namespace LogansNavigationExtension
 
 		[Header("DEBUG")]
 		public Color Color_lines;
-		public bool UseDbgVersion = true;
 
 		#region HELPERS -------------------------------------
 		[ContextMenu("z call GoToDataPoint")]
@@ -25,8 +24,8 @@ namespace LogansNavigationExtension
 
 		}
 
-		[ContextMenu("z call DoEet")]
-		public void DoEet()
+		[ContextMenu("z call RunOperation")]
+		public void RunOperation()
 		{
 			ResultCoordinates = new List<LNX_ComponentCoordinate>();
 			ResultPaths = new List<LNX_Path>();
@@ -42,22 +41,28 @@ namespace LogansNavigationExtension
 
 			DBG_Operation += $"\nGrabber_Hit.CurrentHit: '{Grabber_Hit.CurrentHit.Position}'. Commencing operation...\n";
 
-			if (!UseDbgVersion)
+			DateTime dt_opStart;
+			double totalms = 0;
+			if (!UseDebugVersion )
 			{
+				dt_opStart = DateTime.Now;
 				ResultPaths = _navmesh.GetVisibleVertsFromPoint(Grabber_Hit.CurrentHit, false, excludeCoords);
+				totalms = DateTime.Now.Subtract(dt_opStart).TotalMilliseconds;
 			}
 			else
 			{
 				DBG_Operation += $"using debug version...\n";
 				mthdDbg_Report.StartReport();
+				dt_opStart = DateTime.Now;
 				ResultPaths = _navmesh.GetVisibleVertsFromPoint_dbg(Grabber_Hit.CurrentHit, ref mthdDbg_Report, false, excludeCoords);
+				totalms = DateTime.Now.Subtract(dt_opStart).TotalMilliseconds;
 				mthdDbg_Report.EndReport();
 			}
 
 
 			DBG_Operation += $"{nameof(ResultCoordinates)} count: '{ResultCoordinates.Count}'\n" +
 				$"{nameof(ResultPaths)} count: '{ResultPaths.Count}'\n" +
-				$"";
+				$"total ms: '{totalms}'\n";
 		}
 
 		#endregion
@@ -80,40 +85,10 @@ namespace LogansNavigationExtension
 
 			Grabber_Hit.DrawMyGizmos( Radius_ObjectDebugSpheres );
 
-			if ( Grabber_Hit.RecalculatedLastFrame )
+			if ( AutoCalculate && Grabber_Hit.RecalculatedLastFrame )
 			{
-				ResultCoordinates = new List<LNX_ComponentCoordinate>();
-				ResultPaths = new List<LNX_Path>();
-
-				DBG_Operation = $"{DateTime.Now}\n";
-				mthdDbg_Report.Clear();
-
-				if( Grabber_Hit.CurrentHit == LNX_NavmeshHit.None )
-				{
-					DBG_Operation += $"was NOT able to sample hit from this position. Returning early...\n";
-					return;
-				}
-
-				DBG_Operation += $"\nGrabber_Hit.CurrentHit: '{Grabber_Hit.CurrentHit.Position}'. Commencing operation...\n";
-
-				if ( !UseDbgVersion )
-				{
-					ResultPaths = _navmesh.GetVisibleVertsFromPoint(Grabber_Hit.CurrentHit, false, excludeCoords);
-				}
-				else
-				{
-					DBG_Operation += $"using debug version...\n";
-					mthdDbg_Report.StartReport();
-					ResultPaths = _navmesh.GetVisibleVertsFromPoint_dbg(Grabber_Hit.CurrentHit, ref mthdDbg_Report, false, excludeCoords);
-					mthdDbg_Report.EndReport();
-				}
-
-
-				DBG_Operation += $"{nameof(ResultCoordinates)} count: '{ResultCoordinates.Count}'\n" +
-					$"{nameof(ResultPaths)} count: '{ResultPaths.Count}'\n" +
-					$"";
+				RunOperation();
 			}
-
 
 			Gizmos.color = Color_lines;
 			float height = 0.5f;

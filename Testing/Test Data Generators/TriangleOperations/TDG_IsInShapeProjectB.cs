@@ -10,8 +10,6 @@ namespace LogansNavigationExtension
 {
     public class TDG_IsInShapeProjectB : TDG_base
     {
-		public bool UseDebugVersion = true;
-
 		public LNX_ComponentGrabber _grabber_triangle;
 		public LNX_ComponentGrabber _grabber_hitPosition;
 
