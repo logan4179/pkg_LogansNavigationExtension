@@ -274,7 +274,7 @@ namespace LogansNavigationExtension
 		}
 		*/
 
-		public LNX_NavmeshHit(LNX_Triangle hitTriangle, Vector3 hitpos, Vector3 startPos ) //todo: takw away startpos and maybe even get rid of this overload
+		public LNX_NavmeshHit(LNX_Triangle hitTriangle, Vector3 hitpos ) //todo: takw away startpos and maybe even get rid of this overload
 		{
 			hitPosition = hitpos;
 			normal = hitTriangle.V_PathingNormal;

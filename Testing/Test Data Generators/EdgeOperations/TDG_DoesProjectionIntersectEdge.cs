@@ -41,7 +41,6 @@ namespace LogansNavigationExtension
 		public LNX_NavmeshHit CurrentProjectedHit = LNX_NavmeshHit.None;
 
 		//[Header("DEBUG")]
-		public bool useDebugMethodVersion = false;
 
 		[ContextMenu("z CaptureDataPoint()")]
 		public void CaptureDataPoint()
@@ -221,7 +220,7 @@ namespace LogansNavigationExtension
 					$"using edge: '{CurrentlyGrabbedEdge}'\n" +
 					$"Commencing edge project...\n";
 
-				if( useDebugMethodVersion )
+				if( UseDebugVersion )
 				{
 					DBG_Operation += $"(using debug version...)\n";
 					mthdDbg_Report.StartReport();

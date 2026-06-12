@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEditor;
 using UnityEngine;
 
@@ -11,12 +12,14 @@ namespace LogansNavigationExtension
     {
 		public LNX_ComponentGrabber Grabber_CurrentTri;
 		public LNX_Triangle CurrentlyGrabbedTriangle => Grabber_CurrentTri.CurrentlyGrabbedTriangle;
-		public LNX_ComponentGrabber Grabber_OuterPos;
-		public Vector3 CurrentlyGrabbedOuterPos => Grabber_OuterPos.GetCurrentlyGrabbedPosition();
+		public LNX_ComponentGrabber Grabber_StartPos;
+
+		public LNX_ComponentGrabber Grabber_EndPos;
 
 		public LNX_Triangle CurrentTriangle => Grabber_CurrentTri.CurrentlyGrabbedTriangle;
 		public LNX_Edge ProjectedEdge;
-		public LNX_NavmeshHit perimHitParam;
+		public LNX_NavmeshHit perimHit;
+		public LNX_NavmeshHit closestHitOnPerim;
 
 		[Header("GO TO")]
 		public TDG_TryProjectPathThrough _tdg_projectPathThrough;
@@ -25,8 +28,8 @@ namespace LogansNavigationExtension
 		public void CaptureDataPoint()
 		{
 			_dataCapture.CaptureDataPoint(
-				Grabber_CurrentTri.transform.position, Grabber_OuterPos.transform.position,
-				CurrentTriangle.V_Center, ProjectedEdge.MidPosition, perimHitParam.Position
+				Grabber_CurrentTri.transform.position, Grabber_EndPos.transform.position,
+				CurrentTriangle.V_Center, ProjectedEdge.MidPosition, perimHit.Position
 			);
 		}
 
@@ -34,7 +37,88 @@ namespace LogansNavigationExtension
 		public void GoToTDG()
 		{
 			Grabber_CurrentTri.transform.position = _tdg_projectPathThrough.StartVert.V_Position;
-			Grabber_OuterPos.transform.position = _tdg_projectPathThrough.EndVert.V_Position;
+			Grabber_EndPos.transform.position = _tdg_projectPathThrough.EndVert.V_Position;
+		}
+
+		[ContextMenu("z call RunOperation()")]
+		public void RunOperation()
+		{
+			perimHit = LNX_NavmeshHit.None;
+			closestHitOnPerim = LNX_NavmeshHit.None;
+			ProjectedEdge = null;
+			mthdDbg_Report.Clear();
+
+			DBG_Operation = $"Recalcluated: '{DateTime.Now}'...\n";
+
+			if ( CurrentTriangle == null )
+			{
+				DBG_Operation += $"CurrentTriangle null. Returning early...\n";
+				return;
+			}
+
+			DBG_Operation += $"using triangle '{CurrentTriangle.Index_inCollection}'...\n" +
+				$"commencing operation...\n";
+
+			closestHitOnPerim = CurrentlyGrabbedTriangle.ClosestHitOnPerimeter(Grabber_StartPos.transform.position);
+			DBG_Operation += $"using closestHitOnPerim: '{closestHitOnPerim}'...\n";
+
+			if( closestHitOnPerim == LNX_NavmeshHit.None )
+			{
+				DBG_Operation += $"closest hit none. Can't use this. Returning early...\n";
+				return;
+			}
+
+			if ( !UseDebugVersion )
+			{
+				if ( CurrentTriangle.ProjectThroughToPerimeter
+					(
+						//Grabber_StartPos.CurrentHit, //this will cause problems if not on the same tri...
+						new LNX_NavmeshHit(
+							CurrentlyGrabbedTriangle, 
+							closestHitOnPerim.Position
+							),
+						Grabber_EndPos.CurrentHit, out perimHit
+					)
+				)
+				{
+					DBG_Operation += $"projection returned true. perimHitParam: '{perimHit}'...\n";
+					ProjectedEdge = CurrentTriangle.Edges[perimHit.EdgeIndex];
+				}
+				else
+				{
+					DBG_Operation += $"CurrentTriangle.ProjectThroughToPerimeter() returned false...\n";
+				}
+			}
+			else
+			{
+				mthdDbg_Report.StartReport("");
+
+				if (CurrentTriangle.ProjectThroughToPerimeter_dbg
+					(
+						//Grabber_StartPos.CurrentHit, //this will cause problems if not on the same tri...
+						new LNX_NavmeshHit(
+							CurrentlyGrabbedTriangle,
+							//closestHitOnPerim.Position
+							Grabber_StartPos.CurrentHit.Position
+						),
+						Grabber_EndPos.CurrentHit, out perimHit, ref mthdDbg_Report
+					)
+				)
+				{
+					DBG_Operation += $"projection returned true. perimHitParam: '{perimHit}'...\n";
+					ProjectedEdge = CurrentTriangle.Edges[perimHit.EdgeIndex];
+
+				}
+				else
+				{
+					DBG_Operation += $"CurrentTriangle.ProjectThroughToPerimeter() returned false...\n";
+				}
+				mthdDbg_Report.EndReport();
+
+			}
+
+			DBG_Operation += $"completed operation. {nameof(perimHit)} now: '{perimHit}'...\n";
+
 		}
 
 		protected override void OnDrawGizmos()
@@ -43,17 +127,29 @@ namespace LogansNavigationExtension
 			if
 			( 
 				AmInUnitTest || 
+				(
 				Selection.activeGameObject != gameObject && 
 				Selection.activeGameObject != Grabber_CurrentTri.gameObject && 
-				Selection.activeGameObject != Grabber_OuterPos.gameObject 
+				Selection.activeGameObject != Grabber_StartPos.gameObject &&
+				Selection.activeGameObject != Grabber_EndPos.gameObject 
+				)
 			)
 			{
 				DBG_Operation += $"OnDrawGizmos short-circuit. Something wrong with selection...";
 				return;
 			}
+			base.OnDrawGizmos();
 
-			DBG_Operation = "";
-			perimHitParam = LNX_NavmeshHit.None;
+			if( AutoCalculate && 
+				(
+					Grabber_CurrentTri.RecalculatedLastFrame || 
+					Grabber_EndPos.RecalculatedLastFrame || 
+					Grabber_StartPos.RecalculatedLastFrame
+				)
+			)
+			{
+				RunOperation();
+			}
 
 			if (CurrentTriangle == null)
 			{
@@ -63,53 +159,39 @@ namespace LogansNavigationExtension
 			}
 			#endregion
 
-			base.OnDrawGizmos();
 
-
-			DrawStandardFocusTriGizmos( CurrentTriangle, 1f, $"", Color.magenta);
-
-			DBG_Operation += $"Recalcluated: '{DateTime.Now}'...\n" +
-				$"using triangle '{CurrentTriangle.Index_inCollection}'...\n" +
-				$"commencing operation...\n";
-
-			mthdDbg_Report.StartReport( "" );
-			/*if ( CurrentTriangle.ProjectThroughToPerimeter
-				(
-					Grabber_CurrentTri.transform.position, Grabber_OuterPos.transform.position, out currentHitParam, ref DBG_Method
-				)
-			)*/
-
-			/*
-			if (CurrentTriangle.ProjectThroughToPerimeter_dbg
-				(
-					//Grabber_CurrentTri.transform.position, Grabber_OuterPos.transform.position, out currentHitParam, ref mDbg_Report //todo: dws
-					Grabber_CurrentTri.CurrentHit, Grabber_OuterPos.CurrentHit, out perimHitParam, ref mthdDbg_Report
-
-				)
-			)
+			if ( CurrentTriangle != null )
 			{
-				DBG_Operation += $"projection returned true. perimHitParam: '{perimHitParam}'...\n";
-				ProjectedEdge = CurrentTriangle.Edges[perimHitParam.EdgeIndex];
-				DrawStandardEdgeFocusGizmos( ProjectedEdge, 0.1f, $"edge{ProjectedEdge.MyCoordinate.ComponentIndex}", Color.green );
-
-				Gizmos.DrawCube( perimHitParam.Position, Vector3.one * 0.025f );
-				Handles.Label(perimHitParam.Position + (Vector3.up * 0.03f), "hitPosition" );
+				DrawStandardFocusTriGizmos( CurrentTriangle, 1f, $"", Color.magenta);
 			}
-			else
+
+			if ( ProjectedEdge != null )
 			{
-				DBG_Operation += $"CurrentTriangle.ProjectThroughToPerimeter() returned false...\n";
+				DrawStandardEdgeFocusGizmos(ProjectedEdge, 0.02f, $"edge{ProjectedEdge.MyCoordinate.ComponentIndex}", Color.green);
 			}
-			*/
 
-			mthdDbg_Report.EndReport();
+			if( perimHit != LNX_NavmeshHit.None )
+			{
+				Gizmos.DrawCube(perimHit.Position, Vector3.one * 0.025f);
+				Handles.Label(perimHit.Position + (Vector3.up * 0.03f), "hitPosition");
+			}
 
-			DBG_Operation += $"completed operation. {nameof(perimHitParam)} now: '{perimHitParam}'...\n";
+			if ( closestHitOnPerim != LNX_NavmeshHit.None )
+			{
+				/*
+				Vector3 vRise = (Vector3.up * 0.2f);
+				Gizmos.DrawLine(closestHitOnPerim.Position, closestHitOnPerim.Position + vRise);
+				Handles.Label(closestHitOnPerim.Position + vRise, "closestHitOnPerim");
+				*/
+			}
 
+			Gizmos.color = perimHit.Equals(LNX_NavmeshHit.None) ? Color.red : Color.green;
 
-			Gizmos.color = perimHitParam.Equals(LNX_NavmeshHit.None) ? Color.red : Color.green;
+			//Grabber_CurrentTri.DrawMyGizmos(Radius_ObjectDebugSpheres);
+			Grabber_StartPos.DrawMyGizmos(Radius_ObjectDebugSpheres);
 
-			Grabber_CurrentTri.DrawMyGizmos(Radius_ObjectDebugSpheres);
-			Grabber_OuterPos.DrawMyGizmos(Radius_ObjectDebugSpheres);
+			Grabber_EndPos.DrawMyGizmos(Radius_ObjectDebugSpheres);
+			Gizmos.DrawLine(Grabber_StartPos.transform.position, Grabber_EndPos.transform.position);
 
 			/*
 			Gizmos.DrawLine( Grabber_CurrentTri.transform.position, transform.position );

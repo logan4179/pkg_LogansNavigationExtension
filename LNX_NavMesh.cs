@@ -1463,8 +1463,18 @@ namespace LogansNavigationExtension
 					return true;
 				}
 
+				/*
+				//I don't remember exactly why I put this here, but I think it was to prevent "backing up" at the beginning of the raycast. 
+				//Now that i have the following check that checks for "backing up" at all iterations, I don't think I need this. todo: DWS
 				if (triPerimHit.TriangleIndex == currentStartHit.TriangleIndex)
 				{
+					return true;
+				}
+				*/
+
+				if ( triPerimHit.TriangleIndex == outPath.EndTriIndex )
+				{
+					Debug.Log($"raycast appears to have 'doubled back'. Returning early...");
 					return true;
 				}
 
@@ -1648,9 +1658,24 @@ namespace LogansNavigationExtension
 				}
 				rprt.Log($"LNX_Triangle.ProjectThroughToPerimeter() got perimeter hit: '{triPerimHit}'...");
 
-				if ( triPerimHit.TriangleIndex == currentStartHit.TriangleIndex)
+				/*
+				//I don't remember exactly why I put this here, but I think it was to prevent "backing up" at the beginning of the raycast. 
+				//Now that i have the following check that checks for "backing up" at all iterations, I don't think I need this. todo: DWS
+				if (triPerimHit.TriangleIndex == currentStartHit.TriangleIndex)
 				{
 					rprt.Log_And_End_Method($"perimeter hit was on the same triangle as currentStartHit. Chain must have failed. Returning early...");
+					return true;
+				}
+				*/
+
+				rprt.Log($"checking against last path tri index: '{outPath.EndTriIndex}'...");
+				if ( 
+					triPerimHit.TriangleIndex == outPath.EndTriIndex || 
+					(outPath.PathPoints.Count > 1 && (outPath.PathPoints[outPath.PathPoints.Count-2].TriangleIndex == triPerimHit.TriangleIndex))
+				)
+				{
+					rprt.Log($"tri perimeter hit index: '{triPerimHit.TriangleIndex}' is the same as previously logged path index. There must be a problem. Returning true early...");
+					Debug.Log($"raycast appears to have 'doubled back'. Returning early...");
 					return true;
 				}
 

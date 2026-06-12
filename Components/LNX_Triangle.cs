@@ -490,7 +490,7 @@ namespace LogansNavigationExtension
 			#region DETERMINE THE PROJECTED POSITION--------------------------------------
 			if (Slope == 0f)
 			{
-				surfaceHit = new LNX_NavmeshHit(this, GetProjectionBase() + pos, v_navmeshProjectionDirection_cached);
+				surfaceHit = new LNX_NavmeshHit( this, GetProjectionBase() + pos );
 			}
 			else
 			{
@@ -508,8 +508,7 @@ namespace LogansNavigationExtension
 				float lenC = (Mathf.Sin(angC) * lenA) / MathF.Sin(angA);
 				//projectedPos = flatPos + (v_projectionNormal * lenC);
 				surfaceHit = new LNX_NavmeshHit(
-					this, LNX_Utils.FlooredVector(pos, edgePrjct, v_navmeshProjectionDirection_cached) + (v_navmeshProjectionDirection_cached * lenC),
-					v_navmeshProjectionDirection_cached
+					this, LNX_Utils.FlooredVector(pos, edgePrjct, v_navmeshProjectionDirection_cached) + (v_navmeshProjectionDirection_cached * lenC)
 				);
 			}
 			#endregion
@@ -566,7 +565,7 @@ namespace LogansNavigationExtension
 			#region DETERMINE THE PROJECTED POSITION--------------------------------------
 			if (Slope == 0f)
 			{
-				surfaceHit = new LNX_NavmeshHit(this, GetProjectionBase() + pos, v_navmeshProjectionDirection_cached);
+				surfaceHit = new LNX_NavmeshHit( this, GetProjectionBase() + pos );
 				rprt.Log($"no slope. Created surface hit: '{surfaceHit}'...");
 
 			}
@@ -586,8 +585,7 @@ namespace LogansNavigationExtension
 				float lenC = (Mathf.Sin(angC) * lenA) / MathF.Sin(angA);
 				//projectedPos = flatPos + (v_projectionNormal * lenC);
 				surfaceHit = new LNX_NavmeshHit(
-					this, LNX_Utils.FlooredVector(pos, edgePrjct, v_navmeshProjectionDirection_cached) + (v_navmeshProjectionDirection_cached * lenC),
-					v_navmeshProjectionDirection_cached
+					this, LNX_Utils.FlooredVector(pos, edgePrjct, v_navmeshProjectionDirection_cached) + (v_navmeshProjectionDirection_cached * lenC)
 				);
 				rprt.Log($"there IS slope. Created surface hit: '{surfaceHit}'...");
 			}
