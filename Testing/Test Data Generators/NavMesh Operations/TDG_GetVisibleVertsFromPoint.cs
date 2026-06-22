@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace LogansNavigationExtension
 {
@@ -41,28 +42,31 @@ namespace LogansNavigationExtension
 
 			DBG_Operation += $"\nGrabber_Hit.CurrentHit: '{Grabber_Hit.CurrentHit.Position}'. Commencing operation...\n";
 
-			DateTime dt_opStart;
-			double totalms = 0;
+			long totalMs = 0;
+			long totalTicks = 0;
 			if (!UseDebugVersion )
 			{
-				dt_opStart = DateTime.Now;
+				System.Diagnostics.Stopwatch stpWtch = System.Diagnostics.Stopwatch.StartNew();
 				ResultPaths = _navmesh.GetVisibleVertsFromPoint(Grabber_Hit.CurrentHit, false, excludeCoords);
-				totalms = DateTime.Now.Subtract(dt_opStart).TotalMilliseconds;
+				stpWtch.Stop();
+				totalMs = stpWtch.ElapsedMilliseconds;
+				totalTicks = stpWtch.ElapsedTicks;
 			}
 			else
 			{
 				DBG_Operation += $"using debug version...\n";
 				mthdDbg_Report.StartReport();
-				dt_opStart = DateTime.Now;
+				System.Diagnostics.Stopwatch stpWtch = System.Diagnostics.Stopwatch.StartNew();
 				ResultPaths = _navmesh.GetVisibleVertsFromPoint_dbg(Grabber_Hit.CurrentHit, ref mthdDbg_Report, false, excludeCoords);
-				totalms = DateTime.Now.Subtract(dt_opStart).TotalMilliseconds;
-				mthdDbg_Report.EndReport();
+				stpWtch.Stop();
+				totalMs = stpWtch.ElapsedMilliseconds;
+				totalTicks = stpWtch.ElapsedTicks; mthdDbg_Report.EndReport();
 			}
 
 
 			DBG_Operation += $"{nameof(ResultCoordinates)} count: '{ResultCoordinates.Count}'\n" +
 				$"{nameof(ResultPaths)} count: '{ResultPaths.Count}'\n" +
-				$"total ms: '{totalms}'\n";
+				$"total ms: '{totalMs}', total ticks: '{totalTicks}'\n";
 		}
 
 		#endregion
@@ -85,7 +89,7 @@ namespace LogansNavigationExtension
 
 			Grabber_Hit.DrawMyGizmos( Radius_ObjectDebugSpheres );
 
-			if ( AutoCalculate && Grabber_Hit.RecalculatedLastFrame )
+			if ( AutoRun && Grabber_Hit.RecalculatedLastFrame )
 			{
 				RunOperation();
 			}

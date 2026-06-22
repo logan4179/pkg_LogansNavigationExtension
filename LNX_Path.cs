@@ -12,7 +12,7 @@ namespace LogansNavigationExtension
 	{
 		public List<LNX_NavmeshHit> PathPoints;
 
-		public int PointCount => PathPoints.Count;
+		public int PointCount => (PathPoints != null && PathPoints.Count > -1) ? PathPoints.Count : -1;
 		public LNX_NavmeshHit StartHit => PathPoints[0];
 		public Vector3 StartPosition => PathPoints[0].Position;
 
@@ -37,6 +37,7 @@ namespace LogansNavigationExtension
 
 		/// <summary>A Vector pointing in a straight line from start to end.</summary>
 		public Vector3 V_CrowFlies => PathPoints[PathPoints.Count-1].Position - PathPoints[0].Position;
+		public Vector3 V_CrowFiles_flat => LNX_Utils.FlatVector(PathPoints[PathPoints.Count - 1].Position - PathPoints[0].Position, v_navmeshSurfaceProjection_cached);
 
 		[SerializeField] private Vector3 v_navmeshSurfaceProjection_cached;
 
@@ -379,13 +380,13 @@ namespace LogansNavigationExtension
 				return;
 			}
 
-			Vector3 vRise = v_navmeshSurfaceProjection_cached * 0.015f;
+			Vector3 vRise = v_navmeshSurfaceProjection_cached * 0.5f * pointSize;
 			for ( int i = 0; i < PathPoints.Count; i++ )
 			{
 				Gizmos.DrawSphere( PathPoints[i].Position, pointSize );
 
 				Gizmos.DrawLine(
-					PathPoints[i].Position + vRise, PathPoints[i].Position + (PathPoints[i].Normal * lblHeight)
+					PathPoints[i].Position, PathPoints[i].Position + (PathPoints[i].Normal * lblHeight)
 				);
 
 				if( drawFullLabels )

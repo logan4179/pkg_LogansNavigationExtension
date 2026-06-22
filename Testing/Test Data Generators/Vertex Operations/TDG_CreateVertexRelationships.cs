@@ -81,7 +81,7 @@ namespace LogansNavigationExtension
 			//DBG_Operation += $"Commencing operation...\n";
 
 			if (
-				AutoCalculate &&
+				AutoRun &&
 				(Grabber_vertA.RecalculatedLastFrame ||
 				Grabber_vertB.RecalculatedLastFrame)
 			)

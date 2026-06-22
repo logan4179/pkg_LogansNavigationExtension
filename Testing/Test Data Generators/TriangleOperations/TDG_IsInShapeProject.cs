@@ -1,9 +1,10 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.AI;
+using UnityEngine.Rendering;
 
 namespace LogansNavigationExtension
 {
@@ -13,51 +14,96 @@ namespace LogansNavigationExtension
 		public LNX_ComponentGrabber _grabber_hitPosition;
 
 		public LNX_Triangle CurrentTriangle => _grabber_triangle.CurrentlyGrabbedTriangle;
-		public Vector3 CurrentProjectedPos;
+		public LNX_NavmeshHit CurrentProjectedHit;
 		public bool CurrentResult;
 
 		[Header("DATA CAPTURE")]
 		public List<Vector3> CapturedStartPositions = new List<Vector3>();
 		public List<bool> CapturedResults = new List<bool>();
-		public List<Vector3> CapturedHitPositions = new List<Vector3>();
+		public List<LNX_NavmeshHit> CapturedHits = new List<LNX_NavmeshHit>();
 		public List<Vector3> CapturedTriCenterPositions = new List<Vector3>();
-
-		
 
 		[ContextMenu("z call CaptureDataPoint()")]
 		public void CaptureDataPoint()
 		{
-			CapturedStartPositions.Add( transform.position );
-			CapturedResults.Add( CurrentResult );
-			CapturedHitPositions.Add( CurrentProjectedPos );
-			CapturedTriCenterPositions.Add( CurrentTriangle.V_Center );
+			CapturedStartPositions.Add(transform.position);
+			CapturedResults.Add(CurrentResult);
+			CapturedHits.Add( CurrentProjectedHit );
+			CapturedTriCenterPositions.Add(CurrentTriangle.V_Center);
 
 			DrawDataPointCapture(CapturedStartPositions[CapturedStartPositions.Count - 1],
-				CapturedResults[CapturedResults.Count-1] ? Color.green : Color.red	
+				CapturedResults[CapturedResults.Count - 1] ? Color.green : Color.red
 			);
 
-			if(CapturedResults[CapturedResults.Count-1] )
+			if (CapturedResults[CapturedResults.Count - 1])
 			{
 				DrawDataPointCapture(CapturedStartPositions[CapturedStartPositions.Count - 1],
 					Color.green
 				);
 
-				DrawDataPointCapture(CapturedHitPositions[CapturedHitPositions.Count - 1],
+				DrawDataPointCapture(CapturedHits[CapturedHits.Count - 1],
 					Color.green
 				);
 			}
 
 
-			Debug.Log($"captured '{CapturedResults[CapturedResults.Count-1]}', " +
-				$"hit '{CapturedHitPositions[CapturedHitPositions.Count - 1]}' at start: " +
+			Debug.Log($"captured '{CapturedResults[CapturedResults.Count - 1]}', " +
+				$"hit '{CapturedHits[CapturedHits.Count - 1]}' at start: " +
 				$"'{CapturedStartPositions[CapturedStartPositions.Count - 1]}'");
+		}
+
+		[ContextMenu("z call RunOperation()")]
+		public void RunOperation()
+		{
+			CurrentProjectedHit = LNX_NavmeshHit.None;
+			CurrentResult = false;
+
+			DBG_Operation = $"{DateTime.Now}\n" +
+				$"using pos: '{_grabber_hitPosition.transform.position}'\n" +
+				$"and triangle '{CurrentTriangle.Index_inCollection}'...\n" +
+				$"\nCommencing operation...\n" +
+				$"";
+
+			long totalMs = 0;
+			long totalTicks = 0;
+			if (UseDebugVersion)
+			{
+				DBG_Operation += "using debug version...\n";
+				mthdDbg_Report.StartReport();
+				System.Diagnostics.Stopwatch stpWtch = System.Diagnostics.Stopwatch.StartNew();
+				CurrentResult = CurrentTriangle.IsInShapeProject_dbg(
+					_grabber_hitPosition.transform.position, out CurrentProjectedHit, ref mthdDbg_Report
+				);
+				stpWtch.Stop();
+				totalMs = stpWtch.ElapsedMilliseconds;
+				totalTicks = stpWtch.ElapsedTicks;
+				mthdDbg_Report.EndReport();
+			}
+			else
+			{
+				DBG_Operation += "using real version...\n";
+
+				System.Diagnostics.Stopwatch stpWtch = System.Diagnostics.Stopwatch.StartNew();
+				CurrentResult = CurrentTriangle.IsInShapeProject(
+					_grabber_hitPosition.transform.position, out CurrentProjectedHit
+				);
+				stpWtch.Stop();
+				totalMs = stpWtch.ElapsedMilliseconds;
+				totalTicks = stpWtch.ElapsedTicks;
+
+			}
+
+
+			DBG_Operation += $"Operation complete.\n" +
+				$"rslt: '{CurrentResult}', at hit: '{CurrentProjectedHit}'.\n" +
+				$"op took '{totalMs}' ms / '{totalTicks}' ticks...\n";
+			
 		}
 
 		protected override void OnDrawGizmos()
 		{
-
-			if ( Selection.activeGameObject != gameObject &&
-				Selection.activeGameObject != _grabber_triangle.gameObject && 
+			if (Selection.activeGameObject != gameObject &&
+				Selection.activeGameObject != _grabber_triangle.gameObject &&
 				Selection.activeGameObject != _grabber_hitPosition.gameObject
 			)
 			{
@@ -65,7 +111,9 @@ namespace LogansNavigationExtension
 				return;
 			}
 
-			if ( _navmesh == null )
+			base.OnDrawGizmos();
+
+			if (_navmesh == null)
 			{
 				DBG_Operation = $"OnDrawGizmos short-circuit. Need to assign a navmesh...";
 				Debug.LogWarning($"Need to sample a navmesh...");
@@ -79,53 +127,20 @@ namespace LogansNavigationExtension
 				return;
 			}
 
-			base.OnDrawGizmos();
-
-			if( _grabber_hitPosition.RecalculatedLastFrame )
+			if (_grabber_hitPosition.RecalculatedLastFrame)
 			{
-				DBG_Operation = $"{DateTime.Now}\n" +
-					$"Commencing operation using hitPos: '{_grabber_hitPosition.CurrentHit}', \n" +
-					$"and triangle '{CurrentTriangle.Index_inCollection}'...\n";
-
-				CurrentProjectedPos = Vector3.zero;
-				CurrentResult = false;
-
-				if ( UseDebugVersion )
-				{
-					mthdDbg_Report.StartReport();
-					CurrentResult = CurrentTriangle.IsInShapeProject_dbg(
-						_grabber_hitPosition.transform.position, out CurrentProjectedPos, ref mthdDbg_Report
-					);
-					mthdDbg_Report.EndReport();
-				}
-				else
-				{
-					CurrentResult = CurrentTriangle.IsInShapeProject(
-						_grabber_hitPosition.transform.position, out CurrentProjectedPos
-					);
-				}
-
-
-				DBG_Operation += $"Operation complete. rslt: '{CurrentResult}'.";
+				RunOperation();
 			}
-
-			LNX_DrawingUtils.DrawStandardFocusTriGizmos(
-				CurrentTriangle, 1f, $"tri{CurrentTriangle.Index_inCollection}", Color.magenta
-			);
 
 			Gizmos.color = CurrentResult ? Color.green : Color.red;
-			Gizmos.DrawSphere(_grabber_hitPosition.transform.position, Radius_ObjectDebugSpheres );
+			Gizmos.DrawSphere(_grabber_hitPosition.transform.position, Radius_ObjectDebugSpheres);
 
-			if ( CurrentResult )
+			if (CurrentResult)
 			{
-				Gizmos.DrawCube( CurrentProjectedPos, Vector3.one * Radius_ProjectPos );
-				Gizmos.DrawLine( _grabber_hitPosition.transform.position, CurrentProjectedPos );
+				Gizmos.DrawCube(CurrentProjectedHit.Position, Vector3.one * Radius_ProjectPos);
+				Gizmos.DrawLine(_grabber_hitPosition.transform.position, CurrentProjectedHit.Position);
 			}
-
-
-
 		}
-
 
 		#region HELPERS ---------------------------------------------------
 		[ContextMenu("z call DoEet()")]
@@ -139,7 +154,7 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call WriteMeToJson()")]
 		public bool WriteMeToJson()
 		{
-			bool rslt = TDG_Manager.WriteTestObjectToJson(TDG_Manager.filePath_testData_isInShapeProject, this);
+			bool rslt = TDG_Manager.WriteTestObjectToJson(TDG_Manager.filePath_testData_isInShapeProjectB, this);
 
 			if (rslt)
 			{
@@ -154,13 +169,13 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call RecreateMeFromJson()")]
 		public void RecreateMeFromJson()
 		{
-			if ( !File.Exists(TDG_Manager.filePath_testData_isInShapeProject) )
+			if (!File.Exists(TDG_Manager.filePath_testData_isInShapeProjectB))
 			{
-				Debug.LogError($"path '{TDG_Manager.filePath_testData_isInShapeProject}' didn't exist. returning early...");
+				Debug.LogError($"path '{TDG_Manager.filePath_testData_isInShapeProjectB}' didn't exist. returning early...");
 				return;
 			}
 
-			string myJsonString = File.ReadAllText(TDG_Manager.filePath_testData_isInShapeProject);
+			string myJsonString = File.ReadAllText(TDG_Manager.filePath_testData_isInShapeProjectB);
 
 			JsonUtility.FromJsonOverwrite(myJsonString, this);
 

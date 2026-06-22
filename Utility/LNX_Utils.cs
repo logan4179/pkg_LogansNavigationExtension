@@ -146,15 +146,16 @@ namespace LogansNavigationExtension
 
 		#region MATH OPERATIONS --------------------------------------
 		/// <summary>
-		/// Solves for lenA
+		/// Solves for lenX
 		/// </summary>
-		/// <param name="angA"></param>
-		/// <param name="angB"></param>
-		/// <param name="lenB"></param>
+		/// <param name="angX"></param>
+		/// <param name="angY"></param>
+		/// <param name="lenY"></param>
 		/// <returns></returns>
-		public static float CalculateTriangleEdgeLength( float angA, float angB, float lenB ) //todo: use the following CalculateTriangleSideLength() instead and DWS
+		public static float CalculateTriangleEdgeLength( 
+			float angX, float angY, float lenY ) //todo: use the following CalculateTriangleSideLength() instead and DWS
 		{
-			return Mathf.Sin(angA * Mathf.Deg2Rad) * lenB / Mathf.Sin(angB * Mathf.Deg2Rad);
+			return Mathf.Sin(angX * Mathf.Deg2Rad) * lenY / Mathf.Sin(angY * Mathf.Deg2Rad);
 		}
 
 		/// <summary>

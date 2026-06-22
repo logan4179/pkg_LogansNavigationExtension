@@ -68,7 +68,7 @@ namespace LogansNavigationExtension
 
 			base.OnDrawGizmos();
 
-			if( AutoCalculate )
+			if( AutoRun )
 			{
 				RunOperation();
 			}

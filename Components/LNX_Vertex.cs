@@ -624,14 +624,14 @@ namespace LogansNavigationExtension
 			{
 				Vector3 vLegA_flat = Relationships[
 					SharedVertexCoordinates[i].TrianglesIndex * 3 +
-					(SharedVertexCoordinates[i].ComponentIndex == 0 ? 1 : 0) //todo: I don't think these are calculating the component index correclty
-				].V_to.normalized;
+					(SharedVertexCoordinates[i].ComponentIndex == 0 ? 1 : 0)
+				].V_to_flat.normalized;
 				Vector3 vLegB_flat = Relationships[
 					SharedVertexCoordinates[i].TrianglesIndex * 3 +
 					(SharedVertexCoordinates[i].ComponentIndex == 2 ? 1 : 2)
-				].V_to.normalized;
+				].V_to_flat.normalized;
 
-				if ( LNX_Utils.AmInVectorCone(vProject, vLegA_flat, vLegB_flat, v_navmeshProjectionDirection_cached, true) )
+				if (LNX_Utils.AmInVectorCone(vProject, vLegA_flat, vLegB_flat, v_navmeshProjectionDirection_cached, true))
 				{
 					return SharedVertexCoordinates[i];
 				}
@@ -645,7 +645,7 @@ namespace LogansNavigationExtension
 			rprt.StartMethod($"{this}.GetVertCoord_viaProjectionSweep_dbg(vPrjct: '{vProject}', chckSlf: '{checkSelf}')");
 
 			vProject = LNX_Utils.FlatVector(vProject, v_navmeshProjectionDirection_cached);
-			
+			rprt.Log($"made flat projeciton: '{vProject}'...");
 			#region SHORT-CIRCUIT ================================================
 			if (checkSelf && ProjectionIsInCenterSweep(vProject, true))
 			{
@@ -669,12 +669,12 @@ namespace LogansNavigationExtension
 
 				Vector3 vLegA_flat = Relationships[
 					SharedVertexCoordinates[i].TrianglesIndex * 3 + 
-					(SharedVertexCoordinates[i].ComponentIndex == 0 ? 1 : 0) //todo: I don't think these are calculating the component index correclty
-				].V_to.normalized;
+					(SharedVertexCoordinates[i].ComponentIndex == 0 ? 1 : 0)
+				].V_to_flat.normalized;
 				Vector3 vLegB_flat = Relationships[
 					SharedVertexCoordinates[i].TrianglesIndex * 3 + 
 					(SharedVertexCoordinates[i].ComponentIndex == 2 ? 1 : 2)
-				].V_to.normalized;
+				].V_to_flat.normalized;
 
 				rprt.Log($"using legA: '{vLegA_flat}', legB: '{vLegB_flat}'...");
 
@@ -730,7 +730,9 @@ namespace LogansNavigationExtension
 
 			LNX_Path rcPath = new LNX_Path();
 
-			if ( !nm.Raycast(new LNX_NavmeshHit(this, nm.Triangles[TriangleIndex].V_PathingNormal), endPoint, out rcPath) )
+			bool rcastRslt = nm.Raycast( new LNX_NavmeshHit(this, nm.Triangles[TriangleIndex].V_PathingNormal), endPoint, out rcPath );
+
+			if (!rcastRslt)
 			{
 				return new LNX_Path(runningPath, rcPath);
 			}
@@ -776,6 +778,7 @@ namespace LogansNavigationExtension
 			{
 				LNX_Path path_continuationToVsblVrt = new LNX_Path(runningPath, vsblVrtPths[i]);
 
+				//todo: note: should I pass runingBestDist here instead of maxallowabledist considering maxallowabledist is now -1 at beginning?
 				LNX_Path p = nm.Triangles[vsblVrtPths[i].EndTriIndex].Verts[vsblVrtPths[i].EndHit.VertIndex].Ping(
 					endPoint, nm, runningBestDistance, path_continuationToVsblVrt, fwdBackstopVerts
 				);
@@ -798,24 +801,31 @@ namespace LogansNavigationExtension
 			LNX_Path runningPath, ref LNX_MethodDebugReport rprt, List<LNX_ComponentCoordinate> backstopverts = null
 		)
 		{
-			rprt.StartMethod($"{this}.Ping('{endPoint}', max: '{maxAllowableDist}', bkstps: " +
+			rprt.StartMethod($"{this}.Ping_dbg('{endPoint}', max: '{maxAllowableDist}', bkstps: " +
 				$"'{(backstopverts == null ? "null" : backstopverts.Count)}')", $"{TriangleIndex}.{ComponentIndex}");
 
-			rprt.Log($"Note: runningPath: '{runningPath}', pts count: '{runningPath.PointCount}'...",
-				$"runningpath dist: '{runningPath.TotalDistance}'");
+			if( runningPath != LNX_Path.None )
+			{
+				rprt.Log($"Note: runningPath: '{runningPath}', pts count: '{runningPath.PointCount}'...",
+					$"runningpath dist: '{runningPath.TotalDistance}'");
+			}
 
 			//LNX_Path rtrnPath = LNX_Path.None;
 
 			#region SHORT-CIRCUITING ========================================
 			if (maxAllowableDist > 0f)
 			{
-				rprt.Log($"first, checking distance...");
+				rprt.Log($"first, checking distance to see if we're already too far based on maxAllowableDist...");
 
 				if (runningPath.TotalDistance + Vector3.Distance(V_Position, endPoint.Position) > maxAllowableDist)
 				{
 					rprt.Log_And_End_Method($"runningpath dist plus straight line distance too far. Short-circuiting...");
 					Debug.Log($"runningpath dist plus straight line distance too far. Short-circuiting...");
 					return LNX_Path.None;
+				}
+				else
+				{
+					rprt.Log($"decided am NOT too far yet. Continuing with ping operation...");
 				}
 			}
 
@@ -859,7 +869,6 @@ namespace LogansNavigationExtension
 
 			rprt.Log($"backstop initialized with: '{fwdBackstopVerts.Count}' verts from previous list...");
 
-			rprt.EmptyLine();
 			rprt.Log($"Now getting visible verts from This vert, avoiding backstop verts...");
 
 			rprt.StartAbbreviatedMethod($"GetVisibleVertsFromVert_dbg({this}, maxDist: '{maxAllowableDist - runningPath.TotalDistance}')");

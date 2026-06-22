@@ -213,6 +213,10 @@ namespace LogansNavigationExtension
 				EdgeGrabber.RecalculatedLastFrame
 			)
 			{
+				CurrentProjectedHit = LNX_NavmeshHit.None;
+				CurrentProjectionResult = false;
+				mthdDbg_Report.Clear();
+
 				DBG_Operation = $"{DateTime.Now}\n";
 
 				DBG_Operation += $"using origin param: '{StartPointGrabber.transform.position}', " +
@@ -270,9 +274,12 @@ namespace LogansNavigationExtension
 				Gizmos.color = Color.yellow;
 				Gizmos.DrawCube( CurrentProjectedHit.Position, Vector3.one * Radius_ProjectPos );
 
-				Vector3 prjctHtLnEnd = CurrentProjectedHit.Position + Vector3.up * Radius_ProjectPos * 15f;
-				Gizmos.DrawLine( CurrentProjectedHit.Position, prjctHtLnEnd );
-				Handles.Label(prjctHtLnEnd, "hit");
+				LNX_DrawingUtils.DrawLabeledPoint(CurrentProjectedHit.Position,
+					CurrentProjectedHit.Position + Vector3.up * Radius_ProjectPos * 15f, "hit", Color.yellow
+				);
+
+				Gizmos.color = Color.yellowGreen;
+				Gizmos.DrawLine(StartPointGrabber.transform.position, CurrentProjectedHit.Position);
 			}
 
 		}

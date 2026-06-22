@@ -454,21 +454,21 @@ namespace LogansNavigationExtension
 		#region MAIN API METHODS----------------------------------------------------------------------
 		public bool IsInShapeProject( Vector3 pos, out LNX_NavmeshHit surfaceHit ) //todo: this one doesn't return correct if triangle surface is slanted
 		{
-			//todo: currently, it doesn't set projectedPos to the correct "out" value
-			//todo: I can short-circuit here depending on distance, and it will make this and everything that relies on it way more performant...
+			//todo: I can short-circuit here depending on "flat distance" from tri center to pos, and I belive it will make this and everything that
+			//relies on it way more performant, but I need to efficiency test when I do...
 			surfaceHit = LNX_NavmeshHit.None;
-			pos = LNX_Utils.FlatVector(pos, v_navmeshProjectionDirection_cached);
+			Vector3 fltndPos = LNX_Utils.FlatVector(pos, v_navmeshProjectionDirection_cached);
 
 			#region CHECK IF ON EDGES =============================================
-			if ( Edges[0].DoesPositionLieOnEdge(pos, out surfaceHit) )
+			if (Edges[0].DoesPositionLieOnEdge(fltndPos, out surfaceHit))
 			{
 				return true;
 			}
-			else if (Edges[1].DoesPositionLieOnEdge(pos, out surfaceHit))
+			else if (Edges[1].DoesPositionLieOnEdge(fltndPos, out surfaceHit))
 			{
 				return true;
 			}
-			else if (Edges[2].DoesPositionLieOnEdge(pos, out surfaceHit))
+			else if (Edges[2].DoesPositionLieOnEdge(fltndPos, out surfaceHit))
 			{
 				return true;
 			}
@@ -477,9 +477,9 @@ namespace LogansNavigationExtension
 			if
 			(
 				!LNX_Utils.AmInArea(
-					pos, Verts[0].V_flattenedPosition, 
-					Verts[1].V_flattenedPosition, 
-					Verts[2].V_flattenedPosition, 
+					fltndPos, Verts[0].V_flattenedPosition,
+					Verts[1].V_flattenedPosition,
+					Verts[2].V_flattenedPosition,
 					v_navmeshProjectionDirection_cached, false //Note: I'm purposefully leaving this false because true would cause this to do a redundant checking of the verts and edges, when that's already been checked earlier...
 				)
 			)
@@ -490,25 +490,37 @@ namespace LogansNavigationExtension
 			#region DETERMINE THE PROJECTED POSITION--------------------------------------
 			if (Slope == 0f)
 			{
-				surfaceHit = new LNX_NavmeshHit( this, GetProjectionBase() + pos );
+				surfaceHit = new LNX_NavmeshHit(this, GetProjectionBase() + fltndPos);
 			}
 			else
 			{
+				LNX_NavmeshHit edgeIntersectHit = LNX_NavmeshHit.None;
+
+				//first, find lowest vert...
+				int floorVertIndx = GetFloorVertIndex();
+
 				//Use the law of sines...
-				// Note: todo: This isn't currently perfect. It seems to create a point slightly below the surface of the triangle.
-				Vector3 edgePrjct = Edges[1].StartPosition +
-					Vector3.Project(pos - Edges[1].StartPosition, Edges[1].V_StartToEnd);//this gets a point on the edge closest to the pos
-																						 //float lenA = Vector3.Distance(edgePrjct, flatPos); //orig
+				Vector3 v_flrVrtToPos_fltnd = Vector3.Normalize(fltndPos - Verts[floorVertIndx].V_flattenedPosition);
+				if ( 
+					!Edges[floorVertIndx].DoesProjectionIntersectEdge(
+					Verts[floorVertIndx].V_flattenedPosition,
+					fltndPos,
+					out edgeIntersectHit, false, false)
+				)
+				{
+					return false;
+				}
 
-				//todo: replace the following with LNX_Utils method and make sure tdgs are still showing correct results
-				float lenA = Vector3.Distance(LNX_Utils.FlatVector(edgePrjct, v_navmeshProjectionDirection_cached), pos);
+				float angA = Vector3.Angle(v_flrVrtToPos_fltnd,
+					Vector3.Normalize(edgeIntersectHit.Position - Verts[floorVertIndx].V_Position)
+				);
+				//float angB = 90f;
+				float angC = /*180f - */90f - angA;
+				float lenC = Vector3.Distance(Verts[floorVertIndx].V_flattenedPosition, fltndPos);
+				float lenB = (lenC * MathF.Sin(90f * Mathf.Deg2Rad)) / MathF.Sin(angC * Mathf.Deg2Rad);
 
-				float angA = 90f * Mathf.Deg2Rad;
-				float angC = Slope * Mathf.Deg2Rad;
-				float lenC = (Mathf.Sin(angC) * lenA) / MathF.Sin(angA);
-				//projectedPos = flatPos + (v_projectionNormal * lenC);
-				surfaceHit = new LNX_NavmeshHit(
-					this, LNX_Utils.FlooredVector(pos, edgePrjct, v_navmeshProjectionDirection_cached) + (v_navmeshProjectionDirection_cached * lenC)
+				surfaceHit = new LNX_NavmeshHit(this,
+					Verts[floorVertIndx].V_Position + (Vector3.Normalize(edgeIntersectHit.Position - Verts[floorVertIndx].V_Position) * lenB)
 				);
 			}
 			#endregion
@@ -521,23 +533,23 @@ namespace LogansNavigationExtension
 			//todo: currently, it doesn't set projectedPos to the correct "out" value
 			//todo: I can short-circuit here depending on distance, and it will make this and everything that relies on it way more performant...
 			surfaceHit = LNX_NavmeshHit.None;
-			pos = LNX_Utils.FlatVector(pos, v_navmeshProjectionDirection_cached);
-			rprt.Log($"flattened pos to: '{pos}'...",
+			Vector3 fltndPos = LNX_Utils.FlatVector(pos, v_navmeshProjectionDirection_cached);
+			rprt.Log($"flattened pos to: '{fltndPos}'...",
 				"First checking each edge.DoesPositionLieOnEdge()..."
 			);
 
 			#region CHECK IF ON EDGES =============================================
-			if (Edges[0].DoesPositionLieOnEdge(pos, out surfaceHit))
+			if (Edges[0].DoesPositionLieOnEdge(fltndPos, out surfaceHit))
 			{
 				rprt.Log_And_End_Method($"found that position DOES lie on edge0. hit now: '{surfaceHit}'. Returning true...");
 				return true;
 			}
-			else if (Edges[1].DoesPositionLieOnEdge(pos, out surfaceHit))
+			else if (Edges[1].DoesPositionLieOnEdge(fltndPos, out surfaceHit))
 			{
 				rprt.Log_And_End_Method($"found that position DOES lie on edge1. hit now: '{surfaceHit}'. Returning true...");
 				return true;
 			}
-			else if (Edges[2].DoesPositionLieOnEdge(pos, out surfaceHit))
+			else if (Edges[2].DoesPositionLieOnEdge(fltndPos, out surfaceHit))
 			{
 				rprt.Log_And_End_Method($"found that position DOES lie on edge2. hit now: '{surfaceHit}'. Returning true...");
 				return true;
@@ -549,7 +561,7 @@ namespace LogansNavigationExtension
 			if
 			(
 				!LNX_Utils.AmInArea(
-					pos, Verts[0].V_flattenedPosition,
+					fltndPos, Verts[0].V_flattenedPosition,
 					Verts[1].V_flattenedPosition,
 					Verts[2].V_flattenedPosition,
 					v_navmeshProjectionDirection_cached, false //Note: I'm purposefully leaving this false because true would cause this to do a redundant checking of the verts and edges, when that's already been checked earlier...
@@ -560,177 +572,66 @@ namespace LogansNavigationExtension
 				return false;
 			}
 
-			rprt.Log($"position is in area. Now determining the projected position...");
+			rprt.Log($"found that position IS in area. Proceeding...");
 
 			#region DETERMINE THE PROJECTED POSITION--------------------------------------
 			if (Slope == 0f)
 			{
-				surfaceHit = new LNX_NavmeshHit( this, GetProjectionBase() + pos );
-				rprt.Log($"no slope. Created surface hit: '{surfaceHit}'...");
+				rprt.Log($"there's no slope. Calculation is NOT needed...");
+				surfaceHit = new LNX_NavmeshHit( this, GetProjectionBase() + fltndPos );
+				rprt.Log($"Created surface hit: '{surfaceHit}'...");
 
 			}
 			else
 			{
+				rprt.Log($"there IS slope. This means that surface hit must be calculated with trig...");
+
+				rprt.Log($"note: V_PlaneFaceNormal: '{V_PlaneFaceNormal}'...");
 				//Use the law of sines...
-				// Note: todo: This isn't currently perfect. It seems to create a point slightly below the surface of the triangle.
-				Vector3 edgePrjct = Edges[1].StartPosition +
-					Vector3.Project(pos - Edges[1].StartPosition, Edges[1].V_StartToEnd);//this gets a point on the edge closest to the pos
-																						 //float lenA = Vector3.Distance(edgePrjct, flatPos); //orig
+				LNX_NavmeshHit edgeIntersectHit = LNX_NavmeshHit.None;
 
-				//todo: replace the following with LNX_Utils method and make sure tdgs are still showing correct results
-				float lenA = Vector3.Distance(LNX_Utils.FlatVector(edgePrjct, v_navmeshProjectionDirection_cached), pos);
+				//first, find lowest vert...
+				int floorVertIndx = GetFloorVertIndex();
+				rprt.Log($"First, getting floor vert index...",
+					$"determined index to be: '{floorVertIndx}'...");
 
-				float angA = 90f * Mathf.Deg2Rad;
-				float angC = Slope * Mathf.Deg2Rad;
-				float lenC = (Mathf.Sin(angC) * lenA) / MathF.Sin(angA);
-				//projectedPos = flatPos + (v_projectionNormal * lenC);
-				surfaceHit = new LNX_NavmeshHit(
-					this, LNX_Utils.FlooredVector(pos, edgePrjct, v_navmeshProjectionDirection_cached) + (v_navmeshProjectionDirection_cached * lenC)
+				Vector3 v_flrVrtToPos_fltnd = Vector3.Normalize(fltndPos - Verts[floorVertIndx].V_flattenedPosition);
+				rprt.Log($"first using edge projection method to help calculate angle A...");
+				if( Edges[floorVertIndx].DoesProjectionIntersectEdge_dbg(
+					Verts[floorVertIndx].V_flattenedPosition,
+					fltndPos,
+					out edgeIntersectHit, ref rprt, false, false))
+				{
+					rprt.Log($"edge operation succesful. Got edge hit: '{edgeIntersectHit}'. Now using to calculate angleA...", 
+						$"note: vert{floorVertIndx} is at '{Verts[floorVertIndx].V_Position}'...");
+				}
+				else
+				{
+					rprt.Log_And_End_Method($"something went wrong. Method returned false. This shouldn't happen. Returning false early...");
+					return false;
+				}
+
+				float angA = Vector3.Angle(v_flrVrtToPos_fltnd,
+					Vector3.Normalize(edgeIntersectHit.Position - Verts[floorVertIndx].V_Position)
 				);
-				rprt.Log($"there IS slope. Created surface hit: '{surfaceHit}'...");
+				//float angB = 90f;
+				float angC = /*180f - */90f - angA;
+				float lenC = Vector3.Distance(Verts[floorVertIndx].V_flattenedPosition, fltndPos);
+				float lenB = (lenC * MathF.Sin(90f*Mathf.Deg2Rad)) / MathF.Sin(angC*Mathf.Deg2Rad);
+
+				rprt.Log($"got lenB: '{lenB}' angA: '{angA}', angC: '{angC}', lenC: '{lenC}'...");
+				
+				surfaceHit = new LNX_NavmeshHit(this,
+					Verts[floorVertIndx].V_Position + (Vector3.Normalize(edgeIntersectHit.Position - Verts[floorVertIndx].V_Position) * lenB)
+				);
+
+				rprt.Log($"Created surface hit: '{surfaceHit}'...");
 			}
 			#endregion
 
 			rprt.Log_And_End_Method($"returning true...");
 			return true;
 		}
-
-
-		/// <summary>
-		/// Determines if a supplied position is within a theoretical sweep 
-		/// (or cast) of the triangle's shape along the direction of the navmesh orientation.
-		/// </summary>
-		/// <param name="pos"></param>
-		/// <param name="projectedPos">supplied position projected onto the surface of this triangle</param>
-		/// <returns></returns>
-		public bool IsInShapeProject( Vector3 pos, out Vector3 projectedPos ) //todo: this one doesn't return correct if triangle surface is slanted
-		{
-			//todo: currently, it doesn't set projectedPos to the correct "out" value
-			//todo: I can short-circuit here depending on distance, and it will make this and everything that relies on it way more performant...
-
-			pos = LNX_Utils.FlatVector(pos, v_navmeshProjectionDirection_cached);
-
-			if( !LNX_Utils.AmInArea(pos, Verts[0].V_flattenedPosition, Verts[1].V_flattenedPosition, Verts[2].V_flattenedPosition, v_navmeshProjectionDirection_cached, true) )
-			{
-				projectedPos = Vector3.zero;
-				return false;
-			}
-
-			#region DETERMINE THE PROJECTED POSITION--------------------------------------
-			if (Slope == 0f)
-			{
-				projectedPos = GetProjectionBase() + pos;
-			}
-			else
-			{
-
-				//Trying quaternion multiplication----------------------------------------
-				/*
-				//I still feel like this is worth investigating further because it reads so much better. I believe the reason the 
-				result is a little bent looking is because I'm rotating a directional vector around an axis, which is going to 
-				affect the x and z, when I actually need the x and z to remain the same.
-				Vector3 v_fltCtr_to_fltPos = flatPos - V_FlattenedCenter;
-				Vector3 v_ctrToPos = pos - V_Center;
-
-				//projectedPos = V_Center + (Rotation * v_fltCtr_to_fltPos); //bent
-				projectedPos = V_Center + (Rotation * LNX_Utils.FlatVector(v_ctrToPos, v_projectionNormal) ); //also bent...why? looks like the exact same result
-
-				Vector3 vtry = Vector3.Project(  );
-				*/
-				//-------------------------------------------------------
-
-				//Use the law of sines...
-				// Note: This isn't currently perfect. It seems to create a point slightly below the surface of the triangle.
-				Vector3 edgePrjct = Edges[1].StartPosition + 
-					Vector3.Project(pos - Edges[1].StartPosition, Edges[1].V_StartToEnd);//this gets a point on the edge closest to the pos
-				//float lenA = Vector3.Distance(edgePrjct, flatPos); //orig
-
-				//todo: replace the following with LNX_Utils method and make sure tdgs are still showing correct results
-				float lenA = Vector3.Distance( LNX_Utils.FlatVector(edgePrjct, v_navmeshProjectionDirection_cached), pos );
-
-				float angA = 90f * Mathf.Deg2Rad;
-				float angC = Slope * Mathf.Deg2Rad;
-				float lenC = (Mathf.Sin(angC) * lenA) / MathF.Sin(angA);
-				//projectedPos = flatPos + (v_projectionNormal * lenC);
-				projectedPos = LNX_Utils.FlooredVector(pos, edgePrjct, v_navmeshProjectionDirection_cached) + (v_navmeshProjectionDirection_cached * lenC);
-			}
-			#endregion
-
-			return true;
-		}
-		public bool IsInShapeProject_dbg(Vector3 pos, out Vector3 projectedPos, ref LNX_MethodDebugReport rprt ) //todo: this one doesn't return correct if triangle surface is slanted
-		{
-			rprt.StartMethod($"IsInShapeProject_dbg(pos: '{pos}')");
-
-			//todo: currently, it doesn't set projectedPos to the correct "out" value
-			//todo: I can short-circuit here depending on distance, and it will make this and everything that relies on it way more performant...
-
-			pos = LNX_Utils.FlatVector(pos, v_navmeshProjectionDirection_cached);
-
-			rprt.Log($"Checking with LNX_Utils.AmInArea()...");
-			if 
-			( 
-				!LNX_Utils.AmInArea_dbg(
-					pos, Verts[0].V_flattenedPosition, Verts[1].V_flattenedPosition, 
-					Verts[2].V_flattenedPosition, v_navmeshProjectionDirection_cached, true, ref rprt
-				)
-			)
-			{
-				projectedPos = Vector3.zero;
-				rprt.Log_And_End_Method($"found that position is NOT in area. Returning false...", "IsInShapeProject_dbg()");
-				return false;
-			}
-
-			rprt.Log($"LNX_Utils.AmInArea() returned true. Now calculating projected position...");
-			rprt.Log($"note: slope: '{Slope}'...");
-			#region DETERMINE THE PROJECTED POSITION--------------------------------------
-			//DBG_IsInShapeProject += $"flatpos: '{flatPos}'\n";
-
-			if (Slope == 0f)
-			{
-				projectedPos = pos;
-			}
-			else
-			{
-
-				//Trying quaternion multiplication----------------------------------------
-				/*
-				//I still feel like this is worth investigating further because it reads so much better. I believe the reason the 
-				result is a little bent looking is because I'm rotating a directional vector around an axis, which is going to 
-				affect the x and z, when I actually need the x and z to remain the same.
-				Vector3 v_fltCtr_to_fltPos = flatPos - V_FlattenedCenter;
-				Vector3 v_ctrToPos = pos - V_Center;
-
-				//projectedPos = V_Center + (Rotation * v_fltCtr_to_fltPos); //bent
-				projectedPos = V_Center + (Rotation * LNX_Utils.FlatVector(v_ctrToPos, v_projectionNormal) ); //also bent...why? looks like the exact same result
-
-				Vector3 vtry = Vector3.Project(  );
-				*/
-				//-------------------------------------------------------
-
-
-				//Use the law of sines...
-				// Note: This isn't currently perfect. It seems to create a point slightly below the surface of the triangle.
-				Vector3 edgePrjct = Edges[1].StartPosition +
-					Vector3.Project(pos - Edges[1].StartPosition, Edges[1].V_StartToEnd);//this gets a point on the edge closest to the pos
-																						 //float lenA = Vector3.Distance(edgePrjct, flatPos); //orig
-
-				//todo: replace the following with LNX_Utils method and make sure tdgs are still showing correct results
-				float lenA = Vector3.Distance(LNX_Utils.FlatVector(edgePrjct, v_navmeshProjectionDirection_cached), pos);
-
-				float angA = 90f * Mathf.Deg2Rad;
-				float angC = Slope * Mathf.Deg2Rad;
-				float lenC = (Mathf.Sin(angC) * lenA) / MathF.Sin(angA);
-				//projectedPos = flatPos + (v_projectionNormal * lenC);
-				projectedPos = LNX_Utils.FlooredVector(pos, edgePrjct, v_navmeshProjectionDirection_cached) + (v_navmeshProjectionDirection_cached * lenC);
-			}
-			#endregion
-
-			rprt.Log_And_End_Method($"end of method. projectedPos: '{projectedPos}'...");		
-
-			return true;
-		}
-
 
 		public Vector3 ClosestPointOnPerimeter( Vector3 pos )
 		{
@@ -1744,6 +1645,69 @@ namespace LogansNavigationExtension
 			return false;
 		}
 
+		public int GetFloorVertIndex()
+		{
+			int indx = 0;
+			float runningLowestDimension = float.MaxValue;
+			if( v_navmeshProjectionDirection_cached == Vector3.up )
+			{
+				runningLowestDimension = Verts[0].V_Position.y;
+				if(Verts[1].V_Position.y < runningLowestDimension )
+				{
+					runningLowestDimension = Verts[1].V_Position.y;
+					indx = 1;
+				}
+				if (Verts[2].V_Position.y < runningLowestDimension)
+				{
+					//we don't even need to bother setting the runningLowestDimension on the last one...
+					indx = 2;
+				}
+			}
+			else if ( v_navmeshProjectionDirection_cached == Vector3.down )
+			{
+				runningLowestDimension = Verts[0].V_Position.y;
+				if (Verts[1].V_Position.y > runningLowestDimension)
+				{
+					runningLowestDimension = Verts[1].V_Position.y;
+					indx = 1;
+				}
+				if (Verts[2].V_Position.y > runningLowestDimension)
+				{
+					//we don't even need to bother setting the runningLowestDimension on the last one...
+					indx = 2;
+				}
+			}
+			if (v_navmeshProjectionDirection_cached == Vector3.right)
+			{
+				runningLowestDimension = Verts[0].V_Position.x;
+				if (Verts[1].V_Position.x < runningLowestDimension)
+				{
+					runningLowestDimension = Verts[1].V_Position.x;
+					indx = 1;
+				}
+				if (Verts[2].V_Position.x < runningLowestDimension)
+				{
+					//we don't even need to bother setting the runningLowestDimension on the last one...
+					indx = 2;
+				}
+			}
+			if ( v_navmeshProjectionDirection_cached == Vector3.left )
+			{
+				runningLowestDimension = Verts[0].V_Position.x;
+				if (Verts[1].V_Position.x > runningLowestDimension)
+				{
+					runningLowestDimension = Verts[1].V_Position.x;
+					indx = 1;
+				}
+				if (Verts[2].V_Position.x > runningLowestDimension)
+				{
+					//we don't even need to bother setting the runningLowestDimension on the last one...
+					indx = 2;
+				}
+			}
+
+			return indx;
+		}
 		#endregion
 
 		public void LoadWithSerializedData(LNX_SerializedTriData data )

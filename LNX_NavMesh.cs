@@ -1396,11 +1396,13 @@ namespace LogansNavigationExtension
 			// todo: also, a little bit lower, there's a line saying [Vector3 vProject = FlatVector( endHit.Position - startHit.Position ).normalized;],
 			// try pre-caching this as well and efficiency testing
 
+
+			Vector3 vProject_fltnd = FlatVector(endHit.Position - startHit.Position).normalized;
+
 			if (startHit.VertIndex > -1)
 			{
 				//TODO: could we add another short-circuit here that checks if both the start and end hits are on a vert, and if so, if these verts are shared by a common
 				//triangle? It would effectively be similar to the first short-circuit check above in that we would treat the hits as though theyre both on the same tri
-
 				if
 				(
 					Triangles[startHit.TriangleIndex].Verts[startHit.VertIndex].SharesVertSpaceWithTri(
@@ -1411,10 +1413,8 @@ namespace LogansNavigationExtension
 					return false;
 				}
 
-				Vector3 vProject = FlatVector(endHit.Position - startHit.Position).normalized;
-
 				LNX_ComponentCoordinate rel = Triangles[startHit.TriangleIndex].Verts[startHit.VertIndex].GetVertCoord_viaProjectionSweep(
-					vProject, true);
+					vProject_fltnd, true);
 
 				if (rel.TrianglesIndex != startHit.TriangleIndex || rel.ComponentIndex != startHit.VertIndex)
 				{
@@ -1436,6 +1436,34 @@ namespace LogansNavigationExtension
 							rel.TrianglesIndex,
 							rel.ComponentIndex,
 							-1
+						);
+
+					}
+				}
+			}
+			else if (startHit.EdgeIndex > -1)
+			{
+				if
+				(
+					Vector3.Dot
+					(
+						FlatVector(endHit.Position - startHit.Position),
+						Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].v_Cross_flat
+					) < 0f
+				) //projection points toward "outside" direction of this edge...
+				{
+					if (Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].AmTerminal)
+					{
+						outPath = LNX_Path.None;
+						return true;
+					}
+					else
+					{
+						LNX_ComponentCoordinate shrdEdgeCoord = Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].SharedEdgeCoordinate;
+						startHit = new LNX_NavmeshHit(
+							Triangles[shrdEdgeCoord.TrianglesIndex].Edges[shrdEdgeCoord.ComponentIndex],
+							startHit.Position,
+							GetSurfaceProjectionVector()
 						);
 					}
 				}
@@ -1463,47 +1491,32 @@ namespace LogansNavigationExtension
 					return true;
 				}
 
-				/*
-				//I don't remember exactly why I put this here, but I think it was to prevent "backing up" at the beginning of the raycast. 
-				//Now that i have the following check that checks for "backing up" at all iterations, I don't think I need this. todo: DWS
-				if (triPerimHit.TriangleIndex == currentStartHit.TriangleIndex)
+				if (triPerimHit.TriangleIndex == outPath.PathPoints[outPath.PathPoints.Count - 1].TriangleIndex)
 				{
-					return true;
-				}
-				*/
+					if (DirectionIsTerminalFromHit_extrapolated(vProject_fltnd, triPerimHit))
+					{
+						Debug.Log($"raycast appears to have 'doubled back'. Returning early...");
+					}
 
-				if ( triPerimHit.TriangleIndex == outPath.EndTriIndex )
-				{
-					Debug.Log($"raycast appears to have 'doubled back'. Returning early...");
-					return true;
-				}
-
-				if (triPerimHit.Position != outPath.StartHit.Position) //need this check, otherwise a raycast starting on a vert can create an unnecessary path point that is the same as the alread-logged starthit
-				{
 					outPath.AddPoint(triPerimHit);
+
+					return true;
 				}
 
-				if (triPerimHit.EdgeIndex > -1) //note: what about hits that are on a vert? They will have an edgeindex of -1, so this block won't get triggered
-				{
-					if (Triangles[triPerimHit.TriangleIndex].Edges[triPerimHit.EdgeIndex].AmTerminal) //if we've hit a wall...
-					{
-						return true;
-					}
-					else if (
-						triPerimHit.TriangleIndex == endHit.TriangleIndex ||
-						(
-							Triangles[triPerimHit.TriangleIndex].AmAdjacentToTri(Triangles[endHit.TriangleIndex]) && //this is called first for short-circuiting efficiency
-							Triangles[triPerimHit.TriangleIndex].IsPositionOnAnyEdge(endHit.Position)
-						)
-					)
-					{
-						if (endHit.Position != triPerimHit.Position) //In case the end position is actually on the perimeter of the destination tri...
-						{
-							outPath.AddPoint(endHit);
-						}
+				//if ( triPerimHit.Position != outPath.StartHit.Position ) //need this check, otherwise a raycast starting on a vert can create an unnecessary path point that is the same as the alread-logged starthit
+				//{ //todo: don't think this is necessary anymore now that I've adjusted the startHit object. DWS
+				//rprt.Log($"adding triPerimHit: '{triPerimHit}' to path...");
+				outPath.AddPoint(triPerimHit);
+				//}
 
-						return false;
+				if ( HitIsOnTriPerimeter_extrapolated(triPerimHit, Triangles[endHit.TriangleIndex]) )
+				{
+					if (endHit.Position != triPerimHit.Position) //In case the end position is actually on the perimeter of the destination tri...
+					{
+						outPath.AddPoint(endHit);
 					}
+
+					return false;
 				}
 
 				if (Vector3.Distance(triPerimHit.Position, endHit.Position) < 0.001f) //if the projection is close enough...
@@ -1516,8 +1529,7 @@ namespace LogansNavigationExtension
 				runningWhileIterations++;
 				if (runningWhileIterations > safetyTimeout)
 				{
-					Debug.LogError($"while loop went for more than '{safetyTimeout}' iterations for raycast between start: '{startHit}', " +
-						$"and end hit: '{endHit}'. Breaking early...");
+					Debug.LogError($"Raycast('{startHit}', '{endHit}') while loop went for more than '{safetyTimeout}' iterations. Breaking early...");
 					amStillProjecting = false;
 					return true;
 				}
@@ -1563,6 +1575,8 @@ namespace LogansNavigationExtension
 
 			rprt.Log($"no short-circuit. Proceding...");
 
+			Vector3 vProject_fltnd = FlatVector(endHit.Position - startHit.Position).normalized;
+
 			if ( startHit.VertIndex > -1 )
 			{
 				//TODO: could we add another short-circuit here that checks if both the start and end hits are on a vert, and if so, if these verts are shared by a common
@@ -1581,12 +1595,11 @@ namespace LogansNavigationExtension
 					return false;
 				}
 
-				Vector3 vProject = FlatVector(endHit.Position - startHit.Position).normalized;
 
 				rprt.Log($"start hit lies on vert: '{startHit.VertIndex}'. Checking if hit needs to be adjusted based on start to end projection...");
 
 				LNX_ComponentCoordinate rel = Triangles[startHit.TriangleIndex].Verts[startHit.VertIndex].GetVertCoord_viaProjectionSweep_dbg( 
-					vProject, true, ref rprt );
+					vProject_fltnd, true, ref rprt );
 
 				if( rel.TrianglesIndex == startHit.TriangleIndex && rel.ComponentIndex == startHit.VertIndex )
 				{
@@ -1628,9 +1641,42 @@ namespace LogansNavigationExtension
 					}
 				}
 			}
+			else if( startHit.EdgeIndex > -1 )
+			{
+				rprt.Log($"startHit was on an edge. Now making sure it's the correct edge...");
+				if 
+				(
+					Vector3.Dot
+					(
+						FlatVector(endHit.Position - startHit.Position), 
+						Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].v_Cross_flat
+					) < 0f
+				) //projection points toward "outside" direction of this edge...
+				{
+					rprt.Log($"found that projection points in 'outside' direction of this edge...", 
+						"this will need further investigation...");
+					if (Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].AmTerminal )
+					{
+						outPath = LNX_Path.None;
+						rprt.Log_And_End_Method($"this edge is terminal. Made outpath: '{outPath}', and returning true here...");
+						return true;
+					}
+					else
+					{
+						rprt.Log($"this edge is NOT terminal. Switching startHit to be on adjacent edge...");
+						LNX_ComponentCoordinate shrdEdgeCoord = Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].SharedEdgeCoordinate;
+						startHit = new LNX_NavmeshHit(
+							Triangles[shrdEdgeCoord.TrianglesIndex].Edges[shrdEdgeCoord.ComponentIndex],
+							startHit.Position,
+							GetSurfaceProjectionVector()
+						);
+						rprt.Log($"generated new startHit: '{startHit}'...");
+					}
+				}
+			}
 
 			#region PROJECT THROUGH TO END HIT ==================================
-			outPath = new LNX_Path( this );
+			outPath = new LNX_Path(this);
 			outPath.AddPoint( startHit );
 			rprt.Log($"initialized path and added startHIt: '{startHit}'. Path pt count: '{outPath.PointCount}'");
 
@@ -1656,66 +1702,54 @@ namespace LogansNavigationExtension
 					rprt.EndMethod("Raycast_dbg()");
 					return true;
 				}
-				rprt.Log($"LNX_Triangle.ProjectThroughToPerimeter() got perimeter hit: '{triPerimHit}'...");
+				rprt.Log($"LNX_Triangle.ProjectThroughToPerimeter() got perimeter hit: '{triPerimHit}'...",
+					$"checking against last path tri index: '{outPath.EndTriIndex}'..."
+				);
 
-				/*
-				//I don't remember exactly why I put this here, but I think it was to prevent "backing up" at the beginning of the raycast. 
-				//Now that i have the following check that checks for "backing up" at all iterations, I don't think I need this. todo: DWS
-				if (triPerimHit.TriangleIndex == currentStartHit.TriangleIndex)
+				if( triPerimHit.TriangleIndex == outPath.PathPoints[outPath.PathPoints.Count-1].TriangleIndex )
 				{
-					rprt.Log_And_End_Method($"perimeter hit was on the same triangle as currentStartHit. Chain must have failed. Returning early...");
-					return true;
-				}
-				*/
+					rprt.Log($"tri perimeter hit index: '{triPerimHit.TriangleIndex}' is the same as previously logged path index. " +
+						$"Need to check if there's a problem...");
 
-				rprt.Log($"checking against last path tri index: '{outPath.EndTriIndex}'...");
-				if ( 
-					triPerimHit.TriangleIndex == outPath.EndTriIndex || 
-					(outPath.PathPoints.Count > 1 && (outPath.PathPoints[outPath.PathPoints.Count-2].TriangleIndex == triPerimHit.TriangleIndex))
-				)
-				{
-					rprt.Log($"tri perimeter hit index: '{triPerimHit.TriangleIndex}' is the same as previously logged path index. There must be a problem. Returning true early...");
-					Debug.Log($"raycast appears to have 'doubled back'. Returning early...");
+					if( DirectionIsTerminalFromHit_extrapolated(vProject_fltnd, triPerimHit) )
+					{
+						rprt.Log_And_End_Method($"found that this hit/projection combination is directionally-terminal. " +
+							$"It seems we've hit a wall. Returning true...");
+					}
+					else
+					{
+						rprt.Log_And_End_Method($"tri perimeter hit does NOT seem to be directionally terminal, which is unexpected. There seems to be a problem. Returning true early...");
+						Debug.Log($"raycast appears to have 'doubled back'. Returning early...");
+					}
+
+					outPath.AddPoint( triPerimHit );
+
 					return true;
 				}
 
 				rprt.Log($"LNX_Triangle.ProjectThroughToPerimeter() WAS succesful. Adding the perimeter hit: '{triPerimHit}' to outPath...");
 
-				if ( triPerimHit.Position != outPath.StartHit.Position ) //need this check, otherwise a raycast starting on a vert can create an unnecessary path point that is the same as the alread-logged starthit
-				{
-					rprt.Log($"adding triPerimHit: '{triPerimHit}' to path...");
+				
+				//if ( triPerimHit.Position != outPath.StartHit.Position ) //need this check, otherwise a raycast starting on a vert can create an unnecessary path point that is the same as the alread-logged starthit
+				//{ //todo: don't think this is necessary anymore now that I've adjusted the startHit object. DWS
+					//rprt.Log($"adding triPerimHit: '{triPerimHit}' to path...");
 					outPath.AddPoint( triPerimHit );
-				}
-
-				if( triPerimHit.EdgeIndex > -1) //note: what about hits that are on a vert? They will have an edgeindex of -1, so this block won't get triggered
+				//}
+				
+				if ( HitIsOnTriPerimeter_extrapolated_dbg( triPerimHit, Triangles[endHit.TriangleIndex], ref rprt) )
 				{
-					if ( Triangles[triPerimHit.TriangleIndex].Edges[triPerimHit.EdgeIndex].AmTerminal ) //if we've hit a wall...
+					rprt.Log($"found that triPerimHit was on same triangle as endHIt.",
+						"This means the while-loop should end here. Adding endhit to path...");
+					if (endHit.Position != triPerimHit.Position) //In case the end position is actually on the perimeter of the destination tri...
 					{
-						rprt.Log($"hitEdge was terminal. This means we hit a wall. Returning true...");
-						rprt.EndMethod("Raycast_dbg()");
-						return true;
+						rprt.Log($"adding endHit: '{endHit}' to path...");
+						outPath.AddPoint(endHit);
 					}
-					else if (
-						triPerimHit.TriangleIndex == endHit.TriangleIndex ||
-						(
-							Triangles[triPerimHit.TriangleIndex].AmAdjacentToTri(Triangles[endHit.TriangleIndex]) && //this is called first for short-circuiting efficiency
-							Triangles[triPerimHit.TriangleIndex].IsPositionOnAnyEdge(endHit.Position)
-						)
-					)
-					{
-						rprt.Log($"found that hitEdge was on same triangle as endHIt.",
-							"This means the while-loop should end here. Adding endhit to path...");
 
-						if (endHit.Position != triPerimHit.Position) //In case the end position is actually on the perimeter of the destination tri...
-						{
-							rprt.Log($"adding endHit: '{endHit}' to path...");
-							outPath.AddPoint(endHit);
-						}
-						rprt.Log($"Now path has: '{outPath.PathPoints.Count}' points. Returning false...");
+					rprt.Log($"Now path has: '{outPath.PathPoints.Count}' points. Returning false...");
 
-						rprt.EndMethod("Raycast_dbg()");
-						return false;
-					}
+					rprt.EndMethod("Raycast_dbg()");
+					return false;
 				}
 
 				if (Vector3.Distance(triPerimHit.Position, endHit.Position) < 0.001f) //if the projection is close enough...
@@ -1730,15 +1764,13 @@ namespace LogansNavigationExtension
 				runningWhileIterations++;
 				if (runningWhileIterations > safetyTimeout)
 				{
-					Debug.LogError($"while loop went for more than '{safetyTimeout}' iterations. Breaking early...");
+					Debug.LogError($"Raycast('{startHit}', '{endHit}') while loop went for more than '{safetyTimeout}' iterations. Breaking early...");
 					amStillProjecting = false;
 					rprt.Log($"while loop went for more than '{safetyTimeout}' iterations. Breaking early...");
 					rprt.EndMethod("Raycast_dbg()");
 					return true;
 				}
-				//rprt.Log_Untabbed($"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 			}
-			//rprt.EndMethod("while(amstillprojecting)");
 			#endregion
 
 			rprt.Log($"after while loop. Apparently Projecting through to perimeter didn't work. Returning true as default...");
@@ -1889,9 +1921,10 @@ namespace LogansNavigationExtension
 		public bool CalculatePath(LNX_NavmeshHit startHit, LNX_NavmeshHit endHit,
 			out LNX_Path outPath)
 		{
-			if ( !Raycast(startHit, endHit, out outPath) )
-			{
+			bool rcHitSomething = Raycast(startHit, endHit, out outPath);
 
+			if (!rcHitSomething)
+			{
 				return true;
 			}
 			else
@@ -1910,7 +1943,7 @@ namespace LogansNavigationExtension
 				}
 				*/
 
-				List<LNX_Path> visblVrtPths = GetVisibleVertsFromPoint( startHit, false );
+				List<LNX_Path> visblVrtPths = GetVisibleVertsFromPoint(startHit, false);
 
 				if (visblVrtPths == null || visblVrtPths.Count <= 0)
 				{
@@ -1928,7 +1961,7 @@ namespace LogansNavigationExtension
 				int indx_runningBestPath = -1;
 				for (int i_visblVrts = 0; i_visblVrts < visblVrtPths.Count; i_visblVrts++)
 				{
-					/* //todo: so far, I'm not seeing a discernable difference in efficiency with this check. I guess consider just deleting this...
+					/*//todo: so far, I'm not seeing a discernable difference in efficiency with this check. I guess consider just deleting this...
 					if( runningClosestDistance > 0f && visblVrtPths[i_visblVrts].TotalDistance > runningClosestDistance )
 					{
 						rprt.Log($"this visible vert path has dist: '{visblVrtPths[i_visblVrts].TotalDistance}', which " +
@@ -2039,11 +2072,14 @@ namespace LogansNavigationExtension
 						continue;
 					}
 					*/
-										
+
 					paths[i_visblVrts] = Triangles[visblVrtPths[i_visblVrts].EndTriIndex].
 						Verts[visblVrtPths[i_visblVrts].EndHit.VertIndex].Ping_dbg(
 						endHit, this, runningClosestDistance, visblVrtPths[i_visblVrts], ref rprt, vsblBckstpVerts
 					);
+					
+					
+
 
 					//rprt.EndAbbreviatedMethod($"Ping_dbg(endPt: '{endHit}', maxdist: '{runningClosestDistance}')");
 					
@@ -2164,6 +2200,7 @@ namespace LogansNavigationExtension
 		}
 		#endregion
 
+		#region GET VISIBLE VERTS ========================================
 		public List<LNX_Path> GetVisibleVertsFromPoint( 
 			LNX_NavmeshHit hit, bool includeFringeVerts = false, 
 			List<LNX_ComponentCoordinate> excludeVerts = null, float maxDist = -1f
@@ -2437,6 +2474,7 @@ namespace LogansNavigationExtension
 
 			return outPaths;
 		}
+		#endregion
 
 		#endregion // (END) MAIN API METHODS---------------------
 
@@ -2689,6 +2727,7 @@ namespace LogansNavigationExtension
 
 		#endregion ------------------
 
+		#region VERTEX OPERATIONS =====================================================
 		public bool VertIsOnTerminalEdge(int triIndx, int vrtIndx)
 		{
 			if(
@@ -2741,24 +2780,6 @@ namespace LogansNavigationExtension
 				}
 			}
 			*/
-
-			return false;
-		}
-
-		public bool HaveKink()
-		{
-			if ( Triangles == null || Triangles.Length <= 0 )
-			{
-				return false;
-			}
-
-			for ( int i = 0; i < Triangles.Length; i++ )
-			{
-				if(Triangles[i].AmKinked )
-				{
-					return true;
-				}
-			}
 
 			return false;
 		}
@@ -2820,6 +2841,159 @@ namespace LogansNavigationExtension
 
 			return false;
 		}
+
+		#endregion
+
+		#region HIT OPERATIONS ===========================================================
+		/// <summary>
+		/// Tells whether the supplied projection is directionally-terimnal if starting from the supplied hit.
+		/// <para>Note: This method is "extrapolated" meaning it draws it's conclusion from existing relational information present on 
+		/// the hit object and the navmesh components rather than performing an expensive calculation.<br></br>
+		/// This makes it must faster, but it means that the supplied hit and the navmesh must have correct relational information in order for this method to work right.</para>
+		/// </summary>
+		/// <param name="projection"></param>
+		/// <param name="hit"></param>
+		/// <returns></returns>
+		public bool DirectionIsTerminalFromHit_extrapolated( Vector3 projection, LNX_NavmeshHit hit )
+		{
+			Vector3 fltPrjction = FlatVector(projection);
+
+			if( hit.EdgeIndex > -1 )
+			{
+				if ( Triangles[hit.TriangleIndex].Edges[hit.EdgeIndex].AmTerminal )
+				{
+					return Vector3.Dot( Triangles[hit.TriangleIndex].Edges[hit.EdgeIndex].v_Cross_flat, fltPrjction ) < 0f;
+				}
+				else
+				{
+					return false;
+				}
+			}
+			else if ( hit.VertIndex > -1 )
+			{
+				return Triangles[hit.TriangleIndex].Verts[hit.VertIndex].GetVertCoord_viaProjectionSweep(fltPrjction, true) == LNX_ComponentCoordinate.None;
+			}
+
+			return false; //because it assumes the projection is on the inside of a triangle so it could NOT be terminal...
+		}
+
+		public bool HitIsOnTriPerimeter_extrapolated( LNX_NavmeshHit hit, LNX_Triangle tri )
+		{
+
+			if (hit.EdgeIndex > -1)
+			{
+				if (hit.TriangleIndex == tri.Index_inCollection)
+				{
+					return true;
+				}
+				else if
+				(
+					(
+						tri.Edges[0].SharedEdgeCoordinate.TrianglesIndex == hit.TriangleIndex &&
+						tri.Edges[0].SharedEdgeCoordinate.ComponentIndex == hit.EdgeIndex
+					) ||
+					(
+						tri.Edges[1].SharedEdgeCoordinate.TrianglesIndex == hit.TriangleIndex &&
+						tri.Edges[1].SharedEdgeCoordinate.ComponentIndex == hit.EdgeIndex
+					) ||
+										(
+						tri.Edges[2].SharedEdgeCoordinate.TrianglesIndex == hit.TriangleIndex &&
+						tri.Edges[2].SharedEdgeCoordinate.ComponentIndex == hit.EdgeIndex
+					)
+				)
+				{
+					return true;
+				}
+			}
+			else if ( hit.VertIndex > -1 )
+			{
+				if ( hit.TriangleIndex == tri.Index_inCollection )
+				{
+					return true;
+				}
+				else if 
+				(
+					Triangles[hit.TriangleIndex].Verts[hit.VertIndex].HasSharedVertViaTriIndex(tri.Index_inCollection)
+				)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		public bool HitIsOnTriPerimeter_extrapolated_dbg(LNX_NavmeshHit hit, LNX_Triangle tri, ref LNX_MethodDebugReport rprt)
+		{
+			rprt.StartMethod($"HitIsOnTriPerimeter_extrapolated_dbg(hit: '{hit}', tri: '{tri}')");
+
+			if (hit.TriangleIndex == tri.Index_inCollection)
+			{
+				rprt.Log_And_End_Method($"hit tri index is stame as passed triangle's inde. Returning true...");
+
+				return true;
+			}
+
+			if (hit.EdgeIndex > -1)
+			{
+				rprt.Log($"is on edge...");
+
+				if
+				(
+					(
+						tri.Edges[0].SharedEdgeCoordinate.TrianglesIndex == hit.TriangleIndex &&
+						tri.Edges[0].SharedEdgeCoordinate.ComponentIndex == hit.EdgeIndex
+					) ||
+					(
+						tri.Edges[1].SharedEdgeCoordinate.TrianglesIndex == hit.TriangleIndex &&
+						tri.Edges[1].SharedEdgeCoordinate.ComponentIndex == hit.EdgeIndex
+					) ||
+										(
+						tri.Edges[2].SharedEdgeCoordinate.TrianglesIndex == hit.TriangleIndex &&
+						tri.Edges[2].SharedEdgeCoordinate.ComponentIndex == hit.EdgeIndex
+					)
+				)
+				{
+					rprt.Log_And_End_Method($"returning true...");
+					return true;
+				}
+			}
+			else if (hit.VertIndex > -1)
+			{
+				rprt.Log($"hit is on a vertex...");
+
+				if
+				(
+					Triangles[hit.TriangleIndex].Verts[hit.VertIndex].HasSharedVertViaTriIndex(tri.Index_inCollection)
+				)
+				{
+					rprt.Log_And_End_Method($"returning true...");
+					return true;
+				}
+			}
+
+			rprt.Log_And_End_Method($"made it to end. Returning false...");
+			return false;
+		}
+		#endregion
+
+		public bool HaveKink()
+		{
+			if ( Triangles == null || Triangles.Length <= 0 )
+			{
+				return false;
+			}
+
+			for ( int i = 0; i < Triangles.Length; i++ )
+			{
+				if(Triangles[i].AmKinked )
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
 
 		public bool IsBoundsEdge(int triIndx, int edgeIndx)
 		{

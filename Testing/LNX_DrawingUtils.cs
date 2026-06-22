@@ -117,13 +117,13 @@ namespace LogansNavigationExtension
 			DrawEdgeGizmo(tri.Edges[2]);
 		}
 
-		public static void DrawStandardFocusTriGizmos(LNX_Triangle tri, float raiseAmount, string lblString, Color clr, 
+		public static void DrawStandardFocusTriGizmos(LNX_Triangle tri, float pyramidRaiseAmount, string lblString, Color clr, 
 			bool drawTriGizmo = false, float triGzmoRaiseAmt = 0f, bool lblAll = false, bool drawToCtrLines = true)
 		{
 			Color oldColor = Gizmos.color;
 
 			Gizmos.color = clr;
-			Vector3 vRaise = Vector3.up * raiseAmount;
+			Vector3 vRaise = Vector3.up * pyramidRaiseAmount;
 
 			if (drawToCtrLines)
 			{
@@ -192,6 +192,16 @@ namespace LogansNavigationExtension
 			Handles.DrawLine(tri.Verts[0].V_Position, tri.Verts[1].V_Position, thickness);
 			Handles.DrawLine(tri.Verts[1].V_Position, tri.Verts[2].V_Position, thickness);
 			Handles.DrawLine(tri.Verts[2].V_Position, tri.Verts[0].V_Position, thickness);
+		}
+
+		public static void DrawLabeledPoint(Vector3 pointPos, Vector3 lineEnd, string lbl, Color clr)
+		{
+			Color oldClr = Gizmos.color;
+
+			Gizmos.color = clr;
+
+			Gizmos.DrawLine(pointPos, lineEnd);
+			Handles.Label(lineEnd, lbl);
 		}
 	}
 }

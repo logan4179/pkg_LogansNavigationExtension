@@ -116,62 +116,58 @@ namespace LogansNavigationExtension
 			}
 			*/
 
-			DateTime dt_opStart = DateTime.Now;
+
+			long totalMs = 0;
+			long totalTicks = 0;
+			long totalSeconds = 0;
 			string s = "";
-			int mode = 2;
-			if (mode == 0)
+			if ( !UseDebugVersion )
 			{
-				DBG_Operation += $"Mode0, using StartVert: '{StartVert}', and EndVert: '{EndVert}'...\n" +
+				DBG_Operation += $"regular version.\n" + 
+					$"using startHit: '{Grabber_StartPos.CurrentHit}', and endHit: '{Grabber_EndPos.CurrentHit}'...\n" +
 					$"Commencing operation...\n";
-				CurrentOperationResult = _navmesh.CalculatePath(
-					StartVert, EndVert,
-					out CurrentResultPath
-				);
-			}
-			else if (mode == 1)
-			{
-				DBG_Operation += $"Mode1, using start pos: '{Grabber_StartPos.transform.position}', and end pos: '{Grabber_EndPos.transform.position}'...\n" +
-					$"Commencing operation...\n";
-				CurrentOperationResult = _navmesh.CalculatePath(
-					Grabber_StartPos.transform.position, Grabber_EndPos.transform.position, 0.3f,
-					out CurrentResultPath
-				);
-			}
-			else if (mode == 2)
-			{
-				DBG_Operation += $"Mode2, using startHit: '{Grabber_StartPos.CurrentHit}', and endHit: '{Grabber_EndPos.CurrentHit}'...\n" +
-					$"Commencing operation...\n";
+
+				System.Diagnostics.Stopwatch stpWtch = System.Diagnostics.Stopwatch.StartNew();
 				CurrentOperationResult = _navmesh.CalculatePath(
 					Grabber_StartPos.CurrentHit, Grabber_EndPos.CurrentHit,
 					out CurrentResultPath
 				);
+				stpWtch.Stop();
+				totalMs = stpWtch.ElapsedMilliseconds;
+				totalTicks = stpWtch.ElapsedTicks;
+				totalSeconds = stpWtch.Elapsed.Seconds;
 			}
-			else if (mode == 3)
+			else
 			{
-				DBG_Operation += $"Mode3 (dbg version), using startHit: '{Grabber_StartPos.CurrentHit}', and endHit: '{Grabber_EndPos.CurrentHit}'...\n" +
+				DBG_Operation += $"debug version.\n" +
+					$"using startHit: '{Grabber_StartPos.CurrentHit}', and endHit: '{Grabber_EndPos.CurrentHit}'...\n" +
 					$"Commencing operation...\n";
 
 				mthdDbg_Report.StartReport();
-				try
-				{
-					CurrentOperationResult = _navmesh.CalculatePath_dbg(
+				//try
+				//{
+				System.Diagnostics.Stopwatch stpWtch = System.Diagnostics.Stopwatch.StartNew();
+				CurrentOperationResult = _navmesh.CalculatePath_dbg(
 						Grabber_StartPos.CurrentHit, Grabber_EndPos.CurrentHit,
 						out CurrentResultPath, ref mthdDbg_Report
 					);
-				}
-				catch (Exception)
-				{
-
-					throw;
-				}
+					stpWtch.Stop();
+					totalMs = stpWtch.ElapsedMilliseconds;
+					totalTicks = stpWtch.ElapsedTicks;
+					totalSeconds = stpWtch.Elapsed.Seconds;
+				//}
+				//catch (Exception)
+				//{
+				//throw;
+				//}
 
 				mthdDbg_Report.EndReport();
 			}
 
-			double totalSeconds = DateTime.Now.Subtract(dt_opStart).TotalSeconds;
-			Debug.Log($"operation took: '{totalSeconds}' seconds...");
-
-			DBG_Operation += $"calculatepath took '{totalSeconds}' seconds...\n" +
+			DBG_Operation += $"calculatepath took\n" +
+				$"'{totalSeconds}' seconds\n" +
+				$"'{totalMs}' ms,\n" +
+				$"'{totalTicks}' ticks\n" +
 				$"Result: '{CurrentOperationResult}'\n";
 		}
 
@@ -198,7 +194,7 @@ namespace LogansNavigationExtension
 			//DBG_Operation += $"Commencing operation...\n";
 
 			if( 
-				AutoCalculate && 
+				AutoRun && 
 				(Grabber_StartPos.RecalculatedLastFrame ||
 				Grabber_EndPos.RecalculatedLastFrame)
 			)

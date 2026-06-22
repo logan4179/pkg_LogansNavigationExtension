@@ -56,8 +56,7 @@ namespace LogansNavigationExtension
 				return;
 			}
 
-			DBG_Operation += $"using triangle '{CurrentTriangle.Index_inCollection}'...\n" +
-				$"commencing operation...\n";
+			DBG_Operation += $"using triangle '{CurrentTriangle.Index_inCollection}'...\n";
 
 			closestHitOnPerim = CurrentlyGrabbedTriangle.ClosestHitOnPerimeter(Grabber_StartPos.transform.position);
 			DBG_Operation += $"using closestHitOnPerim: '{closestHitOnPerim}'...\n";
@@ -70,6 +69,8 @@ namespace LogansNavigationExtension
 
 			if ( !UseDebugVersion )
 			{
+				DBG_Operation += "using real version...\n" +
+					"commencing operation...\n";
 				if ( CurrentTriangle.ProjectThroughToPerimeter
 					(
 						//Grabber_StartPos.CurrentHit, //this will cause problems if not on the same tri...
@@ -91,6 +92,9 @@ namespace LogansNavigationExtension
 			}
 			else
 			{
+				DBG_Operation += "using debug version...\n" +
+					"commencing operation...\n";
+
 				mthdDbg_Report.StartReport("");
 
 				if (CurrentTriangle.ProjectThroughToPerimeter_dbg
@@ -135,12 +139,12 @@ namespace LogansNavigationExtension
 				)
 			)
 			{
-				DBG_Operation += $"OnDrawGizmos short-circuit. Something wrong with selection...";
+				DBG_Operation = $"OnDrawGizmos short-circuit. Something wrong with selection...";
 				return;
 			}
 			base.OnDrawGizmos();
 
-			if( AutoCalculate && 
+			if( AutoRun && 
 				(
 					Grabber_CurrentTri.RecalculatedLastFrame || 
 					Grabber_EndPos.RecalculatedLastFrame || 
@@ -150,19 +154,22 @@ namespace LogansNavigationExtension
 			{
 				RunOperation();
 			}
-
-			if (CurrentTriangle == null)
-			{
-				DBG_Operation += $"OnDrawGizmos short-circuit. Need to sample a focus triangle...";
-				Debug.LogWarning($"Need to sample a focus triangle...");
-				return;
-			}
 			#endregion
 
 
 			if ( CurrentTriangle != null )
 			{
-				DrawStandardFocusTriGizmos( CurrentTriangle, 1f, $"", Color.magenta);
+				//DrawStandardFocusTriGizmos( CurrentTriangle, 1f, $"", Color.magenta);
+				LNX_DrawingUtils.DrawStandardFocusTriGizmos( CurrentTriangle, 0.5f, "", Color.magenta );
+			}
+
+
+			if (Grabber_StartPos.CurrentHit != LNX_NavmeshHit.None)
+			{
+				LNX_DrawingUtils.DrawLabeledPoint(
+					Grabber_StartPos.CurrentHit.Position, Grabber_StartPos.CurrentHit.Position + (Vector3.up * 0.04f), 
+					$"startHit\n{Grabber_StartPos.CurrentHit.Position}", Color.white
+				);
 			}
 
 			if ( ProjectedEdge != null )
@@ -172,8 +179,9 @@ namespace LogansNavigationExtension
 
 			if( perimHit != LNX_NavmeshHit.None )
 			{
-				Gizmos.DrawCube(perimHit.Position, Vector3.one * 0.025f);
-				Handles.Label(perimHit.Position + (Vector3.up * 0.03f), "hitPosition");
+				LNX_DrawingUtils.DrawLabeledPoint(
+					perimHit.Position, perimHit.Position + (Vector3.up * 0.04f), $"perimHit\n{perimHit.Position}", Color.white
+				);
 			}
 
 			if ( closestHitOnPerim != LNX_NavmeshHit.None )
@@ -193,14 +201,6 @@ namespace LogansNavigationExtension
 			Grabber_EndPos.DrawMyGizmos(Radius_ObjectDebugSpheres);
 			Gizmos.DrawLine(Grabber_StartPos.transform.position, Grabber_EndPos.transform.position);
 
-			/*
-			Gizmos.DrawLine( Grabber_CurrentTri.transform.position, transform.position );
-
-			Gizmos.DrawSphere(trans_start.position, Radius_ObjectDebugSpheres);
-			//Handles.Label(startTrans.position, "strtTrans");
-			Gizmos.DrawSphere(transform.position, Radius_ObjectDebugSpheres);
-			//Handles.Label(startTrans.position, "endTrans");
-			*/
 		}
 
 		#region HELPERS ---------------------------------------

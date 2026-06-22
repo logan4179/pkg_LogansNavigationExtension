@@ -68,8 +68,8 @@ namespace LogansNavigationExtension
 			{
 				//dt_loopstart = DateTime.Now;
 
-				Vector3 pos;
-				bool rslt = CurrentTri.IsInShapeProject(SamplePositions_InShape[i], out pos );
+				LNX_NavmeshHit hit = LNX_NavmeshHit.None;
+				bool rslt = CurrentTri.IsInShapeProject(SamplePositions_InShape[i], out hit );
 				if( !rslt )
 				{
 					Debug.LogError($"test '{i}' was supposed to be in shape, but apparently it wasn't...");
@@ -93,8 +93,8 @@ namespace LogansNavigationExtension
 			{
 				//dt_loopstart = DateTime.Now;
 
-				Vector3 pos;
-				bool rslt = CurrentTri.IsInShapeProject(SamplePositions_OffShape[i], out pos);
+				LNX_NavmeshHit hit = LNX_NavmeshHit.None;
+				bool rslt = CurrentTri.IsInShapeProject(SamplePositions_OffShape[i], out hit );
 				if (rslt)
 				{
 					Debug.LogError($"test '{i}' was supposed to be off shape, but apparently it wasn't...");

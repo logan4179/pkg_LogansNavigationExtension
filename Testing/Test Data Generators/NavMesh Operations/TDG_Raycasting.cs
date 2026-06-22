@@ -10,8 +10,8 @@ namespace LogansNavigationExtension
 {
     public class TDG_Raycasting : TDG_base
     {
-		public LNX_ComponentGrabber startTrans;
-		public LNX_ComponentGrabber endTrans;
+		public LNX_ComponentGrabber startGrabber;
+		public LNX_ComponentGrabber endGrabber;
 
 		public bool RaycastResult = false;
 
@@ -67,54 +67,57 @@ namespace LogansNavigationExtension
 
 			DBG_Operation = $"{DateTime.Now}\n";
 
-			if (startTrans.CurrentHit == LNX_NavmeshHit.None)
+			if (startGrabber.CurrentHit == LNX_NavmeshHit.None)
 			{
 				DBG_Operation += $"start hit is none. Returning early...\n";
 				return;
 			}
 
-			if (endTrans.CurrentHit == LNX_NavmeshHit.None)
+			if (endGrabber.CurrentHit == LNX_NavmeshHit.None)
 			{
 				DBG_Operation += $"end hit is none. Returning early...\n";
 				return;
 			}
 
-			DBG_Operation += $"using strtHit: '{startTrans.CurrentHit}', endHit: '{endTrans.CurrentHit}'\n";
+			DBG_Operation += $"using strtHit: '{startGrabber.CurrentHit}', endHit: '{endGrabber.CurrentHit}'\n";
 
-			DateTime dt_opStart;
-			double totalMS;
-			if( UseDebugVersion )
+			long totalMs = 0;
+			long totalTicks = 0;
+			if ( UseDebugVersion )
 			{
 				DBG_Operation += $"using debug version...\n";
 				mthdDbg_Report.StartReport("TDG_Raycast");
-				dt_opStart = DateTime.Now;
-				RaycastResult = _navmesh.Raycast_dbg(startTrans.CurrentHit, endTrans.CurrentHit,
+				System.Diagnostics.Stopwatch stpWtch = System.Diagnostics.Stopwatch.StartNew();
+				RaycastResult = _navmesh.Raycast_dbg(startGrabber.CurrentHit, endGrabber.CurrentHit,
 					out ResultPath, ref mthdDbg_Report);
-				totalMS = DateTime.Now.Subtract(dt_opStart).TotalMilliseconds;
+				stpWtch.Stop();
+				totalMs = stpWtch.ElapsedMilliseconds;
+				totalTicks = stpWtch.ElapsedTicks;
 				mthdDbg_Report.EndReport();
 			}
 			else
 			{
 				DBG_Operation += $"using real version...\n";
 
-				dt_opStart = DateTime.Now;
+				System.Diagnostics.Stopwatch stpWtch = System.Diagnostics.Stopwatch.StartNew();
 				RaycastResult = _navmesh.Raycast(
-					startTrans.CurrentHit, endTrans.CurrentHit,out ResultPath
+					startGrabber.CurrentHit, endGrabber.CurrentHit,out ResultPath
 				);
-				totalMS = DateTime.Now.Subtract(dt_opStart).TotalMilliseconds;
-
+				stpWtch.Stop();
+				totalMs = stpWtch.ElapsedMilliseconds;
+				totalTicks = stpWtch.ElapsedTicks;
 			}
 
 			DBG_Operation += $"result: '{RaycastResult}'\n" +
 				$"Path: '{(ResultPath.PathPoints == null ? "null" : ResultPath.PointCount)}'\n" +
 				$"path dist: '{ResultPath.TotalDistance}'\n" +
-				$"total ms: '{totalMS}'\n";
+				$"total ms: '{totalMs}', total ticks: '{totalTicks}'\n";
 		}
 
 		protected override void OnDrawGizmos()
 		{
 
-			if( AmInUnitTest || Selection.activeObject != gameObject && Selection.activeObject != startTrans.gameObject )
+			if( AmInUnitTest || Selection.activeObject != gameObject && Selection.activeObject != startGrabber.gameObject )
 			{
 				return;
 			}
@@ -124,12 +127,12 @@ namespace LogansNavigationExtension
 
 			//RaycastResult = _navmesh.Raycast(startTrans.position, endTrans.position, 3f); //for without path
 
-			if ( AutoCalculate && (startTrans.RecalculatedLastFrame || endTrans.RecalculatedLastFrame) ) //"IF something's changed..." this is to make it a little snappier in the editor...
+			if ( AutoRun && (startGrabber.RecalculatedLastFrame || endGrabber.RecalculatedLastFrame) ) //"IF something's changed..." this is to make it a little snappier in the editor...
 			{
 				RunRaycast();
 			}
 
-			if( !RaycastResult )
+			if (ResultPath != LNX_Path.None)
 			{
 				Color oldClr = Gizmos.color;
 				Gizmos.color = Color_PathPoints;
@@ -143,11 +146,11 @@ namespace LogansNavigationExtension
 
 			Gizmos.color = RaycastResult ? Color.red : Color.green;
 
-			Gizmos.DrawLine(startTrans.transform.position, endTrans.transform.position);
+			Gizmos.DrawLine(startGrabber.transform.position, endGrabber.transform.position);
 
-			Gizmos.DrawSphere(startTrans.transform.position, Radius_ObjectDebugSpheres);
+			Gizmos.DrawSphere(startGrabber.transform.position, Radius_ObjectDebugSpheres);
 			//Handles.Label(startTrans.position, "strtTrans");
-			Gizmos.DrawSphere(endTrans.transform.position, Radius_ObjectDebugSpheres);
+			Gizmos.DrawSphere(endGrabber.transform.position, Radius_ObjectDebugSpheres);
 			//Handles.Label(startTrans.position, "endTrans");
 		}
 

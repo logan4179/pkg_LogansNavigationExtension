@@ -438,6 +438,7 @@ namespace LogansNavigationExtension
 		public float PathDistance => PathTo.TotalDistance;
 
 		public Vector3 V_to => PathTo.V_CrowFlies;
+		public Vector3 V_to_flat => PathTo.V_CrowFiles_flat;
 
 		#endregion
 

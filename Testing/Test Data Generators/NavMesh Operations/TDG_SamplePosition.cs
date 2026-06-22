@@ -24,6 +24,31 @@ namespace LogansNavigationExtension
 		[Range(0f,0.2f)] public float size_sampleObject = 0.15f;
 
 
+		[ContextMenu("z call RunOperation")]
+		public void RunOperation()
+		{
+			DBG_Operation = $"{DateTime.Now}\n";
+
+			lnxHit = new LNX_NavmeshHit();
+
+			DBG_Operation += $"using pos: '{_Grabber.transform.position}'\n";
+
+			DBG_Operation = $"Now sampling position...\n";
+
+			OperationResult = _navmesh.SamplePosition(_Grabber.transform.position, out lnxHit, 10f, false);
+
+			if (OperationResult)
+			{
+				DBG_Operation += $"samplePosition returned true with: '{lnxHit}'\n";
+
+				LNX_Triangle sampledTri = _navmesh.Triangles[lnxHit.TriangleIndex];
+			}
+			else
+			{
+				DBG_Operation += $"samplePosition() returned false\n";
+			}
+		}
+
 		protected override void OnDrawGizmos()
 		{
 			if ( AmInUnitTest || Selection.activeGameObject != gameObject)
@@ -33,25 +58,9 @@ namespace LogansNavigationExtension
 
 			base.OnDrawGizmos();
 
-			if( _Grabber.RecalculatedLastFrame )
+			if( AutoRun && _Grabber.RecalculatedLastFrame )
 			{
-				lnxHit = new LNX_NavmeshHit();
-
-				DBG_Operation = $"{DateTime.Now}\n" +
-					$"Now sampling position...\n";
-
-				OperationResult = _navmesh.SamplePosition( _Grabber.transform.position, out lnxHit, 10f );
-
-				if ( OperationResult )
-				{
-					DBG_Operation += $"samplePosition returned true with: '{lnxHit}'\n";
-
-					LNX_Triangle sampledTri = _navmesh.Triangles[lnxHit.TriangleIndex];
-				}
-				else
-				{
-					DBG_Operation += $"samplePosition() returned false\n";
-				}
+				RunOperation();
 			}
 
 			#region	GIZMO DRAWING ===============================
