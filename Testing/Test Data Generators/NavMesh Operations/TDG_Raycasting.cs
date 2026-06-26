@@ -18,11 +18,12 @@ namespace LogansNavigationExtension
 		[Header("PATH")]
 		//public List<LNX_ProjectionHit> RaycastHitResults;
 		public LNX_Path ResultPath;
+
+		[Header("DEBUG")]
 		public Color Color_PathPoints;
 		[Range(0f, 0.05f)] public float Size_PathPoints;
 		[Range(0f, 0.25f)] public float Height_PathPtLabels;
 
-		//[Header("DEBUG")]
 
 		[ContextMenu("z CaptureDataPoint()")]
 		public void CaptureDataPoint()
@@ -70,12 +71,15 @@ namespace LogansNavigationExtension
 			if (startGrabber.CurrentHit == LNX_NavmeshHit.None)
 			{
 				DBG_Operation += $"start hit is none. Returning early...\n";
+				Debug.LogWarning($"start hit is none. Returning early...\n");
+
 				return;
 			}
 
 			if (endGrabber.CurrentHit == LNX_NavmeshHit.None)
 			{
 				DBG_Operation += $"end hit is none. Returning early...\n";
+				Debug.LogWarning($"end hit is none. Returning early...\n");
 				return;
 			}
 

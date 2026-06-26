@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Net.Sockets;
 using UnityEditor;
@@ -32,6 +33,7 @@ namespace LogansNavigationExtension
 		public LNX_Vertex FocusedVert => Grabber_FocusVert.CurrentlyGrabbedVert;
 
 		[Header("DEBUG TRIANGLES")]
+		public bool DrawTriangles = true;
 		public bool DrawTriLabels = true;
 		[Range(0f, 0.25f)] public float Thickness_focusTri = 0.1f;
 
@@ -182,24 +184,32 @@ namespace LogansNavigationExtension
 				LNX_DrawingUtils.DrawTriGizmos(FocusedTri, Color.yellow, true, true, true, Length_edgeLblsInward, true, Length_edgeLblsInward * 0.5f,
 					true, Length_normalLines
 				);
-			}
 
-
-			for ( int i = 0; i < _mgr.Triangles.Length; i++ )
-			{
-				//DrawTriGizmos(_mgr.Triangles[i], (FocusedTri != null && i == FocusedTri.Index_inCollection) ? true : false, DrawTriLabels, 
-				//drawEdgeLabels, DrawEdges, drawVertSpheres, DrawVertLables, drawNormalLines );
-
-				/*
-				LNX_DrawingUtils.DrawTriGizmos(_mgr.Triangles[i],
-					(FocusedTri != null && i == FocusedTri.Index_inCollection) ? Color.yellow : color_edgeLines,  
-					DrawTriLabels, DrawEdges, drawEdgeLabels, Length_edgeLblsInward, DrawVertLables, Length_normalLines * 0.5f,
-					drawNormalLines, Length_normalLines
+				Vector3 vEnd = FocusedTri.Edges[1].MidPosition + FocusedTri.Edges[1].v_Cross_flat;
+				Gizmos.DrawLine(FocusedTri.Edges[1].MidPosition, 
+					vEnd
 				);
-				*/
-
-				Handles.Label(_mgr.Triangles[i].V_Center, $"{i}");
 			}
+
+			if( DrawTriangles )
+			{
+				for ( int i = 0; i < _mgr.Triangles.Length; i++ )
+				{
+					//DrawTriGizmos(_mgr.Triangles[i], (FocusedTri != null && i == FocusedTri.Index_inCollection) ? true : false, DrawTriLabels, 
+					//drawEdgeLabels, DrawEdges, drawVertSpheres, DrawVertLables, drawNormalLines );
+
+				
+					LNX_DrawingUtils.DrawTriGizmos(_mgr.Triangles[i],
+						(FocusedTri != null && i == FocusedTri.Index_inCollection) ? Color.yellow : color_edgeLines,  
+						DrawTriLabels, DrawEdges, drawEdgeLabels, Length_edgeLblsInward, DrawVertLables, Length_normalLines * 0.5f,
+						drawNormalLines, Length_normalLines
+					);
+				
+
+					Handles.Label(_mgr.Triangles[i].V_Center, $"{i}");
+				}
+			}
+
 
 			if( FocusedEdge != null )
 			{
@@ -252,5 +262,25 @@ namespace LogansNavigationExtension
 
 			Gizmos.color = oldColor;
 		}
+
+		#region HELPERS ========================================
+		[ContextMenu("z call RecalculateAllDerivedInfo()")]
+		public void RecalculateAllDerivedInfo() //todo: dws
+		{
+			Debug.Log($"RecalculateAllDerivedInfo()");
+
+			foreach (LNX_Triangle tri in _mgr.Triangles)
+			{
+				tri.CalculateDerivedInfo(_mgr);
+
+				if ( tri.Index_inCollection == 43 )
+				{
+					//Debug.Log(tri.dbgDerived);
+				}
+			}
+			Debug.Log($"RecalculateAllDerivedInfo finished...");
+		}
+		#endregion
+
 	}
 }

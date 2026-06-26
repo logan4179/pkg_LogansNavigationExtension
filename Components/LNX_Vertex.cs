@@ -97,7 +97,7 @@ namespace LogansNavigationExtension
 		public int Index_FirstSiblingVert => MyCoordinate.ComponentIndex == 0 ? 1 : 0;
 		public LNX_ComponentCoordinate Coordinate_FirstSibling => new LNX_ComponentCoordinate(MyCoordinate.TrianglesIndex, Index_FirstSiblingVert);
 		//private int firstSiblingRelationshipIndex => MyCoordinate.ComponentIndex == 0 ? (MyCoordinate.TrianglesIndex * 3) + 1 : MyCoordinate.TrianglesIndex * 3;
-		private int firstSiblingRelationshipIndex => (MyCoordinate.TrianglesIndex * 3) + Index_FirstSiblingVert;
+		public int firstSiblingRelationshipIndex => (MyCoordinate.TrianglesIndex * 3) + Index_FirstSiblingVert;
 
 		public LNX_VertexRelationship FirstSiblingRelationship
 		{
@@ -113,7 +113,7 @@ namespace LogansNavigationExtension
 		public int Index_SecondSiblingVert => MyCoordinate.ComponentIndex == 2 ? 1 : 2;
 		public LNX_ComponentCoordinate Coordinate_SecondSibling => new LNX_ComponentCoordinate(MyCoordinate.TrianglesIndex, Index_SecondSiblingVert);
 
-		private int secondSiblingRelationshipIndex => (MyCoordinate.TrianglesIndex * 3) + Index_SecondSiblingVert;
+		public int secondSiblingRelationshipIndex => (MyCoordinate.TrianglesIndex * 3) + Index_SecondSiblingVert;
 
 		public LNX_VertexRelationship SecondSiblingRelationship
 		{
@@ -243,186 +243,150 @@ namespace LogansNavigationExtension
 
 		public void CalculateDerivedInfo(LNX_Triangle tri, LNX_NavMesh nvmsh )
 		{
-			//todo: take out the tri parameter, because it can be derived from the navmesh parameter along with the 
-			// cached triangle coordinate, then efficiency test to see what difference it makes.
 
-			#region ESTABLISH SIBLING RELATIONSHIPS FIRST --------------------------------------------------			
-			/*
-			if( Relationships == null || Relationships.Length == 0 || 
-				Relationships.Length != (nvmsh.Triangles.Length * 3) )
-			{
-				Relationships = new LNX_VertexRelationship[nvmsh.Triangles.Length * 3];
-			}
-			*/
-
-			//First establish initial relationships sibling relationships. This is important to do 
-			//now so that the rest can raycast without error...
-			
-			/* //todo: dws
-			Relationships[firstSiblingRelationshipIndex] = new LNX_VertexRelationship(
-				this, tri, Index_FirstSiblingVert
-			);
-			Relationships[secondSiblingRelationshipIndex] = new LNX_VertexRelationship(
-				this, tri, Index_SecondSiblingVert
-			);
-			*/
-
-			/*
-			Relationships[firstSiblingRelationshipIndex] = new LNX_VertexRelationship(
-				new LNX_Path(
-					v_surfaceNormal_cached,
-					new LNX_NavmeshHit(this),
-					new LNX_NavmeshHit(tri.Verts[Index_FirstSiblingVert])
-				)
-			);
-
-			Relationships[secondSiblingRelationshipIndex] = new LNX_VertexRelationship(
-				new LNX_Path(
-					v_surfaceNormal_cached,
-					new LNX_NavmeshHit(this),
-					new LNX_NavmeshHit(tri.Verts[Index_SecondSiblingVert])
-				)
-			);
-			*/
-			#endregion
 		}
 
-		public void CreateRelationships( LNX_NavMesh nvmsh ) //todo: unit test
+		public void CreateRelationships( LNX_NavMesh nvmsh, bool createSiblingRelationships, 
+			bool createSharingSpaceRelationships, bool createDistalRelationships ) //todo: unit test
 		{
-			//Debug.Log( $"vert[{MyCoordinate}].{nameof(CreateRelationships)}()---" );
+			Debug.Log( $"vert[{MyCoordinate}].{nameof(CreateRelationships)}()---" );
 
 			//DateTime dt_start = DateTime.Now;
 			//why does this take so long?
 			Relationships = new LNX_VertexRelationship[nvmsh.Triangles.Length * 3];
 			Vector3 clcltdPthngNrml = nvmsh.Triangles[TriangleIndex].V_PathingNormal;
 
-			#region ESTABLISH SIBLING RELATIONSHIPS FIRST --------------------------------------------------			
-			//Note: Even though I've already done this earlier, I need to do this again here, because I'm
-			//making this method so that it can be used to completely re-recreate the relationships, so
-			//it makes the collection new, and so those relationships are gone now that I've re-initialized the
-			//Relationships collection above...
+			if (createSiblingRelationships)
+			{
+				Relationships[firstSiblingRelationshipIndex] = new LNX_VertexRelationship(
+					new LNX_Path(
+						v_navmeshProjectionDirection_cached,
+						new LNX_NavmeshHit(this, clcltdPthngNrml),
+						new LNX_NavmeshHit(nvmsh.Triangles[TriangleIndex].Verts[Index_FirstSiblingVert], clcltdPthngNrml)
+					)
+				);
 
-			Relationships[firstSiblingRelationshipIndex] = new LNX_VertexRelationship(
-				new LNX_Path(
-					v_navmeshProjectionDirection_cached,
-					new LNX_NavmeshHit(this, clcltdPthngNrml),
-					new LNX_NavmeshHit(nvmsh.Triangles[TriangleIndex].Verts[Index_FirstSiblingVert], clcltdPthngNrml)
-				)
-			);
-
-			Relationships[secondSiblingRelationshipIndex] = new LNX_VertexRelationship(
-				new LNX_Path(
-					v_navmeshProjectionDirection_cached,
-					new LNX_NavmeshHit(this, clcltdPthngNrml),
-					new LNX_NavmeshHit(nvmsh.Triangles[TriangleIndex].Verts[Index_SecondSiblingVert], clcltdPthngNrml)
-				)
-			);
-			#endregion
+				Relationships[secondSiblingRelationshipIndex] = new LNX_VertexRelationship(
+					new LNX_Path(
+						v_navmeshProjectionDirection_cached,
+						new LNX_NavmeshHit(this, clcltdPthngNrml),
+						new LNX_NavmeshHit(nvmsh.Triangles[TriangleIndex].Verts[Index_SecondSiblingVert], clcltdPthngNrml)
+					)
+				);
+			}
+			
 			//Debug.Log($"creating sibling relationships took: '{DateTime.Now.Subtract(dt_start)}'");
 
-			#region NEXT, CALCULATE 'NEIGHBOR' VERT RELATIONSHIPS
-			//Note: This needs to be done before the rest of the relationships so that raycasting using a vert 
-			//as a start point will work.
-			List<LNX_ComponentCoordinate> temp_sharedVrtCoords = new List<LNX_ComponentCoordinate>();
-			for (int i = 0; i < nvmsh.Triangles.Length; i++)
+			if( createSharingSpaceRelationships )
 			{
-				if (i == MyCoordinate.TrianglesIndex)
+				//Note: This needs to be done before the rest of the relationships so that raycasting using a vert 
+				//as a start point will work.
+				List<LNX_ComponentCoordinate> temp_sharedVrtCoords = new List<LNX_ComponentCoordinate>();
+				for (int i = 0; i < nvmsh.Triangles.Length; i++)
 				{
-					continue;
-				}
-
-				for (int i_vrts = 0; i_vrts < 3; i_vrts++)
-				{
-					if (nvmsh.Triangles[i].Verts[i_vrts].V_Position == V_Position)
+					if (i == MyCoordinate.TrianglesIndex)
 					{
-						temp_sharedVrtCoords.Add(nvmsh.Triangles[i].Verts[i_vrts].MyCoordinate);
-						//Debug.LogWarning("it happened a!");
-						//Go ahead and make the other relationships...
-						Relationships[(i * 3) + 0] = new LNX_VertexRelationship(
-							new LNX_Path(
-								CachedSurfaceNormal, new LNX_NavmeshHit(this, clcltdPthngNrml),
-								new LNX_NavmeshHit(nvmsh.Triangles[i].Verts[0], nvmsh.Triangles[i].V_PathingNormal)
-							)
-						);
-						Relationships[(i * 3) + 1] = new LNX_VertexRelationship(
-							new LNX_Path(
-								CachedSurfaceNormal, new LNX_NavmeshHit(this, clcltdPthngNrml),
-								new LNX_NavmeshHit(nvmsh.Triangles[i].Verts[1], nvmsh.Triangles[i].V_PathingNormal)
-							)
-						);
-						Relationships[(i * 3) + 2] = new LNX_VertexRelationship(
-							new LNX_Path(
-								CachedSurfaceNormal, new LNX_NavmeshHit(this, clcltdPthngNrml),
-								new LNX_NavmeshHit(nvmsh.Triangles[i].Verts[2], nvmsh.Triangles[i].V_PathingNormal)
-							)
-						);
-
-						break;
+						continue;
 					}
-					else if (nvmsh.Triangles[i].Verts[i_vrts].V_Position ==
-						nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[Index_FirstSiblingVert].V_Position
-					)
-					{//In this case, we have a vert that shares space with a sibling vert...
+
+					for (int i_vrts = 0; i_vrts < 3; i_vrts++)
+					{
+						if (nvmsh.Triangles[i].Verts[i_vrts].V_Position == V_Position)
+						{
+							temp_sharedVrtCoords.Add(nvmsh.Triangles[i].Verts[i_vrts].MyCoordinate);
+							//Debug.LogWarning("it happened a!");
+							//Go ahead and make the other relationships...
+							Relationships[(i * 3) + 0] = new LNX_VertexRelationship(
+								new LNX_Path(
+									CachedSurfaceNormal, new LNX_NavmeshHit(this, clcltdPthngNrml),
+									new LNX_NavmeshHit(nvmsh.Triangles[i].Verts[0], nvmsh.Triangles[i].V_PathingNormal)
+								)
+							);
+							Relationships[(i * 3) + 1] = new LNX_VertexRelationship(
+								new LNX_Path(
+									CachedSurfaceNormal, new LNX_NavmeshHit(this, clcltdPthngNrml),
+									new LNX_NavmeshHit(nvmsh.Triangles[i].Verts[1], nvmsh.Triangles[i].V_PathingNormal)
+								)
+							);
+							Relationships[(i * 3) + 2] = new LNX_VertexRelationship(
+								new LNX_Path(
+									CachedSurfaceNormal, new LNX_NavmeshHit(this, clcltdPthngNrml),
+									new LNX_NavmeshHit(nvmsh.Triangles[i].Verts[2], nvmsh.Triangles[i].V_PathingNormal)
+								)
+							);
+
+							break;
+						}
+						else if (nvmsh.Triangles[i].Verts[i_vrts].V_Position ==
+							nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[Index_FirstSiblingVert].V_Position
+						)
+						{//In this case, we have a vert that shares space with a sibling vert...
 						
-						//Debug.LogWarning("it happened b!");
+							//Debug.LogWarning("it happened b!");
 
-						Relationships[(i * 3) + i_vrts] = new LNX_VertexRelationship(
-							new LNX_Path(
-								CachedSurfaceNormal, 
-								new LNX_NavmeshHit(this, clcltdPthngNrml),
-								new LNX_NavmeshHit(nvmsh.Triangles[i].Verts[i_vrts], nvmsh.Triangles[i].V_PathingNormal)
-							)
-						);
-					}
-					else if (nvmsh.Triangles[i].Verts[i_vrts].V_Position ==
-						nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[Index_SecondSiblingVert].V_Position
-					)
-					{
-						//Debug.LogWarning("it happened c!");
+							Relationships[(i * 3) + i_vrts] = new LNX_VertexRelationship(
+								new LNX_Path(
+									CachedSurfaceNormal, 
+									new LNX_NavmeshHit(this, clcltdPthngNrml),
+									new LNX_NavmeshHit(nvmsh.Triangles[i].Verts[i_vrts], nvmsh.Triangles[i].V_PathingNormal)
+								)
+							);
+						}
+						else if (nvmsh.Triangles[i].Verts[i_vrts].V_Position ==
+							nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[Index_SecondSiblingVert].V_Position
+						)
+						{
+							//Debug.LogWarning("it happened c!");
 
-						Relationships[(i * 3) + i_vrts] = new LNX_VertexRelationship(
-							new LNX_Path(
-								CachedSurfaceNormal, 
-								new LNX_NavmeshHit(this, clcltdPthngNrml),
-								new LNX_NavmeshHit(nvmsh.Triangles[i].Verts[i_vrts], nvmsh.Triangles[i].V_PathingNormal)
-							)
-						);
+							Relationships[(i * 3) + i_vrts] = new LNX_VertexRelationship(
+								new LNX_Path(
+									CachedSurfaceNormal, 
+									new LNX_NavmeshHit(this, clcltdPthngNrml),
+									new LNX_NavmeshHit(nvmsh.Triangles[i].Verts[i_vrts], nvmsh.Triangles[i].V_PathingNormal)
+								)
+							);
+						}
 					}
 				}
+
+				SharedVertexCoordinates = temp_sharedVrtCoords.ToArray();
 			}
-			#endregion
 
-			for ( int i = 0; i < nvmsh.Triangles.Length; i++ ) //Note: Before optimization this look took about 1.6 seconds
+			if ( createDistalRelationships )
 			{
-				if( i == MyCoordinate.TrianglesIndex )
+				for ( int i = 0; i < nvmsh.Triangles.Length; i++ ) //Note: Before optimization this look took about 1.6 seconds
 				{
-					continue;
-				}
-
-				for (int i_vrts = 0; i_vrts < 3; i_vrts++)
-				{
-					if (nvmsh.Triangles[i].Verts[i_vrts].V_Position == V_Position ||
-						nvmsh.Triangles[i].Verts[i_vrts].V_Position == nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[Index_FirstSiblingVert].V_Position ||
-						nvmsh.Triangles[i].Verts[i_vrts].V_Position == nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[Index_SecondSiblingVert].V_Position
-					)
+					Debug.Log($"for tri{i}...");
+					if( i == MyCoordinate.TrianglesIndex )
 					{
-						continue; //because these are already logged above
+						Debug.Log($"bypassing because of tri index...");
+						continue;
 					}
 
-					Relationships[(i * 3) + i_vrts] = new LNX_VertexRelationship(
-						this, nvmsh.Triangles[i].Verts[i_vrts], nvmsh, true
-					);
+					for (int i_vrts = 0; i_vrts < 3; i_vrts++)
+					{
+						Debug.Log($"for vert{i_vrts}...");
+
+						if (nvmsh.Triangles[i].Verts[i_vrts].V_Position == V_Position ||
+							nvmsh.Triangles[i].Verts[i_vrts].V_Position == nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[Index_FirstSiblingVert].V_Position ||
+							nvmsh.Triangles[i].Verts[i_vrts].V_Position == nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[Index_SecondSiblingVert].V_Position
+						)
+						{
+							continue; //because these are already logged above
+						}
+
+						Relationships[(i * 3) + i_vrts] = new LNX_VertexRelationship(
+							this, nvmsh.Triangles[i].Verts[i_vrts], nvmsh, true
+						);
+					}
 				}
 			}
 
 			//Debug.Log($"creating the rest took: '{DateTime.Now.Subtract(dt_start)}'");
-
-			SharedVertexCoordinates = temp_sharedVrtCoords.ToArray();
 		}
 		
 		public Vector3 CalculatePathingNormal()
 		{
-			Debug.Log($"CalculatePathingNormal() relationships count: '{Relationships.Length}'");
 			Vector3 nrml = Vector3.Cross(
 				Vector3.Normalize(V_ToFirstSiblingVert),
 				Vector3.Normalize(V_ToSecondSiblingVert)
@@ -602,7 +566,6 @@ namespace LogansNavigationExtension
 			return Relationships[vertCoord.TrianglesIndex * 3 + (vertCoord.ComponentIndex)];
 		}
 
-
 		public LNX_ComponentCoordinate GetVertCoord_viaProjectionSweep(
 			Vector3 vProject, bool checkSelf )
 		{
@@ -693,28 +656,58 @@ namespace LogansNavigationExtension
 
 			return LNX_ComponentCoordinate.None;
 		}
-
-		public bool IsRelationshipCollectionValid()
+		public bool IsRelationshipCollectionValid( LNX_NavMesh nm )
 		{
-			if( Relationships == null || Relationships.Length <= 0 )
+			if( Relationships == null || Relationships.Length != (nm.Triangles.Length * 3) )
 			{
 				return false;
 			}
 
-			for( int i = 0; i < Relationships.Length; i++ )
+			return true;
+		}
+
+		public bool IsTriangleCompletelyRelationallyValid(int triIndx)
+		{
+			if ( !Relationships[triIndx * 3].AmValid )
 			{
-				//if( Relationships[i] == LNX_VertexRelationship.None )
-				if ( !Relationships[i].AmValid )
-				{
-					return false;
-				}
+				return false;
+			}
+			if ( !Relationships[(triIndx * 3) + 1].AmValid )
+			{
+				return false;
+			}
+			if ( !Relationships[(triIndx * 3) + 2].AmValid )
+			{
+				return false;
 			}
 
 			return true;
 		}
+
+		public float GetFurthestDistanceOnTriangle_viaRelational(int triIndx)
+		{
+			if( !IsTriangleCompletelyRelationallyValid(triIndx) )
+			{
+				Debug.LogError($"LNX ERROR! GetFurthestDistanceOnTriangle_viaRelational('{triIndx}') should " +
+					$"only be called if IsTriangleCompletelyRelationallyValid() returns true");
+				return -1f;
+			}
+
+			float runningBestDist = Relationships[triIndx * 3].PathDistance;
+			if( Relationships[(triIndx * 3) + 1].PathDistance < runningBestDist )
+			{
+				runningBestDist = Relationships[(triIndx * 3) + 1].PathDistance;
+			}
+			if (Relationships[(triIndx * 3) + 2].PathDistance < runningBestDist)
+			{
+				runningBestDist = Relationships[(triIndx * 3) + 2].PathDistance;
+			}
+
+			return runningBestDist;
+		}
 		#endregion
 
-		
+
 		public LNX_Path Ping( LNX_NavmeshHit endPoint, LNX_NavMesh nm, float maxAllowableDist, LNX_Path runningPath,
 			List<LNX_ComponentCoordinate> backstopverts = null
 		)
@@ -730,7 +723,9 @@ namespace LogansNavigationExtension
 
 			LNX_Path rcPath = new LNX_Path();
 
-			bool rcastRslt = nm.Raycast( new LNX_NavmeshHit(this, nm.Triangles[TriangleIndex].V_PathingNormal), endPoint, out rcPath );
+			bool rcastRslt = nm.Raycast( 
+				new LNX_NavmeshHit(this, nm.Triangles[TriangleIndex].V_PathingNormal), endPoint, out rcPath 
+			);
 
 			if (!rcastRslt)
 			{
@@ -777,13 +772,22 @@ namespace LogansNavigationExtension
 			for (int i = 0; i < vsblVrtPths.Count; i++)
 			{
 				LNX_Path path_continuationToVsblVrt = new LNX_Path(runningPath, vsblVrtPths[i]);
-
-				//todo: note: should I pass runingBestDist here instead of maxallowabledist considering maxallowabledist is now -1 at beginning?
+				
+				
 				LNX_Path p = nm.Triangles[vsblVrtPths[i].EndTriIndex].Verts[vsblVrtPths[i].EndHit.VertIndex].Ping(
 					endPoint, nm, runningBestDistance, path_continuationToVsblVrt, fwdBackstopVerts
 				);
+				
 
-
+				/*
+				LNX_MethodDebugReport rprt = new LNX_MethodDebugReport();
+				rprt.StartReport();
+				LNX_Path p = nm.Triangles[vsblVrtPths[i].EndTriIndex].Verts[vsblVrtPths[i].EndHit.VertIndex].Ping_dbg(
+					endPoint, nm, runningBestDistance, path_continuationToVsblVrt, ref rprt, fwdBackstopVerts
+				);
+				rprt.EndReport();
+				*/
+				
 				if (p != LNX_Path.None)
 				{
 					if (runningBestDistance > 0 && p.TotalDistance < runningBestDistance)
@@ -819,8 +823,12 @@ namespace LogansNavigationExtension
 
 				if (runningPath.TotalDistance + Vector3.Distance(V_Position, endPoint.Position) > maxAllowableDist)
 				{
-					rprt.Log_And_End_Method($"runningpath dist plus straight line distance too far. Short-circuiting...");
-					Debug.Log($"runningpath dist plus straight line distance too far. Short-circuiting...");
+					rprt.Log_And_End_Method($"runningpath dist ('{runningPath.TotalDistance}') plus straight line " +
+						$"distance ('{Vector3.Distance(V_Position, endPoint.Position)}') farther than " +
+						$"maxAllowableDist: '{maxAllowableDist}'. Short-circuiting...");
+					//Debug.Log($"runningpath dist ('{runningPath.TotalDistance}') plus straight line " +
+						//$"distance ('{Vector3.Distance(V_Position, endPoint.Position)}') farther than " +
+						//$"maxAllowableDist: '{maxAllowableDist}'. Short-circuiting...");
 					return LNX_Path.None;
 				}
 				else
@@ -833,16 +841,13 @@ namespace LogansNavigationExtension
 			LNX_Path rcPath = new LNX_Path();
 
 			rprt.StartAbbreviatedMethod($"Raycast({this}, {endPoint})");
-			bool rcastRslt = nm.Raycast_dbg(new LNX_NavmeshHit(this, nm.Triangles[TriangleIndex].V_PathingNormal), endPoint, out rcPath, ref rprt);
+			bool rcastRslt = nm.Raycast_dbg(
+				new LNX_NavmeshHit(this, nm.Triangles[TriangleIndex].V_PathingNormal), endPoint, out rcPath, ref rprt
+			);
 			rprt.EndAbbreviatedMethod($"Raycast({this}, {endPoint})");
 
 			if (!rcastRslt)
 			{
-				/*
-				LNX_Path p = new LNX_Path(runningPath, rcPath);
-				rprt.Log_And_End_Method($"endpoint WAS visible. Returning path with dist: '{p.TotalDistance}' made from appending raycast path to running path...");
-				return p;
-				*/
 				rprt.Log_And_End_Method($"endpoint WAS visible. Returning path made from appending raycast path to running path...");
 
 				return new LNX_Path(runningPath, rcPath);
@@ -881,7 +886,8 @@ namespace LogansNavigationExtension
 			{
 				rprt.Log_And_End_Method($"Ping() method tried to get visible verts from '{ToString()}', but failed to get any " +
 					$"that weren't part of backstop collection. Returning 'None' path...");
-
+				//Debug.Log($"Ping() method tried to get visible verts from '{ToString()}', but failed to get any " +
+					//$"that weren't part of backstop collection. Returning 'None' path...");
 				return LNX_Path.None;
 			}
 			else
@@ -906,25 +912,15 @@ namespace LogansNavigationExtension
 			{
 				rprt.Log($"for{i} ({vsblVrtPths[i].EndCoordinate_vert})...");
 
-				/*
-				if( (runningPath.TotalDistance + vsblVrtPths[i].TotalDistance) > maxAllowableDist )
-				{
-					rprt.Log($"path distances are already too long. Ignoring this one and continuing...");
-					continue;
-				}
-				*/
-
 				rprt.Log($"first, generating continuation path...");
 
 				LNX_Path path_continuationToVsblVrt = new LNX_Path(runningPath, vsblVrtPths[i]);
 
 				rprt.Log($"pinging from visible vert: '{vsblVrtPths[i].EndCoordinate_vert}'...");
 
-				//todo: note: should I pass runingBestDist here instead of maxallowabledist considering maxallowabledist is now -1 at beginning?
 				LNX_Path p = nm.Triangles[vsblVrtPths[i].EndTriIndex].Verts[vsblVrtPths[i].EndHit.VertIndex].Ping_dbg(
 					endPoint, nm, runningBestDistance, path_continuationToVsblVrt, ref rprt, fwdBackstopVerts
 				);
-
 
 				if (p == LNX_Path.None)
 				{
@@ -954,36 +950,39 @@ namespace LogansNavigationExtension
 
 
 		#region HELPERS --------------------------------------------------
-		public string GetCurrentInfoString()
+		public string GetCurrentInfoString(LNX_NavMesh nm )
 		{
-			return $"Vert.{nameof(SayCurrentInfo)}()\n" +
+			string rtrnString = $"{this}.GetCurrentInfoString()\n" +
 				$"{nameof(MyCoordinate)}: '{MyCoordinate}'\n" +
 				$"{nameof(V_Position)}: '{V_Position}'\n" +
 				$"{nameof(originalPosition)}: '{originalPosition}'\n" +
 
 				$"{nameof(v_triCenter_cached)}: '{v_triCenter_cached}'\n" +
 				$"{nameof(v_navmeshProjectionDirection_cached)}: '{v_navmeshProjectionDirection_cached}'\n" +
-				$"{nameof(Relationships)} count: '{Relationships.Length}\n" +
 				$"{nameof(Index_VisMesh_Vertices)}: '{Index_VisMesh_Vertices}'\n" +
-				$"{nameof(AngleAtBend)}: '{AngleAtBend}'\n" +
+
+				$"RELATIONAL---------\n" +
+
+				$"{GetRelationalString(nm)}\n";
+
+			if( IsRelationshipCollectionValid(nm) )
+			{
+				rtrnString += $"{nameof(AngleAtBend)}: '{AngleAtBend}'\n" +
 				$"{nameof(AngleAtBend_flattened)}: '{AngleAtBend_flattened}'\n" +
 
-				$"{nameof(Index_FirstSiblingVert)}: '{Index_FirstSiblingVert}'\n" +
-				$"{nameof(firstSiblingRelationshipIndex)}: '{firstSiblingRelationshipIndex}'\n" +
 				$"{nameof(V_ToFirstSiblingVert)}: '{V_ToFirstSiblingVert}'\n" +
 
-				$"{nameof(Index_SecondSiblingVert)}: '{Index_SecondSiblingVert}'\n" +
-				$"{nameof(secondSiblingRelationshipIndex)}: '{secondSiblingRelationshipIndex}'\n" +
 				$"{nameof(V_ToSecondSiblingVert)}: '{V_ToSecondSiblingVert}'\n" +
 
-				$"{nameof(SharedVertexCoordinates)} length: '{SharedVertexCoordinates.Length}'\n" +
-
 				$"";
+			}
+
+			return rtrnString;
 		}
 
-		public void SayCurrentInfo()
+		public void SayCurrentInfo(LNX_NavMesh nm)
 		{
-			Debug.Log( GetCurrentInfoString() );
+			Debug.Log( GetCurrentInfoString(nm) );
 		}
 
 		public override string ToString()
@@ -1088,23 +1087,35 @@ namespace LogansNavigationExtension
 			return returnString;
 		}
 
-		public string GetRelationalString()
+		public string GetRelationalString(LNX_NavMesh nm)
 		{
 			string s = $"Vert[{ComponentIndex}].{nameof(GetRelationalString)}()\n";
 
+			s += $"IsRelationshipCollectionValid(): " +
+				$"'{(IsRelationshipCollectionValid(nm) ? "true" : "relationships NOT valid! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n")}'\n";
 			try
 			{
-				if( Relationships != null )
+				if( Relationships == null )
 				{
-					s += $"{nameof(Relationships)} count: '{Relationships.Length}'\n";
-					s += $"{nameof(FirstSiblingRelationship)}: '{FirstSiblingRelationship}'\n" +
-					$"{nameof(SecondSiblingRelationship)}: '{SecondSiblingRelationship}'\n\n" +
-					$"{nameof(SharedVertexCoordinates)} count: '{SharedVertexCoordinates.Length}'\n" +
-					$"";
+					s += "relationships collection was null...\n";
+				}
+				else if ( Relationships.Length == 0 )
+				{
+					s += $"relationships length is 0...\n";
 				}
 				else
 				{
-					s += "relationships collection was null...\n";
+					s += $"{nameof(Relationships)} count: '{Relationships.Length}'\n" +
+					$"\n" +
+					$"{nameof(Index_FirstSiblingVert)}: '{Index_FirstSiblingVert}'\n" +
+					$"{nameof(FirstSiblingRelationship)}: '{FirstSiblingRelationship}'\n" +
+					$"{nameof(firstSiblingRelationshipIndex)}: '{firstSiblingRelationshipIndex}'\n" +
+
+					$"\n" +
+					$"{nameof(Index_SecondSiblingVert)}: '{Index_SecondSiblingVert}'\n" +
+					$"{nameof(SecondSiblingRelationship)}: '{SecondSiblingRelationship}'\n" +
+					$"{nameof(secondSiblingRelationshipIndex)}: '{secondSiblingRelationshipIndex}'\n\n" +
+					$"";
 				}
 
 				if (SharedVertexCoordinates == null)

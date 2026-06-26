@@ -11,7 +11,6 @@ namespace LogansNavigationExtension
 		public LNX_ComponentGrabber Grabber_Hit;
 
 		[Header("RESULTS")]
-		public List<LNX_ComponentCoordinate> ResultCoordinates;
 		public List<LNX_Path> ResultPaths;
 		public List<LNX_ComponentCoordinate> excludeCoords;
 
@@ -28,7 +27,6 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call RunOperation")]
 		public void RunOperation()
 		{
-			ResultCoordinates = new List<LNX_ComponentCoordinate>();
 			ResultPaths = new List<LNX_Path>();
 
 			DBG_Operation = $"{DateTime.Now}\n";
@@ -46,6 +44,8 @@ namespace LogansNavigationExtension
 			long totalTicks = 0;
 			if (!UseDebugVersion )
 			{
+				DBG_Operation += $"using regular version...\n";
+
 				System.Diagnostics.Stopwatch stpWtch = System.Diagnostics.Stopwatch.StartNew();
 				ResultPaths = _navmesh.GetVisibleVertsFromPoint(Grabber_Hit.CurrentHit, false, excludeCoords);
 				stpWtch.Stop();
@@ -64,8 +64,7 @@ namespace LogansNavigationExtension
 			}
 
 
-			DBG_Operation += $"{nameof(ResultCoordinates)} count: '{ResultCoordinates.Count}'\n" +
-				$"{nameof(ResultPaths)} count: '{ResultPaths.Count}'\n" +
+			DBG_Operation += $"{nameof(ResultPaths)} count: '{ResultPaths.Count}'\n" +
 				$"total ms: '{totalMs}', total ticks: '{totalTicks}'\n";
 		}
 
@@ -97,21 +96,6 @@ namespace LogansNavigationExtension
 			Gizmos.color = Color_lines;
 			float height = 0.5f;
 
-			if( ResultCoordinates != null && ResultCoordinates.Count > 0 )
-			{
-				for( int i = 0; i < ResultCoordinates.Count; i++ )
-				{
-					Gizmos.DrawLine(
-						Grabber_Hit.CurrentHit.Position,
-						_navmesh.GetVertexAtCoordinate(ResultCoordinates[i]).V_Position
-					);
-
-					Gizmos.DrawLine( 
-						_navmesh.GetVertexAtCoordinate(ResultCoordinates[i]).V_Position,
-						_navmesh.GetVertexAtCoordinate(ResultCoordinates[i]).V_Position + (Vector3.up * height)
-					);
-				}
-			}
 
 			if ( ResultPaths != null && ResultPaths.Count > 0 )
 			{

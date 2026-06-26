@@ -116,6 +116,17 @@ namespace LogansNavigationExtension
 			}
 			*/
 
+			if( Grabber_StartPos.CurrentHit == LNX_NavmeshHit.None )
+			{
+				DBG_Operation += $"start hit is none. Returning early...\n";
+				return;
+			}
+			if (Grabber_EndPos.CurrentHit == LNX_NavmeshHit.None)
+			{
+				DBG_Operation += $"end hit is none. Returning early...\n";
+				return;
+			}
+
 
 			long totalMs = 0;
 			long totalTicks = 0;
@@ -188,8 +199,14 @@ namespace LogansNavigationExtension
 
 			base.OnDrawGizmos();
 
-			DrawStandardFocusTriGizmos(StartTriangle, 0.01f, "", Color.magenta, true, 0.01f, false, false);
-			DrawStandardFocusTriGizmos(EndTriangle, 0.01f, "", Color.magenta, true, 0.01f, false, false);
+			if( StartTriangle != null )
+			{
+				DrawStandardFocusTriGizmos(StartTriangle, 0.01f, "", Color.magenta, true, 0.01f, false, false);
+			}
+			if (EndTriangle != null)
+			{
+				DrawStandardFocusTriGizmos(EndTriangle, 0.01f, "", Color.magenta, true, 0.01f, false, false);
+			}
 
 			//DBG_Operation += $"Commencing operation...\n";
 

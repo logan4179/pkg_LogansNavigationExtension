@@ -62,7 +62,7 @@ namespace LogansNavigationExtension
 			}
 		}
 
-		[TextArea(1,20)] public string DBG_class;
+		//[TextArea(1,20)] public string DBG_class;
 
 
 		private static LNX_Path none = new LNX_Path();
@@ -78,7 +78,7 @@ namespace LogansNavigationExtension
 		#region CONSTRUCTORS =====================================================
 		public LNX_Path( LNX_NavMesh nm )
 		{
-			DBG_class = $"ctorA\n";
+			//DBG_class = $"ctorA\n";
 			amStraight = true;
 			totalDistance_cached = 0f;
 			v_navmeshSurfaceProjection_cached = nm.GetSurfaceProjectionVector();
@@ -87,7 +87,7 @@ namespace LogansNavigationExtension
 
 		public LNX_Path( LNX_Path basePath )
 		{
-			DBG_class = $"ctorB\n" + basePath.DBG_class;
+			//DBG_class = $"ctorB\n" + basePath.DBG_class;
 
 			amStraight = basePath.AmStraight;
 			totalDistance_cached = basePath.totalDistance_cached;
@@ -106,7 +106,7 @@ namespace LogansNavigationExtension
 
 		public LNX_Path( LNX_Path basePathA, LNX_Path basePathB )//////////////////////
 		{
-			DBG_class = $"ctorC\n";
+			//DBG_class = $"ctorC\n";
 
 			amStraight = basePathA.AmStraight && basePathB.amStraight && basePathA.V_CrowFlies == basePathB.V_CrowFlies;
 			totalDistance_cached = basePathA.totalDistance_cached + basePathB.totalDistance_cached;
@@ -114,32 +114,32 @@ namespace LogansNavigationExtension
 
 			PathPoints = new List<LNX_NavmeshHit>();
 
-			DBG_class += $"adding pathpoints from constructor paths...\n";
+			//DBG_class += $"adding pathpoints from constructor paths...\n";
 
 			if ( basePathA.PathPoints != null && basePathA.PathPoints.Count > 1 )
 			{
-				DBG_class += $"basePathA points are valid with '{basePathA.PathPoints.Count}' pts...\n";
+				//DBG_class += $"basePathA points are valid with '{basePathA.PathPoints.Count}' pts...\n";
 				for ( int i = 0; i < basePathA.PathPoints.Count; i++)
 				{
-					DBG_class += $"for'{i}' ({basePathA.PathPoints[i]})...\n";
+					//DBG_class += $"for'{i}' ({basePathA.PathPoints[i]})...\n";
 					AddPoint( basePathA.PathPoints[i] );
 				}
 
-				DBG_class += $"finished adding basePathA's points. pt count: '{PointCount}'. dist: '{TotalDistance}'...\n";
+				//DBG_class += $"finished adding basePathA's points. pt count: '{PointCount}'. dist: '{TotalDistance}'...\n";
 			}
 
 			if (basePathB.PathPoints != null && basePathB.PathPoints.Count > 1)
 			{
-				DBG_class += $"basePathB points are valid with '{basePathB.PathPoints.Count}' pts...\n";
+				//DBG_class += $"basePathB points are valid with '{basePathB.PathPoints.Count}' pts...\n";
 
 				for (int i = 0; i < basePathB.PathPoints.Count; i++)
 				{
-					DBG_class += $"for'{i}' ({basePathB.PathPoints[i]})...\n";
+					//DBG_class += $"for'{i}' ({basePathB.PathPoints[i]})...\n";
 
 					if ( i == 0 && basePathA.PathPoints != null && basePathA.PathPoints.Count > 0 && 
 						basePathB.StartHit.Position == basePathA.EndHit.Position)
 					{
-						DBG_class += $"first pt of pathB is same as last logged point. continuing..\n";
+						//DBG_class += $"first pt of pathB is same as last logged point. continuing..\n";
 						continue;
 					}
 					else
@@ -147,14 +147,14 @@ namespace LogansNavigationExtension
 						AddPoint(basePathB.PathPoints[i]);
 					}
 				}
-				DBG_class += $"finished adding basePathA's points. pt count: '{PointCount}'. dist: '{TotalDistance}'...\n";
+				//DBG_class += $"finished adding basePathA's points. pt count: '{PointCount}'. dist: '{TotalDistance}'...\n";
 
 			}
 		}
 		
 		public LNX_Path( Vector3 nvmshProjectionDir, params LNX_NavmeshHit[] hits)
 		{
-			DBG_class = $"ctorD\n";
+			//DBG_class = $"ctorD\n";
 
 			PathPoints = hits.ToList();
 			totalDistance_cached = 0f;
@@ -192,7 +192,7 @@ namespace LogansNavigationExtension
 
 		public LNX_Path(Vector3 nvmshProjectionDir, List<LNX_NavmeshHit> hits)
 		{
-			DBG_class = $"ctorE\n";
+			//DBG_class = $"ctorE\n";
 
 			PathPoints = hits.ToList();
 			totalDistance_cached = 0f;
@@ -234,7 +234,8 @@ namespace LogansNavigationExtension
 
 		public void AddPoint( LNX_NavmeshHit pt )
 		{
-			DBG_class += $"AddPoint('{pt}')\n";
+			//Debug.Log($"string size: '{DBG_class.Length}'");
+			//DBG_class += $"AddPoint('{pt}')\n"; //<<<<<<<<<<<<<<<<<<<<<<<<<
 			if (PathPoints == null)
 			{
 				PathPoints = new List<LNX_NavmeshHit>();
@@ -244,13 +245,13 @@ namespace LogansNavigationExtension
 
 			if (PathPoints.Count <= 1)
 			{
-				DBG_class += $"pathpoints count <= 1...\n";
+				//DBG_class += $"pathpoints count <= 1...\n";
 				totalDistance_cached = 0f;
 				return;
 			}
 
 			totalDistance_cached += Vector3.Distance( PathPoints[PathPoints.Count - 2].Position, pt.Position );
-			DBG_class += $"adding dist: '{Vector3.Distance(PathPoints[PathPoints.Count - 2].Position, pt.Position)}', new totalDist: '{totalDistance_cached}'\n";
+			//DBG_class += $"adding dist: '{Vector3.Distance(PathPoints[PathPoints.Count - 2].Position, pt.Position)}', new totalDist: '{totalDistance_cached}'\n";
 
 			//determine straightness
 			if ( PathPoints.Count > 1 )
@@ -260,8 +261,8 @@ namespace LogansNavigationExtension
 					Vector3 firstDir_fltnd = LNX_Utils.FlatVector(PathPoints[1].Position - PathPoints[0].Position, pt.Normal).normalized; //todo: can get rid of these two variables, and just do the if statement with these expressions. Want to efficiency test doing this
 
 					Vector3 dirNew = LNX_Utils.FlatVector(pt.Position - PathPoints[PathPoints.Count - 2].Position, pt.Normal).normalized;//<<
-					DBG_class += $"determining straightness using firstDir: '{LNX_UnitTestUtilities.LongVectorString(firstDir_fltnd)}', " +
-						$"newDir: '{LNX_UnitTestUtilities.LongVectorString(dirNew)}'\n";
+					//DBG_class += $"determining straightness using firstDir: '{LNX_UnitTestUtilities.LongVectorString(firstDir_fltnd)}', " +
+						//$"newDir: '{LNX_UnitTestUtilities.LongVectorString(dirNew)}'\n";
 
 					/*
 					if (dirNew != firstDir_fltnd)
@@ -277,12 +278,12 @@ namespace LogansNavigationExtension
 					}*/
 					if( Vector3.Angle(firstDir_fltnd, dirNew) > 0f )
 					{
-						DBG_class += $"decided not equal. angDiff: '{Vector3.Angle(firstDir_fltnd, dirNew)}'. Changing amStraight to false...\n";
+						//DBG_class += $"decided not equal. angDiff: '{Vector3.Angle(firstDir_fltnd, dirNew)}'. Changing amStraight to false...\n";
 						amStraight = false;
 					}
 					else
 					{
-						DBG_class += $"decided AM equal...\n";
+						//DBG_class += $"decided AM equal...\n";
 					}
 				}
 			}

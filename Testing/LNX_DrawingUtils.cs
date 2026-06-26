@@ -78,7 +78,7 @@ namespace LogansNavigationExtension
 			if (drwNrmlLns)
 			{
 				Gizmos.DrawLine(tri.V_Center, tri.V_Center + (tri.v_sampledNormal * nrmlLineLength));
-				Handles.Label(tri.V_Center + (tri.v_sampledNormal * nrmlLineLength), $"N");
+				Handles.Label(tri.V_Center + (tri.v_sampledNormal * nrmlLineLength), $"SmpldNrm");
 
 				Gizmos.DrawLine(tri.V_Center, tri.V_Center + (tri.V_PathingNormal * nrmlLineLength));
 				Handles.Label(tri.V_Center + (tri.V_PathingNormal * nrmlLineLength), $"PN");

@@ -148,12 +148,6 @@ namespace LogansNavigationExtension
 			}
 		}
 
-		//[Header("DEBUG")]
-		//[TextArea(0,10)] public string DBG_Class;
-		//[SerializeField] private string DbgCalculateTriInfo;
-		/*[TextArea(0, 10)]*/
-		//[HideInInspector] public string DBG_Relationships;
-
 		public LNX_Triangle( int parallelIndex, int areaIndx, List<LNX_AtomicTriangle> atomicTris, LNX_NavMesh navMesh )
 		{
 			//DBG_Class = $"ctor '({DateTime.Now.ToString()})'...\n";
@@ -194,40 +188,35 @@ namespace LogansNavigationExtension
 			SampleNormal( navMesh ); 
 		}
 
-		public void RefreshMe( LNX_NavMesh nm, bool meshContinuityHasChanged )
+		public void RefreshMe( LNX_NavMesh nm, bool meshContinuityHasChanged, bool createDistalRels )
 		{
-			//Debug.Log($"{nameof(RefreshMe)}() on {this.ToString()} at {DateTime.Now}");
-			//DateTime dt_methodStart = DateTime.Now;
-			//case 1: a single vert on the mesh has been moved
-			//case 2: A tri has been added
-			//case 3: A tri has been deleted
+			Debug.Log($"RefreshMe() on {this.ToString()} at {DateTime.Now}");
 
-			if( dirtyFlag_repositionedVert )
+			if( meshContinuityHasChanged )
 			{
-				CalculateDerivedInfo( nm );
+				Verts[0].CreateRelationships(nm, true, true, createDistalRels);
+				Verts[1].CreateRelationships(nm, true, true, createDistalRels);
+				Verts[2].CreateRelationships(nm, true, true, createDistalRels);
 
-				SampleNormal( nm );
-				//note: Calling SampleNormal() here may seem expensive, but technically
-				//it seems necessary bc if the triangle changes it should probably resample
-			}
-
-			Verts[0].CreateRelationships(nm);
-			Verts[1].CreateRelationships(nm);
-			Verts[2].CreateRelationships(nm);
-
-			if ( meshContinuityHasChanged )
-			{
 				Edges[0].CreateRelationships(nm);
 				Edges[1].CreateRelationships(nm);
 				Edges[2].CreateRelationships(nm);
 			}
+			else
+			{
+				Verts[0].CreateRelationships( nm, dirtyFlag_repositionedVert, false, createDistalRels);
+				Verts[1].CreateRelationships(nm, dirtyFlag_repositionedVert, false, createDistalRels);
+				Verts[2].CreateRelationships(nm, dirtyFlag_repositionedVert, false, createDistalRels);
+			}
 		}
 
-		public void CalculateCompletelyVisibleTris(LNX_NavMesh nm, LNX_Edge[] terminalEdges )
+		public void CalculateCompletelyVisibleTris( LNX_NavMesh nm, LNX_Edge[] terminalEdges = null )
 		{
-			//DBG_FullyVisible = $"{this.ToString()}.{nameof(CalculateCompletelyVisibleTris)}() at {DateTime.Now}----------\n";
-			//Debug.Log(DBG_FullyVisible);
-			
+			if( terminalEdges == null ) //Note: making this parameter default-null, and therefor optional, means I can save a lot of time in 
+			{						//LNX_Navmesh.CalculateEfficiencyData() by caching this and continually supplying it to this method in the for loop
+				terminalEdges = nm.GetTerminalEdges(false);
+			}
+
 			List<int> temp_fullyVisTriIndices = new List<int>();
 
 			//DBG_FullyVisible += $"First, inspecting composite edges for visibility based on angle...\n";
@@ -235,12 +224,6 @@ namespace LogansNavigationExtension
 			// Start with composing edges....
 			for (int i = 0; i < 3; i++) //Add any shared edge triangles that have the correct angle...
 			{
-				/*DBG_FullyVisible += $"Edge{i}...\n" +
-					$"start shared angle: '{Edges[i].GetCombinedSharedEdgeAngle(nm, true)}'---\n" +
-					//$"{Edges[i].DBG_GetSharedAngle}\n" +
-					$"end shared angle: '{Edges[i].GetCombinedSharedEdgeAngle(nm, false)}'---\n" +
-					//$"{Edges[i].DBG_GetSharedAngle}\n" +
-					$"";*/
 				if
 				(
 					Edges[i].SharedEdgeCoordinate != LNX_ComponentCoordinate.None &&
@@ -248,7 +231,6 @@ namespace LogansNavigationExtension
 					Edges[i].GetCombinedSharedEdgeAngle(nm, false) <= 180f
 				)
 				{
-					//DBG_FullyVisible += $"Adding '{Edges[i].SharedEdgeCoordinate.TrianglesIndex}'...\n";
 					temp_fullyVisTriIndices.Add(Edges[i].SharedEdgeCoordinate.TrianglesIndex);
 
 					//Now check the next triangle out...
@@ -258,30 +240,20 @@ namespace LogansNavigationExtension
 						nm.GetVertexAtCoordinate(nm.GetEdge(Edges[i].SharedEdgeCoordinate).EndVertCoordinate).AngleAtBend_flattened <= 90f
 					)
 					{
-						//temp_fullyVisTriIndices.Add()
+						//temp_fullyVisTriIndices.Add() //todo: not sure why I commented this out. Does it not work? Need to check
 					}
-				}
-				else
-				{
-					//DBG_FullyVisible += $"not adding any indices..\n";
 				}
 			}
 			#endregion
-
-			//DBG_FullyVisible += $"\nNow checking the rest based on terminal edge obstruction. There are '{terminalEdges.Length}' terminal edges...\n";
-
-			//Debug.Log($"Now checking the rest based on terminal edge obstruction. There are '{terminalEdges.Length}' terminal edges...");
 
 			LNX_ComponentCoordinate obstructEdgeCheck = new LNX_ComponentCoordinate(53, 0);
 
 			for( int i = 0; i < nm.Triangles.Length; i++ )
 			{
-				//Debug.Log($"(for)tri '{i}'...\n");
-
 				#region SHORT-CIRCUITING ======================================================
 				if ( i == index_inCollection || temp_fullyVisTriIndices.Contains(i) )
 				{
-					//Debug.Log("Bypassing obstruction check because of index...");
+					//Debug.Log("Bypassing obstruction check because index is already logged...");
 					continue;
 				}
 
@@ -291,10 +263,9 @@ namespace LogansNavigationExtension
 					nm.Triangles[i].KnownFullyVisibleTriangleIndices.Length > 0
 				)
 				{
-					//Debug.LogWarning("shortcircuit");
 					if( nm.Triangles[i].HasIndexInKnownFullyVisibleList(index_inCollection) )
 					{
-						temp_fullyVisTriIndices.Add(i);
+						temp_fullyVisTriIndices.Add(i); //"reverse add"
 					}
 					continue;
 				}
@@ -366,28 +337,40 @@ namespace LogansNavigationExtension
 			//Debug.Log(DBG_FullyVisible);
 		}
 
+		/// <summary>
+		/// Clears the collection of "known fully visible" triangles making this triangle 
+		/// "unaware" of which triangles are definitely fully visible.
+		/// </summary>
 		public void ClearKnownVisible()
 		{
 			indices_knownFullyVisibleTriangles = new int[0];
 		}
 
+		//public string dbgDerived;
+
 		/// <summary>
 		/// Calculates/recalculates the information a tri derives about itself using the positions of it's vertices. 
 		/// Use this after you edit a tri's components.
 		/// </summary>
-		private void CalculateDerivedInfo( LNX_NavMesh nm )
+		public void CalculateDerivedInfo( LNX_NavMesh nm )
 		{
+			//dbgDerived = $"{this}\n";
 			#region CALCULATE PLANEFACE NORMAL------------------------------
 			//Note: This calculation needs to come before the edges calculate their derived info.
 			V_PlaneFaceNormal = Vector3.Cross(
 				Vector3.Normalize(Verts[0].V_Position - Verts[1].V_Position),
 				Vector3.Normalize(Verts[2].V_Position - Verts[1].V_Position)
 			).normalized;
-			if (Vector3.Dot(v_navmeshProjectionDirection_cached, V_PlaneFaceNormal) > Vector3.Dot(v_navmeshProjectionDirection_cached, -V_PlaneFaceNormal))
+			//dbgDerived += $"comparing '{Vector3.Dot(v_navmeshProjectionDirection_cached, V_PlaneFaceNormal)}' to '{Vector3.Dot(v_navmeshProjectionDirection_cached, -V_PlaneFaceNormal)}'...\n";
+			if (Vector3.Dot(v_navmeshProjectionDirection_cached, -V_PlaneFaceNormal) > 
+				Vector3.Dot(v_navmeshProjectionDirection_cached, V_PlaneFaceNormal))
 			{
+				//dbgDerived += "pfn was reversed\n";
 				V_PlaneFaceNormal = -V_PlaneFaceNormal;
 			}
 			#endregion
+
+			//dbgDerived += $"V_PlaneFaceNormal: '{V_PlaneFaceNormal}'\n";
 
 			Verts[0].CalculateDerivedInfo(this, nm);
 			Verts[1].CalculateDerivedInfo(this, nm);
@@ -396,6 +379,8 @@ namespace LogansNavigationExtension
 			Edges[0].CalculateDerivedInfo(this, nm );
 			Edges[1].CalculateDerivedInfo(this, nm );
 			Edges[2].CalculateDerivedInfo(this, nm );
+
+			//Debug.Log(dbgDerived);
 		}
 
 		public void SampleNormal( LNX_NavMesh nm )
@@ -684,6 +669,7 @@ namespace LogansNavigationExtension
 
 		public bool ProjectThroughToPerimeter(LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, out LNX_NavmeshHit perimHit, bool returnHitOnAdjacenttTriangle = false)
 		{
+			Debug.Log($"'{this}'.ProjectThroughToPerimeter(startHit: '{startHit}', endHit: '{endHit}')");
 			perimHit = LNX_NavmeshHit.None;
 
 			#region SHORT-CIRCUIT =======================================================================
@@ -719,6 +705,8 @@ namespace LogansNavigationExtension
 				TouchesVertAtCoordinate_ViaRelational(endHit.TriangleIndex, endHit.VertIndex, out touchedVert)
 			)
 			{
+				//todo: need to check that projection is in center sweep...
+
 				LNX_ComponentCoordinate rel = Verts[touchedVert].GetVertCoord_viaProjectionSweep(v_projection_flat, false);
 
 				if (rel == LNX_ComponentCoordinate.None)
@@ -742,9 +730,18 @@ namespace LogansNavigationExtension
 			#region HANDLE STARTHIT BEING ON A VERT =============================
 			if (startHit.VertIndex != -1)
 			{
+				if(Verts[startHit.VertIndex].Relationships == null)
+				{
+					Debug.Log($"tri{Index_inCollection}.vert{startHit.VertIndex} relationships null");
+				}
+				else
+				{
+					Debug.Log($"tri{Index_inCollection}.vert{startHit.VertIndex} relationships length: '{Verts[startHit.VertIndex].Relationships.Length}'");
+				}
 				if (v_projection_flat == Verts[startHit.VertIndex].V_ToFirstSiblingVert_flat)
 				{
-					LNX_ComponentCoordinate rel = Verts[Verts[startHit.VertIndex].Index_FirstSiblingVert].GetVertCoord_viaProjectionSweep(v_projection_flat, false);
+					LNX_ComponentCoordinate rel = Verts[Verts[startHit.VertIndex].Index_FirstSiblingVert].GetVertCoord_viaProjectionSweep(
+						v_projection_flat, false);
 
 					if (rel == LNX_ComponentCoordinate.None)
 					{
@@ -752,22 +749,25 @@ namespace LogansNavigationExtension
 							Verts[Verts[startHit.VertIndex].Index_FirstSiblingVert],
 							V_PathingNormal
 						);
+
 						return true;
 					}
 					else
 					{
 						perimHit = new LNX_NavmeshHit(
-							endHit.Position, v_navmeshProjectionDirection_cached,
+							Verts[Verts[startHit.VertIndex].Index_FirstSiblingVert].V_Position, v_navmeshProjectionDirection_cached,
 							rel.TrianglesIndex,
 							rel.ComponentIndex,
 							-1
 						);
+
 						return true;
 					}
 				}
 				else if (v_projection_flat == Verts[startHit.VertIndex].V_ToSecondSiblingVert_flat)
 				{
-					LNX_ComponentCoordinate rel = Verts[Verts[startHit.VertIndex].Index_SecondSiblingVert].GetVertCoord_viaProjectionSweep(v_projection_flat, false);
+					LNX_ComponentCoordinate rel = Verts[Verts[startHit.VertIndex].Index_SecondSiblingVert].GetVertCoord_viaProjectionSweep(
+						v_projection_flat, false);
 
 					if (rel == LNX_ComponentCoordinate.None)
 					{
@@ -775,16 +775,18 @@ namespace LogansNavigationExtension
 							Verts[Verts[startHit.VertIndex].Index_SecondSiblingVert],
 							V_PathingNormal
 						);
+
 						return true;
 					}
 					else
 					{
 						perimHit = new LNX_NavmeshHit(
-							endHit.Position, v_navmeshProjectionDirection_cached,
+							Verts[Verts[startHit.VertIndex].Index_SecondSiblingVert].V_Position, v_navmeshProjectionDirection_cached,
 							rel.TrianglesIndex,
 							rel.ComponentIndex,
 							-1
 						);
+
 						return true;
 					}
 				}
@@ -811,7 +813,7 @@ namespace LogansNavigationExtension
 										 //on the vert class to derive the pathing normal based on the relationships
 						Edges[startHit.VertIndex].AmTerminal ? index_inCollection : Edges[startHit.VertIndex].SharedEdgeCoordinate.TrianglesIndex,
 						-1,
-						startHit.VertIndex
+						Edges[startHit.VertIndex].AmTerminal ? startHit.VertIndex : Edges[startHit.VertIndex].SharedEdgeCoordinate.ComponentIndex
 					);
 
 					return true;
@@ -827,7 +829,7 @@ namespace LogansNavigationExtension
 					else
 					{
 						perimHit = new LNX_NavmeshHit(
-							endHit.Position, v_navmeshProjectionDirection_cached,
+							startHit.Position, v_navmeshProjectionDirection_cached,
 							rel.TrianglesIndex,
 							rel.ComponentIndex,
 							-1
@@ -851,11 +853,10 @@ namespace LogansNavigationExtension
 				{
 					crntEdgeHit = startHit;
 				}
-				else if ( !Edges[i].DoesProjectionIntersectEdge(startHit.Position, endHit.Position, out crntEdgeHit, false, false))
+				else if (!Edges[i].DoesProjectionIntersectEdge(startHit.Position, endHit.Position, out crntEdgeHit, false, false))
 				{
 					continue;
 				}
-
 
 				//at this point, check if the dot of the projection and this edge's cross vector are opposite.
 				//if so, keep checking the next edges
@@ -1710,6 +1711,30 @@ namespace LogansNavigationExtension
 		}
 		#endregion
 
+		#region	RELATIONAL =======================================================
+		public float GetFurthestDistanceOnTriangle_viaRelational(int triIndx)
+		{
+			if (!IsTriangleCompletelyRelationallyValid(triIndx))
+			{
+				Debug.LogError($"LNX ERROR! GetFurthestDistanceOnTriangle_viaRelational('{triIndx}') should " +
+					$"only be called if IsTriangleCompletelyRelationallyValid() returns true");
+				return -1f;
+			}
+
+			float runningBestDist = Relationships[triIndx * 3].PathDistance;
+			if (Relationships[(triIndx * 3) + 1].PathDistance < runningBestDist)
+			{
+				runningBestDist = Relationships[(triIndx * 3) + 1].PathDistance;
+			}
+			if (Relationships[(triIndx * 3) + 2].PathDistance < runningBestDist)
+			{
+				runningBestDist = Relationships[(triIndx * 3) + 2].PathDistance;
+			}
+
+			return runningBestDist;
+		}
+		#endregion
+
 		public void LoadWithSerializedData(LNX_SerializedTriData data )
 		{
 			indices_knownFullyVisibleTriangles = data.KnownFullyVisibleTriangleIndices;
@@ -1753,9 +1778,9 @@ namespace LogansNavigationExtension
 				$"{completelyVisibleTrisSTring}\n\n" +
 
 				$"Vertices---------------------\n" +
-				$"{Verts[0].GetCurrentInfoString()}\n" +
-				$"{Verts[1].GetCurrentInfoString()}\n" +
-				$"{Verts[2].GetCurrentInfoString()}\n\n" +
+				$"{Verts[0].GetCurrentInfoString(nm)}\n" +
+				$"{Verts[1].GetCurrentInfoString(nm)}\n" +
+				$"{Verts[2].GetCurrentInfoString(nm)}\n\n" +
 
 				$"Edges---------------------\n" +
 				$"{Edges[0].GetCurrentInfoString(nm)}\n" +
@@ -1894,16 +1919,16 @@ namespace LogansNavigationExtension
 			return returnString;
 		}
 
-		public string GetRelationalString()
+		public string GetRelationalString(LNX_NavMesh nm)
 		{
-			return $"LNX_Triangle[{Index_inCollection}].{nameof(GetRelationalString)}()\n" +
+			return $"LNX_Triangle[{Index_inCollection}].GetRelationalString()\n" +
 				$"Verts----\n" +
 				$"vert0\n" +
-				$"{Verts[0].GetRelationalString()}\n" +
+				$"{Verts[0].GetRelationalString(nm)}\n" +
 				$"vert1\n" +
-				$"{Verts[1].GetRelationalString()}\n" +
+				$"{Verts[1].GetRelationalString(nm)}\n" +
 				$"vert2\n" +
-				$"{Verts[2].GetRelationalString()}\n" +
+				$"{Verts[2].GetRelationalString(nm)}\n" +
 
 				$"\nEdges----\n" +
 				$"edge0\n" +

@@ -177,12 +177,83 @@ namespace LogansNavigationExtension
 			Debug.Log($"{nameof(GoToProblem)}()...");
 		}
 
+		[ContextMenu("z call DoEet()")]
+		public void DoEet()
+		{
+			Vector3 v_Cross_flat_A = LNX_Utils.FlatVector //the old way I was doing it...
+			(
+				_navmesh.Triangles[43].Edges[1].v_Cross, _navmesh.Triangles[43].V_NavmeshProjectionDirection_cached
+			).normalized;
+			Debug.Log($"Current val: '{_navmesh.Triangles[43].Edges[1].v_Cross_flat}'");
+
+			Debug.Log($"a) '{LNX_UnitTestUtilities.LongVectorString(v_Cross_flat_A)}'");
+
+			Vector3 v_Cross_flat_B = Vector3.Cross(_navmesh.Triangles[43].Edges[1].V_StartToEnd_flattened, 
+				_navmesh.Triangles[43].V_NavmeshProjectionDirection_cached);
+			Debug.Log($"b) '{LNX_UnitTestUtilities.LongVectorString(v_Cross_flat_B)}'");
+
+			Debug.Log($"angA: '{Vector3.Angle(v_Cross_flat_A, _navmesh.Triangles[43].Edges[1].V_StartToEnd_flattened)}', " +
+				$"B: '{Vector3.Angle(v_Cross_flat_A, _navmesh.Triangles[43].Edges[1].V_EndToStart_flattened)}'"
+			);
+
+			Debug.Log($"angA: '{Vector3.Angle(v_Cross_flat_B, _navmesh.Triangles[43].Edges[1].V_StartToEnd_flattened)}', " +
+				$"B: '{Vector3.Angle(v_Cross_flat_B, _navmesh.Triangles[43].Edges[1].V_EndToStart_flattened)}'"
+			);
+		}
+
 		[ContextMenu("z SetDebuggerFocusToMine()")]
 		public void SetDebuggerFocusToMine()
 		{
 			Debug.Log($"{nameof(SetDebuggerFocusToMine)}()...");
 
 			_debugger.Grabber_FocusTri.transform.position = _navmesh.Triangles[CurrentlyGrabbedEdge.TriangleIndex].V_Center;
+		}
+
+		[ContextMenu("z call RunOperation()")]
+		public void RunOperation()
+		{
+			CurrentProjectedHit = LNX_NavmeshHit.None;
+			CurrentProjectionResult = false;
+			mthdDbg_Report.Clear();
+
+			DBG_Operation = $"{DateTime.Now}\n";
+
+			DBG_Operation += $"using origin param: '{StartPointGrabber.transform.position}', " +
+				$"dest param: '{EndPointGrabber.transform.position}'\n" +
+				$"using edge: '{CurrentlyGrabbedEdge}'\n" +
+				$"Commencing edge project...\n";
+
+			if (UseDebugVersion)
+			{
+				DBG_Operation += $"(using debug version...)\n";
+				mthdDbg_Report.StartReport();
+
+				CurrentProjectionResult =
+				CurrentlyGrabbedEdge.DoesProjectionIntersectEdge_dbg
+				(
+					StartPointGrabber.transform.position,
+					EndPointGrabber.transform.position,
+					out CurrentProjectedHit,
+					ref mthdDbg_Report,
+					true
+				);
+
+				mthdDbg_Report.EndReport();
+			}
+			else
+			{
+				CurrentProjectionResult =
+					CurrentlyGrabbedEdge.DoesProjectionIntersectEdge
+					(
+						StartPointGrabber.transform.position,
+						EndPointGrabber.transform.position,
+						out CurrentProjectedHit,
+						false
+					);
+			}
+
+			DBG_Operation += $"result: '{CurrentProjectionResult}'\n" +
+				$"projected Hit: '{CurrentProjectedHit}'";
 		}
 
 		protected override void OnDrawGizmos()
@@ -208,53 +279,15 @@ namespace LogansNavigationExtension
 			}
 
 			if( 
-				StartPointGrabber.RecalculatedLastFrame ||
-				EndPointGrabber.RecalculatedLastFrame ||
-				EdgeGrabber.RecalculatedLastFrame
+				AutoRun &&
+				(
+					StartPointGrabber.RecalculatedLastFrame ||
+					EndPointGrabber.RecalculatedLastFrame ||
+					EdgeGrabber.RecalculatedLastFrame
+				)
 			)
 			{
-				CurrentProjectedHit = LNX_NavmeshHit.None;
-				CurrentProjectionResult = false;
-				mthdDbg_Report.Clear();
-
-				DBG_Operation = $"{DateTime.Now}\n";
-
-				DBG_Operation += $"using origin param: '{StartPointGrabber.transform.position}', " +
-					$"dest param: '{EndPointGrabber.transform.position}'\n" +
-					$"using edge: '{CurrentlyGrabbedEdge}'\n" +
-					$"Commencing edge project...\n";
-
-				if( UseDebugVersion )
-				{
-					DBG_Operation += $"(using debug version...)\n";
-					mthdDbg_Report.StartReport();
-
-					CurrentProjectionResult =
-					CurrentlyGrabbedEdge.DoesProjectionIntersectEdge_dbg
-					(
-						StartPointGrabber.transform.position,
-						EndPointGrabber.transform.position,
-						out CurrentProjectedHit,
-						ref mthdDbg_Report,
-						true
-					);
-
-					mthdDbg_Report.EndReport();
-				}
-				else
-				{
-					CurrentProjectionResult =
-						CurrentlyGrabbedEdge.DoesProjectionIntersectEdge
-						(
-							StartPointGrabber.transform.position,
-							EndPointGrabber.transform.position,
-							out CurrentProjectedHit,
-							false
-						);
-				}
-
-				DBG_Operation += $"result: '{CurrentProjectionResult}'\n" +
-					$"projected Hit: '{CurrentProjectedHit}'";
+				RunOperation();
 			}
 
 			DrawStandardFocusTriGizmos(_navmesh.Triangles[CurrentlyGrabbedEdge.TriangleIndex], 1f, $"tri{CurrentlyGrabbedEdge.TriangleIndex}", Color.magenta);
