@@ -17,12 +17,15 @@ namespace LogansNavigationExtension
 		[Header("OPTIONS")]
 		public bool UseDebugVersionOfMethod = true;
 		public bool AutoGenerate = true;
+		public bool IncludeFringeVertsParam = true;
 
 		[Header("RESULTS")]
-		List<LNX_Path> ResultPaths = new List<LNX_Path>();
+		public List<LNX_Path> ResultPaths = new List<LNX_Path>();
+		public List<LNX_NavmeshHit> ResultHits = new List<LNX_NavmeshHit>();
 
 		[Header("DEBUG")]
 		public Color Color_lines;
+		public bool DrawResultVertLabels;
 
 
 		#region HELPERS -------------------------------------
@@ -53,10 +56,11 @@ namespace LogansNavigationExtension
 			CurrentVert.SayAllRelationships();
 		}
 
-		[ContextMenu("z call GetVisible()")]
-		public void GetVisible()
+		[ContextMenu("z call RunOperation()")]
+		public void RunOperation()
 		{
 			ResultPaths = new List<LNX_Path>();
+			ResultHits = new List<LNX_NavmeshHit>();
 			DBG_Operation = $"starting operation at: '{System.DateTime.Now}'...\n";
 
 			if( Grabber_Vert.CurrentHit == LNX_NavmeshHit.None )
@@ -72,6 +76,7 @@ namespace LogansNavigationExtension
 			}
 
 			DBG_Operation += $"using currentvert: '{CurrentVert}'...\n" +
+				$"using exclude vert count: '{ExcludeVerts.Count}'...\n" +
 				$"Commencing operation...\n";
 			DateTime dtStart;
 			double totalMs = 0;
@@ -81,7 +86,7 @@ namespace LogansNavigationExtension
 				mthdDbg_Report.StartReport();
 				dtStart = DateTime.Now; ;
 				ResultPaths = _navmesh.GetVisibleVertsFromVert_dbg(
-					CurrentVert, ref mthdDbg_Report, true, ExcludeVerts
+					CurrentVert, ref mthdDbg_Report, IncludeFringeVertsParam, ExcludeVerts
 				);
 				totalMs = DateTime.Now.Subtract(dtStart).TotalMilliseconds;
 				mthdDbg_Report.EndReport();
@@ -90,8 +95,19 @@ namespace LogansNavigationExtension
 			{
 				DBG_Operation += $"using regular version (as opposed to debug version)...\n";
 				dtStart = DateTime.Now; ;
-				ResultPaths = _navmesh.GetVisibleVertsFromVert(CurrentVert, true, ExcludeVerts);
+				ResultPaths = _navmesh.GetVisibleVertsFromVert(CurrentVert, IncludeFringeVertsParam, ExcludeVerts);
 				totalMs = DateTime.Now.Subtract(dtStart).TotalMilliseconds;
+			}
+
+			if (ResultPaths.Count > 0)
+			{
+				DBG_Operation += $"\n====================\n";
+				for (int i = 0; i < ResultPaths.Count; i++)
+				{
+					//ResultHits.Add(ResultPaths[i].EndHit);
+					DBG_Operation += $"{ResultPaths[i].EndHit}\n";
+				}
+				DBG_Operation += $"\n====================\n";
 			}
 
 			DBG_Operation += $"{nameof(ResultPaths)} count: '{ResultPaths.Count}'\n" +
@@ -128,7 +144,7 @@ namespace LogansNavigationExtension
 
 			if (Grabber_Vert.RecalculatedLastFrame && AutoGenerate )
 			{
-				GetVisible();
+				RunOperation();
 			}
 
 			Gizmos.color = Color_lines;
@@ -145,6 +161,11 @@ namespace LogansNavigationExtension
 					_navmesh.Triangles[ResultPaths[i].EndTriIndex].Verts[ResultPaths[i].EndHit.VertIndex].V_Position + 
 					(Vector3.up * height)
 				);
+
+				if (DrawResultVertLabels)
+				{
+					Handles.Label(ResultPaths[i].EndPosition + (Vector3.up * height), ResultPaths[i].EndCoordinate_vert.ToString());
+				}
 			}
 
 			Gizmos.color = Color.red;

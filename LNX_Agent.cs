@@ -127,7 +127,7 @@ namespace LogansNavigationExtension.AI
 
 		[Header("PATHING")]
 		[SerializeField, Tooltip("Distance within this agent will consider itself 'close enough' and start towards the next point")] 
-        private float advanceToNextPointDistance;
+        private float CloseEnoughDistance;
 
 		[Header("ROTATION")]
 		[SerializeField] private float rotationSpeed;

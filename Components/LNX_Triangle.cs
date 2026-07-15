@@ -188,25 +188,22 @@ namespace LogansNavigationExtension
 			SampleNormal( navMesh ); 
 		}
 
-		public void RefreshMe( LNX_NavMesh nm, bool meshContinuityHasChanged, bool createDistalRels )
+		public void RefreshMe( LNX_NavMesh nm, bool meshContinuityHasChanged )
 		{
-			Debug.Log($"RefreshMe() on {this.ToString()} at {DateTime.Now}");
+			//Debug.Log($"RefreshMe() on {this.ToString()} at {DateTime.Now}");
+
+			Verts[0].CreateRelationships( nm, dirtyFlag_repositionedVert || meshContinuityHasChanged, 
+				dirtyFlag_repositionedVert || meshContinuityHasChanged, false );
+			Verts[1].CreateRelationships( nm, dirtyFlag_repositionedVert || meshContinuityHasChanged, 
+				dirtyFlag_repositionedVert || meshContinuityHasChanged, false );
+			Verts[2].CreateRelationships( nm, dirtyFlag_repositionedVert || meshContinuityHasChanged, 
+				dirtyFlag_repositionedVert || meshContinuityHasChanged, false );
 
 			if( meshContinuityHasChanged )
 			{
-				Verts[0].CreateRelationships(nm, true, true, createDistalRels);
-				Verts[1].CreateRelationships(nm, true, true, createDistalRels);
-				Verts[2].CreateRelationships(nm, true, true, createDistalRels);
-
 				Edges[0].CreateRelationships(nm);
 				Edges[1].CreateRelationships(nm);
 				Edges[2].CreateRelationships(nm);
-			}
-			else
-			{
-				Verts[0].CreateRelationships( nm, dirtyFlag_repositionedVert, false, createDistalRels);
-				Verts[1].CreateRelationships(nm, dirtyFlag_repositionedVert, false, createDistalRels);
-				Verts[2].CreateRelationships(nm, dirtyFlag_repositionedVert, false, createDistalRels);
 			}
 		}
 
@@ -669,7 +666,7 @@ namespace LogansNavigationExtension
 
 		public bool ProjectThroughToPerimeter(LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, out LNX_NavmeshHit perimHit, bool returnHitOnAdjacenttTriangle = false)
 		{
-			Debug.Log($"'{this}'.ProjectThroughToPerimeter(startHit: '{startHit}', endHit: '{endHit}')");
+			//Debug.Log($"'{this}'.ProjectThroughToPerimeter(startHit: '{startHit}', endHit: '{endHit}')");
 			perimHit = LNX_NavmeshHit.None;
 
 			#region SHORT-CIRCUIT =======================================================================
@@ -730,14 +727,16 @@ namespace LogansNavigationExtension
 			#region HANDLE STARTHIT BEING ON A VERT =============================
 			if (startHit.VertIndex != -1)
 			{
+				/*
 				if(Verts[startHit.VertIndex].Relationships == null)
 				{
 					Debug.Log($"tri{Index_inCollection}.vert{startHit.VertIndex} relationships null");
 				}
 				else
 				{
-					Debug.Log($"tri{Index_inCollection}.vert{startHit.VertIndex} relationships length: '{Verts[startHit.VertIndex].Relationships.Length}'");
+					Debug.Log($"tri{Index_inCollection}.vert{startHit.VertIndex} relationships length: '{Verts[startHit.VertIndex].Relationships.Length}'"); //<<<<<<<<<1
 				}
+				*/
 				if (v_projection_flat == Verts[startHit.VertIndex].V_ToFirstSiblingVert_flat)
 				{
 					LNX_ComponentCoordinate rel = Verts[Verts[startHit.VertIndex].Index_FirstSiblingVert].GetVertCoord_viaProjectionSweep(
@@ -1714,24 +1713,45 @@ namespace LogansNavigationExtension
 		#region	RELATIONAL =======================================================
 		public float GetFurthestDistanceOnTriangle_viaRelational(int triIndx)
 		{
-			if (!IsTriangleCompletelyRelationallyValid(triIndx))
+			if( triIndx == index_inCollection )
 			{
-				Debug.LogError($"LNX ERROR! GetFurthestDistanceOnTriangle_viaRelational('{triIndx}') should " +
-					$"only be called if IsTriangleCompletelyRelationallyValid() returns true");
+				Debug.LogError($"LNX ERROR! GetFurthestDistanceOnTriangle_viaRelational() was supplied index: " +
+					$"'{triIndx}', which is the same index as calling triangle.");
 				return -1f;
 			}
 
-			float runningBestDist = Relationships[triIndx * 3].PathDistance;
-			if (Relationships[(triIndx * 3) + 1].PathDistance < runningBestDist)
+			float runningBestDist = Verts[0].GetFurthestDistanceOnTriangle_viaRelational(triIndx);
+			float val = Verts[1].GetFurthestDistanceOnTriangle_viaRelational(triIndx);
+			if (val > runningBestDist)
 			{
-				runningBestDist = Relationships[(triIndx * 3) + 1].PathDistance;
+				runningBestDist = val;
 			}
-			if (Relationships[(triIndx * 3) + 2].PathDistance < runningBestDist)
+
+			val = Verts[2].GetFurthestDistanceOnTriangle_viaRelational(triIndx);
+			if (val > runningBestDist)
 			{
-				runningBestDist = Relationships[(triIndx * 3) + 2].PathDistance;
+				runningBestDist = val;
 			}
 
 			return runningBestDist;
+		}
+
+		public bool IsTriangleCompletelyRelationallyValid(int triIndx)
+		{
+			if( !Verts[0].IsTriangleCompletelyRelationallyValid(triIndx) )
+			{
+				return false;
+			}
+			if (!Verts[1].IsTriangleCompletelyRelationallyValid(triIndx))
+			{
+				return false;
+			}
+			if (!Verts[2].IsTriangleCompletelyRelationallyValid(triIndx))
+			{
+				return false;
+			}
+
+			return true;
 		}
 		#endregion
 

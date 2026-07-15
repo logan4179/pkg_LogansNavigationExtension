@@ -56,6 +56,13 @@ namespace LogansNavigationExtension
 		/// </summary>
 		public int TriangulationVerticesIndex;
 		*/
+		public bool AmValid
+		{
+			get
+			{
+				return TrianglesIndex > -1 && ComponentIndex > -1;
+			}
+		}
 
 		private static LNX_ComponentCoordinate none = new LNX_ComponentCoordinate()
 		{
@@ -124,7 +131,7 @@ namespace LogansNavigationExtension
 
 		public override string ToString()
 		{
-			return $"[{TrianglesIndex}][{ComponentIndex}]";
+			return this == LNX_ComponentCoordinate.none ? "None" : $"[{TrianglesIndex}][{ComponentIndex}]";
 		}
 	}
 
@@ -442,12 +449,11 @@ namespace LogansNavigationExtension
 
 		#endregion
 
-
 		public bool AmValid //Started using this bc for some reason, having a static LNX_VertexRelationship.None was causing problems in in LNX_Vertex.CalculateDerivedInfo().
 		{
 			get
 			{
-				return RelatedVertCoordinate != LNX_ComponentCoordinate.None && PathTo != LNX_Path.None;
+				return RelatedVertCoordinate.AmValid && PathTo.AmValid;
 			}
 		}
 
@@ -456,68 +462,100 @@ namespace LogansNavigationExtension
 
 
 		#region CONSTRUCTORS ======================================================================
-
 		public LNX_VertexRelationship(LNX_Vertex myVert, LNX_Vertex relatedVert, LNX_NavMesh nvMsh, bool allowBorrowing = false)
 		{
 			StringBuilder rprt = new StringBuilder($"LNX_VertexRelationship ctor()");
+			Debug.Log($"LNX_VertexRelationship ctor('{myVert}', '{relatedVert}')");
 
 			DateTime dt_start = DateTime.Now;
 
 			RelatedVertCoordinate = relatedVert.MyCoordinate;
 			PathTo = LNX_Path.None;
 
-			if (myVert == null && relatedVert == null)
+			if (myVert == null || relatedVert == null)
 			{
+				Debug.LogError($"LNX ERROR! One of the supplied verts in vertex relationship constructor was null. " +
+					$"myVert null: '{myVert == null}', relatedVert null: '{relatedVert == null}'");
 				RelatedVertCoordinate = LNX_ComponentCoordinate.None;
 				return;
 			}
 
-			if (myVert.V_Position != relatedVert.V_Position)
+			if (myVert.V_Position == relatedVert.V_Position)
 			{
-				if (myVert.MyCoordinate.TrianglesIndex == relatedVert.MyCoordinate.TrianglesIndex ||
-					relatedVert.SharesVertSpace(nvMsh.Triangles[myVert.Coordinate_FirstSibling.TrianglesIndex].Verts[myVert.Coordinate_FirstSibling.ComponentIndex]) ||
-					relatedVert.SharesVertSpace(nvMsh.Triangles[myVert.Coordinate_SecondSibling.TrianglesIndex].Verts[myVert.Coordinate_SecondSibling.ComponentIndex])
-				) //"If we're siblings". More performant than using the AreSiblings() method
+				Debug.LogWarning($"happened A, positions are the same...");
+				PathTo = new LNX_Path
+				(
+					nvMsh.GetSurfaceProjectionVector(),
+					new LNX_NavmeshHit(relatedVert, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal)
+				);
+				return;
+			}
+
+			if ( allowBorrowing && relatedVert.IsRelationshipCollectionValid(nvMsh) )
+			{
+				Debug.LogWarning($"happened B. trying to make reversed relationship...");
+
+				LNX_VertexRelationship borrowRel = relatedVert.GetRelationship(myVert.MyCoordinate);
+
+				if ( borrowRel.AmValid )
 				{
-					rprt.AppendLine($"Siblings, or in same spot as siblings");
-					PathTo = new LNX_Path
-					(
-						nvMsh.GetSurfaceProjectionVector(),
-						new LNX_NavmeshHit(myVert, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal),
-						new LNX_NavmeshHit(relatedVert, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal)
-					);
+					Debug.Log($"borrowed rel '{borrowRel}' was valid...");
+					PathTo = borrowRel.PathTo.Reversed();
+					return;
 				}
-				else
+
+				Debug.Log($"borrowed rel path null: '{borrowRel.PathTo == null}'");
+
+				if (borrowRel.PathTo != null)
 				{
-					rprt.AppendLine($"Not siblings. Can't derive path. Actually calculating the path...");
-
-					/*
-					nvMsh.CalculatePath_dbg(
-						myVert, relatedVert, out PathTo, ref rprt 
-					); //this is by far where most of the time is being spent
-					*/
-					nvMsh.CalculatePath(
-						myVert, relatedVert, out PathTo
-					); //this is by far where most of the time is being spent
-
-					rprt.AppendLine($"created path: '{PathTo}'");
-
-					rprt.AppendLine($"path has '{PathTo.PathPoints.Count}' points...\n");
-					//Just to make things run smoother for now...
-					PathTo = new LNX_Path
-					(
-						nvMsh.GetSurfaceProjectionVector(),
-						new LNX_NavmeshHit(myVert, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal),
-						new LNX_NavmeshHit(relatedVert, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal)
-					);
+					Debug.Log($"borrowed rel path count: '{borrowRel.PathTo.PointCount}'");
 
 				}
+
+				Debug.Log($"borrowed rel '{borrowRel}' was apparently NOT valid...");
+
+			}
+
+			if (myVert.MyCoordinate.TrianglesIndex == relatedVert.MyCoordinate.TrianglesIndex ||
+				relatedVert.SharesVertSpace(nvMsh.Triangles[myVert.Coordinate_FirstSibling.TrianglesIndex].Verts[myVert.Coordinate_FirstSibling.ComponentIndex]) ||
+				relatedVert.SharesVertSpace(nvMsh.Triangles[myVert.Coordinate_SecondSibling.TrianglesIndex].Verts[myVert.Coordinate_SecondSibling.ComponentIndex])
+			) //"If we're siblings". More performant than using the AreSiblings() method
+			{
+				rprt.AppendLine($"Siblings, or in same spot as siblings");
+				PathTo = new LNX_Path
+				(
+					nvMsh.GetSurfaceProjectionVector(),
+					new LNX_NavmeshHit(myVert, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal),
+					new LNX_NavmeshHit(relatedVert, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal)
+				);
 			}
 			else
 			{
-				rprt.AppendLine("verts are in same position...");
-			}
+				rprt.AppendLine($"Not siblings. Can't derive path. Actually calculating the path...");
+				/*
+				//Just to make things run smoother for now...
+				PathTo = new LNX_Path
+				(
+					nvMsh.GetSurfaceProjectionVector(),
+					new LNX_NavmeshHit(myVert, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal),
+					new LNX_NavmeshHit(relatedVert, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal)
+				);
+				*/
 
+				/*
+				nvMsh.CalculatePath_dbg(
+					myVert, relatedVert, out PathTo, ref rprt 
+				); //this is by far where most of the time is being spent
+				*/
+				nvMsh.CalculatePath(
+					myVert, relatedVert, out PathTo
+				); //this is by far where most of the time is being spent
+
+				rprt.AppendLine($"created path: '{PathTo}'");
+
+				rprt.AppendLine($"path has '{PathTo.PathPoints.Count}' points...\n");
+			}
+			
 			rprt.AppendLine($"end of vertrelationship ctor. total time: '{DateTime.Now.Subtract(dt_start)}' " +
 				$"total ms: '{DateTime.Now.Subtract(dt_start).TotalMilliseconds}'");
 		}
@@ -619,7 +657,6 @@ namespace LogansNavigationExtension
 		}
 		#endregion
 
-		
 		public static LNX_VertexRelationship None  //todo: dws unless I figure out why this causes problems in in LNX_Vertex.CalculateDerivedInfo()
 		{
 			get
@@ -665,8 +702,16 @@ namespace LogansNavigationExtension
 
 		public override string ToString()
 		{
-			return this == none ? "LNX_VertexRelationship.None" : $"{(PathTo.PathPoints.Count > 0 ? $"([{PathTo.StartHit.TriangleIndex}][{PathTo.StartHit.VertIndex}]" : "[?]")}->" +
-				$"{RelatedVertCoordinate})";
+			if( this == none )
+			{
+				return "None";
+			}
+
+			//return this == none ? "LNX_VertexRelationship.None" : $"{(PathTo.PathPoints.Count > 0 ? $"([{PathTo.StartHit.TriangleIndex}][{PathTo.StartHit.VertIndex}]" : "[?]")}->" +
+				//$"{RelatedVertCoordinate})";
+
+			return $"{PathTo}";
+
 		}
 
 		public string GetInfoString()

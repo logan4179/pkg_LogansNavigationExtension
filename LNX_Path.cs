@@ -166,24 +166,27 @@ namespace LogansNavigationExtension
 				return;
 			}
 
-			Vector3 dirTo = LNX_Utils.FlatVector(hits[1].Position - hits[0].Position, v_navmeshSurfaceProjection_cached).normalized;
-
-			for (int i = 0; i < hits.Length; i++)
+			if( hits.Length > 1 )
 			{
-				if (i > 0)
-				{
-					totalDistance_cached += Vector3.Distance(hits[i - 1].Position, hits[i].Position);
+				Vector3 dirTo = LNX_Utils.FlatVector(hits[1].Position - hits[0].Position, v_navmeshSurfaceProjection_cached).normalized;
 
-					if (amStraight) //only check the following if I still think I'm straight...
+				for (int i = 0; i < hits.Length; i++)
+				{
+					if (i > 0)
 					{
-						Vector3 dirNew = LNX_Utils.FlatVector(hits[i].Position - hits[i - 1].Position, v_navmeshSurfaceProjection_cached).normalized;
-						if (dirNew != dirTo)
+						totalDistance_cached += Vector3.Distance(hits[i - 1].Position, hits[i].Position);
+
+						if (amStraight) //only check the following if I still think I'm straight...
 						{
-							amStraight = false;
-						}
-						else
-						{
-							dirTo = dirNew;
+							Vector3 dirNew = LNX_Utils.FlatVector(hits[i].Position - hits[i - 1].Position, v_navmeshSurfaceProjection_cached).normalized;
+							if (dirNew != dirTo)
+							{
+								amStraight = false;
+							}
+							else
+							{
+								dirTo = dirNew;
+							}
 						}
 					}
 				}
@@ -204,24 +207,27 @@ namespace LogansNavigationExtension
 				return;
 			}
 
-			Vector3 dirTo = LNX_Utils.FlatVector(hits[1].Position - hits[0].Position, v_navmeshSurfaceProjection_cached).normalized;
-
-			for (int i = 0; i < hits.Count; i++)
+			if( hits.Count > 1 )
 			{
-				if (i > 0)
-				{
-					totalDistance_cached += Vector3.Distance(hits[i - 1].Position, hits[i].Position);
+				Vector3 dirTo = LNX_Utils.FlatVector(hits[1].Position - hits[0].Position, v_navmeshSurfaceProjection_cached).normalized;
 
-					if (amStraight) //only check the following if I still think I'm straight...
+				for (int i = 0; i < hits.Count; i++)
+				{
+					if (i > 0)
 					{
-						Vector3 dirNew = LNX_Utils.FlatVector(hits[i].Position - hits[i - 1].Position, v_navmeshSurfaceProjection_cached).normalized;
-						if (dirNew != dirTo)
+						totalDistance_cached += Vector3.Distance(hits[i - 1].Position, hits[i].Position);
+
+						if (amStraight) //only check the following if I still think I'm straight...
 						{
-							amStraight = false;
-						}
-						else
-						{
-							dirTo = dirNew;
+							Vector3 dirNew = LNX_Utils.FlatVector(hits[i].Position - hits[i - 1].Position, v_navmeshSurfaceProjection_cached).normalized;
+							if (dirNew != dirTo)
+							{
+								amStraight = false;
+							}
+							else
+							{
+								dirTo = dirNew;
+							}
 						}
 					}
 				}
@@ -287,6 +293,23 @@ namespace LogansNavigationExtension
 					}
 				}
 			}
+		}
+
+		public LNX_Path Reversed()
+		{
+			List<LNX_NavmeshHit> reversedHits = new List<LNX_NavmeshHit>();
+			LNX_Path returnPath = new LNX_Path();
+
+			if( PathPoints.Count == 1 )
+			{
+				returnPath = new LNX_Path( v_navmeshSurfaceProjection_cached, PathPoints[0] );
+			}
+			for ( int i = PathPoints.Count-1; i > -1; i-- )
+			{
+				reversedHits.Add( PathPoints[i] );
+			}
+
+			return returnPath;
 		}
 		#endregion
 

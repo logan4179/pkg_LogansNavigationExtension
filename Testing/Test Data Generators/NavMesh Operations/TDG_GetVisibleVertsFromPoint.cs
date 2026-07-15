@@ -16,6 +16,7 @@ namespace LogansNavigationExtension
 
 		[Header("DEBUG")]
 		public Color Color_lines;
+		public bool DrawResultVertLabels;
 
 		#region HELPERS -------------------------------------
 		[ContextMenu("z call GoToDataPoint")]
@@ -38,7 +39,7 @@ namespace LogansNavigationExtension
 				return;
 			}
 
-			DBG_Operation += $"\nGrabber_Hit.CurrentHit: '{Grabber_Hit.CurrentHit.Position}'. Commencing operation...\n";
+			DBG_Operation += $"\nGrabber_Hit.CurrentHit: '{Grabber_Hit.CurrentHit}'. Commencing operation...\n";
 
 			long totalMs = 0;
 			long totalTicks = 0;
@@ -63,6 +64,15 @@ namespace LogansNavigationExtension
 				totalTicks = stpWtch.ElapsedTicks; mthdDbg_Report.EndReport();
 			}
 
+			if (ResultPaths.Count > 0)
+			{
+				DBG_Operation += $"\n====================\n";
+				for (int i = 0; i < ResultPaths.Count; i++)
+				{
+					DBG_Operation += $"{ResultPaths[i].EndHit}\n";
+				}
+				DBG_Operation += $"\n====================\n";
+			}
 
 			DBG_Operation += $"{nameof(ResultPaths)} count: '{ResultPaths.Count}'\n" +
 				$"total ms: '{totalMs}', total ticks: '{totalTicks}'\n";
@@ -110,6 +120,11 @@ namespace LogansNavigationExtension
 						ResultPaths[i].EndPosition,
 						ResultPaths[i].EndPosition + (Vector3.up * height)
 					);
+
+					if (DrawResultVertLabels) 
+					{
+						Handles.Label(ResultPaths[i].EndPosition + (Vector3.up * height), ResultPaths[i].EndCoordinate_vert.ToString() );
+					}
 				}
 			}
 		}

@@ -113,6 +113,7 @@ namespace LogansNavigationExtension
 			}
 
 			DBG_Operation += $"result: '{RaycastResult}'\n" +
+				$"path: '{ResultPath}'\n" +
 				$"Path: '{(ResultPath.PathPoints == null ? "null" : ResultPath.PointCount)}'\n" +
 				$"path dist: '{ResultPath.TotalDistance}'\n" +
 				$"total ms: '{totalMs}', total ticks: '{totalTicks}'\n";

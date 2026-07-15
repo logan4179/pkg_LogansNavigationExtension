@@ -62,7 +62,9 @@ namespace LogansNavigationExtension
 		[Header("NAVMESH TRIANGULATION")]
 		public bool OnlyNMGizmos = false;
 
-		public Vector3 V_vertPlacePos;
+		[Header("SAY SPECIFIED VERT RELATIONAL")]
+		public LNX_ComponentCoordinate Coord_specifiedVrt_sayRelational;
+
 
 		//[Header("VERT MANIPULATION")]
 		/*
@@ -87,13 +89,20 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call SayFocusedVertInfo()")]
 		public void SayFocusedVertInfo()
 		{
-			FocusedVert.SayCurrentInfo();
+			FocusedVert.SayCurrentInfo(_mgr);
 		}
 
 		[ContextMenu("z call SayFocusedVertRelational()")]
 		public void SayFocusedVertRelational()
 		{
 			FocusedVert.SayAllRelationships();
+		}
+
+		[ContextMenu("z call SaySpecifieddVertRelational()")]
+		public void SaySpecifieddVertRelational()
+		{
+			_mgr.Triangles[Coord_specifiedVrt_sayRelational.TrianglesIndex].Verts[Coord_specifiedVrt_sayRelational.ComponentIndex].
+				SayAllRelationships();
 		}
 
 		[ContextMenu("z call SendGrabberToFocusTri()")]
@@ -279,6 +288,109 @@ namespace LogansNavigationExtension
 				}
 			}
 			Debug.Log($"RecalculateAllDerivedInfo finished...");
+		}
+
+		[ContextMenu("z call CalculateProximalRelationships()")]
+		public void CalculateProximalRelationships()
+		{
+			Debug.Log($"CalculateProximalRelationships");
+
+			for (int i = 0; i < _mgr.Triangles.Length; i++)
+			{
+				_mgr.Triangles[i].Verts[0].Relationships = null;
+				_mgr.Triangles[i].Verts[1].Relationships = null;
+				_mgr.Triangles[i].Verts[2].Relationships = null;
+			}
+
+			for (int i = 0; i < _mgr.Triangles.Length; i++)
+			{
+				_mgr.Triangles[i].Verts[0].CreateRelationships(_mgr, true, true, false);
+				_mgr.Triangles[i].Verts[1].CreateRelationships(_mgr, true, true, false);
+				_mgr.Triangles[i].Verts[2].CreateRelationships(_mgr, true, true, false);
+			}
+		}
+
+		[ContextMenu("z call CalculateDistalRelationships()")]
+		public void CalculateDistalRelationships()
+		{
+			Debug.Log($"CalculateDistalRelationships");
+			/*
+			for (int i = 0; i < _mgr.Triangles.Length; i++)
+			{
+				_mgr.Triangles[i].Verts[0].Relationships = null;
+				_mgr.Triangles[i].Verts[1].Relationships = null;
+				_mgr.Triangles[i].Verts[2].Relationships = null;
+			}
+			*/
+
+			DateTime dt_start = DateTime.Now;
+			_mgr.Triangles[0].Verts[0].CreateRelationships(_mgr, false, false, true); //for now...
+
+			for (int i = 0; i < _mgr.Triangles.Length; i++)
+			{
+				Debug.Log($"for{i}........................................................");
+				//_mgr.Triangles[i].Verts[0].CreateRelationships(_mgr, false, false, true );
+				//_mgr.Triangles[i].Verts[1].CreateRelationships(_mgr, false, false, true );
+				//_mgr.Triangles[i].Verts[2].CreateRelationships(_mgr, false, false, true );
+
+				if( DateTime.Now.Subtract(dt_start).TotalSeconds > 20f )
+				{
+					Debug.Log($"time limit exceeded. Breaking...");
+					break;
+				}
+			}
+
+			Debug.Log($"finished. Elapsed time: '{DateTime.Now.Subtract(dt_start)}'");
+		}
+
+		[ContextMenu("z call RecreateAllRelationships()")]
+		public void RecreateAllRelationships()
+		{
+			Debug.Log($"RecreateAllRelationships");
+
+			DateTime dt_start = DateTime.Now;
+
+			for (int i = 0; i < _mgr.Triangles.Length; i++)
+			{
+				_mgr.Triangles[i].Verts[0].Relationships = null;
+				_mgr.Triangles[i].Verts[1].Relationships = null;
+				_mgr.Triangles[i].Verts[2].Relationships = null;
+
+				if (DateTime.Now.Subtract(dt_start).TotalSeconds > 20f)
+				{
+					Debug.Log($"time limit exceeded. Breaking...");
+					return;
+				}
+			}
+
+			for (int i = 0; i < _mgr.Triangles.Length; i++)
+			{
+				_mgr.Triangles[i].Verts[0].CreateRelationships(_mgr, true, true, false);
+				_mgr.Triangles[i].Verts[1].CreateRelationships(_mgr, true, true, false);
+				_mgr.Triangles[i].Verts[2].CreateRelationships(_mgr, true, true, false);
+
+				if (DateTime.Now.Subtract(dt_start).TotalSeconds > 20f)
+				{
+					Debug.Log($"time limit exceeded. Breaking...");
+					return;
+				}
+			}
+
+			for (int i = 0; i < _mgr.Triangles.Length; i++)
+			{
+				_mgr.Triangles[i].Verts[0].CreateRelationships(_mgr, false, false, true);
+				_mgr.Triangles[i].Verts[1].CreateRelationships(_mgr, false, false, true);
+				_mgr.Triangles[i].Verts[2].CreateRelationships(_mgr, false, false, true);
+
+				if (DateTime.Now.Subtract(dt_start).TotalSeconds > 20f)
+				{
+					Debug.Log($"time limit exceeded. Breaking...");
+					return;
+				}
+			}
+
+			Debug.Log($"finished. Elapsed time: '{DateTime.Now.Subtract(dt_start)}'");
+
 		}
 		#endregion
 

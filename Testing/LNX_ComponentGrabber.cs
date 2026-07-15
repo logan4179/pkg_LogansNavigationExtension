@@ -171,7 +171,7 @@ namespace LogansNavigationExtension
 		{
 			if ( CurrentCoordinateMode == LNX_Component.Vertex )
 			{
-				CurrentlyGrabbedVert.SayCurrentInfo();
+				CurrentlyGrabbedVert.SayCurrentInfo(_navmesh);
 				Debug.Log( CurrentlyGrabbedVert.GetAnomolyString(_navmesh) );
 			}
 			else if ( CurrentCoordinateMode == LNX_Component.Triangle )
@@ -192,7 +192,7 @@ namespace LogansNavigationExtension
 			{
 				//CurrentlyGrabbedTriangle.SayCurrentInfo(_navmesh);
 				//Debug.Log(CurrentlyGrabbedTriangle.GetAnomolyString(_navmesh));
-				CurrentlyGrabbedTriangle.GetRelationalString();
+				CurrentlyGrabbedTriangle.GetRelationalString(_navmesh);
 
 			}
 		}

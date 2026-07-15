@@ -12,6 +12,8 @@ namespace LogansNavigationExtension
 		public string ReportString => rprtString;
 
 		private List<LNXMDR_MethodSignature> methodSignatures;
+		public List<LNXMDR_MethodSignature> MethodSignatures => methodSignatures;
+
 
 		public int MethodLvl => methodSignatures.Count;
 
@@ -67,7 +69,7 @@ namespace LogansNavigationExtension
 				return;
 			}
 
-			methodSignatures.Add( new LNXMDR_MethodSignature(methodName, tabStarter, CurrentInnerTabText) );
+			methodSignatures.Add(new LNXMDR_MethodSignature(methodName, tabStarter, CurrentInnerTabText));
 
 			rprtString += $"{CurrentMethodTabText}{methodName}\n" +
 				$"{CurrentMethodTabText}{{\n";
@@ -99,7 +101,7 @@ namespace LogansNavigationExtension
 				return;
 			}
 
-			if( !flag_amInAbbreviateMethod )
+			if (!flag_amInAbbreviateMethod)
 			{
 				Debug.LogWarning($"EndAbbreviatedMethod() was called, but wasn't in abbreviated method");
 			}
@@ -110,7 +112,7 @@ namespace LogansNavigationExtension
 
 		public void EndMethod(string methodName = "")
 		{
-			if (flag_amInAbbreviateMethod || flag_limitReached )
+			if (flag_amInAbbreviateMethod || flag_limitReached)
 			{
 				return;
 			}

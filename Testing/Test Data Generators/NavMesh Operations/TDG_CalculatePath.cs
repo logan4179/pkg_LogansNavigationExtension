@@ -36,6 +36,7 @@ namespace LogansNavigationExtension
 
 		[Header("DEBUG")]
 		public bool AllowEffiencyLoading;
+		public bool DrawLineBetween = false;
 		public Color Color_IfTrue;
 		public Color Color_IfFalse;
 
@@ -84,8 +85,8 @@ namespace LogansNavigationExtension
 			_data = JsonUtility.FromJson<LNX_NavMeshData>( DataAsset.ToString() );
 		}
 
-		[ContextMenu("z call CalculatePath()")]
-		public void CalculatePath() //putting all the logic here so I can call as desired rather than automatically in ondrawgizmos
+		[ContextMenu("z call RunOperation()")]
+		public void RunOperation() //putting all the logic here so I can call as desired rather than automatically in ondrawgizmos
 		{
 			DBG_Operation = $"Recalculating at: '{DateTime.Now}'...\n";
 			CurrentOperationResult = false;
@@ -136,6 +137,7 @@ namespace LogansNavigationExtension
 			{
 				DBG_Operation += $"regular version.\n" + 
 					$"using startHit: '{Grabber_StartPos.CurrentHit}', and endHit: '{Grabber_EndPos.CurrentHit}'...\n" +
+					$"CurrentResultPath.length: '{CurrentResultPath.PointCount}'\n" +
 					$"Commencing operation...\n";
 
 				System.Diagnostics.Stopwatch stpWtch = System.Diagnostics.Stopwatch.StartNew();
@@ -216,7 +218,7 @@ namespace LogansNavigationExtension
 				Grabber_EndPos.RecalculatedLastFrame)
 			)
 			{
-				CalculatePath();
+				RunOperation();
 			}
 
 
@@ -250,9 +252,15 @@ namespace LogansNavigationExtension
 				BestVertPaths[Index_drawVertPath].DrawMyGizmos( Size_PathPoints, Height_PathPtLabels );
 			}
 
-				Gizmos.color = oldclr;
+			Gizmos.color = oldclr;
 			Handles.color = oldHandlesColor;
 			#endregion
+		}
+
+		[ContextMenu("z call CaptureProblemPosition()")]
+		public override void CaptureProblemPosition()
+		{
+			_dataCapture_problems.CaptureDataPoint(Grabber_StartPos.CurrentHit.Position, Grabber_EndPos.CurrentHit.Position);
 		}
 	}
 }

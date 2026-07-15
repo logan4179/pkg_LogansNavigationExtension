@@ -25,7 +25,7 @@ namespace LogansNavigationExtension
 		[ContextMenu("Z SayCurrentInfoString()")]
 		public void SayCurrentInfoString()
 		{
-			Debug.Log( CurrentlyGrabbedVert.GetCurrentInfoString() );
+			Debug.Log( CurrentlyGrabbedVert.GetCurrentInfoString(_navmesh) );
 		}
 		#endregion
 
