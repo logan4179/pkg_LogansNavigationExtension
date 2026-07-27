@@ -15,6 +15,8 @@ namespace LogansNavigationExtension
 		public LNX_Vertex CurrentVert => VertGrabber.CurrentlyGrabbedVert;
 		[TextArea(1, 20)]
 		public string DBG_Operation;
+		[TextArea(1, 10)]
+		public string DBG_PathDisplay;
 
 		[Header("SELF")]
 		public Vector3 V_Position;
@@ -35,9 +37,16 @@ namespace LogansNavigationExtension
 
 
 		[Header("RELATIONAL")]
-		public VertDisp_Relationship[] Relationships;
+		[Range(-1, 83)]  public int Index_PathDisplay_tri = -1;
+		[Range(0, 2)] public int Index_PathDisplay_vert = -1;
+
+		public VertDisp_Relationship[] DisplayRelationships;
+		public LNX_VertexRelationship[] ActualRelationships;
 		public LNX_ComponentCoordinate[] SharedVertexCoordinates;
 
+		[Header("DEBUG")]
+		[Range(0f, 0.5f)] public float radius_pthPts = 0.1f;
+		[Range(0f, 1f)] public float height_pthPts = 0.5f;
 
 
 		[ContextMenu("RunOperation")]
@@ -72,10 +81,23 @@ namespace LogansNavigationExtension
 			SecondSiblingRelationship = CurrentVert.SecondSiblingRelationship;
 			#endregion
 
-			Relationships = new VertDisp_Relationship[CurrentVert.Relationships.Length];
+			DisplayRelationships = new VertDisp_Relationship[CurrentVert.Relationships.Length];
+			ActualRelationships = new LNX_VertexRelationship[CurrentVert.Relationships.Length];
+			int validCount = 0;
+			int invalidCount = 0;
 			for (int i = 0; i < CurrentVert.Relationships.Length; i++)
 			{
-				Relationships[i] = new VertDisp_Relationship( CurrentVert.Relationships[i] );
+				DisplayRelationships[i] = new VertDisp_Relationship( CurrentVert.Relationships[i] );
+				ActualRelationships[i] = CurrentVert.Relationships[i];
+
+				if(DisplayRelationships[i].AmValid )
+				{
+					validCount++;
+				}
+				else
+				{
+					invalidCount++;
+				}
 			}
 
 			SharedVertexCoordinates = new LNX_ComponentCoordinate[CurrentVert.SharedVertexCoordinates.Length];
@@ -85,11 +107,13 @@ namespace LogansNavigationExtension
 			}
 
 			DBG_Operation += $"End of operation\n" +
-				$"Relationships: '{Relationships.Length}'\n" +
+				$"Relationships: '{DisplayRelationships.Length}'. valid: '{validCount}', invalid: '{invalidCount}'\n" +
 				$"SharedVertexCoordinates: '{SharedVertexCoordinates.Length}'\n" +
 				$"IsRelationshipCollectionValid: '{CurrentVert.IsRelationshipCollectionValid(_navmesh)}'\n" +
 				$"";
 		}
+
+
 
 		private void OnDrawGizmos()
 		{
@@ -102,6 +126,75 @@ namespace LogansNavigationExtension
 			)
 			{
 				return;
+			}
+
+			DBG_PathDisplay = $"Recalculating at: '{DateTime.Now}'...\n\n";
+
+
+			if ( Index_PathDisplay_tri > -1 )
+			{
+				if( DisplayRelationships == null ||  DisplayRelationships.Length <= 0 )
+				{
+					Debug.LogError($"Relationships collectino null or 0 count...");
+					DBG_PathDisplay += ($"Relationships collectino null or 0 count...");
+
+				}
+				else if ( (Index_PathDisplay_tri * 3) > DisplayRelationships.Length - 3 )
+				{
+					Debug.LogError($"index too high...");
+					DBG_PathDisplay += ($"index too high...");
+				}
+				else
+				{
+					DBG_PathDisplay += $"using==================\n" +
+						$"tri{Index_PathDisplay_tri}, vert{Index_PathDisplay_vert}\n" +
+						$"relationship: '{(Index_PathDisplay_tri * 3) + Index_PathDisplay_vert}' / {ActualRelationships.Length}...\n" +
+						$"\n";
+
+					VertDisp_Relationship foundRel = DisplayRelationships[(Index_PathDisplay_tri * 3) + Index_PathDisplay_vert];
+					LNX_Path foundPath = foundRel.Rel.PathTo;
+
+					DBG_PathDisplay += $"Path: '{foundPath}', \n" +
+						$"valid: '{foundPath.AmValid}', foundIssue: '{foundPath.FoundIssue()}'\n" +
+						$"amStraight: '{foundPath.AmStraight}'\n" +
+						$"count: '{foundPath.PointCount}'\n" +
+						$"\n";
+
+
+					if( foundPath.PointCount == 1 && 
+						foundPath.EndPosition == CurrentVert.V_Position )
+					{
+						DBG_PathDisplay += $"SHARED!\n";
+					}
+					else
+					{
+
+					}
+
+					Gizmos.color = Color.white;
+					Gizmos.DrawLine(
+						foundPath.EndPosition,
+						foundPath.EndPosition +
+						(Vector3.up * 2f)
+					);
+
+					if ( !foundPath.AmValid || foundPath.FoundIssue())
+					{
+						Gizmos.color = Color.red;
+					}
+					else
+					{
+						Gizmos.color = Color.green;
+					}
+
+					foundPath.DrawMyGizmos(radius_pthPts, height_pthPts, false);
+
+					Gizmos.DrawLine(
+						_navmesh.Triangles[Index_PathDisplay_tri].Verts[Index_PathDisplay_vert].V_Position,
+						_navmesh.Triangles[Index_PathDisplay_tri].Verts[Index_PathDisplay_vert].V_Position + 
+						(Vector3.up * 2f)
+					);
+				}
 			}
 		}
 
@@ -117,13 +210,99 @@ namespace LogansNavigationExtension
 
 			return false;
 		}
+
+		#region HELPERS ======================================
+		[ContextMenu("z call SayCurrentVertInfo()")]
+		public void SayCurrentVertInfo()
+		{
+			CurrentVert.SayCurrentInfo( _navmesh );
+		}
+
+		[ContextMenu("z call CheckIFPathShouldBeStraight()")]
+		public void CheckIFPathShouldBeStraight()
+		{
+			string rprt = $"CheckIFPathShouldBeStraight()\n";
+
+			VertDisp_Relationship foundRel = DisplayRelationships[(Index_PathDisplay_tri * 3) + Index_PathDisplay_vert];
+			LNX_Path foundPath = foundRel.Rel.PathTo;
+			rprt += ($"{foundPath}\n" +
+				$"amStraight (cached): '{foundPath.AmStraight}'\n" +
+				$"V_CrowFiles_flat: '{foundPath.V_CrowFiles_flat}'\n" +
+				$"count: '{foundPath.PathPoints.Count}'...\n");
+			if (foundPath.PathPoints.Count > 1)
+			{
+				Vector3 firstDir_fltnd = LNX_Utils.FlatVector(
+					foundPath.PathPoints[1].Position - foundPath.PathPoints[0].Position, 
+					foundPath.V_navmeshSurfaceProjection_cached
+				).normalized;
+
+				rprt += ($"firstDir_fltnd: '{firstDir_fltnd}'\n\n");
+				bool amStraight = false;
+				for ( int i = 0; i < foundPath.PathPoints.Count - 1; i++ )
+				{
+					rprt += $"for{i}...\n";
+
+					Vector3 dirToNext = LNX_Utils.FlatVector(
+						foundPath.PathPoints[i+1].Position - foundPath.PathPoints[i].Position,
+						foundPath.V_navmeshSurfaceProjection_cached
+						).normalized;
+
+					rprt += ($"dirToNext: '{dirToNext}'\n" +
+						$"dirNew != firstDir_fltnd: '{dirToNext != firstDir_fltnd}'\n" +
+						$"ang: '{Vector3.Angle(firstDir_fltnd, dirToNext)}'\n");
+
+					if (Vector3.Angle(firstDir_fltnd, dirToNext) > 0f)
+					{
+						rprt += $"decided NOT same<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<!!!!!!\n";
+						amStraight = false;
+					}
+					else
+					{
+						rprt += "decided same\n";
+					}
+				}
+
+				rprt += $"end. amStraight: '{amStraight}'\n";
+			}
+
+			Debug.Log( rprt );
+			Debug.Log($"rprt:\n" +
+				$"dbgclass: {foundPath.DBG_class}");
+		}
+
+		[ContextMenu("z call DoEet()")]
+		public void DoEet()
+		{
+			VertDisp_Relationship foundRel = DisplayRelationships[(Index_PathDisplay_tri * 3) + Index_PathDisplay_vert];
+			LNX_Path foundPath = foundRel.Rel.PathTo;
+
+			Debug.Log( $"BEFORE! {foundPath}\n" +
+				$"amStraight (cached): '{foundPath.AmStraight}'\n" +
+				$"count: '{foundPath.PathPoints.Count}'\n");
+
+			foundPath.AddPoint( new LNX_NavmeshHit(_navmesh.Triangles[22].Verts[1]) );
+			Debug.Log($"after! {foundPath}\n" +
+				$"amStraight (cached): '{foundPath.AmStraight}'\n" +
+				$"count: '{foundPath.PathPoints.Count}'\n");
+
+
+			Vector3 newVect = new Vector3(1f, 2f, 3f);
+			Debug.Log($"BEFORE! '{newVect}'\n");
+
+			newVect.x = 10f;
+			newVect.y = 20f;
+			
+			Debug.Log($"after! '{newVect}'\n");
+
+		}
+		#endregion
 	}
 
 	[System.Serializable]
 	public struct VertDisp_Relationship
 	{
 		public bool AmValid;
-		LNX_VertexRelationship Rel;
+		public LNX_VertexRelationship Rel;
 
 		public VertDisp_Relationship(LNX_VertexRelationship rel )
 		{

@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using System;
 using System.Linq;
 using System.Net.Sockets;
@@ -66,108 +67,7 @@ namespace LogansNavigationExtension
 		public LNX_ComponentCoordinate Coord_specifiedVrt_sayRelational;
 
 
-		//[Header("VERT MANIPULATION")]
-		/*
-		[ContextMenu("z call CalculateAllDerived()")]
-		public void CalculateAllDerived()
-		{
-			Debug.Log($"{nameof(CalculateAllDerived)}");
-
-			for ( int i = 0; i < _mgr.Triangles.Length; i++ )
-			{
-				_mgr.Triangles[i].CalculateDerivedInfo();
-			}
-		}
-		*/
-
-		[ContextMenu("z call SayFocusedTriInfo()")]
-		public void SayFocusedTriInfo()
-		{
-			FocusedTri.SayCurrentInfo(_mgr);
-		}
-
-		[ContextMenu("z call SayFocusedVertInfo()")]
-		public void SayFocusedVertInfo()
-		{
-			FocusedVert.SayCurrentInfo(_mgr);
-		}
-
-		[ContextMenu("z call SayFocusedVertRelational()")]
-		public void SayFocusedVertRelational()
-		{
-			FocusedVert.SayAllRelationships();
-		}
-
-		[ContextMenu("z call SaySpecifieddVertRelational()")]
-		public void SaySpecifieddVertRelational()
-		{
-			_mgr.Triangles[Coord_specifiedVrt_sayRelational.TrianglesIndex].Verts[Coord_specifiedVrt_sayRelational.ComponentIndex].
-				SayAllRelationships();
-		}
-
-		[ContextMenu("z call SendGrabberToFocusTri()")]
-		public void SendGrabberToFocusTri()
-		{
-			Grabber_FocusTri.transform.position = _mgr.Triangles[Index_SendFocusTriGrabberTo].V_Center;
-		}
-
-		[ContextMenu("z call SayVisualMeshInfo()")]
-		public void SayVisualMeshInfo()
-		{
-			string s = $"Vertices '{_mgr._VisualizationMesh.vertices.Length}' \n";
-
-			for( int i = 0; i < _mgr._VisualizationMesh.vertices.Length; i++ )
-			{
-				s += $"vert pos {i}: '{_mgr._VisualizationMesh.vertices[i]}'\n";
-			}
-
-			s += $"\nNormals '{_mgr._VisualizationMesh.normals.Length}' \n";
-
-			for (int i = 0; i < _mgr._VisualizationMesh.normals.Length; i++)
-			{
-				s += $"normal {i}: '{_mgr._VisualizationMesh.normals[i]}'\n";
-			}
-
-			Debug.Log(s);
-		}
-
-		[ContextMenu("z call SayBounds()")]
-		public void SayBounds()
-		{
-			string s = $"\n";
-
-			s += $"lowX: '{_mgr.Bounds[0]}', highX: '{_mgr.Bounds[1]}'\n" +
-				$"lowY: '{_mgr.Bounds[2]}', highY: '{_mgr.Bounds[3]}'\n" +
-				$"lowZ: '{_mgr.Bounds[4]}', highZ: '{_mgr.Bounds[5]}'\n" +
-				$"V_BoundsSize: '{_mgr.V_BoundsSize}', bounds center: '{_mgr.V_BoundsCenter}'";
-
-			Debug.Log(s);
-		}
-
-		[ContextMenu("z call SayRelationshipsCount")]
-		public void SayRelationshipsCount()
-		{
-			int relCount = 0;
-
-			for ( int i = 0; i < _mgr.Triangles.Length; i++ )
-			{
-				for( int i_vrts = 0; i_vrts < 3; i_vrts++ )
-				{
-					if (_mgr.Triangles[i].Verts[i_vrts].Relationships != null && _mgr.Triangles[i].Verts[i_vrts].Relationships.Length > 0 )
-					{
-						for (int i_rels = 0; i_rels < _mgr.Triangles[i].Verts[i_vrts].Relationships.Length; i_rels++)
-						{
-							if (_mgr.Triangles[i].Verts[i_vrts].Relationships[i_rels].PathTo != LNX_Path.None )
-							{
-								relCount++;
-							}
-						}
-					}
-				}
-			}
-
-			Debug.Log(relCount);
-		}
+		
 
 		private void OnEnable()
 		{
@@ -184,6 +84,11 @@ namespace LogansNavigationExtension
 			if ( !AmDebugging || _mgr == null || _mgr.Triangles != null && _mgr.Triangles.Length <= 0 )
 			{
 				return;
+			}
+
+			if (FetchedRel != null && FetchedRel.PathTo != LNX_Path.None )
+			{
+				//FetchedRel.PathTo.DrawMyGizmos(0.1f, 0.5f, false);
 			}
 
 			if ( FocusedTri != null )
@@ -302,15 +207,119 @@ namespace LogansNavigationExtension
 				_mgr.Triangles[i].Verts[2].Relationships = null;
 			}
 
+			DateTime dt_start = DateTime.Now;
 			for (int i = 0; i < _mgr.Triangles.Length; i++)
 			{
 				_mgr.Triangles[i].Verts[0].CreateRelationships(_mgr, true, true, false);
 				_mgr.Triangles[i].Verts[1].CreateRelationships(_mgr, true, true, false);
 				_mgr.Triangles[i].Verts[2].CreateRelationships(_mgr, true, true, false);
 			}
+
+			Debug.Log($"finished. took: '{DateTime.Now.Subtract(dt_start).TotalMilliseconds}' ms");
+
+
+
+			/*
+			Debug.Log($"now checking validity...");
+			for (int i = 0; i < _mgr.Triangles.Length; i++)
+			{
+				Debug.Log($"checking '{_mgr.Triangles[i].Verts[0].Relationships.Length}' relationships on vert0...");
+				for (int j = 0; j < _mgr.Triangles[i].Verts[0].Relationships.Length; j++)
+				{
+					Debug.Log($"for rel{j}...");
+					Debug.Log($"valid: '{_mgr.Triangles[i].Verts[0].Relationships[j].AmValid}'");
+					
+				}
+
+				_mgr.Triangles[i].Verts[0].Relationships = null;
+				_mgr.Triangles[i].Verts[1].Relationships = null;
+				_mgr.Triangles[i].Verts[2].Relationships = null;
+			}
+			*/
 		}
 
-		[ContextMenu("z call CalculateDistalRelationships()")]
+		public LNX_VertexRelationship FetchedRel;
+		//[ContextMenu("z call DoEet()")]
+		public void DoEet()
+		{
+			FetchedRel = _mgr.Triangles[0].Verts[0].GetFurthestDistanceRelationshipOnTriangle(76);
+
+		}
+
+		public VertexDisplayer VrtDsplr;
+		[ContextMenu("z call TryRelationships()")]
+		public void TryRelationships()
+		{
+			CalculateProximalRelationships();
+
+			float timeoutAmt = 25f;
+
+			DateTime dt_methodStart = DateTime.Now;
+
+			Debug.Log($"now creating distal relationships...");
+
+			for (int i = 0; i < _mgr.Triangles.Length; i++)
+			{
+				Debug.Log($"for tri{i} ====/////////////////////////////////////////////////////////");
+
+				DateTime dt_relStart = DateTime.Now;
+
+				_mgr.Triangles[i].Verts[0].CreateRelationships(_mgr, false, false, true);
+
+				/*
+				LNX_MethodDebugReport cdrRprt = new LNX_MethodDebugReport();
+				cdrRprt.StartReport();
+				_mgr.Triangles[i].Verts[0].CreateDistalRelationships_dbg(_mgr, ref cdrRprt);
+				cdrRprt.EndReport();
+				*/
+
+				if (DateTime.Now.Subtract(dt_methodStart).TotalSeconds > timeoutAmt)
+				{
+					Debug.Log($"time limit exceeded. Breaking at tri{i}, vert{0}...");
+					break;
+				}
+
+				LNX_VertexRelationship interestedRel = _mgr.Triangles[0].Verts[0].Relationships[67];
+
+				Debug.Log($"rel 8 tostring: '{interestedRel}'\n" +
+					$"rel valid: '{interestedRel.AmValid}'\n" +
+					$"path valid: '{interestedRel.PathTo.AmValid}'\n" +
+					$"path count: '{interestedRel.PathTo.PointCount}'\n" +
+					$"found issue: '{interestedRel.PathTo.FoundIssue()}'\n" +
+					$"");
+				break;
+
+				FetchedRel = _mgr.Triangles[0].Verts[0].GetFurthestDistanceRelationshipOnTriangle(76);
+
+
+				dt_relStart = DateTime.Now;
+				_mgr.Triangles[i].Verts[1].CreateRelationships(_mgr, false, false, true);
+				Debug.Log($"end of CreateRelationships for vert1. Elapsed time: '{DateTime.Now.Subtract(dt_relStart)}'...");
+				if (DateTime.Now.Subtract(dt_methodStart).TotalSeconds > timeoutAmt)
+				{
+					Debug.Log($"time limit exceeded. Breaking at tri{i}, vert{1}...");
+					break;
+				}
+
+				dt_relStart = DateTime.Now;
+				_mgr.Triangles[i].Verts[2].CreateRelationships(_mgr, false, false, true);
+				Debug.Log($"end of CreateRelationships for vert2. Elapsed time: '{DateTime.Now.Subtract(dt_relStart)}'...");
+				if (DateTime.Now.Subtract(dt_methodStart).TotalSeconds > timeoutAmt)
+				{
+					Debug.Log($"time limit exceeded. Breaking at tri{i}, vert{2}...");
+					break;
+				}
+
+				break;
+			}
+
+			Debug.Log($"running operation on vert displayer...");
+			VrtDsplr.RunOperation();
+
+		}
+
+
+		//[ContextMenu("z call CalculateDistalRelationships()")]
 		public void CalculateDistalRelationships()
 		{
 			Debug.Log($"CalculateDistalRelationships");
@@ -323,27 +332,57 @@ namespace LogansNavigationExtension
 			}
 			*/
 
-			DateTime dt_start = DateTime.Now;
-			_mgr.Triangles[0].Verts[0].CreateRelationships(_mgr, false, false, true); //for now...
+			float timeoutAmt = 25f;
 
+			DateTime dt_methodStart = DateTime.Now;
+			
 			for (int i = 0; i < _mgr.Triangles.Length; i++)
 			{
-				Debug.Log($"for{i}........................................................");
-				//_mgr.Triangles[i].Verts[0].CreateRelationships(_mgr, false, false, true );
-				//_mgr.Triangles[i].Verts[1].CreateRelationships(_mgr, false, false, true );
-				//_mgr.Triangles[i].Verts[2].CreateRelationships(_mgr, false, false, true );
+				Debug.Log($"for tri{i} ====/////////////////////////////////////////////////////////");
 
-				if( DateTime.Now.Subtract(dt_start).TotalSeconds > 20f )
+				DateTime dt_relStart = DateTime.Now;
+				
+				_mgr.Triangles[i].Verts[0].CreateRelationships(_mgr, false, false, true );
+				
+
+				Debug.Log($"end of CreateRelationships for vert0. Elapsed time: '{DateTime.Now.Subtract(dt_relStart)}'...");
+				if (DateTime.Now.Subtract(dt_methodStart).TotalSeconds > timeoutAmt)
 				{
-					Debug.Log($"time limit exceeded. Breaking...");
+					Debug.Log($"time limit exceeded. Breaking at tri{i}, vert{0}...");
 					break;
 				}
-			}
 
-			Debug.Log($"finished. Elapsed time: '{DateTime.Now.Subtract(dt_start)}'");
+				return;
+
+				FetchedRel = _mgr.Triangles[0].Verts[0].GetFurthestDistanceRelationshipOnTriangle(76);
+
+
+				dt_relStart = DateTime.Now;
+				_mgr.Triangles[i].Verts[1].CreateRelationships(_mgr, false, false, true );
+				Debug.Log($"end of CreateRelationships for vert1. Elapsed time: '{DateTime.Now.Subtract(dt_relStart)}'...");
+				if (DateTime.Now.Subtract(dt_methodStart).TotalSeconds > timeoutAmt)
+				{
+					Debug.Log($"time limit exceeded. Breaking at tri{i}, vert{1}...");
+					break;
+				}
+
+				dt_relStart = DateTime.Now;
+				_mgr.Triangles[i].Verts[2].CreateRelationships(_mgr, false, false, true );
+				Debug.Log($"end of CreateRelationships for vert2. Elapsed time: '{DateTime.Now.Subtract(dt_relStart)}'...");
+				if ( DateTime.Now.Subtract(dt_methodStart).TotalSeconds > timeoutAmt )
+				{
+					Debug.Log($"time limit exceeded. Breaking at tri{i}, vert{2}...");
+					break;
+				}
+
+				break;
+			}
+			
+
+			Debug.Log($"method finished. Elapsed time: '{DateTime.Now.Subtract(dt_methodStart)}'");
 		}
 
-		[ContextMenu("z call RecreateAllRelationships()")]
+		//[ContextMenu("z call RecreateAllRelationships()")]
 		public void RecreateAllRelationships()
 		{
 			Debug.Log($"RecreateAllRelationships");
@@ -392,6 +431,115 @@ namespace LogansNavigationExtension
 			Debug.Log($"finished. Elapsed time: '{DateTime.Now.Subtract(dt_start)}'");
 
 		}
+
+		//[Header("VERT MANIPULATION")]
+		/*
+		[ContextMenu("z call CalculateAllDerived()")]
+		public void CalculateAllDerived()
+		{
+			Debug.Log($"{nameof(CalculateAllDerived)}");
+
+			for ( int i = 0; i < _mgr.Triangles.Length; i++ )
+			{
+				_mgr.Triangles[i].CalculateDerivedInfo();
+			}
+		}
+		*/
+
+		[ContextMenu("z call SayFocusedTriInfo()")]
+		public void SayFocusedTriInfo()
+		{
+			FocusedTri.SayCurrentInfo(_mgr);
+		}
+
+
+		[ContextMenu("z call SayFocusedVertRelational()")]
+		public void SayFocusedVertRelational()
+		{
+			FocusedVert.SayAllRelationships();
+		}
+
+		[ContextMenu("z call SaySpecifieddVertRelational()")]
+		public void SaySpecifieddVertRelational()
+		{
+			_mgr.Triangles[Coord_specifiedVrt_sayRelational.TrianglesIndex].Verts[Coord_specifiedVrt_sayRelational.ComponentIndex].
+				SayAllRelationships();
+		}
+
+		[ContextMenu("z call SayNavMeshInfo()")]
+		public void SayNavMeshInfo()
+		{
+			string s = $"Tri count: '{_mgr.Triangles.Length}' \n";
+
+
+
+			Debug.Log(s);
+		}
+
+		[ContextMenu("z call SayVisualMeshInfo()")]
+		public void SayVisualMeshInfo()
+		{
+			string s = $"Vertices '{_mgr._VisualizationMesh.vertices.Length}' \n";
+
+			for (int i = 0; i < _mgr._VisualizationMesh.vertices.Length; i++)
+			{
+				s += $"vert pos {i}: '{_mgr._VisualizationMesh.vertices[i]}'\n";
+			}
+
+			s += $"\nNormals '{_mgr._VisualizationMesh.normals.Length}' \n";
+
+			for (int i = 0; i < _mgr._VisualizationMesh.normals.Length; i++)
+			{
+				s += $"normal {i}: '{_mgr._VisualizationMesh.normals[i]}'\n";
+			}
+
+			Debug.Log(s);
+		}
+
+		[ContextMenu("z call SayBounds()")]
+		public void SayBounds()
+		{
+			string s = $"\n";
+
+			s += $"lowX: '{_mgr.Bounds[0]}', highX: '{_mgr.Bounds[1]}'\n" +
+				$"lowY: '{_mgr.Bounds[2]}', highY: '{_mgr.Bounds[3]}'\n" +
+				$"lowZ: '{_mgr.Bounds[4]}', highZ: '{_mgr.Bounds[5]}'\n" +
+				$"V_BoundsSize: '{_mgr.V_BoundsSize}', bounds center: '{_mgr.V_BoundsCenter}'";
+
+			Debug.Log(s);
+		}
+
+		[ContextMenu("z call SayRelationshipsCount")]
+		public void SayRelationshipsCount()
+		{
+			int relCount = 0;
+
+			for (int i = 0; i < _mgr.Triangles.Length; i++)
+			{
+				for (int i_vrts = 0; i_vrts < 3; i_vrts++)
+				{
+					if (_mgr.Triangles[i].Verts[i_vrts].Relationships != null && _mgr.Triangles[i].Verts[i_vrts].Relationships.Length > 0)
+					{
+						for (int i_rels = 0; i_rels < _mgr.Triangles[i].Verts[i_vrts].Relationships.Length; i_rels++)
+						{
+							if (_mgr.Triangles[i].Verts[i_vrts].Relationships[i_rels].PathTo != LNX_Path.None)
+							{
+								relCount++;
+							}
+						}
+					}
+				}
+			}
+
+			Debug.Log(relCount);
+		}
+
+		[ContextMenu("z call SendGrabberToFocusTri()")]
+		public void SendGrabberToFocusTri()
+		{
+			Grabber_FocusTri.transform.position = _mgr.Triangles[Index_SendFocusTriGrabberTo].V_Center;
+		}
+
 		#endregion
 
 	}

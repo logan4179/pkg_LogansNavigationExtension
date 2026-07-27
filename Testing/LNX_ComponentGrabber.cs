@@ -35,6 +35,7 @@ namespace LogansNavigationExtension
 
 		public Vector3 V_labelOffset;
 		public Transform Trans_drawLineTo;
+		[SerializeField] private Color color_drawLineToTrans = Color.white;
 		[SerializeField] private bool recalculatedLastFrame = false;
 		public bool RecalculatedLastFrame => recalculatedLastFrame;
 		[SerializeField] bool drawComponentCoordinateInsteadOfLabel = false;
@@ -229,6 +230,7 @@ namespace LogansNavigationExtension
 
 			if (Trans_drawLineTo != null)
 			{
+				Gizmos.color = color_drawLineToTrans;
 				Gizmos.DrawLine(transform.position, Trans_drawLineTo.position);
 			}
 		}
@@ -268,6 +270,7 @@ namespace LogansNavigationExtension
 
 			if (Trans_drawLineTo != null)
 			{
+				Gizmos.color = color_drawLineToTrans;
 				Gizmos.DrawLine(transform.position, Trans_drawLineTo.position);
 			}
 		}
@@ -309,7 +312,7 @@ namespace LogansNavigationExtension
 			if (drawFocusTriGizmos && CurrentlyGrabbedTriangle != null)
 			{
 				LNX_DrawingUtils.DrawTriGizmos( CurrentlyGrabbedTriangle, Color.yellow,
-					false, false, true, 0.02f, true, 0.1f, 
+					false, false, true, 0.02f, true, CurrentlyGrabbedTriangle.ShortestEdgeLength * 0.3f, 
 					drawNormalLines, 0.25f
 				);
 			}

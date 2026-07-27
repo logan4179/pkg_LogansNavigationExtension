@@ -8,6 +8,7 @@ namespace LogansNavigationExtension
 {
     public class TDG_CreateVertexRelationships : TDG_base
     {
+		public LNX_NavMeshDebugger _debugger;
         public LNX_ComponentGrabber Grabber_vertA;
 		private LNX_Vertex vertA => Grabber_vertA.CurrentlyGrabbedVert;
 
@@ -24,20 +25,24 @@ namespace LogansNavigationExtension
 		[Range(0.01f, 0.5f)] public float size_pathPts;
 		public float len_pthPts;
 
-		[ContextMenu("z call CreateRelationship()")]
-		public void CreateRelationship()
+		[ContextMenu("z call RunOperation()")]
+		public void RunOperation()
 		{
 			DBG_Operation = $"{DateTime.Now}\n";
 			mthdDbg_Report.Clear();
 
+			DBG_Operation += $"re-calculating proximal relationships...\n";
+			_debugger.CalculateProximalRelationships();
+			DBG_Operation += $"relationships collections remade. Continuing...\n";
+
 			if (Grabber_vertA.CurrentlyGrabbedVert == null)
 			{
-				DBG_Operation += $"{nameof(Grabber_vertA.CurrentlyGrabbedVert)} is null. Returning early...";
+				DBG_Operation += $"{nameof(Grabber_vertA.CurrentlyGrabbedVert)}A is null. Returning early...";
 				return;
 			}
 			if (Grabber_vertB.CurrentlyGrabbedVert == null)
 			{
-				DBG_Operation += $"{nameof(Grabber_vertB.CurrentlyGrabbedVert)} is null. Returning early...";
+				DBG_Operation += $"{nameof(Grabber_vertB.CurrentlyGrabbedVert)}B is null. Returning early...";
 				return;
 			}
 
@@ -47,7 +52,7 @@ namespace LogansNavigationExtension
 			mthdDbg_Report.StartReport(name);
 			DateTime dt_opStart = DateTime.Now;
 			Relationship_aToB = new LNX_VertexRelationship(
-				vertA, vertB, _navmesh, ref mthdDbg_Report
+				vertA, vertB, _navmesh, false, ref mthdDbg_Report
 			);
 			DateTime dt_opEnd = DateTime.Now;
 			mthdDbg_Report.EndReport();
@@ -86,7 +91,7 @@ namespace LogansNavigationExtension
 				Grabber_vertB.RecalculatedLastFrame)
 			)
 			{
-				CreateRelationship();
+				RunOperation();
 
 			}
 

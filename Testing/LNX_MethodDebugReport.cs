@@ -119,7 +119,11 @@ namespace LogansNavigationExtension
 
 			rprtString += $"{CurrentMethodTabText}}}{(methodName == string.Empty ? "" : $" <-end of {methodName}")}\n";
 
-			methodSignatures.RemoveAt(methodSignatures.Count - 1);
+			if (MethodSignatures.Count > 1)
+			{
+				methodSignatures.RemoveAt(methodSignatures.Count - 1);
+			}
+			//methodSignatures.RemoveAt(methodSignatures.Count - 1);
 		}
 
 		public void Log(string s, bool includeConsole = false, bool abbreviationOverride = false)
@@ -134,7 +138,7 @@ namespace LogansNavigationExtension
 				return;
 			}
 
-			if (rprtString.Length < 50000)
+			if (rprtString.Length < 70000)
 			{
 				rprtString += $"{CurrentInnerTabText}{s}\n";
 			}

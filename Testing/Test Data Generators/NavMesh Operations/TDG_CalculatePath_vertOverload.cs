@@ -67,6 +67,88 @@ namespace LogansNavigationExtension
 			_data = JsonUtility.FromJson<LNX_NavMeshData>(DataAsset.ToString());
 		}
 
+		[ContextMenu("z call RunOperation()")]
+		public void RunOperation()
+		{
+			DBG_Operation = $"{DateTime.Now}\n";
+			CurrentOperationResult = false;
+			mthdDbg_Report.Clear();
+
+			if (StartVert == null)
+			{
+				DBG_Operation += $"startvert is null. Returning early...\n";
+				return;
+			}
+
+			if (EndVert == null)
+			{
+				DBG_Operation += $"EndVert is null. Returning early...\n";
+				return;
+			}
+
+			if (AllowEffiencyLoading)
+			{
+				DBG_Operation += $"am allowing efficiency loading. attempting loading...\n";
+				DateTime dt_efficiencyLoadStart = DateTime.Now;
+				if (!_data.MatchesNavmesh(_navmesh))
+				{
+					Debug.LogError($"LNX ERROR! {nameof(AllowEffiencyLoading)} is turned on, but saved navmesh data seems to be " +
+						$"invalid. Returning early...");
+					return;
+				}
+				else
+				{
+					_navmesh.TryLoadEfficiencyData(_data);
+				}
+				DBG_Operation += $"efficiency load took '{DateTime.Now.Subtract(dt_efficiencyLoadStart).TotalSeconds}' seconds...\n";
+
+				if (_data == null || !_data.MatchesNavmesh(_navmesh))
+				{
+					DBG_Operation += ($"LNX ERROR! Saved navmesh data seems to be invalid. You should probably " +
+						$"call {nameof(CastTextAssetToData)} Returning early...");
+					return;
+				}
+			}
+
+			DateTime dt_opStart = DateTime.Now;
+
+			if (!UseDbgVersion)
+			{
+				DBG_Operation += $"Using StartVert: '{StartVert}', and EndVert: '{EndVert}'...\n" +
+					$"Commencing operation...\n";
+				CurrentOperationResult = _navmesh.CalculatePath(
+					StartVert, EndVert,
+					out CurrentResultPath
+				);
+			}
+			else
+			{
+				DBG_Operation += $"(dbg version) Using startHit: '{Grabber_StartPos.CurrentHit}', and endHit: '{Grabber_EndPos.CurrentHit}'...\n" +
+					$"Commencing operation...\n";
+
+				mthdDbg_Report.StartReport();
+				try
+				{
+					CurrentOperationResult = _navmesh.CalculatePath_dbg(
+						StartVert, EndVert,
+						out CurrentResultPath, ref mthdDbg_Report
+					);
+				}
+				catch (Exception)
+				{
+
+					throw;
+				}
+
+				mthdDbg_Report.EndReport();
+			}
+
+			DBG_Operation += $"calculatepath took '{DateTime.Now.Subtract(dt_opStart).TotalSeconds}' seconds...\n" +
+				$"Result: '{CurrentOperationResult}'\n" +
+				$"path: '{CurrentResultPath}'\n" +
+				$"amStraight: '{CurrentResultPath.AmStraight}'";
+		}
+
 		protected override void OnDrawGizmos()
 		{
 			if
@@ -91,88 +173,13 @@ namespace LogansNavigationExtension
 			//DBG_Operation += $"Commencing operation...\n";
 
 			if (
-				Grabber_StartPos.RecalculatedLastFrame ||
-				Grabber_EndPos.RecalculatedLastFrame
+				AutoRun &&
+				(Grabber_StartPos.RecalculatedLastFrame ||
+				Grabber_EndPos.RecalculatedLastFrame)
 			)
 			{
-
-				DBG_Operation = $"{DateTime.Now}\n";
-				CurrentOperationResult = false;
-				mthdDbg_Report.Clear();
-
-				if( StartVert == null )
-				{
-					DBG_Operation += $"startvert is null. Returning early...\n";
-					return;
-				}
-
-				if (EndVert == null)
-				{
-					DBG_Operation += $"EndVert is null. Returning early...\n";
-					return;
-				}
-
-				if ( AllowEffiencyLoading )
-				{
-					DBG_Operation += $"am allowing efficiency loading. attempting loading...\n";
-					DateTime dt_efficiencyLoadStart = DateTime.Now;
-					if( !_data.MatchesNavmesh(_navmesh) )
-					{
-						Debug.LogError($"LNX ERROR! {nameof(AllowEffiencyLoading)} is turned on, but saved navmesh data seems to be " +
-							$"invalid. Returning early...");
-						return;
-					}
-					else
-					{
-						_navmesh.TryLoadEfficiencyData(_data);
-					}
-					DBG_Operation += $"efficiency load took '{DateTime.Now.Subtract(dt_efficiencyLoadStart).TotalSeconds}' seconds...\n";
-				
-					if (_data == null || !_data.MatchesNavmesh(_navmesh))
-					{
-						DBG_Operation += ($"LNX ERROR! Saved navmesh data seems to be invalid. You should probably " +
-							$"call {nameof(CastTextAssetToData)} Returning early...");
-						return;
-					}
-				}
-
-				DateTime dt_opStart = DateTime.Now;
-
-				if ( !UseDbgVersion )
-				{
-					DBG_Operation += $"Using StartVert: '{StartVert}', and EndVert: '{EndVert}'...\n" +
-						$"Commencing operation...\n";
-					CurrentOperationResult = _navmesh.CalculatePath(
-						StartVert, EndVert,
-						out CurrentResultPath
-					);
-				}
-				else
-				{
-					DBG_Operation += $"(dbg version) Using startHit: '{Grabber_StartPos.CurrentHit}', and endHit: '{Grabber_EndPos.CurrentHit}'...\n" +
-						$"Commencing operation...\n";
-
-					mthdDbg_Report.StartReport();
-					try
-					{
-						CurrentOperationResult = _navmesh.CalculatePath_dbg(
-							StartVert, EndVert,
-							out CurrentResultPath, ref mthdDbg_Report
-						);
-					}
-					catch (Exception)
-					{
-
-						throw;
-					}
-
-					mthdDbg_Report.EndReport();
-				}
-
-				DBG_Operation += $"calculatepath took '{DateTime.Now.Subtract(dt_opStart).TotalSeconds}' seconds...\n" +
-					$"Result: '{CurrentOperationResult}'\n";
+				RunOperation();
 			}
-
 
 			if (CurrentOperationResult)
 			{
