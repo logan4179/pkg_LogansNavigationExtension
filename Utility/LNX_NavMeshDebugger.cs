@@ -6,6 +6,7 @@ using UnityEditor;
 using UnityEditor.PackageManager.UI;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Rendering;
 
 namespace LogansNavigationExtension
 {
@@ -86,7 +87,7 @@ namespace LogansNavigationExtension
 				return;
 			}
 
-			if (FetchedRel != null && FetchedRel.PathTo != LNX_Path.None )
+			if (FetchedRel != null && FetchedRel.PathTo != null )
 			{
 				//FetchedRel.PathTo.DrawMyGizmos(0.1f, 0.5f, false);
 			}
@@ -210,6 +211,8 @@ namespace LogansNavigationExtension
 			DateTime dt_start = DateTime.Now;
 			for (int i = 0; i < _mgr.Triangles.Length; i++)
 			{
+				Debug.Log($"for triangle '{i}'...");
+
 				_mgr.Triangles[i].Verts[0].CreateRelationships(_mgr, true, true, false);
 				_mgr.Triangles[i].Verts[1].CreateRelationships(_mgr, true, true, false);
 				_mgr.Triangles[i].Verts[2].CreateRelationships(_mgr, true, true, false);
@@ -239,10 +242,33 @@ namespace LogansNavigationExtension
 		}
 
 		public LNX_VertexRelationship FetchedRel;
-		//[ContextMenu("z call DoEet()")]
+		[ContextMenu("z call DoEet()")]
 		public void DoEet()
 		{
-			FetchedRel = _mgr.Triangles[0].Verts[0].GetFurthestDistanceRelationshipOnTriangle(76);
+			//FetchedRel = _mgr.Triangles[0].Verts[0].GetFurthestDistanceRelationshipOnTriangle(76);
+
+
+			LNX_VertexRelationship[] rels = new LNX_VertexRelationship[10];
+			LNX_Path[] paths = new LNX_Path[10];
+			LNX_VertexRelationship lclRel = new LNX_VertexRelationship();
+			Debug.Log($"lclrel null: '{lclRel == null}'"); //false
+			Debug.Log($"rels[1] null: '{rels[1] == null}'"); //true
+			Debug.Log($"paths[1] null: '{paths[1] == null}'"); //true
+
+			rels[2] = new LNX_VertexRelationship();
+			LNX_VertexRelationship lclIndexedRel = rels[2];
+			Debug.Log($"rels[2].SpecialInt before: '{rels[2].SpecialInt}', lclIndexedRel.SpecialInt: '{lclIndexedRel.SpecialInt}'"); // prints -1
+			lclIndexedRel.SpecialInt = 123;
+			Debug.Log($"rels[2].SpecialInt after: '{rels[2].SpecialInt}', lclIndexedRel.SpecialInt: '{lclIndexedRel.SpecialInt}'"); //prings 123, so the local int is the same object
+
+
+			Debug.Log($"coord none: '{lclRel.RelatedVertCoordinate == LNX_ComponentCoordinate.None}'");
+			Debug.Log($"coord: '{lclRel.RelatedVertCoordinate}', triIndx: '{lclRel.RelatedVertCoordinate.TrianglesIndex}' compIndx: '{lclRel.RelatedVertCoordinate.ComponentIndex}'");
+
+			Debug.Log($" path null: '{lclRel.PathTo == null}'");
+
+			Debug.Log($" path: '{lclRel.PathTo}'");
+
 
 		}
 
@@ -251,7 +277,7 @@ namespace LogansNavigationExtension
 		public void TryRelationships()
 		{
 			CalculateProximalRelationships();
-
+			
 			float timeoutAmt = 25f;
 
 			DateTime dt_methodStart = DateTime.Now;
@@ -522,7 +548,7 @@ namespace LogansNavigationExtension
 					{
 						for (int i_rels = 0; i_rels < _mgr.Triangles[i].Verts[i_vrts].Relationships.Length; i_rels++)
 						{
-							if (_mgr.Triangles[i].Verts[i_vrts].Relationships[i_rels].PathTo != LNX_Path.None)
+							if (_mgr.Triangles[i].Verts[i_vrts].Relationships[i_rels].PathTo != null)
 							{
 								relCount++;
 							}

@@ -91,7 +91,7 @@ namespace LogansNavigationExtension
 			DBG_Operation = $"Recalculating at: '{DateTime.Now}'...\n";
 			CurrentOperationResult = false;
 			mthdDbg_Report.Clear();
-			CurrentResultPath = LNX_Path.None;
+			CurrentResultPath = null;
 			/*
 			if( AllowEffiencyLoading )
 			{

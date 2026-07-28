@@ -243,7 +243,7 @@ namespace LogansNavigationExtension
 			);
 		}
 
-		public void CalculateDerivedInfo(LNX_Triangle tri, LNX_NavMesh nvmsh )
+		public void CalculateDerivedInfo(LNX_Triangle tri, LNX_NavMesh nvmsh ) //todo: dws
 		{
 
 		}
@@ -258,14 +258,14 @@ namespace LogansNavigationExtension
 
 			if ( Relationships == null || Relationships.Length != nvmsh.Triangles.Length * 3 )
 			{
+				Relationships = new LNX_VertexRelationship[nvmsh.Triangles.Length * 3];
+
 				if ( createDistalRelationships && (!createSiblingRelationships || !createProximalRelationships) )
 				{
 					Debug.LogWarning($"LNX WARNING! CreateRelationships() was called for ONLY distal relationships, yet collection length " +
 						$"was NOT valid, meaning proximal relationships might not be valid. Cannot make distal relationships if proximal " +
 						$"relationships aren't valid. Remaking entire collection...");
 				}
-
-				Relationships = new LNX_VertexRelationship[nvmsh.Triangles.Length * 3];
 
 				createSiblingRelationships = true;
 				createProximalRelationships = true;
@@ -309,6 +309,7 @@ namespace LogansNavigationExtension
 				{
 					if (i == MyCoordinate.TrianglesIndex)
 					{
+						Debug.Log($"continuing because of tri index...");
 						continue;
 					}
 
@@ -396,11 +397,9 @@ namespace LogansNavigationExtension
 
 					#region CHECK IF TRIANGLE SHARES A VERT WITH ONE OF MY SIBLINGS ============
 					if 
-					( 
-						(
-							nvmsh.Triangles[i].Verts[0].V_Position == nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[Index_FirstSiblingVert].V_Position ||
-							nvmsh.Triangles[i].Verts[0].V_Position == nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[Index_SecondSiblingVert].V_Position
-						) && !Relationships[(i * 3) + 0].AmValid
+					(
+						nvmsh.Triangles[i].Verts[0].V_Position == nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[Index_FirstSiblingVert].V_Position ||
+						nvmsh.Triangles[i].Verts[0].V_Position == nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[Index_SecondSiblingVert].V_Position
 					)
 					{
 						Relationships[(i * 3) + 0] = new LNX_VertexRelationship(
@@ -413,10 +412,8 @@ namespace LogansNavigationExtension
 					}
 					if
 					(
-						(
-							nvmsh.Triangles[i].Verts[1].V_Position == nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[Index_FirstSiblingVert].V_Position ||
-							nvmsh.Triangles[i].Verts[1].V_Position == nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[Index_SecondSiblingVert].V_Position
-						) && !Relationships[(i * 3) + 1].AmValid
+						nvmsh.Triangles[i].Verts[1].V_Position == nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[Index_FirstSiblingVert].V_Position ||
+						nvmsh.Triangles[i].Verts[1].V_Position == nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[Index_SecondSiblingVert].V_Position
 					)
 					{
 						Relationships[(i * 3) + 1] = new LNX_VertexRelationship(
@@ -429,10 +426,8 @@ namespace LogansNavigationExtension
 					}
 					if
 					(
-						(
-							nvmsh.Triangles[i].Verts[2].V_Position == nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[Index_FirstSiblingVert].V_Position ||
-							nvmsh.Triangles[i].Verts[2].V_Position == nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[Index_SecondSiblingVert].V_Position
-						) && !Relationships[(i * 3) + 2].AmValid
+						nvmsh.Triangles[i].Verts[2].V_Position == nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[Index_FirstSiblingVert].V_Position ||
+						nvmsh.Triangles[i].Verts[2].V_Position == nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[Index_SecondSiblingVert].V_Position
 					)
 					{
 						Relationships[(i * 3) + 2] = new LNX_VertexRelationship(
@@ -813,7 +808,7 @@ namespace LogansNavigationExtension
 
 		public bool IsVertexRelationallyValid(int triIndx, int vrtIndx)
 		{
-			return Relationships[(triIndx * 3) + vrtIndx].AmValid;
+			return Relationships[(triIndx * 3) + vrtIndx] != null && Relationships[(triIndx * 3) + vrtIndx].AmValid;
 		}
 
 		public bool IsTriangleCompletelyRelationallyValid(int triIndx)
@@ -879,7 +874,7 @@ namespace LogansNavigationExtension
 			{
 				if (runningPath.TotalDistance + Vector3.Distance(V_Position, endPoint.Position) > maxAllowableDist)
 				{
-					return LNX_Path.None;
+					return null;
 				}
 			}
 
@@ -917,7 +912,7 @@ namespace LogansNavigationExtension
 
 			if (vsblVrtPths.Count <= 0)
 			{
-				return LNX_Path.None;
+				return null;
 			}
 			else
 			{
@@ -928,7 +923,7 @@ namespace LogansNavigationExtension
 			}
 			#endregion
 
-			LNX_Path runningBestPath = LNX_Path.None;
+			LNX_Path runningBestPath = null;
 			float runningBestDistance = maxAllowableDist;
 
 			for (int i = 0; i < vsblVrtPths.Count; i++)
@@ -950,7 +945,7 @@ namespace LogansNavigationExtension
 				rprt.EndReport();
 				*/
 
-				if (fwdPath != LNX_Path.None)
+				if (fwdPath != null)
 				{
 					if (runningBestDistance == -1 || fwdPath.TotalDistance < runningBestDistance)
 					{
@@ -970,7 +965,7 @@ namespace LogansNavigationExtension
 			rprt.StartMethod($"{this}.Ping_dbg('{endPoint}', maxAllowableDist: '{maxAllowableDist}', bkstps: " +
 				$"'{(backstopverts == null ? "null" : backstopverts.Count)}')");
 
-			if( runningPath != LNX_Path.None )
+			if( runningPath != null )
 			{
 				rprt.Log($"Note: runningPath: '{runningPath}', pts count: '{runningPath.PointCount}'...",
 					$"runningpath dist: '{runningPath.TotalDistance}'");
@@ -991,7 +986,7 @@ namespace LogansNavigationExtension
 					//Debug.Log($"runningpath dist ('{runningPath.TotalDistance}') plus straight line " +
 						//$"distance ('{Vector3.Distance(V_Position, endPoint.Position)}') farther than " +
 						//$"maxAllowableDist: '{maxAllowableDist}'. Short-circuiting...");
-					return LNX_Path.None;
+					return null;
 				}
 				else
 				{
@@ -1055,7 +1050,7 @@ namespace LogansNavigationExtension
 					$"that weren't part of backstop collection. Returning 'None' path...");
 				//Debug.Log($"Ping() method tried to get visible verts from '{ToString()}', but failed to get any " +
 					//$"that weren't part of backstop collection. Returning 'None' path...");
-				return LNX_Path.None;
+				return null;
 			}
 			else
 			{
@@ -1083,7 +1078,7 @@ namespace LogansNavigationExtension
 			}
 			#endregion
 
-			LNX_Path runningBestPath = LNX_Path.None;
+			LNX_Path runningBestPath = null;
 			float runningBestDistance = maxAllowableDist;
 
 			rprt.Log($"now calling ping() for all visible verts with starting runningbestdist: '{runningBestDistance}'...");
@@ -1111,7 +1106,7 @@ namespace LogansNavigationExtension
 				pingFwdRprt.EndReport();
 				*/
 
-				if (fwdPath == LNX_Path.None)
+				if (fwdPath == null)
 				{
 					rprt.Log($"ping returned 'None' path...");
 				}

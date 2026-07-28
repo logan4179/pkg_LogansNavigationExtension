@@ -1409,7 +1409,7 @@ namespace LogansNavigationExtension
 						LNX_VertexRelationship rel = Triangles[startHit.TriangleIndex].Verts[startHit.VertIndex].GetRelationship(
 							endHit.TriangleIndex, endHit.VertIndex);
 
-						if (rel.AmValid)
+						if (rel != null && rel.AmValid)
 						{
 							outPath = new LNX_Path(rel.PathTo); //IMPORTANT! This needs to be a new (different) object so that the pathpoint list doesn't get inadvertently changed
 							return !outPath.AmStraight;
@@ -1439,7 +1439,7 @@ namespace LogansNavigationExtension
 								$"This shouldn't happen on a non-terminal vert. Maybe the relational information is incorrect or needs to be reloaded. Returning early...");
 						}
 
-						outPath = LNX_Path.None;
+						outPath = null;
 						return true;
 					}
 					else
@@ -1466,7 +1466,7 @@ namespace LogansNavigationExtension
 				{
 					if (Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].AmTerminal)
 					{
-						outPath = LNX_Path.None;
+						outPath = null;
 						return true;
 					}
 					else
@@ -1647,7 +1647,7 @@ namespace LogansNavigationExtension
 							rprt.Log_And_End_Method($"Problem! Got none relationship. Returning true...");
 						}
 
-						outPath = LNX_Path.None;
+						outPath = null;
 						return true;
 					}
 					else
@@ -1681,7 +1681,7 @@ namespace LogansNavigationExtension
 						"this will need further investigation...");
 					if (Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].AmTerminal )
 					{
-						outPath = LNX_Path.None;
+						outPath = null;
 						rprt.Log_And_End_Method($"this edge is terminal. Made outpath: '{outPath}', and returning true here...");
 						return true;
 					}
@@ -1858,7 +1858,7 @@ namespace LogansNavigationExtension
 		public bool Raycast(Vector3 sourcePosition, Vector3 targetPosition, float maxSampleDistance, out LNX_Path outPath,
 			bool considerOffPerimeter = false) //todo: Unit test!!!
 		{
-			outPath = LNX_Path.None;
+			outPath = null;
 
 			LNX_NavmeshHit lnxStartHit = LNX_NavmeshHit.None;
 			LNX_NavmeshHit lnxEndHit = LNX_NavmeshHit.None;
@@ -1884,7 +1884,7 @@ namespace LogansNavigationExtension
 			//rprt.Log($"tablvl: '{rprt.MethodLvl}'");
 			rprt.StartMethod($"Raycast_dbg(sourcePosition: '{sourcePosition}', targetPosition: '{targetPosition}')");
 
-			outPath = LNX_Path.None;
+			outPath = null;
 
 			LNX_NavmeshHit lnxStartHit = LNX_NavmeshHit.None;
 			LNX_NavmeshHit lnxEndHit = LNX_NavmeshHit.None;
@@ -1949,7 +1949,7 @@ namespace LogansNavigationExtension
 			}
 			else
 			{
-				outPath = LNX_Path.None; //needs to be done bc of the raycast above, which will give this a junk value if the method gets this far....
+				outPath = null; //needs to be done bc of the raycast above, which will give this a junk value if the method gets this far....
 
 				#region DETERMINE RUNNINGCLOSESTDISTANCE =============================================================
 				float runningClosestDistance = -1;
@@ -2074,7 +2074,7 @@ namespace LogansNavigationExtension
 			else
 			{
 				rprt.Log($"Initial raycast returned true, meaning it DID hit an obstruction. Continuing...");
-				outPath = LNX_Path.None; //needs to be done bc of the raycast above, which will give this a junk value if the method gets this far....
+				outPath = null; //needs to be done bc of the raycast above, which will give this a junk value if the method gets this far....
 
 				#region DETERMINE RUNNINGCLOSESTDISTANCE =============================================================
 				rprt.Log($"Checking if preliminary runningclosestdistance can be established.", 
@@ -2224,7 +2224,7 @@ namespace LogansNavigationExtension
 
 
 					rprt.Log($"Got path: '{paths[i_visblVrts]}' with dist: '{paths[i_visblVrts].TotalDistance}'.",
-						$"pts: '{(paths[i_visblVrts] == LNX_Path.None ? "None" : paths[i_visblVrts].PointCount)}'",
+						$"pts: '{(paths[i_visblVrts] == null ? "None" : paths[i_visblVrts].PointCount)}'",
 						$"Checking against runningClosestDistance: '{runningClosestDistance}' to see if this is a new best path...");
 
 					if 
@@ -2277,12 +2277,10 @@ namespace LogansNavigationExtension
 			}
 			#endregion
 
-			bool rslt = CalculatePath(
+			return CalculatePath(
 				new LNX_NavmeshHit(startVert, Triangles[startVert.TriangleIndex].V_PathingNormal),
 				new LNX_NavmeshHit(endVert, Triangles[endVert.TriangleIndex].V_PathingNormal),
 				out outPath);
-
-			return rslt;
 		}
 		public bool CalculatePath_dbg(LNX_Vertex startVert, LNX_Vertex endVert, out LNX_Path outPath, ref LNX_MethodDebugReport rprt) //1 <<<<<<<<<<<<<<<<
 		{

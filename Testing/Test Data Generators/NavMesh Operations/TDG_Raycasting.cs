@@ -64,7 +64,7 @@ namespace LogansNavigationExtension
 		public void RunRaycast()
 		{
 			mthdDbg_Report.Clear();
-			ResultPath = LNX_Path.None;
+			ResultPath = null;
 
 			DBG_Operation = $"{DateTime.Now}\n";
 
@@ -137,7 +137,7 @@ namespace LogansNavigationExtension
 				RunRaycast();
 			}
 
-			if (ResultPath != LNX_Path.None)
+			if (ResultPath != null)
 			{
 				Color oldClr = Gizmos.color;
 				Gizmos.color = Color_PathPoints;
