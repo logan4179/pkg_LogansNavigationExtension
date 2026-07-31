@@ -1,13 +1,14 @@
+using LogansNavigationExtension;
+using NUnit.Framework;
 using System.Collections;
 using System.Collections.Generic;
-using NUnit.Framework;
-using UnityEngine;
-using UnityEngine.TestTools;
-using LogansNavigationExtension;
-using UnityEngine.AI;
-using System.IO;
 using System.ComponentModel;
+using System.IO;
+using UnityEditor.SceneManagement;
 using UnityEditor.SearchService;
+using UnityEngine;
+using UnityEngine.AI;
+using UnityEngine.TestTools;
 
 
 namespace LoganLand.LogansNavmeshExtension.Tests
@@ -32,13 +33,12 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		/// dynamically-constructed lnx navmesh. Therefore, this object should be re-serialized to json anytime I make a change 
 		/// to the scene geometry that makes the navmesh.</summary>
 		LNX_NavMesh _jsonGeneratedLnxNavmesh; //note: originally I was going to use this to save the _mesh and triangulation
-		// collection lengths instead of testing a hard-coded value, but those things don't seem to get serialized to JSON. 
-		// Leaving this here in case I think of something else to do with it...
+											  // collection lengths instead of testing a hard-coded value, but those things don't seem to get serialized to JSON. 
+											  // Leaving this here in case I think of something else to do with it...
 
-        //TDG_SamplePosition _tdg_samplePosition;
+		//TDG_SamplePosition _tdg_samplePosition;
 
 		//TDG_SampleClosestPtOnPerimeter _test_closestOnPerimeter;
-
 
 		#region A - Setup ---------------------------------------------------------------------------
 		[Test]
@@ -79,7 +79,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			_testGeneratedLnxNavmesh.MyLayerMask = LayerMask.GetMask( "lr_EnvSolid" );
 
 
-			_testGeneratedLnxNavmesh.CalculateTriangulation();
+			_testGeneratedLnxNavmesh.CreateFromSceneTriangulation();
 			Assert.NotNull(_testGeneratedLnxNavmesh._VisualizationMesh);
 			Debug.Log($"mesh visual. {nameof(_testGeneratedLnxNavmesh._VisualizationMesh.vertices)} length: '{_testGeneratedLnxNavmesh._VisualizationMesh.vertices.Length}', " +
 				$"{nameof(_testGeneratedLnxNavmesh._VisualizationMesh.triangles)} length: '{_testGeneratedLnxNavmesh._VisualizationMesh.triangles.Length}, " +
@@ -214,23 +214,6 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				Assert.Greater(_testGeneratedLnxNavmesh.Triangles[i].AreaIndex, -1);
 			}
 		}
-
-		/*
-		[Test] //todo: took this out because I took away triangle relationshipos. dws
-		public void C3_All_Triangle_Relationships_Array_Lengths_Equal_Master_Triangles_Array_Length()
-		{
-			Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(C3_All_Triangle_Relationships_Array_Lengths_Equal_Master_Triangles_Array_Length)));
-
-			Debug.Log($"\nChecking relationships...");
-			Debug.Log($"Running through '{_sceneGeneratedLnxNavmesh.Triangles.Length}' triangles to check relationships..");
-			for (int i = 0; i < _sceneGeneratedLnxNavmesh.Triangles.Length; i++)
-			{
-				Debug.Log($"checking tri '{i}'...");
-
-				Assert.AreEqual(_sceneGeneratedLnxNavmesh.Triangles[i].Relationships.Length, _sceneGeneratedLnxNavmesh.Triangles.Length);
-			}
-		}
-		*/
 
 		/*
 		[Test]

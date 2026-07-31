@@ -84,6 +84,10 @@ namespace LogansNavigationExtension
 			}
 		}
 
+		/// <summary>Whether this triangle's face direction is oriented correctly </summary>
+		public bool AmKinked => Vector3.Dot(v_navmeshProjectionDirection_cached, V_PlaneFaceNormal) <= 0f; //note: this will only work if the plane face normal is calculated correctly. Will need to make sure to do that
+
+
 		[Header("RELATIONAL")]
 		/// <summary>
 		/// Array of indices of triangles that share at least one vertex with this triangle.
@@ -124,8 +128,6 @@ namespace LogansNavigationExtension
 			}
 		}
 
-		/// <summary>Whether this triangle's face direction is oriented correctly </summary>
-		public bool AmKinked => Vector3.Dot(v_navmeshProjectionDirection_cached, V_PlaneFaceNormal) <= 0f; //note: this will only work if the plane face normal is calculated correctly. Will need to make sure to do that
 
 		//[Header("OTHER")]
 		/// <summary>Normal derived by sampling the terrain underfoot.</summary>
@@ -428,6 +430,7 @@ namespace LogansNavigationExtension
 			else
 			{
 				v_sampledNormal = Vector3.zero;
+				Debug.LogWarning($"LNX WARNING! Couldn't sample normal for tri: '{index_inCollection}'...");
 				//DbgCalculateTriInfo += $"";
 			}
 			#endregion

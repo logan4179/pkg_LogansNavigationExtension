@@ -265,7 +265,7 @@ namespace LogansNavigationExtension
 		{
 			if( flattenDir == Vector3.zero )
 			{
-				Debug.LogError( $"LNX ERROR! You supplied a normal parameter of 0. Need a normal direction in order to flatten!" );
+				Debug.LogError( $"LNX ERROR! You supplied a normal parameter of Vector3.zero. Need a normal direction in order to flatten!" );
 				return Vector3.zero;
 			}
 

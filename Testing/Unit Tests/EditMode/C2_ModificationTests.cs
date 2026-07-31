@@ -50,8 +50,8 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				$"'{_sceneGeneratedNavmesh.HaveModifications()}'. now calling {nameof(_sceneGeneratedNavmesh.ClearModifications)}()...");
 			_sceneGeneratedNavmesh.ClearModifications(); //need to clear mods to be sure...
 
-			Debug.Log($"calling {nameof(_sceneGeneratedNavmesh.CalculateTriangulation)}() in order to ensure a fresh creation free of mods...");
-			_sceneGeneratedNavmesh.CalculateTriangulation();
+			Debug.Log($"calling {nameof(_sceneGeneratedNavmesh.CreateFromSceneTriangulation)}() in order to ensure a fresh creation free of mods...");
+			_sceneGeneratedNavmesh.CreateFromSceneTriangulation();
 
 			Assert.False( _sceneGeneratedNavmesh.HaveModifications() );
 
@@ -132,7 +132,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			Debug.Log( string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(b2_RecalculateTriangulationAfterMove)) );
 
 			Debug.Log($"Recalculating triangulation....");
-			_sceneGeneratedNavmesh.CalculateTriangulation();
+			_sceneGeneratedNavmesh.CreateFromSceneTriangulation();
 
 			Debug.Log($"Checking if navmesh still considers itself to be modified after recalculating triangulation....");
 			Assert.True( _sceneGeneratedNavmesh.HaveModifications() );

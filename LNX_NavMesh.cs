@@ -523,11 +523,10 @@ namespace LogansNavigationExtension
 
 		#region CREATION/SETUP ---------------------------------------------------------
 		[NonSerialized, HideInInspector] public string DBG_CalculateTriangulation;
-		[ContextMenu("z - call CalculateTriangulation()")]
-		public void CalculateTriangulation()
+		public void CreateFromTriangulation(NavMeshTriangulation triangulation)
 		{
 			DateTime dt_methodStart = DateTime.Now;
-			DBG_CalculateTriangulation = $"{nameof(CalculateTriangulation)}()";
+			DBG_CalculateTriangulation = $"{nameof(CreateFromTriangulation)}()";
 
 			Debug.Log($"{nameof(MyLayerMask)}: '{MyLayerMask.value}'");
 			if( MyLayerMask.value == 0 )
@@ -542,11 +541,10 @@ namespace LogansNavigationExtension
 			_VisualizationMesh = new Mesh();
 
 			#region DEAL WITH TRIANGULATION -----------------------------------------------------------------------------
-			NavMeshTriangulation triangulation = NavMesh.CalculateTriangulation(); //Docs: This calculates and returns a "simple triangulation of the current navmesh..."
 
-			DBG_CalculateTriangulation += $"fetched scene triangulation has '{triangulation.areas.Length}' areas, '{triangulation.vertices.Length}' " +
+			DBG_CalculateTriangulation += $"supplied triangulation has '{triangulation.areas.Length}' areas, '{triangulation.vertices.Length}' " +
 				$"vertices, and '{triangulation.indices.Length}' indices.\n";
-			Debug.Log($"fetched scene triangulation has '{triangulation.areas.Length}' areas, '{triangulation.vertices.Length}' " +
+			Debug.Log($"supplied triangulation has '{triangulation.areas.Length}' areas, '{triangulation.vertices.Length}' " +
 				$"vertices, and '{triangulation.indices.Length}' indices.\n");
 
 			List<LNX_AtomicTriangle> constructedAtomicTris = new List<LNX_AtomicTriangle>();
@@ -590,12 +588,12 @@ namespace LogansNavigationExtension
 			#endregion
 
 			DBG_CalculateTriangulation += $"Finished constructing '{constructedAtomicTris.Count}' atomic tris. Now constructing real list...\n";
-			Debug.Log($"Finished constructing '{constructedAtomicTris.Count}' atomic tris. Now constructing real list...\n");
+			//Debug.Log($"Finished constructing '{constructedAtomicTris.Count}' atomic tris. Now constructing real list...\n");
 			Triangles = new LNX_Triangle[constructedAtomicTris.Count];
 			for ( int i = 0; i < constructedAtomicTris.Count; i++ )
 			{
 				DBG_CalculateTriangulation += $"{i} --------------------------////////////////////////////////////\n";
-				Debug.Log($"{i} --------------------------////////////////////////////////////\n");
+				//Debug.Log($"{i} --------------------------////////////////////////////////////\n");
 
 				Triangles[i] = new LNX_Triangle(i, constructedAreaIndices[i], constructedAtomicTris, this);
 			}
@@ -619,14 +617,28 @@ namespace LogansNavigationExtension
 			}
 #endif
 
-			Debug.Log($"Finished making list. method time: '{DateTime.Now.Subtract(dt_methodStart)}'");
+			//Debug.Log($"Finished making list. method time: '{DateTime.Now.Subtract(dt_methodStart)}'");
 			DBG_CalculateTriangulation += $"Finished making list. method time: '{DateTime.Now.Subtract(dt_methodStart)}'";
 
-			DBG_CalculateTriangulation += $"End of {nameof(CalculateTriangulation)}(). Created '{Triangles.Length}' triangles, " +
+			DBG_CalculateTriangulation += $"End of {nameof(CreateFromTriangulation)}(). Created '{Triangles.Length}' triangles, " +
 				$"and '{constructedVertices_unique.Count}' unique vertices for the mesh.\n";
 
-			Debug.Log(DBG_CalculateTriangulation);
+			//Debug.Log(DBG_CalculateTriangulation);
 			EditorUtility.SetDirty(this);
+		}
+
+		[ContextMenu("z - call CreateFromSceneTriangulation()")]
+		public void CreateFromSceneTriangulation()
+		{
+			NavMeshTriangulation tringltn = NavMesh.CalculateTriangulation(); //Docs: This calculates and returns a "simple triangulation of the current navmesh..."
+			if (tringltn.vertices == null || tringltn.vertices.Length <= 0 )
+			{
+				Debug.LogError($"LNX ERROR! triangulation gathered from the scene had null or 0 vertices collection. " +
+					$"Returning early...");
+				return;
+			}
+
+			CreateFromTriangulation( tringltn );
 		}
 
 		public void Refresh( bool meshContinuityHasChanged ) //NEW
@@ -1380,7 +1392,7 @@ namespace LogansNavigationExtension
 			#region SHORT-CIRCUITING ==================================================
 			if (startHit.TriangleIndex == endHit.TriangleIndex) //If start and end hit are on same triangle...
 			{
-				outPath = new LNX_Path(GetSurfaceProjectionVector(), endHit);
+				outPath = new LNX_Path(GetSurfaceProjectionVector(), startHit, endHit);
 				return false;
 			}
 
@@ -1390,6 +1402,8 @@ namespace LogansNavigationExtension
 				return false;
 			}
 			#endregion
+
+			outPath = new LNX_Path(GetSurfaceProjectionVector(), startHit);
 
 			//todo: instead of using FlatHitPosition(startHit) below, cache this value and efficiency test to see if it's worth it
 			// todo: also, a little bit lower, there's a line saying [Vector3 vProject = FlatVector( endHit.Position - startHit.Position ).normalized;],
@@ -1482,9 +1496,6 @@ namespace LogansNavigationExtension
 			}
 
 			#region PROJECT THROUGH TO END HIT ==================================
-			outPath = new LNX_Path(this);
-			outPath.AddPoint(startHit);
-
 			LNX_NavmeshHit currentStartHit = startHit;
 			int safetyTimeout = Triangles.Length;
 			int runningWhileIterations = 0;
@@ -1555,7 +1566,7 @@ namespace LogansNavigationExtension
 			#region SHORT-CIRCUITING ==================================================
 			if (startHit.TriangleIndex == endHit.TriangleIndex) //If start and end hit are on same triangle...
 			{
-				outPath = new LNX_Path(GetSurfaceProjectionVector(), endHit);
+				outPath = new LNX_Path(GetSurfaceProjectionVector(), startHit, endHit);
 				rprt.Log_And_End_Method("startHit and endHit on same tri index. Short-circuiting early...");
 				return false;
 			}
@@ -1567,6 +1578,8 @@ namespace LogansNavigationExtension
 				return false;
 			}
 			#endregion
+
+			outPath = new LNX_Path(GetSurfaceProjectionVector(), startHit);
 
 			//todo: instead of using FlatHitPosition(startHit) below, cache this value and efficiency test to see if it's worth it
 			// todo: also, a little bit lower, there's a line saying [Vector3 vProject = FlatVector( endHit.Position - startHit.Position ).normalized;],
@@ -1700,8 +1713,6 @@ namespace LogansNavigationExtension
 			}
 
 			#region PROJECT THROUGH TO END HIT ==================================
-			outPath = new LNX_Path(this);
-			outPath.AddPoint( startHit );
 			rprt.Log($"initialized path and added startHIt: '{startHit}'. Path pt count: '{outPath.PointCount}'");
 
 			LNX_NavmeshHit currentStartHit = startHit;

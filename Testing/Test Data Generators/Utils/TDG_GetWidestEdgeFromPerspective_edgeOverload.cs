@@ -79,8 +79,8 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call SendToProblemPosition()")]
 		public void SendToProblemPosition()
 		{
-			PerspectiveEdgeGrabber.transform.position = _dataCapture_problems.VectorCaptureLists[0].vectors[Index_GoToProblem];
-			OtherTriGrabber.transform.position = _dataCapture_problems.VectorCaptureLists[1].vectors[Index_GoToProblem];
+			PerspectiveEdgeGrabber.transform.position = _dataCapture_problems.VectorCaptureLists[0].vectors[Index_FocusOn];
+			OtherTriGrabber.transform.position = _dataCapture_problems.VectorCaptureLists[1].vectors[Index_FocusOn];
 
 			SampleComponents();
 		}

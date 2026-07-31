@@ -13,21 +13,23 @@ namespace LogansNavigationExtension
 		public LNX_ComponentGrabber startGrabber;
 		public LNX_ComponentGrabber endGrabber;
 
+		[Header("RESULTS")]
 		public bool RaycastResult = false;
-
-		[Header("PATH")]
 		//public List<LNX_ProjectionHit> RaycastHitResults;
 		public LNX_Path ResultPath;
+
+		[Header("DATA")]
+		public List<RaycastResultEntry_v0> ResultEntries;
 
 		[Header("DEBUG")]
 		public Color Color_PathPoints;
 		[Range(0f, 0.05f)] public float Size_PathPoints;
 		[Range(0f, 0.25f)] public float Height_PathPtLabels;
 
-
 		[ContextMenu("z CaptureDataPoint()")]
 		public void CaptureDataPoint()
 		{
+			Debug.Log($"{nameof(CaptureDataPoint)}()...");
 			/*
 			CapturedStartPositions.Add( startTrans.position );
 			CapturedEndPositions.Add( endTrans.position );
@@ -35,7 +37,7 @@ namespace LogansNavigationExtension
 			*/
 			//Debug.Log($"Logged '{rslt_CurrentProjectedPtOnEdge}'...");
 
-
+			ResultEntries.Add( new RaycastResultEntry_v0(startGrabber.CurrentHit, endGrabber.CurrentHit, ResultPath, RaycastResult) );
 		}
 
 		[ContextMenu("z CaptureProblemPosition (override)()")]
@@ -51,13 +53,24 @@ namespace LogansNavigationExtension
 		[ContextMenu("z GoToProblem()")]
 		public void GoToProblem()
 		{
-			//startTrans.position = problemPositions[Index_FocusProblem];
-			//endTrans.position = ProblemEndPositions[Index_FocusProblem];
+			Debug.Log($"going to '{Index_FocusOn}'...");
+			if (startGrabber.SnapTo != LNX_Component.None)
+			{
+				Debug.LogWarning($"WARNING! startgrabber snap set to: '{startGrabber.SnapTo}'...");
+			}
+			if (endGrabber.SnapTo != LNX_Component.None)
+			{
+				Debug.LogWarning($"WARNING! endGrabber snap set to: '{endGrabber.SnapTo}'...");
+			}
 
-			//startTrans.position = CapturedStartPositions[index_focusProblem];
-			//endTrans.position = CapturedEndPositions[index_focusProblem];
+			startGrabber.Index_TriRestrict = -1;
+			endGrabber.Index_TriRestrict = -1;
 
-			Debug.Log($"{nameof(GoToProblem)}()...");
+			startGrabber.transform.position = _dataCapture_problems.VectorCaptureLists[0].vectors[Index_FocusOn];
+			startGrabber.GrabComponent();
+
+			endGrabber.transform.position = _dataCapture_problems.VectorCaptureLists[1].vectors[Index_FocusOn];
+			endGrabber.GrabComponent();
 		}
 
 		[ContextMenu("z call RunRaycast()")]
@@ -163,15 +176,35 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call GoToDataPoint")]
 		public void GoToDataPoint()
 		{
-			//startTrans.position = CapturedStartPositions[index_focusProblem];
-			//endTrans.position = CapturedEndPositions[index_focusProblem];
+			Debug.Log($"going to '{Index_FocusOn}'...");
+			if( startGrabber.SnapTo != LNX_Component.None )
+			{
+				Debug.LogWarning($"WARNING! startgrabber snap set to: '{startGrabber.SnapTo}'...");
+			}
+			if ( endGrabber.SnapTo != LNX_Component.None)
+			{
+				Debug.LogWarning($"WARNING! endGrabber snap set to: '{endGrabber.SnapTo}'...");
+			}
+
+			startGrabber.Index_TriRestrict = -1;
+			endGrabber.Index_TriRestrict = -1;
+
+			startGrabber.transform.position = _dataCapture.VectorCaptureLists[0].vectors[Index_FocusOn];
+			startGrabber.GrabComponent();
+
+			endGrabber.transform.position = _dataCapture.VectorCaptureLists[1].vectors[Index_FocusOn];
+			endGrabber.GrabComponent();
 		}
 
 
 		[ContextMenu("z call DoEet")]
 		public void DoEet()
 		{
+			ResultEntries = new List<RaycastResultEntry_v0>();
+			for (int i = 0; i < _dataCapture.VectorCaptureLists.Count; i++)
+			{
 
+			}
 		}
 		#endregion
 
@@ -207,5 +240,40 @@ namespace LogansNavigationExtension
 			EditorUtility.SetDirty(this);
 		}
 		#endregion
+
+		[System.Serializable]
+		public struct RaycastResultEntry_v0
+		{
+			[TextArea(1,5)]
+			public string Description;
+			public bool AmProblem;
+
+			[Header("PARAMETERS")]
+			public LNX_NavmeshHit startHit;
+			public LNX_NavmeshHit endHit;
+
+			[Header("RESULTS")]
+			public LNX_Path outPath;
+			public bool OperationResult;
+
+			/*
+			public RaycastResultEntry_v0( TDG_VectorCaptureList cptrList )
+			{
+				Description = "";
+
+				startHit = new LNX_NavmeshHit(
+			}
+			*/
+
+			public RaycastResultEntry_v0(LNX_NavmeshHit strtHit, LNX_NavmeshHit ndHt, LNX_Path otPth, bool opRslt)
+			{
+				Description = "";
+				AmProblem = false;
+				startHit = strtHit;
+				endHit = ndHt;
+				outPath = otPth;
+				OperationResult = opRslt;
+			}
+		}
 	}
 }

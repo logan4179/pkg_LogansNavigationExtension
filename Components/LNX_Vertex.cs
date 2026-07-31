@@ -272,7 +272,7 @@ namespace LogansNavigationExtension
 			}
 			else if ( createSiblingRelationships && createProximalRelationships && createDistalRelationships )
 			{
-				Debug.Log($"making collection anew...");
+				//Debug.Log($"making collection anew...");
 
 				Relationships = new LNX_VertexRelationship[nvmsh.Triangles.Length * 3];
 			}
@@ -309,7 +309,7 @@ namespace LogansNavigationExtension
 				{
 					if (i == MyCoordinate.TrianglesIndex)
 					{
-						Debug.Log($"continuing because of tri index...");
+						//Debug.Log($"continuing because of tri index...");
 						continue;
 					}
 
