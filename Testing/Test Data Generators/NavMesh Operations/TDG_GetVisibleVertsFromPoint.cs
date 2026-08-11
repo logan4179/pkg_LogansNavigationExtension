@@ -48,7 +48,7 @@ namespace LogansNavigationExtension
 				DBG_Operation += $"using regular version...\n";
 
 				System.Diagnostics.Stopwatch stpWtch = System.Diagnostics.Stopwatch.StartNew();
-				ResultPaths = _navmesh.GetVisibleVertsFromPoint(Grabber_Hit.CurrentHit, false, excludeCoords);
+				ResultPaths = _navmesh.GetVisibleVertsFromHit(Grabber_Hit.CurrentHit, false, excludeCoords);
 				stpWtch.Stop();
 				totalMs = stpWtch.ElapsedMilliseconds;
 				totalTicks = stpWtch.ElapsedTicks;
@@ -58,7 +58,7 @@ namespace LogansNavigationExtension
 				DBG_Operation += $"using debug version...\n";
 				mthdDbg_Report.StartReport();
 				System.Diagnostics.Stopwatch stpWtch = System.Diagnostics.Stopwatch.StartNew();
-				ResultPaths = _navmesh.GetVisibleVertsFromPoint_dbg(Grabber_Hit.CurrentHit, ref mthdDbg_Report, false, excludeCoords);
+				ResultPaths = _navmesh.GetVisibleVertsFromHit_dbg(Grabber_Hit.CurrentHit, ref mthdDbg_Report, false, excludeCoords);
 				stpWtch.Stop();
 				totalMs = stpWtch.ElapsedMilliseconds;
 				totalTicks = stpWtch.ElapsedTicks; mthdDbg_Report.EndReport();

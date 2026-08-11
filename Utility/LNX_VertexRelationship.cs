@@ -349,6 +349,39 @@ namespace LogansNavigationExtension
 		}
 		#endregion
 
+		public bool ValueEquals( LNX_VertexRelationship otherRelationship)
+		{
+			if( otherRelationship == null || RelatedVertCoordinate != otherRelationship.RelatedVertCoordinate )
+			{
+				return false;
+			}
+
+			if( PathTo == null )
+			{
+				if( otherRelationship.PathTo != null )
+				{
+					return false;
+				}
+				else
+				{
+					return true;
+				}
+			}
+			else if( otherRelationship.PathTo == null ) 
+			{
+				if ( PathTo != null)
+				{
+					return false;
+				}
+				else
+				{
+					return true;
+				}
+			}
+
+			return PathTo.ValueEquals(otherRelationship.PathTo);
+		}
+
 		#region OPERATORS ==================================================
 		/*
 		public override bool Equals(object obj)

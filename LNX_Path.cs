@@ -304,6 +304,36 @@ namespace LogansNavigationExtension
 
 			return new LNX_Path( v_navmeshSurfaceProjection_cached, reversedHits );
 		}
+
+		public bool ValueEquals( LNX_Path otherPath )
+		{
+
+			if ((pathPoints == null && otherPath.pathPoints != null) ||
+				(pathPoints != null && otherPath.pathPoints == null))
+			{
+				return false;
+			}
+
+			if (pathPoints != null && otherPath.pathPoints != null &&
+				pathPoints.Count != otherPath.pathPoints.Count
+			)
+			{
+				return false;
+			}
+
+			if (pathPoints != null && otherPath.pathPoints != null)
+			{
+				for (int i = 0; i < pathPoints.Count; i++)
+				{
+					if (otherPath.pathPoints[i] != pathPoints[i])
+					{
+						return false;
+					}
+				}
+			}
+
+			return true;
+		}
 		#endregion
 
 		public Vector3 GetVectorPointingToPreviousPoint( int ptIndx )
@@ -356,38 +386,6 @@ namespace LogansNavigationExtension
 			}
 
 			return pathPoints[ptIndx].Position - pathPoints[ptIndx - 1].Position;
-		}
-
-		public bool AmOnCourse( int currentPtIndx, Vector3 pos_passed, float threshold, float dist_checkIfOffCourseBeyondPrev)
-		{
-			if (currentPtIndx == 0 )
-			{
-				if ( Vector3.Distance(pos_passed, pathPoints[currentPtIndx].Position) <= 0.25f )
-				{
-					return true;
-				}
-				else
-				{
-					return false;
-				}
-			}
-			else
-			{
-				float distToPrev = Vector3.Distance(pos_passed, pathPoints[currentPtIndx - 1].Position);
-				//Vector3 v_prevToPos = Vector3.Normalize(pos_passed - PathPoints[currentPtIndx - 1].V_Position);
-
-				float myDot = Vector3.Dot(
-					GetVectorPointingToPreviousPoint(currentPtIndx - 1).normalized, 
-					GetVectorPointingToNextPoint(currentPtIndx-1).normalized
-				);
-
-				return (distToPrev < dist_checkIfOffCourseBeyondPrev || myDot >= threshold);
-			}
-		}
-
-		public float GetCombinedDistance(LNX_Path pth)
-		{
-			return totalDistance_cached + pth.totalDistance_cached;
 		}
 
 		public bool FoundIssue()
@@ -461,6 +459,7 @@ namespace LogansNavigationExtension
 		/*
 		public static bool operator ==(LNX_Path a, LNX_Path b)
 		{
+			Debug.Log("==");
 			return a.Equals(b);
 		}
 
@@ -471,6 +470,7 @@ namespace LogansNavigationExtension
 
 		public override bool Equals(object obj)
 		{
+			Debug.Log($"equals");
 			if (!(obj is LNX_Path))
 				return false;
 
@@ -516,7 +516,7 @@ namespace LogansNavigationExtension
 				pathPoints, totalDistance_cached, v_navmeshSurfaceProjection_cached, amStraight
 			);
 		}
-		*/
+		
 
 		public static LNX_Path operator +(LNX_Path p1,
 									 LNX_Path p2)
@@ -524,12 +524,20 @@ namespace LogansNavigationExtension
 			Debug.Log("it's hapening!");
 			return new LNX_Path( p1, p2 );
 		}
+		*/
 
 		public override string ToString()
 		{
 			if( !AmValid )
 			{
-				return $"[Invalid Path]";
+				if( pathPoints == null )
+				{
+					return $"[Invalid Path(null pts collection)]";
+				}
+				else
+				{
+					return $"[Invalid Path(0 length pts collection)]";
+				}
 			}
 
 			return $"LNX_Path{StartHit}_->_{EndHit}";

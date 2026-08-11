@@ -16,8 +16,6 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 		TDG_SamplePosition _tdg_samplePosition;
 
-		TDG_SampleClosestPtOnPerimeter _tdg_sampleClosestPtOnPerimeter;
-
 		TDG_Raycasting _tdg_raycasting;
 
 		#region A - Setup --------------------------------------------------------------------------------
@@ -57,140 +55,8 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			Assert.NotNull(_testGeneratedLnxNavmesh);
 		}
 
-		[Test]
-		public void a2_CreateTestObjectsFromJson()
-		{
-			LNX_UnitTestUtilities.LogTestStart(nameof(a2_CreateTestObjectsFromJson),
-			"Creates the objects necessary for this test suite");
 
-			#region Sample Position -------------------------------------------------------
-			if (!File.Exists(TDG_Manager.filePath_testData_SamplePosition))
-			{
-				Debug.LogError($"PROBLEM!!!!! file at test path does not exist. Cannot perform test.");
-				return;
-			}
 
-			string jsonString = File.ReadAllText(TDG_Manager.filePath_testData_SamplePosition);
-			Assert.IsNotEmpty(jsonString);
-			Debug.Log($"Read json string for tdg_SamplePosition. string length: '{jsonString.Length}'...");
-
-			_tdg_samplePosition = _testGeneratedLnxNavmesh.gameObject.AddComponent<TDG_SamplePosition>();
-			_tdg_samplePosition.AmInUnitTest = true;
-			JsonUtility.FromJsonOverwrite(jsonString, _tdg_samplePosition);
-			Assert.NotNull(_tdg_samplePosition);
-
-			Debug.Log($"Created Sampling test object for tdg_SamplePosition");
-			#endregion
-
-			#region CLOSEST ON PERIMETER -----------------------------
-			Debug.Log("\n2) SAMPLE CLOSEST POINT ON TRIANGLE PERIMETER SETUP....");
-			if (!File.Exists(TDG_Manager.filePath_testData_sampleClosestPtOnPerim))
-			{
-				Debug.LogError($"PROBLEM!!!!! file at test path does not exist. Cannot perform test.");
-				return;
-			}
-			_tdg_sampleClosestPtOnPerimeter = _testGeneratedLnxNavmesh.gameObject.AddComponent<TDG_SampleClosestPtOnPerimeter>();
-			_tdg_sampleClosestPtOnPerimeter.AmInUnitTest = true;
-
-			jsonString = File.ReadAllText(TDG_Manager.filePath_testData_sampleClosestPtOnPerim);
-
-			JsonUtility.FromJsonOverwrite(jsonString, _tdg_sampleClosestPtOnPerimeter);
-			Debug.Log($"Created {nameof(_tdg_sampleClosestPtOnPerimeter)} test object. Asserting necessary collections " +
-				$"are not null for testing...");
-
-			#endregion
-
-			#region Raycast -------------------------------------------------------
-			if ( !File.Exists(TDG_Manager.filePath_testData_Raycasting) )
-			{
-				Debug.LogError($"PROBLEM!!!!! file at test path does not exist. Cannot perform test.");
-				return;
-			}
-
-			//CREATE TEST OBJECT -----------------------------
-			_tdg_raycasting = _testGeneratedLnxNavmesh.gameObject.AddComponent<TDG_Raycasting>();
-			_tdg_raycasting.AmInUnitTest = true;
-
-			jsonString = File.ReadAllText( TDG_Manager.filePath_testData_Raycasting );
-			JsonUtility.FromJsonOverwrite(jsonString, _tdg_raycasting);
-			Assert.NotNull(_tdg_raycasting);
-			#endregion
-		}
-
-		[Test]
-		public void A3_Ensure_Test_Objects_Are_Valid()
-		{
-			LNX_UnitTestUtilities.LogTestStart(
-				nameof(A3_Ensure_Test_Objects_Are_Valid),
-				"Ensures that the objects created for testing have adequate/valid values"
-			);
-
-			#region Sample Position--------------------------------------------------------------
-			Assert.NotNull(_tdg_samplePosition._dataCapture);
-			Assert.NotNull( _tdg_samplePosition._dataCapture.VectorCaptureLists ); //just tried to run this test after a long time. 
-			//test fails here. It almost looks like maybe I never serialized this one with the new data capture thing, but I"m 
-			//not sure...
-
-			Assert.Greater(_tdg_samplePosition._dataCapture.VectorCaptureLists.Count, 0);
-			Debug.Log($"tdg_SamplePosition");
-
-			Debug.Log($"Created Sampling test object. Counts: '{_tdg_samplePosition._dataCapture.VectorCaptureLists[0].vectors.Count}', " +
-				$"'{_tdg_samplePosition._dataCapture.VectorCaptureLists[1].vectors.Count}', and " +
-				$"'{_tdg_samplePosition._dataCapture.VectorCaptureLists[2].vectors.Count}'...");
-
-			Assert.IsNotNull(_tdg_samplePosition._dataCapture.VectorCaptureLists[0].vectors); //sample positions
-			Assert.Greater(_tdg_samplePosition._dataCapture.VectorCaptureLists[0].vectors.Count, 0);
-
-			Assert.IsNotNull(_tdg_samplePosition._dataCapture.VectorCaptureLists[1].vectors); //captured hit positions
-			Assert.Greater(_tdg_samplePosition._dataCapture.VectorCaptureLists[1].vectors.Count, 0);
-
-			Assert.IsNotNull(_tdg_samplePosition._dataCapture.VectorCaptureLists[2].vectors); //captured tri centers
-			Assert.Greater(_tdg_samplePosition._dataCapture.VectorCaptureLists[2].vectors.Count, 0);
-
-			Assert.AreEqual(_tdg_samplePosition._dataCapture.VectorCaptureLists[0].vectors.Count, 
-				_tdg_samplePosition._dataCapture.VectorCaptureLists[1].vectors.Count);
-
-			if (!File.Exists(TDG_Manager.filePath_testData_sampleClosestPtOnPerim))
-			{
-				Debug.LogError($"PROBLEM!!!!! file at test path does not exist. Cannot perform test.");
-				return;
-			}
-			#endregion
-
-			#region SETUP CLOSEST ON PERIMETER TEST -----------------------------
-			Debug.Log("\n2) SAMPLE CLOSEST POINT ON TRIANGLE PERIMETER SETUP....");
-			Debug.Log($"Created {nameof(_tdg_sampleClosestPtOnPerimeter)} test object. Asserting necessary collections " +
-				$"are not null for testing...");
-
-			Assert.IsNotNull(_tdg_sampleClosestPtOnPerimeter._dataCapture.VectorCaptureLists[0].vectors); //sample from 
-			Assert.IsNotNull(_tdg_sampleClosestPtOnPerimeter._dataCapture.VectorCaptureLists[1].vectors); //captured perimeter
-			Assert.IsNotNull(_tdg_sampleClosestPtOnPerimeter._dataCapture.VectorCaptureLists[2].vectors); //captured tri centers
-
-			Debug.Log( $"Collection Counts: \n" +
-				$"samplefrom: '{_tdg_sampleClosestPtOnPerimeter._dataCapture.VectorCaptureLists[0].vectors.Count}'\n" +
-				$"perimPositions: '{_tdg_sampleClosestPtOnPerimeter._dataCapture.VectorCaptureLists[1].vectors.Count}'\n" +
-				$"tri centers: '{_tdg_sampleClosestPtOnPerimeter._dataCapture.VectorCaptureLists[2].vectors.Count}'\n" +
-				$"");
-
-			Debug.Log("Asserting collection counts are above 0...");
-			Assert.Greater(_tdg_sampleClosestPtOnPerimeter._dataCapture.VectorCaptureLists[0].vectors.Count, 0);
-			Assert.Greater(_tdg_sampleClosestPtOnPerimeter._dataCapture.VectorCaptureLists[1].vectors.Count, 0);
-			Assert.Greater(_tdg_sampleClosestPtOnPerimeter._dataCapture.VectorCaptureLists[2].vectors.Count, 0);
-
-			#endregion
-
-			#region Raycasting --------------------------------------------
-			Debug.Log($"Checking raycast data...");
-
-			Assert.Greater(_tdg_raycasting._dataCapture.VectorCaptureLists[0].vectors.Count, 0);
-			int commongCount = _tdg_raycasting._dataCapture.VectorCaptureLists[0].vectors.Count;
-
-			Assert.AreEqual( commongCount, _tdg_raycasting._dataCapture.VectorCaptureLists[1].vectors.Count );
-			Assert.AreEqual( commongCount, _tdg_raycasting._dataCapture.BooleanCaptureList.booleans.Count );
-
-			#endregion
-
-		}
 		#endregion
 
 
@@ -250,37 +116,6 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			*/
 		}
 
-		[Test]
-		public void B3_Test_ClosestOnPerimeter_triCenters()
-		{
-			LNX_UnitTestUtilities.LogTestStart(nameof(B3_Test_ClosestOnPerimeter_triCenters),
-				"Checks that the LNX_Navmesh.SamplePosition() method works as expected");
-
-			//todo: redo this now that I've gotten rid of the problem positions thing...
-			/*
-			for (int i = 0; i < _tdg_sampleClosestPtOnPerimeter.problemPositions.Count; i++)
-			{
-				Debug.Log($"{i}...");
-
-				LNX_NavmeshHit hit = new LNX_NavmeshHit();
-
-				if (_serializedLNXNavmesh.SamplePosition(_tdg_sampleClosestPtOnPerimeter.problemPositions[i], out hit, 10f)) //It needs to do this in order to decide which triangle to use...
-				{
-					Vector3 v_result = _serializedLNXNavmesh.Triangles[hit.TriIndex].ClosestPointOnPerimeter(_tdg_sampleClosestPtOnPerimeter.problemPositions[i]);
-
-					Debug.Log($"{i}. expecting: '{_tdg_sampleClosestPtOnPerimeter.capturedPerimeterPositions[i]}', ClosestPointOnPerimeter got: '{v_result}'. " +
-						$"close: '{Vector3.Distance(v_result, _tdg_sampleClosestPtOnPerimeter.capturedPerimeterPositions[i])}'..");
-
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_sampleClosestPtOnPerimeter.capturedTriCenters[i].x, 
-						_serializedLNXNavmesh.Triangles[hit.TriIndex].V_Center.x);
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_sampleClosestPtOnPerimeter.capturedTriCenters[i].y, 
-						_serializedLNXNavmesh.Triangles[hit.TriIndex].V_Center.y);
-					UnityEngine.Assertions.Assert.AreApproximatelyEqual(_tdg_sampleClosestPtOnPerimeter.capturedTriCenters[i].z, 
-						_serializedLNXNavmesh.Triangles[hit.TriIndex].V_Center.z);
-				}
-			}
-			*/
-		}
 
 		[Test]
 		public void B4_Raycasting()

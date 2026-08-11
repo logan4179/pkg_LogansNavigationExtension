@@ -230,54 +230,6 @@ namespace LogansNavigationExtension
 		}
 
 		#region API METHODS-----------------------------
-		public Vector3 ClosestPointOnEdge(Vector3 pos)
-		{
-			Vector3 v_vrtToPos = pos - StartPosition;
-			Vector3 v_edge = EndPosition - StartPosition;
-
-			#region SHORT-CIRCUIT ====================================
-			//TODO: efficiency test this method with and without this check to determine how much this check costs. Note: this check 
-			// WILL be triggered in LNX_Triangle.ProjectThroughToPerimeter() in the overload that takes in LNX_Hits as parameters 
-			// when called by LNX_Utils.TryProjectPathThrough()
-			if ( v_vrtToPos.normalized == v_edge.normalized ) //this works bc both of these vectors are calcualted from 'StartPosition'
-			{
-				if ( v_vrtToPos.magnitude <= v_edge.magnitude )
-				{
-					return pos;
-				}
-				else
-				{
-					return EndPosition;
-				}
-			}
-			else if (v_vrtToPos.normalized == -v_edge.normalized)
-			{
-				if (v_vrtToPos.magnitude <= v_edge.magnitude)
-				{
-					return pos;
-				}
-				else
-				{
-					return StartPosition;
-				}
-			}
-			#endregion
-
-			Vector3 v_result = StartPosition + Vector3.Project( v_vrtToPos, v_edge.normalized );
-
-			float dist_startToRslt = Vector3.Distance(v_result, StartPosition);
-			float dist_endToRslt = Vector3.Distance(v_result, EndPosition);
-
-			//Debug.Log($"dist_startToRslt: '{dist_startToRslt}', dist_endToRslt: '{dist_endToRslt}', len: '{EdgeLength}'");
-			if (dist_startToRslt > EdgeLength || dist_endToRslt > EdgeLength)
-			{
-				//Debug.Log("if");
-				v_result = dist_startToRslt < dist_endToRslt ? StartPosition : EndPosition;
-			}
-
-			return v_result;
-		}
-
 		public LNX_NavmeshHit ClosestHitOnEdge(Vector3 pos)
 		{
 			Vector3 v_vrtToPos = pos - StartPosition;
@@ -295,7 +247,13 @@ namespace LogansNavigationExtension
 				}
 				else
 				{
-					return new LNX_NavmeshHit( this, EndPosition, v_navmeshProjectionDirection_cached );
+					return new LNX_NavmeshHit(
+						EndPosition, 
+						v_navmeshProjectionDirection_cached, 
+						MyCoordinate.TrianglesIndex, 
+						EndVertIndex, 
+						MyCoordinate.ComponentIndex
+					);
 				}
 			}
 			else if ( v_vrtToPos.normalized == -v_edge.normalized )
@@ -306,12 +264,18 @@ namespace LogansNavigationExtension
 				}
 				else
 				{
-					return new LNX_NavmeshHit(this, StartPosition, v_navmeshProjectionDirection_cached);
+					return new LNX_NavmeshHit(
+						StartPosition,
+						v_navmeshProjectionDirection_cached,
+						MyCoordinate.TrianglesIndex,
+						StartVertIndex,
+						MyCoordinate.ComponentIndex
+					);
 				}
 			}
 			#endregion
 
-				Vector3 v_result = StartPosition + Vector3.Project(v_vrtToPos, v_edge.normalized);
+			Vector3 v_result = StartPosition + Vector3.Project(v_vrtToPos, v_edge.normalized);
 
 			float dist_startToRslt = Vector3.Distance(v_result, StartPosition);
 			float dist_endToRslt = Vector3.Distance(v_result, EndPosition);
@@ -321,6 +285,21 @@ namespace LogansNavigationExtension
 			{
 				//Debug.Log("if");
 				v_result = dist_startToRslt < dist_endToRslt ? StartPosition : EndPosition;
+			}
+
+			if( LNX_Utils.FlatEquals(v_result, StartPosition, v_navmeshProjectionDirection_cached) )
+			{
+				return new LNX_NavmeshHit(
+					v_result, v_navmeshProjectionDirection_cached,
+					MyCoordinate.TrianglesIndex, StartVertIndex, MyCoordinate.ComponentIndex
+				);
+			}
+			else if (LNX_Utils.FlatEquals(v_result, EndPosition, v_navmeshProjectionDirection_cached))
+			{
+				return new LNX_NavmeshHit(
+					v_result, v_navmeshProjectionDirection_cached,
+					MyCoordinate.TrianglesIndex, EndVertIndex, MyCoordinate.ComponentIndex
+				);
 			}
 
 			return new LNX_NavmeshHit( this, v_result, v_navmeshProjectionDirection_cached );

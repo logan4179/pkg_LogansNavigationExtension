@@ -268,6 +268,19 @@ namespace LogansNavigationExtension
 			return null;
 		}
 
+		public LNX_Triangle GetTriangle(LNX_AtomicTriangle tri )
+		{
+			for (int i = 0; i < Triangles.Length; i++)
+			{
+				if ( tri.CurrentlyPositionallyMatches(Triangles[i]) )
+				{
+					return Triangles[i];
+				}
+			}
+
+			return null;
+		}
+
 		public LNX_Triangle GetClosestTriangleToPosition(Vector3 pos)
 		{
 			float runningClosestDist = float.MaxValue;
@@ -1606,7 +1619,7 @@ namespace LogansNavigationExtension
 							endHit.TriangleIndex, endHit.VertIndex);
 						rprt.Log($"Got existing relationship: '{rel}'...");
 
-						if ( rel.AmValid )
+						if ( rel != null && rel.AmValid )
 						{
 							outPath = new LNX_Path(rel.PathTo); //IMPORTANT! This needs to be a new (different) object so that the pathpoint list doesn't get inadvertently changed
 
@@ -1954,8 +1967,11 @@ namespace LogansNavigationExtension
 		public bool CalculatePath(LNX_NavmeshHit startHit, LNX_NavmeshHit endHit,
 			out LNX_Path outPath)
 		{
-			if ( !Raycast(startHit, endHit, out outPath) )
+			LNX_Path rcPath = new LNX_Path();
+
+			if ( !Raycast(startHit, endHit, out rcPath) )
 			{
+				outPath = new LNX_Path( rcPath );
 				return true;
 			}
 			else
@@ -1991,7 +2007,7 @@ namespace LogansNavigationExtension
 				}
 				else
 				{
-					visblVrtPths = GetVisibleVertsFromPoint(startHit, false);
+					visblVrtPths = GetVisibleVertsFromHit(startHit, false);
 				}
 
 				if (visblVrtPths == null || visblVrtPths.Count <= 0)
@@ -2043,9 +2059,10 @@ namespace LogansNavigationExtension
 						endHit, this, runningClosestDistance, visblVrtPths[i_visblVrts], vsblBckstpVerts
 					);
 
+					Debug.Log($"it be null: '{paths[i_visblVrts] == null}'");
 					if
 					(
-						paths[i_visblVrts].AmValid &&
+						paths[i_visblVrts] != null && paths[i_visblVrts].AmValid &&
 						(runningClosestDistance == -1 || paths[i_visblVrts].TotalDistance < runningClosestDistance)
 					)
 					{
@@ -2057,7 +2074,7 @@ namespace LogansNavigationExtension
 
 				if (indx_runningBestPath > -1)
 				{
-					outPath = paths[indx_runningBestPath];
+					outPath = new LNX_Path( paths[indx_runningBestPath] );
 					return true;
 				}
 			}
@@ -2072,12 +2089,14 @@ namespace LogansNavigationExtension
 			rprt.Log($"first, attempting to raycast to the destination...");
 
 			rprt.StartAbbreviatedMethod("Raycast_dbg() from cp");
-			bool rcHitSomething = Raycast_dbg(startHit, endHit, out outPath, ref rprt);
+			LNX_Path rcPath = new LNX_Path();
+			bool rcHitSomething = Raycast_dbg(startHit, endHit, out rcPath, ref rprt);
 			rprt.EndAbbreviatedMethod("Raycast_dbg() from cp");
 
 			//rprt.Log($"end of initial raycast...");
 			if ( !rcHitSomething)
 			{
+				outPath = new LNX_Path(rcPath);
 				rprt.Log_And_End_Method($"Initial raycast was false, meaning that it did NOT hit an obstruction. " +
 					$"outPath: '{outPath}'. Returning true...", $"CalculatePath(startHit: '{startHit}', endHit: '{endHit}'");
 				return true;
@@ -2132,7 +2151,7 @@ namespace LogansNavigationExtension
 					rprt.Log($"starthit NOT on a vert. Calling GetVisibleVertsFromPoint_dbg()...");
 
 					rprt.StartAbbreviatedMethod($"GetVisibleVertsFromPoint_dbg()");
-					visblVrtPths = GetVisibleVertsFromPoint_dbg(startHit, ref rprt, false);
+					visblVrtPths = GetVisibleVertsFromHit_dbg(startHit, ref rprt, false);
 					rprt.EndAbbreviatedMethod("GetVisibleVertsFromPoint_dbg()");
 				}
 
@@ -2167,29 +2186,14 @@ namespace LogansNavigationExtension
 						Debug.Log($"visible vert '{visblVrtPths[i_visblVrts].EndCoordinate_vert}' at index: '{i_visblVrts}' " +
 							$"touches end tri '{endHit.TriangleIndex}'...");
 
-						if ( endHit.TriangleIndex == 22 && endHit.VertIndex == 1 )
-						{
-							Debug.Log($"<color=red>GOT here! visblVrtPths[{i_visblVrts}].PathPoints current count: " +
-								$"'{visblVrtPths[i_visblVrts].PathPoints.Count}'. " +
-								$"amStraight: '{visblVrtPths[i_visblVrts].AmStraight}'\n" +
-								$"dbgClass\n" +
-								$"{visblVrtPths[i_visblVrts].DBG_class}</color>");
-						}
-						//Here, visblVrtPths[i_visblVrts].PathPoints.Count is 6 and amStraight is true
 						visblVrtPths[i_visblVrts].AddPoint( endHit ); //here, inside the addpoint method, it ends with pointCount 7, and amStraight = false
 						//It appears from what I can tell, that here it's reporting amStraight = true...
-						if (endHit.TriangleIndex == 22 && endHit.VertIndex == 1)
-						{
-							Debug.Log($"<color=red>After. visblVrtPths[{i_visblVrts}].PathPoints Current count: " +
-								$"'{visblVrtPths[i_visblVrts].PathPoints.Count}'. " +
-								$"amStraight: '{visblVrtPths[i_visblVrts].AmStraight}'\n" +
-								$"dbgclass\n" +
-								$"{visblVrtPths[i_visblVrts].DBG_class}</color>");
-						}
+
 						if ( runningClosestDistance <= 0f || visblVrtPths[i_visblVrts].TotalDistance < runningClosestDistance )
 						{
 							runningClosestDistance = visblVrtPths[i_visblVrts].TotalDistance;
 							indx_runningBestPath = i_visblVrts;
+							rprt.Log($"decided new initial runningClosestDistance: '{runningClosestDistance}'");
 						}
 					}
 				}
@@ -2233,14 +2237,20 @@ namespace LogansNavigationExtension
 					//rprt.EndAbbreviatedMethod("Ping_dbg");
 					//Debug.Log($"ping{i_visblVrts} took: '{DateTime.Now.Subtract(dt_Try).TotalMilliseconds}'ms...");
 
-
-					rprt.Log($"Got path: '{paths[i_visblVrts]}' with dist: '{paths[i_visblVrts].TotalDistance}'.",
-						$"pts: '{(paths[i_visblVrts] == null ? "None" : paths[i_visblVrts].PointCount)}'",
-						$"Checking against runningClosestDistance: '{runningClosestDistance}' to see if this is a new best path...");
+					if(paths[i_visblVrts] == null )
+					{
+						rprt.Log($"got null path");
+					}
+					else
+					{
+						rprt.Log($"Got path: '{paths[i_visblVrts]}' with dist: '{paths[i_visblVrts].TotalDistance}'.",
+							$"pts: '{(paths[i_visblVrts] == null ? "None" : paths[i_visblVrts].PointCount)}'",
+							$"Checking against runningClosestDistance: '{runningClosestDistance}' to see if this is a new best path...");
+					}
 
 					if 
 					(
-						paths[i_visblVrts].AmValid && 
+						paths[i_visblVrts] != null && paths[i_visblVrts].AmValid && 
 						(runningClosestDistance == -1 || paths[i_visblVrts].TotalDistance < runningClosestDistance) 
 					)
 					{
@@ -2260,7 +2270,7 @@ namespace LogansNavigationExtension
 
 				if (indx_runningBestPath > -1)
 				{
-					outPath = paths[indx_runningBestPath];
+					outPath = new LNX_Path(paths[indx_runningBestPath]);
 
 					rprt.Log($"made outPath: '{outPath}'...");
 					rprt.Log_And_End_Method($"returning true...", $"CalculatePath(startHit: '{startHit}', endHit: '{endHit}'");
@@ -2329,7 +2339,7 @@ namespace LogansNavigationExtension
 		#endregion
 
 		#region GET VISIBLE VERTS ========================================
-		public List<LNX_Path> GetVisibleVertsFromPoint( 
+		public List<LNX_Path> GetVisibleVertsFromHit( 
 			LNX_NavmeshHit hit, bool includeFringeVerts = false, 
 			List<LNX_ComponentCoordinate> excludeVerts = null, float maxDist = -1f
 		)
@@ -2412,7 +2422,7 @@ namespace LogansNavigationExtension
 			return visibleVertPaths;
 		}
 
-		public List<LNX_Path> GetVisibleVertsFromPoint_dbg(
+		public List<LNX_Path> GetVisibleVertsFromHit_dbg(
 			LNX_NavmeshHit hit, ref LNX_MethodDebugReport rprt, bool includeFringeVerts = false, 
 			List<LNX_ComponentCoordinate> excludeVerts = null, float maxDist = -1f
 		)
@@ -2531,8 +2541,6 @@ namespace LogansNavigationExtension
 						//rprt.EndAbbreviatedMethod("");
 						
 						rprt.Log($"raycast from hit: '{hit}' to vert[{i_tris}][{i_vrts}] hit obstruction");
-						rprt.Log($"end of path: '{(path.PathPoints == null || path.PathPoints.Count <= 0 ? "null" : path.EndHit)}'...");
-
 					}
 					//rcRprt.EndMethod();
 				}
@@ -2558,7 +2566,7 @@ namespace LogansNavigationExtension
 						continue;
 					}
 
-					if (!vert.Relationships[i].AmValid)
+					if (vert.Relationships[i] == null || !vert.Relationships[i].AmValid)
 					{
 						foundAnInvalidRel = true;
 						continue;
@@ -2616,7 +2624,7 @@ namespace LogansNavigationExtension
 			}
 			#endregion
 
-			List<LNX_Path> gvvfpPaths = GetVisibleVertsFromPoint(
+			List<LNX_Path> gvvfpPaths = GetVisibleVertsFromHit(
 				new LNX_NavmeshHit(vert),
 				includeFringeVerts, fwdExcludeVerts, maxDist
 			);
@@ -2653,7 +2661,7 @@ namespace LogansNavigationExtension
 					}
 
 					//rprt.Log($"first, checking if this one is already accounted for in the excludeverts list...");
-					if ( !vert.Relationships[i].AmValid )
+					if ( vert.Relationships[i] == null || !vert.Relationships[i].AmValid )
 					{
 						//rprt.Log($"relationship not valid. bypassing...");
 						foundAnInvalidRel = true;
@@ -2743,7 +2751,7 @@ namespace LogansNavigationExtension
 
 			rprt.Log($"now calling GetVisibleVertsFromPoint_dbg()...");
 			//rprt.StartAbbreviatedMethod($"GetVisibleVertsFromPoint_dbg()");
-			List<LNX_Path> gvvfpPaths = GetVisibleVertsFromPoint_dbg(
+			List<LNX_Path> gvvfpPaths = GetVisibleVertsFromHit_dbg(
 				new LNX_NavmeshHit(vert), ref rprt,
 				includeFringeVerts, fwdExcludeVerts, maxDist
 			);
@@ -3176,7 +3184,7 @@ namespace LogansNavigationExtension
 			return false;
 		}
 
-		public bool VertTouchesTriangle(LNX_ComponentCoordinate vertCoordinate, int triIndex )
+		public bool VertTouchesTriangle(LNX_ComponentCoordinate vertCoordinate, int triIndex ) //todo: unit test
 		{
 			if ( vertCoordinate.TrianglesIndex == triIndex )
 			{
@@ -3254,7 +3262,6 @@ namespace LogansNavigationExtension
 
 		public bool HitIsOnTriPerimeter_extrapolated( LNX_NavmeshHit hit, LNX_Triangle tri )
 		{
-
 			if (hit.EdgeIndex > -1)
 			{
 				if (hit.TriangleIndex == tri.Index_inCollection)
@@ -3280,7 +3287,8 @@ namespace LogansNavigationExtension
 					return true;
 				}
 			}
-			else if (hit.VertIndex > -1)
+			
+			if (hit.VertIndex > -1)
 			{
 				if (Triangles[hit.TriangleIndex].Verts[hit.VertIndex].HasSharedVertViaTriIndex(tri.Index_inCollection))
 				{

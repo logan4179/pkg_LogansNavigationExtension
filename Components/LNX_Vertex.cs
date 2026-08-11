@@ -160,15 +160,15 @@ namespace LogansNavigationExtension
 		public float DistToFirstSiblingVert_straight => FirstSiblingRelationship.V_to.magnitude;
 		public float DistToSecondSiblingVert_straight => SecondSiblingRelationship.V_to.magnitude;
 
+		/// <summary>Collection of vertices sharing the same space as this one.</summary>
+		public LNX_ComponentCoordinate[] SharedVertexCoordinates;
+
 		#region EDGE =======================================================================
 		/// <summary>Index of 'first' edge (based on index in the edges array) on the containing triangle, that forms this vertex. Note: This index will be the same as the first sibling vertex index </summary>
 		public int Index_FirstFormingEdge => MyCoordinate.ComponentIndex == 0 ? 1 : 0;
 		/// <summary>Index of 'second' edge (based on index in the edges array) on the containing triangle, that forms this vertex. Note: This index will be the same as the second sibling vertex index </summary>
 		public int Index_SecondFormingEdge => MyCoordinate.ComponentIndex == 2 ? 1 : 2;
 		#endregion
-
-		/// <summary>Collection of vertices sharing the same space as this one.</summary>
-		public LNX_ComponentCoordinate[] SharedVertexCoordinates;
 		#endregion --------------------------------------------------------------------------------
 
 		public LNX_Vertex ( LNX_Triangle tri, List<LNX_AtomicTriangle> atomicTris, int triIndx, int cmpntIndx )
@@ -532,22 +532,99 @@ namespace LogansNavigationExtension
 		#region API METHODS ------------------------------------------------------------
 		public bool ProjectionIsInCenterSweep( Vector3 projection, bool includeOnPerim = false )
 		{
-			return LNX_Utils.AmInVectorCone(
-				projection, V_ToFirstSiblingVert_flat, V_ToSecondSiblingVert_flat, 
-				v_navmeshProjectionDirection_cached, includeOnPerim );
+			projection = Vector3.Normalize(projection);
+
+			#region SHORT-CIRCUITING ==========================================
+			if (projection == V_ToFirstSiblingVert_flat || projection == V_ToSecondSiblingVert_flat)
+			{
+				if (includeOnPerim)
+				{
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			}
+
+			if (V_ToFirstSiblingVert_flat == -V_ToSecondSiblingVert_flat)
+			{
+				return true; //because the "sweep cone" in this case would be a full 180 degrees, and it wouldn't matter which side.
+							 //todo: Maybe I should actually log a warning here?
+			}
+
+			if (V_ToFirstSiblingVert_flat == V_ToSecondSiblingVert_flat)
+			{
+				return false;
+			}
+			#endregion
+
+			float ang_crnr = Vector3.SignedAngle(V_ToFirstSiblingVert_flat, V_ToSecondSiblingVert_flat, v_navmeshProjectionDirection_cached);
+			//float ang_crnr = Vector3.Angle(vLegA, vLegB);
+
+			float ang_legAToPos = Vector3.SignedAngle(projection, V_ToFirstSiblingVert_flat, v_navmeshProjectionDirection_cached);
+			float ang_legBToPos = Vector3.SignedAngle(projection, V_ToSecondSiblingVert_flat, v_navmeshProjectionDirection_cached);
+
+			if
+			(
+				Mathf.Sign(ang_crnr) != Mathf.Sign(ang_legAToPos) &&
+				Mathf.Sign(ang_crnr) == Mathf.Sign(ang_legBToPos)
+			)
+			{
+				return true;
+			}
+
+			return false;
 		}
 		public bool ProjectionIsInCenterSweep_dbg(Vector3 projection, ref LNX_MethodDebugReport rprt, bool includeOnPerim = false)
 		{
 			rprt.StartMethod( $"v{ComponentIndex}.ProjectionIsInCenterSweep_dbg('{projection}', incldOnPrm: '{includeOnPerim}')");
 
-			rprt.Log($"Passing off to util method...");
-			bool rslt = LNX_Utils.AmInVectorCone_dbg(
-				projection, V_ToFirstSiblingVert_flat, V_ToSecondSiblingVert_flat,
-				v_navmeshProjectionDirection_cached, ref rprt, includeOnPerim);
+			projection = Vector3.Normalize(projection);
 
-			rprt.Log_And_End_Method($"returning: '{rslt}'...", "ProjectionIsInCenterSweep_dbg()");
+			#region SHORT-CIRCUITING ==========================================
+			if (projection == V_ToFirstSiblingVert_flat || projection == V_ToSecondSiblingVert_flat)
+			{
+				if (includeOnPerim)
+				{
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			}
 
-			return rslt;
+			if (V_ToFirstSiblingVert_flat == -V_ToSecondSiblingVert_flat)
+			{
+				return true; //because the "sweep cone" in this case would be a full 180 degrees, and it wouldn't matter which side.
+							 //todo: Maybe I should actually log a warning here?
+			}
+
+			if (V_ToFirstSiblingVert_flat == V_ToSecondSiblingVert_flat)
+			{
+				return false;
+			}
+			#endregion
+
+			float ang_crnr = Vector3.SignedAngle(V_ToFirstSiblingVert_flat, V_ToSecondSiblingVert_flat, v_navmeshProjectionDirection_cached);
+			//float ang_crnr = Vector3.Angle(vLegA, vLegB);
+
+			float ang_legAToPos = Vector3.SignedAngle(projection, V_ToFirstSiblingVert_flat, v_navmeshProjectionDirection_cached);
+			float ang_legBToPos = Vector3.SignedAngle(projection, V_ToSecondSiblingVert_flat, v_navmeshProjectionDirection_cached);
+
+			if
+			(
+				Mathf.Sign(ang_crnr) != Mathf.Sign(ang_legAToPos) &&
+				Mathf.Sign(ang_crnr) == Mathf.Sign(ang_legBToPos)
+			)
+			{
+				return true;
+			}
+
+			rprt.Log_And_End_Method($"returning false...", "ProjectionIsInCenterSweep_dbg()");
+
+			return false;
 		}
 
 		/// <summary>
@@ -806,22 +883,22 @@ namespace LogansNavigationExtension
 			return true;
 		}
 
-		public bool IsVertexRelationallyValid(int triIndx, int vrtIndx)
+		public bool IsVertexRelationallyValid( int triIndx, int vrtIndx )
 		{
 			return Relationships[(triIndx * 3) + vrtIndx] != null && Relationships[(triIndx * 3) + vrtIndx].AmValid;
 		}
 
 		public bool IsTriangleCompletelyRelationallyValid(int triIndx)
 		{
-			if ( !Relationships[triIndx * 3].AmValid )
+			if ( Relationships[triIndx * 3] == null || !Relationships[triIndx * 3].AmValid )
 			{
 				return false;
 			}
-			if ( !Relationships[(triIndx * 3) + 1].AmValid )
+			if ( Relationships[(triIndx * 3) + 1] == null || !Relationships[(triIndx * 3) + 1].AmValid )
 			{
 				return false;
 			}
-			if ( !Relationships[(triIndx * 3) + 2].AmValid )
+			if (Relationships[(triIndx * 3) + 2] == null || !Relationships[(triIndx * 3) + 2].AmValid )
 			{
 				return false;
 			}
@@ -907,7 +984,7 @@ namespace LogansNavigationExtension
 			}
 
 			List<LNX_Path> vsblVrtPths = nm.GetVisibleVertsFromVert(
-				this, false, fwdBackstopVerts, maxAllowableDist - runningPath.TotalDistance
+				this, false, fwdBackstopVerts, maxAllowableDist > 0 ? maxAllowableDist - runningPath.TotalDistance : maxAllowableDist
 			);
 
 			if (vsblVrtPths.Count <= 0)
@@ -949,7 +1026,7 @@ namespace LogansNavigationExtension
 				{
 					if (runningBestDistance == -1 || fwdPath.TotalDistance < runningBestDistance)
 					{
-						runningBestPath = fwdPath;
+						runningBestPath = new LNX_Path( fwdPath );
 						runningBestDistance = fwdPath.TotalDistance;
 					}
 				}
@@ -1038,9 +1115,9 @@ namespace LogansNavigationExtension
 
 			rprt.Log($"Now getting visible verts from This vert, avoiding backstop verts...");
 
-			rprt.StartAbbreviatedMethod($"GetVisibleVertsFromVert_dbg({this}, maxDist: '{maxAllowableDist - runningPath.TotalDistance}')");
+			rprt.StartAbbreviatedMethod($"GetVisibleVertsFromVert_dbg({this}, maxDist: '{(maxAllowableDist > 0 ? maxAllowableDist - runningPath.TotalDistance : maxAllowableDist)}')");
 			List<LNX_Path> vsblVrtPths = nm.GetVisibleVertsFromVert_dbg(
-				this, ref rprt, false, fwdBackstopVerts, maxAllowableDist - runningPath.TotalDistance
+				this, ref rprt, false, fwdBackstopVerts, maxAllowableDist > 0 ? maxAllowableDist - runningPath.TotalDistance : maxAllowableDist
 			);
 			rprt.EndAbbreviatedMethod("");
 

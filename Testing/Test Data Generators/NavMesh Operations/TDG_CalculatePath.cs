@@ -137,7 +137,6 @@ namespace LogansNavigationExtension
 			{
 				DBG_Operation += $"regular version.\n" + 
 					$"using startHit: '{Grabber_StartPos.CurrentHit}', and endHit: '{Grabber_EndPos.CurrentHit}'...\n" +
-					$"CurrentResultPath.length: '{CurrentResultPath.PointCount}'\n" +
 					$"Commencing operation...\n";
 
 				System.Diagnostics.Stopwatch stpWtch = System.Diagnostics.Stopwatch.StartNew();

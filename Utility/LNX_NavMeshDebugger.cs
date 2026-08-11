@@ -1,12 +1,10 @@
-using JetBrains.Annotations;
 using System;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using UnityEditor;
-using UnityEditor.PackageManager.UI;
 using UnityEngine;
-using UnityEngine.AI;
-using UnityEngine.Rendering;
+
 
 namespace LogansNavigationExtension
 {
@@ -247,29 +245,100 @@ namespace LogansNavigationExtension
 		{
 			//FetchedRel = _mgr.Triangles[0].Verts[0].GetFurthestDistanceRelationshipOnTriangle(76);
 
+			string filePath = Path.Combine($"{Directory.GetCurrentDirectory()}\\Assets\\LNX Testing", 
+				"lnxNavmesh_expectedProximalRelationships.json");
 
-			LNX_VertexRelationship[] rels = new LNX_VertexRelationship[10];
-			LNX_Path[] paths = new LNX_Path[10];
-			LNX_VertexRelationship lclRel = new LNX_VertexRelationship();
-			Debug.Log($"lclrel null: '{lclRel == null}'"); //false
-			Debug.Log($"rels[1] null: '{rels[1] == null}'"); //true
-			Debug.Log($"paths[1] null: '{paths[1] == null}'"); //true
+			System.IO.File.WriteAllText(filePath, JsonUtility.ToJson(_mgr, true));
 
-			rels[2] = new LNX_VertexRelationship();
-			LNX_VertexRelationship lclIndexedRel = rels[2];
-			Debug.Log($"rels[2].SpecialInt before: '{rels[2].SpecialInt}', lclIndexedRel.SpecialInt: '{lclIndexedRel.SpecialInt}'"); // prints -1
-			lclIndexedRel.SpecialInt = 123;
-			Debug.Log($"rels[2].SpecialInt after: '{rels[2].SpecialInt}', lclIndexedRel.SpecialInt: '{lclIndexedRel.SpecialInt}'"); //prings 123, so the local int is the same object
+		}
 
+		[ContextMenu("z call CompareWithProximalModel()")]
+		public void CompareWithProximalModel()
+		{
+			string filePath = Path.Combine($"{Directory.GetCurrentDirectory()}\\Assets\\LNX Testing",
+				"lnxNavmesh_expectedProximalRelationships.json");
 
-			Debug.Log($"coord none: '{lclRel.RelatedVertCoordinate == LNX_ComponentCoordinate.None}'");
-			Debug.Log($"coord: '{lclRel.RelatedVertCoordinate}', triIndx: '{lclRel.RelatedVertCoordinate.TrianglesIndex}' compIndx: '{lclRel.RelatedVertCoordinate.ComponentIndex}'");
+			string myJsonString = File.ReadAllText(filePath);
+			GameObject go = new GameObject();
 
-			Debug.Log($" path null: '{lclRel.PathTo == null}'");
+			LNX_NavMesh newNavmesh = go.AddComponent<LNX_NavMesh>();
 
-			Debug.Log($" path: '{lclRel.PathTo}'");
+			JsonUtility.FromJsonOverwrite( myJsonString, newNavmesh);
 
+			Debug.Log($"new navmesh triangle count: '{newNavmesh.Triangles.Length}', " +
+			$"model triangle count: '{_mgr.Triangles.Length}'");
 
+			if ( newNavmesh.Triangles.Length != _mgr.Triangles.Length )
+			{
+				Debug.LogError($"constructeed navemsh triangle count ('{newNavmesh.Triangles.Length}') different from model's " +
+					$"triangle count: '{_mgr.Triangles.Length}'");
+				return;
+			}
+
+			for (int i = 0; i < _mgr.Triangles.Length; ++i)
+			{
+				Debug.Log($"for tri{i}...");
+
+				for( int i_vrts = 0; i_vrts < 3; i_vrts++ )
+				{
+					Debug.Log($"for vert{i_vrts}...");
+
+					if
+					(
+						_mgr.Triangles[i].Verts[i_vrts].Relationships.Length !=
+						newNavmesh.Triangles[i].Verts[i_vrts].Relationships.Length
+					)
+					{
+						Debug.LogError($"newNavmesh.Triangles[i].Verts[i_vrts].Relationships.Length: '{newNavmesh.Triangles[i].Verts[i_vrts].Relationships.Length}' " +
+							$"different from _mgr.Triangles[i].Verts[i_vrts].Relationships.Length: '{_mgr.Triangles[i].Verts[i_vrts].Relationships.Length}'");
+						DestroyImmediate(go);
+						return;
+					}
+
+					for( int i_rels = 0; i_rels < _mgr.Triangles[i].Verts[i_vrts].Relationships.Length; i_rels++ )
+					{
+						//Debug.Log($"for rel{i_rels}...");
+
+						if ( _mgr.Triangles[i].Verts[i_vrts].Relationships[i_rels] == null )
+						{
+							if( !newNavmesh.Triangles[i].Verts[i_vrts].Relationships[i_rels].AmValid	)
+							{
+								Debug.Log($"mgr rel is null and newnavmesh rel not valid. Continuing...");
+								continue;
+							}
+							else
+							{
+								Debug.Log($"Appears to be a problem.\n" +
+									$"data model rel null: '{newNavmesh.Triangles[i].Verts[i_vrts].Relationships[i_rels] == null}'...\n" + 
+									$"data model rel valid: '{newNavmesh.Triangles[i].Verts[i_vrts].Relationships[i_rels].AmValid}'...\n" +
+									$"existing rel null: '{_mgr.Triangles[i].Verts[i_vrts].Relationships[i_rels] == null}'...");
+								DestroyImmediate(go);
+
+								return;
+							}
+						}
+
+						if
+						(
+							!_mgr.Triangles[i].Verts[i_vrts].Relationships[i_rels].ValueEquals
+							(
+								newNavmesh.Triangles[i].Verts[i_vrts].Relationships[i_rels]
+							)
+						)
+						{
+							Debug.LogError($"newNavmesh.Triangles[{i}].Verts[{i_vrts}].Relationships[{i_rels}]: '{newNavmesh.Triangles[i].Verts[i_vrts].Relationships[i_rels]}' " +
+								$"different from _mgr.Triangles[{i}].Verts[{i_vrts}].Relationships[{i_rels}]: '{_mgr.Triangles[i].Verts[i_vrts].Relationships[i_rels]}'");
+							DestroyImmediate(go);
+
+							return;
+						}
+					}
+				}
+			}
+
+			DestroyImmediate(go);
+
+			Debug.Log($"finished");
 		}
 
 		public VertexDisplayer VrtDsplr;

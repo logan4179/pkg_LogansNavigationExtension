@@ -134,6 +134,7 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call WriteMeToJson()")]
 		public bool WriteMeToJson()
 		{
+			/*
 			bool rslt = TDG_Manager.WriteTestObjectToJson(TDG_Manager.filePath_testData_isInCenterSweep, this);
 
 			if (rslt)
@@ -141,6 +142,7 @@ namespace LogansNavigationExtension
 				LastWriteTime = System.DateTime.Now.ToString();
 				return true;
 			}
+			*/
 
 			return false;
 		}

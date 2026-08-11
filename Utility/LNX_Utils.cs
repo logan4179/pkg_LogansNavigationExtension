@@ -357,52 +357,6 @@ namespace LogansNavigationExtension
 
 		public static bool AmInVectorCone(Vector3 vToPos, Vector3 vLegA, Vector3 vLegB, Vector3 nrml, bool includeOnPerim = false )
 		{
-			#region SHORT-CIRCUITING ==========================================
-			if ( vToPos == vLegA || vToPos == vLegB)
-			{
-				if (includeOnPerim)
-				{
-					return true;
-				}
-				else
-				{
-					return false;
-				}
-			}
-
-			if( vLegA == -vLegB )
-			{
-				return true; //because the "sweep cone" in this case would be a full 180 degrees, and it wouldn't matter which side.
-				//todo: Maybe I should actually log a warning here?
-			}
-
-			if( vLegA == vLegB )
-			{
-				return false;
-			}
-			#endregion
-			float ang_crnr = Vector3.SignedAngle( vLegA, vLegB, nrml );
-			//float ang_crnr = Vector3.Angle(vLegA, vLegB);
-
-			float ang_legAToPos = Vector3.SignedAngle( vToPos, vLegA, nrml );
-			float ang_legBToPos = Vector3.SignedAngle( vToPos, vLegB, nrml );
-
-			if
-			( 
-				Mathf.Sign(ang_crnr) != Mathf.Sign(ang_legAToPos) &&
-				Mathf.Sign(ang_crnr) == Mathf.Sign(ang_legBToPos)
-			)
-			{
-				return true;
-			}
-
-			return false;
-		}
-		public static bool AmInVectorCone_dbg(Vector3 vToPos, Vector3 vLegA, Vector3 vLegB, Vector3 nrml, ref LNX_MethodDebugReport rprt, bool includeOnPerim = false)
-		{
-			rprt.StartMethod($"AmInVectorCone(vToPos: '{vToPos}', incldOnPerim: '{includeOnPerim}')");
-			rprt.Log($"vLegA: '{vLegA}', vLegB: '{vLegB}', nrml: '{nrml}'");
-
 			vToPos = Vector3.Normalize(vToPos);
 
 			#region SHORT-CIRCUITING ==========================================
@@ -410,37 +364,25 @@ namespace LogansNavigationExtension
 			{
 				if (includeOnPerim)
 				{
-					rprt.Log_And_End_Method( $"was told to include perim, and I found that pos is on perim, short-circuit returning true...",
-						$"AmInVectorCone");
-
 					return true;
 				}
 				else
 				{
-					rprt.Log_And_End_Method( $"was told NOT to include perim, and I found that pos is on perim, short-circuit returning false...",
-						$"AmInVectorCone");
-
 					return false;
 				}
 			}
 
 			if (vLegA == -vLegB)
 			{
-				rprt.Log_And_End_Method($"vLegA equals -vLegB, this would make a 180 degree sweep. Short-circuit returning true...",
-					"AmInVectorCone");
 				return true; //because the "sweep cone" in this case would be a full 180 degrees, and it wouldn't matter which side.
 							 //todo: Maybe I should actually log a warning here?
 			}
 
 			if (vLegA == vLegB)
 			{
-				rprt.Log_And_End_Method($"vLegA equals vLegB, this would make a 0 degree sweep. Short-circuit returning false...",
-					"AmInVectorCone");
 				return false;
 			}
 			#endregion
-
-			rprt.Log($"no short-circuits applied. Continuing...");
 
 			float ang_crnr = Vector3.SignedAngle(vLegA, vLegB, nrml);
 			//float ang_crnr = Vector3.Angle(vLegA, vLegB);
@@ -448,25 +390,14 @@ namespace LogansNavigationExtension
 			float ang_legAToPos = Vector3.SignedAngle(vToPos, vLegA, nrml);
 			float ang_legBToPos = Vector3.SignedAngle(vToPos, vLegB, nrml);
 
-			rprt.Log($" using ang_crnr: '{ang_crnr}', ang_legAToPos: '{ang_legAToPos}', and ang_legBToPos: '{ang_legBToPos}'...");
-			rprt.Log($"now performing sign check...");
-
 			if
 			(
 				Mathf.Sign(ang_crnr) != Mathf.Sign(ang_legAToPos) &&
 				Mathf.Sign(ang_crnr) == Mathf.Sign(ang_legBToPos)
 			)
 			{
-				rprt.Log_And_End_Method($"sign check succeeded. Returning true...",
-					"AmInVectorCone");
 				return true;
 			}
-			else
-			{
-				rprt.Log($"sign check failed....");
-			}
-
-			rprt.Log_And_End_Method("Returning false...", "AmInVectorCone");
 
 			return false;
 		}
@@ -759,52 +690,6 @@ namespace LogansNavigationExtension
 				return true;
 			}
 
-			return false;
-		}
-		public static bool AmInArea_dbg(Vector3 pos, Vector3 crnrA, Vector3 crnrB, Vector3 crnrC, Vector3 nrml, bool includeOnPerim, ref LNX_MethodDebugReport rprt )
-		{
-			rprt.StartMethod($"AmInArea_dbg(pos: '{pos}', )");
-
-			pos = FlatVector(pos, nrml);
-			crnrA = FlatVector(crnrA, nrml);
-			crnrB = FlatVector(crnrB, nrml);
-			crnrC = FlatVector(crnrC, nrml);
-
-			#region SHORT-CIRCUITING ==========================
-			if( includeOnPerim &&
-				(
-					pos == crnrA || pos == crnrB || pos == crnrC
-				)
-			)
-			{
-				rprt.Log_And_End_Method($"includeOnPerim == true, and position was on one of the coners. Returning true early...", 
-					"AmInArea_dbg");
-				return true;
-			}
-			#endregion
-
-			Vector3 v_a_to_b = Vector3.Normalize(crnrB - crnrA);
-			Vector3 v_a_to_c = Vector3.Normalize(crnrC - crnrA);
-			Vector3 v_cnrA_to_pos = Vector3.Normalize(pos - crnrA);
-
-			Vector3 v_cnrB_to_pos = Vector3.Normalize(pos - crnrB);
-			Vector3 v_b_toA = -v_a_to_b;
-			Vector3 v_b_to_c = Vector3.Normalize(crnrC - crnrB);
-
-			rprt.Log($"have created necessary values. Now running AmInVectorCone() checks...");
-			if
-			(
-				AmInVectorCone_dbg(v_cnrA_to_pos, v_a_to_b, v_a_to_c, nrml, ref rprt, includeOnPerim) &&
-				AmInVectorCone_dbg(v_cnrB_to_pos, v_b_toA, v_b_to_c, nrml, ref rprt, includeOnPerim)
-			)
-			{
-				rprt.Log_And_End_Method($"checks passed. Returning true...", 
-					"AmInArea_dbg");
-				return true;
-			}
-
-			rprt.Log_And_End_Method($"checks did NOT pass. Returning false...",
-				"AmInArea_dbg");
 			return false;
 		}
 

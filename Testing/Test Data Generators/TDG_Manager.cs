@@ -49,31 +49,16 @@ namespace LogansNavigationExtension
 		public TDG_CalculatePath _tdg_pathing;
 		public static string filePath_testData_pathing = $"{dirPath_testDataFolder}\\tdg_pathing_data_A.json";
 
-		public TDG_SampleClosestPtOnPerimeter _tdg_sampleClosestPtOnPerim;
-		public static string filePath_testData_sampleClosestPtOnPerim = $"{dirPath_testDataFolder}\\tdg_sampleClosestOnPerimeter_data_A.json";
-
 		public TDG_pointingAndGrabbing _tdg_pointingAndGrabbing;
 		public static string filePath_testData_pointingAndGrabbing = $"{dirPath_testDataFolder}\\tdg_pointingAndGrabbing_data_A.json";
 
 		[Header("VERTEX TESTERS")]
-		public TDG_IsInCenterSweep _tdg_isInCenterSweep;
-		public static string filePath_testData_isInCenterSweep = $"{dirPath_testDataFolder}\\tdg_isInCenterSweep_data_A.json";
 
 		[Header("EDGE TESTERS")]
 		public TDG_DoesPositionLieOnEdge _tdg_doesPositionLieOnEdge;
 		public static string filePath_testData_doesPositionLieOnEdge = $"{dirPath_testDataFolder}\\tdg_doesPositionLieOnEdge_data_A.json";
 		public TDG_DoesProjectionIntersectEdge _tdg_doesProjectionIntersectEdge;
 		public static string filePath_testData_doesProjectionIntersectEdge = $"{dirPath_testDataFolder}\\tdg_doesProjectionIntersectEdge_data_A.json";
-
-		[Header("TRIANGLE TESTERS")]
-		TDG_ProjectThroughToPerimeter _tdg_projectThroughToPerimeter;
-		public static string filePath_testData_projectThroughToPerimeter = $"{dirPath_testDataFolder}\\tdg_projectThroughToPerimeter_data_A.json";
-
-		TDG_IsInShapeProject _tdg_isInShapeProject;
-		public static string filePath_testData_isInShapeProject = $"{dirPath_testDataFolder}\\tdg_isInShapeProject_data_A.json";
-
-		TDG_IsInShapeProject _tdg_isInShapeProjectB;
-		public static string filePath_testData_isInShapeProjectB = $"{dirPath_testDataFolder}\\tdg_isInShapeProjectB_data_A.json";
 
 
 		[Header("DEBUG")]
@@ -229,27 +214,9 @@ namespace LogansNavigationExtension
 				WriteSerializedLnxMeshToJson();
 				WriteSceneGeneratedMeshDataToJson();
 
-				#region VERTEX OPERATIONS ----------------------------------------------------------
-				if ( !_tdg_isInCenterSweep.WriteMeToJson() )
-				{
-					Debug.LogError($"write to json didn't work on {nameof(_tdg_isInCenterSweep)}. Returning early...");
-					return;
-				}
-				#endregion
 
 				#region PATHING ---------------------------------------------------
 				//todo: implement when this tdg works...
-				#endregion
-
-				#region CLOSEST POINT ON PERIMETER ---------------------------------------------------
-				_tdg_sampleClosestPtOnPerim.GenerateHItResultCollections();
-
-				if (!_tdg_sampleClosestPtOnPerim.WriteMeToJson())
-				{
-					Debug.LogError($"write to json didn't work on {nameof(_tdg_sampleClosestPtOnPerim)}. Returning early...");
-					return;
-				}
-				
 				#endregion
 
 				#region POINTING AND GRABBING ----------------------------------------------------------
@@ -307,19 +274,6 @@ namespace LogansNavigationExtension
 				}
 				#endregion
 
-				#region TRIANGLE OPERATIONS ----------------------------------------------------------
-				if (!_tdg_projectThroughToPerimeter.WriteMeToJson() )
-				{
-					Debug.LogError($"write to json didn't work on {nameof(_tdg_projectThroughToPerimeter)}. Returning early...");
-					return;
-				}
-
-				if ( !_tdg_isInShapeProject.WriteMeToJson() )
-				{
-					Debug.LogError($"write to json didn't work on {nameof(_tdg_isInShapeProject)}. Returning early...");
-					return;
-				}
-				#endregion
 
 				logWarning = true;
 			}

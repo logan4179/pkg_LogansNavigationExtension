@@ -240,6 +240,21 @@ namespace LogansNavigationExtension
 
 			return false;
 		}
+
+		public bool CurrentlyPositionallyMatches(LNX_Triangle tri)
+		{
+			if
+			(
+				tri.Verts[0].V_Position == VertPos0_current &&
+				tri.Verts[1].V_Position == VertPos1_current &&
+				tri.Verts[2].V_Position == VertPos2_current
+			)
+			{
+				return true;
+			}
+
+			return false;
+		}
 	}
 
 	[System.Serializable]
