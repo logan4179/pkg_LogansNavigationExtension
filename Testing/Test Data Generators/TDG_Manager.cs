@@ -46,8 +46,6 @@ namespace LogansNavigationExtension
 		public TDG_Raycasting _tdg_raycasting;
 		public static string filePath_testData_Raycasting = Path.Combine(dirPath_testDataFolder, "tdg_raycasting_data_A.json");
 
-		public TDG_CalculatePath _tdg_pathing;
-		public static string filePath_testData_pathing = $"{dirPath_testDataFolder}\\tdg_pathing_data_A.json";
 
 		public TDG_pointingAndGrabbing _tdg_pointingAndGrabbing;
 		public static string filePath_testData_pointingAndGrabbing = $"{dirPath_testDataFolder}\\tdg_pointingAndGrabbing_data_A.json";

@@ -16,7 +16,6 @@ namespace LogansNavigationExtension
 
 		[Header("OPTIONS")]
 		public bool UseDebugVersionOfMethod = true;
-		public bool AutoGenerate = true;
 		public bool IncludeFringeVertsParam = true;
 
 		[Header("RESULTS")]
@@ -142,7 +141,7 @@ namespace LogansNavigationExtension
 				);
 			}
 
-			if (Grabber_Vert.RecalculatedLastFrame && AutoGenerate )
+			if (Grabber_Vert.RecalculatedLastFrame && AutoRun )
 			{
 				RunOperation();
 			}

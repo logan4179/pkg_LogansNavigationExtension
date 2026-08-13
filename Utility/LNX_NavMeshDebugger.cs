@@ -209,7 +209,7 @@ namespace LogansNavigationExtension
 			DateTime dt_start = DateTime.Now;
 			for (int i = 0; i < _mgr.Triangles.Length; i++)
 			{
-				Debug.Log($"for triangle '{i}'...");
+				//Debug.Log($"for triangle '{i}'...");
 
 				_mgr.Triangles[i].Verts[0].CreateRelationships(_mgr, true, true, false);
 				_mgr.Triangles[i].Verts[1].CreateRelationships(_mgr, true, true, false);
@@ -355,57 +355,30 @@ namespace LogansNavigationExtension
 
 			for (int i = 0; i < _mgr.Triangles.Length; i++)
 			{
-				Debug.Log($"for tri{i} ====/////////////////////////////////////////////////////////");
+				Debug.Log($"for tri{i} =====================/////////////////////////////////////////////////////");
 
 				DateTime dt_relStart = DateTime.Now;
 
 				_mgr.Triangles[i].Verts[0].CreateRelationships(_mgr, false, false, true);
-
-				/*
-				LNX_MethodDebugReport cdrRprt = new LNX_MethodDebugReport();
-				cdrRprt.StartReport();
-				_mgr.Triangles[i].Verts[0].CreateDistalRelationships_dbg(_mgr, ref cdrRprt);
-				cdrRprt.EndReport();
-				*/
-
-				if (DateTime.Now.Subtract(dt_methodStart).TotalSeconds > timeoutAmt)
+				if (DateTime.Now.Subtract(dt_relStart).TotalSeconds > timeoutAmt)
 				{
-					Debug.Log($"time limit exceeded. Breaking at tri{i}, vert{0}...");
+					Debug.Log($"timeout hit after creating all relationships for tri{i}vert{0}. Breaking...");
 					break;
 				}
 
-				LNX_VertexRelationship interestedRel = _mgr.Triangles[0].Verts[0].Relationships[67];
-
-				Debug.Log($"rel 8 tostring: '{interestedRel}'\n" +
-					$"rel valid: '{interestedRel.AmValid}'\n" +
-					$"path valid: '{interestedRel.PathTo.AmValid}'\n" +
-					$"path count: '{interestedRel.PathTo.PointCount}'\n" +
-					$"found issue: '{interestedRel.PathTo.FoundIssue()}'\n" +
-					$"");
-				break;
-
-				FetchedRel = _mgr.Triangles[0].Verts[0].GetFurthestDistanceRelationshipOnTriangle(76);
-
-
-				dt_relStart = DateTime.Now;
 				_mgr.Triangles[i].Verts[1].CreateRelationships(_mgr, false, false, true);
-				Debug.Log($"end of CreateRelationships for vert1. Elapsed time: '{DateTime.Now.Subtract(dt_relStart)}'...");
-				if (DateTime.Now.Subtract(dt_methodStart).TotalSeconds > timeoutAmt)
+				if (DateTime.Now.Subtract(dt_relStart).TotalSeconds > timeoutAmt)
 				{
-					Debug.Log($"time limit exceeded. Breaking at tri{i}, vert{1}...");
+					Debug.Log($"timeout hit after creating all relationships for tri{i}vert{1}. Breaking...");
 					break;
 				}
 
-				dt_relStart = DateTime.Now;
 				_mgr.Triangles[i].Verts[2].CreateRelationships(_mgr, false, false, true);
-				Debug.Log($"end of CreateRelationships for vert2. Elapsed time: '{DateTime.Now.Subtract(dt_relStart)}'...");
-				if (DateTime.Now.Subtract(dt_methodStart).TotalSeconds > timeoutAmt)
+				if( DateTime.Now.Subtract(dt_relStart).TotalSeconds >  timeoutAmt )
 				{
-					Debug.Log($"time limit exceeded. Breaking at tri{i}, vert{2}...");
+					Debug.Log($"timeout hit after creating all relationships for tri{i}vert{2}. Breaking...");
 					break;
 				}
-
-				break;
 			}
 
 			Debug.Log($"running operation on vert displayer...");
