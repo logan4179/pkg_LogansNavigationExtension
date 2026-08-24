@@ -1,24 +1,19 @@
 
-using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Text;
 using UnityEditor;
-using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.LightTransport;
 using UnityEngine.SceneManagement;
-using UnityEngine.UIElements;
 
 
 namespace LogansNavigationExtension
 {
 	[System.Serializable]
-	public class LNX_NavMesh : MonoBehaviour
+	public class LNX_NavMeshSurface : MonoBehaviour
 	{
 		//[Header("OPTIONS")]
 		public LNX_Direction SurfaceOrientation = LNX_Direction.PositiveY;
@@ -616,9 +611,10 @@ namespace LogansNavigationExtension
 			CalculateBounds(); //This needs to happen now before the triangles refresh because the creation of the vert relationships relies on CalculatePath(), which relies on knowing the bounds in order to short-circuit
 			for ( int i = 0; i < Triangles.Length; i++ )
 			{
-				Triangles[i].Verts[0].CreateRelationships( this, true, true, false );
-				Triangles[i].Verts[1].CreateRelationships(this, true, true, false);
-				Triangles[i].Verts[2].CreateRelationships(this, true, true, false);
+				StringBuilder sb = new StringBuilder();
+				Triangles[i].Verts[0].CreateRelationships( this, true, true, false, ref sb);
+				Triangles[i].Verts[1].CreateRelationships(this, true, true, false, ref sb);
+				Triangles[i].Verts[2].CreateRelationships(this, true, true, false, ref sb);
 
 				Triangles[i].Edges[0].CreateRelationships(this);
 				Triangles[i].Edges[1].CreateRelationships(this);
@@ -1969,7 +1965,6 @@ namespace LogansNavigationExtension
 		public bool CalculatePath(LNX_NavmeshHit startHit, LNX_NavmeshHit endHit,
 			out LNX_Path outPath)
 		{
-
 			LNX_Path rcPath = new LNX_Path();
 			bool rcHitSomething = Raycast(startHit, endHit, out rcPath);
 
@@ -1982,27 +1977,6 @@ namespace LogansNavigationExtension
 			else
 			{
 				outPath = null; //needs to be done bc of the raycast above, which will give this a junk value if the method gets this far....
-
-				#region DETERMINE RUNNINGCLOSESTDISTANCE =============================================================
-				float runningClosestDistance = -1;
-				/*
-				if (
-					Triangles[startHit.TriangleIndex].Verts[0].IsRelationshipCollectionSuperficiallyValid(Triangles.Length) &&
-					Triangles[startHit.TriangleIndex].Verts[0].IsTriangleCompletelyRelationallyValid(endHit.TriangleIndex)
-				)
-				{
-					//runningClosestDistance = Triangles[startHit.TriangleIndex].Verts[0].GetFurthestDistanceOnTriangle_viaRelational(
-						//endHit.TriangleIndex);
-					runningClosestDistance = Vector3.Distance(startHit.Position, Triangles[startHit.TriangleIndex].Verts[0].V_Position) +
-						Triangles[startHit.TriangleIndex].Verts[0].GetFurthestDistanceOnTriangle_viaRelational
-						(
-							endHit.TriangleIndex
-						) + 
-						Vector3.Distance(endHit.Position, Triangles[endHit.TriangleIndex].Verts[0].V_Position) + 0.01f;
-				}
-				*/
-
-				#endregion =====================================////////////////
 
 				#region GET VISIBLE VERTS/PATHS =========================================================
 				List<LNX_Path> visblVrtPths = new List<LNX_Path>();
@@ -2023,37 +1997,77 @@ namespace LogansNavigationExtension
 				}
 				#endregion
 
+				#region ASSEMBLE BACKSTOP VERTS ====================================
 				List<LNX_ComponentCoordinate> vsblBckstpVerts = new List<LNX_ComponentCoordinate>();
+				if (startHit.VertIndex > -1)
+				{
+					vsblBckstpVerts.Add(startHit.AsVertCoordinate());
+				}
 				for (int i = 0; i < visblVrtPths.Count; i++) //Note: this must come before the check for shared vert space...
 				{
 					vsblBckstpVerts.Add(visblVrtPths[i].EndCoordinate_vert);
 				}
+				#endregion
 
+				#region CHECK FOR BEST START PING VERT =======================================================
 				int indx_runningBestPath = -1;
-				int indx_foundSecondarilyAdjacent = -1;
-				#region CHECK FOR SHARED VERT SPACE =======================================================
+
+				bool foundRelPrblm = false;
+				float runningClosestDistance = -1f;
+
 				for (int i_visblVrtPths = 0; i_visblVrtPths < visblVrtPths.Count; i_visblVrtPths++)
 				{
-					if (VertTouchesTriangle(visblVrtPths[i_visblVrtPths].EndCoordinate_vert, endHit.TriangleIndex))
+					if (!Triangles[startHit.TriangleIndex].IsTriangleCompletelyRelationallyValid(endHit.TriangleIndex))
 					{
-						visblVrtPths[i_visblVrtPths].AddPoint(endHit);
+						foundRelPrblm = true;
+						break;
+					}
 
-						if (runningClosestDistance <= 0f || visblVrtPths[i_visblVrtPths].TotalDistance < runningClosestDistance)
+					for (int i_vrts = 0; i_vrts < 3; i_vrts++)
+					{
+						float dist = visblVrtPths[i_visblVrtPths].TotalDistance +
+						Triangles[visblVrtPths[i_visblVrtPths].EndTriIndex].Verts[visblVrtPths[i_visblVrtPths].EndHit.VertIndex].
+						GetRelationship(endHit.TriangleIndex, i_vrts).PathDistance +
+						Vector3.Distance(Triangles[endHit.TriangleIndex].Verts[i_vrts].V_Position, endHit.Position);
+
+						if (runningClosestDistance == -1 || dist < runningClosestDistance)
 						{
-							runningClosestDistance = visblVrtPths[i_visblVrtPths].TotalDistance;
+							runningClosestDistance = dist;
 							indx_runningBestPath = i_visblVrtPths;
 						}
 					}
-					else if (indx_foundSecondarilyAdjacent < 0)
+				}
+
+				if (foundRelPrblm)
+				{
+					int runningBestAdjacency = -1;
+					List<int> uniqueTris = new List<int>();
+					for (int i_visblVrtPths = 0; i_visblVrtPths < visblVrtPths.Count; i_visblVrtPths++)
 					{
-						for (int i_shrd = 0; i_shrd < Triangles[visblVrtPths[i_visblVrtPths].EndTriIndex].Verts[visblVrtPths[i_visblVrtPths].EndHit.VertIndex].SharedVertexCoordinates.Length; i_shrd++)
+						if (uniqueTris.Contains(visblVrtPths[i_visblVrtPths].EndTriIndex))
 						{
-							if (Triangles[Triangles[visblVrtPths[i_visblVrtPths].EndTriIndex].Verts[visblVrtPths[i_visblVrtPths].EndHit.VertIndex].SharedVertexCoordinates[i_shrd].TrianglesIndex].
-								AmAdjacentToTri(Triangles[endHit.TriangleIndex]))
-							{
-								indx_foundSecondarilyAdjacent = i_visblVrtPths;
-								break;
-							}
+							continue;
+						}
+
+						uniqueTris.Add(visblVrtPths[i_visblVrtPths].EndTriIndex);
+
+						int adjcncy = GetAdjacencyDepthToTriangle(visblVrtPths[i_visblVrtPths].EndTriIndex, endHit.TriangleIndex);
+
+						if (adjcncy < 0)
+						{
+							Debug.LogError($"apparently something went wrong. Continuing...");
+							continue;
+						}
+
+						if (runningBestAdjacency == -1 || adjcncy < runningBestAdjacency)
+						{
+							runningBestAdjacency = adjcncy;
+							indx_runningBestPath = i_visblVrtPths;
+						}
+
+						if (adjcncy == 1)
+						{
+							break;
 						}
 					}
 				}
@@ -2062,40 +2076,27 @@ namespace LogansNavigationExtension
 				#region CONSTRUCT PATHS -------------------------------------
 				LNX_Path[] paths = new LNX_Path[visblVrtPths.Count];
 
-				if
-				(
-					indx_foundSecondarilyAdjacent > -1 &&
-					 (runningClosestDistance == -1 || visblVrtPths[indx_foundSecondarilyAdjacent].TotalDistance < runningClosestDistance)
-				)
+				if (indx_runningBestPath > -1)
 				{
-					paths[indx_foundSecondarilyAdjacent] = Triangles[visblVrtPths[indx_foundSecondarilyAdjacent].EndTriIndex].
-						Verts[visblVrtPths[indx_foundSecondarilyAdjacent].EndHit.VertIndex].Ping(
-						endHit, this, runningClosestDistance, visblVrtPths[indx_foundSecondarilyAdjacent], vsblBckstpVerts
+					paths[indx_runningBestPath] = Triangles[visblVrtPths[indx_runningBestPath].EndTriIndex].
+						Verts[visblVrtPths[indx_runningBestPath].EndHit.VertIndex].Ping(
+						endHit, this, runningClosestDistance, visblVrtPths[indx_runningBestPath], vsblBckstpVerts
 					);
 
 					if
 					(
-						paths[indx_foundSecondarilyAdjacent] != null && paths[indx_foundSecondarilyAdjacent].AmValid &&
-						(runningClosestDistance == -1 || paths[indx_foundSecondarilyAdjacent].TotalDistance < runningClosestDistance)
+						paths[indx_runningBestPath] != null && paths[indx_runningBestPath].AmValid &&
+						(runningClosestDistance == -1 || paths[indx_runningBestPath].TotalDistance < runningClosestDistance)
 					)
 					{
-						indx_runningBestPath = indx_foundSecondarilyAdjacent;
-						runningClosestDistance = paths[indx_foundSecondarilyAdjacent].TotalDistance;
+						runningClosestDistance = paths[indx_runningBestPath].TotalDistance;
 					}
 				}
 
 				for (int i_visblVrtPths = 0; i_visblVrtPths < visblVrtPths.Count; i_visblVrtPths++)
 				{
-
-					if (i_visblVrtPths == indx_foundSecondarilyAdjacent)
+					if (i_visblVrtPths == indx_runningBestPath)
 					{
-						continue;
-					}
-
-					if (visblVrtPths[i_visblVrtPths].EndHit == endHit)
-					{
-						paths[i_visblVrtPths] = visblVrtPths[i_visblVrtPths];
-
 						continue;
 					}
 
@@ -2108,7 +2109,6 @@ namespace LogansNavigationExtension
 						Verts[visblVrtPths[i_visblVrtPths].EndHit.VertIndex].Ping(
 						endHit, this, runningClosestDistance, visblVrtPths[i_visblVrtPths], vsblBckstpVerts
 					);
-
 
 					if
 					(
@@ -2156,31 +2156,6 @@ namespace LogansNavigationExtension
 				rprt.Log($"Initial raycast returned true, meaning it DID hit an obstruction. Continuing...");
 				outPath = null; //needs to be done bc of the raycast above, which will give this a junk value if the method gets this far....
 
-				#region DETERMINE RUNNINGCLOSESTDISTANCE =============================================================
-				rprt.Log($"Checking if preliminary runningclosestdistance can be established.", 
-					$"criteriaA: '{Triangles[startHit.TriangleIndex].Verts[0].IsRelationshipCollectionSuperficiallyValid(Triangles.Length)}', " +
-					$"criteriaB: '{Triangles[startHit.TriangleIndex].Verts[0].IsTriangleCompletelyRelationallyValid(endHit.TriangleIndex)}'");
-				float runningClosestDistance = -1;
-				/*
-				if (
-					Triangles[startHit.TriangleIndex].Verts[0].IsRelationshipCollectionSuperficiallyValid(Triangles.Length) &&
-					Triangles[startHit.TriangleIndex].Verts[0].IsTriangleCompletelyRelationallyValid(endHit.TriangleIndex)
-				)
-				{
-					//runningClosestDistance = Triangles[startHit.TriangleIndex].Verts[0].GetFurthestDistanceOnTriangle_viaRelational(
-						//endHit.TriangleIndex);
-					runningClosestDistance = Vector3.Distance(startHit.Position, Triangles[startHit.TriangleIndex].Verts[0].V_Position) +
-						Triangles[startHit.TriangleIndex].Verts[0].GetFurthestDistanceOnTriangle_viaRelational
-						(
-							endHit.TriangleIndex
-						) + 
-						Vector3.Distance(endHit.Position, Triangles[endHit.TriangleIndex].Verts[0].V_Position) + 0.01f;
-				}
-				*/
-
-				rprt.Log($"pre-determined initial running closest dist to be: '{runningClosestDistance}'...");
-				#endregion =====================================////////////////
-
 				rprt.Log($"Now checking for which verts are visible from start position...");
 
 				//rprt.Flag_suspendAll = true;
@@ -2216,93 +2191,141 @@ namespace LogansNavigationExtension
 				rprt.Log($"found '{visblVrtPths.Count}' visible verts...");
 				#endregion
 
+				#region ASSEMBLE BACKSTOP VERTS ====================================
 				rprt.Log($"Now assembling backstop list...");
 				List<LNX_ComponentCoordinate> vsblBckstpVerts = new List<LNX_ComponentCoordinate>();
+				if( startHit.VertIndex > -1 )
+				{
+					vsblBckstpVerts.Add( startHit.AsVertCoordinate() );
+				}
 				for (int i = 0; i < visblVrtPths.Count; i++) //Note: this must come before the check for shared vert space...
 				{
-					//rprt.Log($"adding visible vert: '{visblVrtPths[i].EndCoordinate_vert}'...");
+					rprt.Log($"adding visible vert: '{visblVrtPths[i].EndCoordinate_vert}'...");
 					vsblBckstpVerts.Add(visblVrtPths[i].EndCoordinate_vert);
 				}
 				rprt.Log($"Assembled visible backstop list with '{visblVrtPths.Count}' verts...");
+				#endregion
+
+				#region CHECK FOR BEST START PING VERT =======================================================
+				rprt.Log($"Checking each visible vert for best start ping...\n");
 
 				int indx_runningBestPath = -1;
-				int indx_foundSecondarilyAdjacent = -1;
-				#region CHECK FOR SHARED VERT SPACE =======================================================
-				rprt.Log($"Decided there are '{visblVrtPths.Count}' visible verts from startHit. Checking if any touch end tri...\n");
 
-				for ( int i_visblVrtPths = 0; i_visblVrtPths < visblVrtPths.Count; i_visblVrtPths++ )
+				bool foundRelPrblm = false;
+				float runningClosestDistance = -1f;
+				System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+
+				for (int i_visblVrtPths = 0; i_visblVrtPths < visblVrtPths.Count; i_visblVrtPths++)
 				{
-					LNX_Vertex visibleVert = Triangles[visblVrtPths[i_visblVrtPths].EndTriIndex].Verts[visblVrtPths[i_visblVrtPths].EndHit.VertIndex];
+					rprt.Log($"for({i_visblVrtPths}), vert: '{visblVrtPths[i_visblVrtPths].EndCoordinate_vert}'...");
 
-					rprt.Log($"for{i_visblVrtPths}, vert: '{visibleVert}...");
-
-					if ( VertTouchesTriangle(visibleVert, endHit.TriangleIndex) )
+					if ( !Triangles[startHit.TriangleIndex].IsTriangleCompletelyRelationallyValid(endHit.TriangleIndex))
 					{
-						rprt.Log($"visible vert touches end tri...");
-						Debug.Log($"visible vert touches end tri '{endHit.TriangleIndex}'...");
+						rprt.Log($"startHit tri '{startHit.TriangleIndex}' does NOT consider endHit tri to be relationally valid. breaking check...");
+						foundRelPrblm = true;
+						break;
+					}
 
-						visblVrtPths[i_visblVrtPths].AddPoint( endHit ); //here, inside the addpoint method, it ends with pointCount 7, and amStraight = false
-						//It appears from what I can tell, that here it's reporting amStraight = true...
-
-						if ( runningClosestDistance <= 0f || visblVrtPths[i_visblVrtPths].TotalDistance < runningClosestDistance )
+					for ( int i_vrts = 0; i_vrts < 3; i_vrts++ )
+					{
+						float dist = visblVrtPths[i_visblVrtPths].TotalDistance +
+						Triangles[visblVrtPths[i_visblVrtPths].EndTriIndex].Verts[visblVrtPths[i_visblVrtPths].EndHit.VertIndex].
+						GetRelationship(endHit.TriangleIndex, i_vrts).PathDistance +
+						Vector3.Distance(Triangles[endHit.TriangleIndex].Verts[i_vrts].V_Position, endHit.Position);
+						
+						if( runningClosestDistance == -1 || dist < runningClosestDistance )
 						{
-							runningClosestDistance = visblVrtPths[i_visblVrtPths].TotalDistance;
+							runningClosestDistance = dist;
 							indx_runningBestPath = i_visblVrtPths;
-							rprt.Log($"decided new initial runningClosestDistance: '{runningClosestDistance}'");
+							rprt.Log($"decided path: '{visblVrtPths[i_visblVrtPths]}' " +
+								$" seems to be the new best.",
+								$"runningClosestDistance: '{runningClosestDistance}', indx_runningBestPath: '{indx_runningBestPath}'");
+
 						}
 					}
-					else if ( indx_foundSecondarilyAdjacent < 0 )
-					{
-						rprt.Log($"now checking if path tri is secondarily-adjacent to endhit tri...");
-
-						for ( int i_shrd = 0; i_shrd < visibleVert.SharedVertexCoordinates.Length; i_shrd++ )
-						{
-							if ( Triangles[visibleVert.SharedVertexCoordinates[i_shrd].TrianglesIndex].AmAdjacentToTri(Triangles[endHit.TriangleIndex]) )
-							{
-								rprt.Log($"decided that tri '{visblVrtPths[i_visblVrtPths].EndTriIndex}' was secondarily adjacent to end hit tri...");
-								indx_foundSecondarilyAdjacent = i_visblVrtPths;
-								break;
-							}
-						}
-					}
-
-					rprt.Log($"neither...");
 				}
-				rprt.Log($"After touching end tri check, runningClosestDistance: '{runningClosestDistance}', " +
-					$"indx_runningBestPath: '{indx_runningBestPath}', " +
-					$"indx_foundBestStartPath: '{indx_foundSecondarilyAdjacent}'");
+				sw.Stop();
+				rprt.Log($"fastest ping check took: '{sw.ElapsedMilliseconds}' ms");
+				rprt.Log($"end of check for best start ping. indx_runningBestPath: '{indx_runningBestPath}', runningClosestDistance: '{runningClosestDistance}'");
+				
+				if (foundRelPrblm)
+				{
+					rprt.Log($"found relational problem. Using adjacency to calculate best start ping...");
+					int runningBestAdjacency = -1;
+
+					sw = new System.Diagnostics.Stopwatch();
+					sw.Start();
+					List<int> uniqueTris = new List<int>();
+					for (int i_visblVrtPths = 0; i_visblVrtPths < visblVrtPths.Count; i_visblVrtPths++)
+					{
+						//rprt.Log($"for{i_visblVrtPths}: '{visblVrtPths[i_visblVrtPths]}'...");
+						if (uniqueTris.Contains(visblVrtPths[i_visblVrtPths].EndTriIndex))
+						{
+							//rprt.Log($"end tri: '{visblVrtPths[i_visblVrtPths].EndTriIndex}' already inspected.");
+							continue;
+						}
+
+						//rprt.Log($"found new triangle. Inspecting...");
+						uniqueTris.Add(visblVrtPths[i_visblVrtPths].EndTriIndex);
+
+						rprt.Log($"now checking adjacency from tri: '{visblVrtPths[i_visblVrtPths].EndTriIndex}', " +
+							$"to tri: '{endHit.TriangleIndex}'...");
+
+						int adjcncy = GetAdjacencyDepthToTriangle(visblVrtPths[i_visblVrtPths].EndTriIndex, endHit.TriangleIndex);
+
+						if (adjcncy < 0)
+						{
+							rprt.Log($"apparently something went wrong. Continuing...");
+							Debug.LogError($"apparently something went wrong. Continuing...");
+							continue;
+						}
+
+						if (runningBestAdjacency == -1 || adjcncy < runningBestAdjacency)
+						{
+							runningBestAdjacency = adjcncy;
+							indx_runningBestPath = i_visblVrtPths;
+							rprt.Log($"found new best index: '{indx_runningBestPath}' with adjacency: '{runningBestAdjacency}'...");
+						}
+
+						if (adjcncy == 1)
+						{
+							rprt.Log($"adjacency won't get better than this. Breaking out of this looop with best adjacency of 1...");
+							break;
+						}
+					}
+					sw.Stop();
+					rprt.Log($"After adjacency check, runningBestAdjacency: '{runningBestAdjacency}', " +
+						$"indx_runningBestPath: '{indx_runningBestPath}'",
+						$"adjacency check took: '{sw.ElapsedMilliseconds}' ms");
+				}
 				#endregion
 
 				#region CONSTRUCT PATHS -------------------------------------
 				rprt.Log($"Now pinging each visible vert...");
 				LNX_Path[] paths = new LNX_Path[visblVrtPths.Count];
 
-				if
-				( 
-					indx_foundSecondarilyAdjacent > -1 &&
-					 (runningClosestDistance == -1 || visblVrtPths[indx_foundSecondarilyAdjacent].TotalDistance < runningClosestDistance)
-				)
+				if ( indx_runningBestPath > -1 )
 				{
-					rprt.Log($"starting with indx_foundSecondarilyAdjacent: '{indx_foundSecondarilyAdjacent}'...");
+					rprt.Log($"starting with found best adjacency, path: '{indx_runningBestPath}'...");
 
-					//rprt.StartAbbreviatedMethod("Ping_dbg");
-					paths[indx_foundSecondarilyAdjacent] = Triangles[visblVrtPths[indx_foundSecondarilyAdjacent].EndTriIndex].
-						Verts[visblVrtPths[indx_foundSecondarilyAdjacent].EndHit.VertIndex].Ping_dbg(
-						endHit, this, runningClosestDistance, visblVrtPths[indx_foundSecondarilyAdjacent], ref rprt, vsblBckstpVerts
+					rprt.StartAbbreviatedMethod("Ping_dbg");
+					paths[indx_runningBestPath] = Triangles[visblVrtPths[indx_runningBestPath].EndTriIndex].
+						Verts[visblVrtPths[indx_runningBestPath].EndHit.VertIndex].Ping_dbg(
+						endHit, this, runningClosestDistance, visblVrtPths[indx_runningBestPath], ref rprt, vsblBckstpVerts
 					);
-					//rprt.EndAbbreviatedMethod("Ping_dbg");
+					rprt.EndAbbreviatedMethod("Ping_dbg");
 					//Debug.Log($"ping{i_visblVrts} took: '{DateTime.Now.Subtract(dt_Try).TotalMilliseconds}'ms...");
+					rprt.Log($"got path: '{(paths[indx_runningBestPath] == null ? "null" : paths[indx_runningBestPath])}'");
 
-
-					if
-					(
-						paths[indx_foundSecondarilyAdjacent] != null && paths[indx_foundSecondarilyAdjacent].AmValid &&
-						(runningClosestDistance == -1 || paths[indx_foundSecondarilyAdjacent].TotalDistance < runningClosestDistance)
+					if 
+					( 
+						paths[indx_runningBestPath] != null && paths[indx_runningBestPath].AmValid && 
+						(runningClosestDistance == -1 || paths[indx_runningBestPath].TotalDistance < runningClosestDistance) 
 					)
 					{
-						indx_runningBestPath = indx_foundSecondarilyAdjacent;
-						runningClosestDistance = paths[indx_foundSecondarilyAdjacent].TotalDistance;
-						rprt.Log($"found new runningBestPath with dist: '{paths[indx_foundSecondarilyAdjacent].TotalDistance}'. indx now: '{indx_runningBestPath}'...");
+						runningClosestDistance = paths[indx_runningBestPath].TotalDistance;
+						rprt.Log($"found new runningBestPath with dist: '{paths[indx_runningBestPath].TotalDistance}'. " +
+							$"indx_runningBestPath now: '{indx_runningBestPath}'...");
 					}
 					else
 					{
@@ -2314,19 +2337,9 @@ namespace LogansNavigationExtension
 				{
 					rprt.Log($"for {i_visblVrtPths}: '{visblVrtPths[i_visblVrtPths]}'=====================");
 
-					if( i_visblVrtPths == indx_foundSecondarilyAdjacent )
+					if( i_visblVrtPths == indx_runningBestPath)
 					{
 						rprt.Log($"bypassing bc same as indx_foundSecondarilyAdjacent, so already pinged...");
-						continue;
-					}
-
-					if(visblVrtPths[i_visblVrtPths].EndHit == endHit )
-					{
-						rprt.Log($"path end hit is same as passed endhit param. This one should already be accounted for. Skipping...");
-
-						paths[i_visblVrtPths] = visblVrtPths[i_visblVrtPths];
-						//paths[i_visblVrts] = new LNX_Path(visblVrtPths[i_visblVrts]);
-
 						continue;
 					}
 
@@ -2341,12 +2354,12 @@ namespace LogansNavigationExtension
 						continue;
 					}
 
-					//rprt.StartAbbreviatedMethod("Ping_dbg");
+					rprt.StartAbbreviatedMethod("Ping_dbg");
 					paths[i_visblVrtPths] = Triangles[visblVrtPths[i_visblVrtPths].EndTriIndex].
 						Verts[visblVrtPths[i_visblVrtPths].EndHit.VertIndex].Ping_dbg(
 						endHit, this, runningClosestDistance, visblVrtPths[i_visblVrtPths], ref rprt, vsblBckstpVerts
 					);
-					//rprt.EndAbbreviatedMethod("Ping_dbg");
+					rprt.EndAbbreviatedMethod("Ping_dbg");
 					//Debug.Log($"ping{i_visblVrts} took: '{DateTime.Now.Subtract(dt_Try).TotalMilliseconds}'ms...");
 
 					if(paths[i_visblVrtPths] == null )
@@ -2406,6 +2419,8 @@ namespace LogansNavigationExtension
 			)
 			{
 				outPath = new LNX_Path(startVert.GetPathTo(endVert));
+				Debug.LogError($"IIIIIITTTTT happened! strt: '{startVert}', end: '{endVert}', rslt: '{outPath}'");
+
 				return true;
 			}
 			#endregion
@@ -2415,7 +2430,7 @@ namespace LogansNavigationExtension
 				new LNX_NavmeshHit(endVert, Triangles[endVert.TriangleIndex].V_PathingNormal),
 				out outPath);
 		}
-		public bool CalculatePath_dbg(LNX_Vertex startVert, LNX_Vertex endVert, out LNX_Path outPath, ref LNX_MethodDebugReport rprt) //1 <<<<<<<<<<<<<<<<
+		public bool CalculatePath_dbg(LNX_Vertex startVert, LNX_Vertex endVert, out LNX_Path outPath, ref LNX_MethodDebugReport rprt)
 		{
 			rprt.StartMethod($"CalculatePath_dbg(startVert: '{startVert}', endVert: '{endVert}')");
 
@@ -2429,6 +2444,7 @@ namespace LogansNavigationExtension
 				rprt.Log_And_End_Method(
 					$"start rels length: '{startVert.Relationships.Length}', end rels length: '{endVert.Relationships.Length}' " +
 					$"relationships valid. Getting already-existing cached relational path...");
+				Debug.LogError("IIIIIITTTTT happened");
 				outPath = new LNX_Path( startVert.GetPathTo(endVert) );
 				return true;
 			}
@@ -2453,7 +2469,7 @@ namespace LogansNavigationExtension
 		#region GET VISIBLE VERTS ========================================
 		public List<LNX_Path> GetVisibleVertsFromHit( 
 			LNX_NavmeshHit hit, bool includeFringeVerts = false, 
-			List<LNX_ComponentCoordinate> excludeVerts = null, float maxDist = -1f
+			List<LNX_ComponentCoordinate> excludeVerts = null, float maxDist = -1f, bool includeHitVert = false
 		)
 		{
 			#region INITIALIZE VISIBLE VERT PATHS COLLECTION ===============================
@@ -2461,6 +2477,11 @@ namespace LogansNavigationExtension
 
 			for (int i = 0; i < 3; i++)
 			{
+				if ( !includeHitVert && i == hit.VertIndex)
+				{
+					continue;
+				}
+
 				if (!includeFringeVerts && IsBoundsVert(hit.TriangleIndex, i))
 				{
 					continue;
@@ -2486,6 +2507,12 @@ namespace LogansNavigationExtension
 				for (int i_vrts = 0; i_vrts < 3; i_vrts++)
 				{
 					#region SHORT-CIRCUITING =======================================
+					if ( !includeHitVert && hit.VertIndex > -1 &&
+					Triangles[i_tris].Verts[i_vrts].V_Position == Triangles[hit.TriangleIndex].Verts[hit.VertIndex].V_Position)
+					{
+						continue;
+					}
+
 					if (excludeVerts != null && excludeVerts.Count > 0)
 					{
 						if (VertTouchesAnotherVertInList(Triangles[i_tris].Verts[i_vrts].MyCoordinate, excludeVerts))
@@ -2536,7 +2563,7 @@ namespace LogansNavigationExtension
 
 		public List<LNX_Path> GetVisibleVertsFromHit_dbg(
 			LNX_NavmeshHit hit, ref LNX_MethodDebugReport rprt, bool includeFringeVerts = false, 
-			List<LNX_ComponentCoordinate> excludeVerts = null, float maxDist = -1f
+			List<LNX_ComponentCoordinate> excludeVerts = null, float maxDist = -1f, bool includeHitVert = false
 		)
 		{
 			rprt.StartMethod( $"GetVisibleVertsFromPoint_dbg(hit: '{hit}', excldCount: " +
@@ -2549,6 +2576,12 @@ namespace LogansNavigationExtension
 			for ( int i = 0; i < 3; i++ )
 			{
 				rprt.Log($"for composing vert '{i}'...");
+
+				if (!includeHitVert && i == hit.VertIndex)
+				{
+					rprt.Log($"Same position. Bypassing...");
+					continue;
+				}
 
 				if ( !includeFringeVerts && IsBoundsVert(hit.TriangleIndex, i) )
 				{
@@ -2589,6 +2622,13 @@ namespace LogansNavigationExtension
 					rprt.Log(triString + $", vert{i_vrts}..." );
 
 					#region SHORT-CIRCUITING =======================================
+					if ( !includeHitVert && hit.VertIndex > -1 &&
+						Triangles[i_tris].Verts[i_vrts].V_Position == Triangles[hit.TriangleIndex].Verts[hit.VertIndex].V_Position)
+					{
+						rprt.Log($"Same position. Bypassing...");
+						continue;
+					}
+
 					if (excludeVerts != null && excludeVerts.Count > 0)
 					{
 						rprt.Log($"was passed exclude verts. Checking exclude vert collection...");
@@ -2678,9 +2718,14 @@ namespace LogansNavigationExtension
 						continue;
 					}
 
-					if (vert.Relationships[i] == null || !vert.Relationships[i].AmValid)
+					if (vert.Relationships[i] == null || !vert.Relationships[i].AmValid )
 					{
 						foundAnInvalidRel = true;
+						continue;
+					}
+
+					if (vert.Relationships[i].PathTo.PointCount <= 1)
+					{
 						continue;
 					}
 
@@ -2715,6 +2760,7 @@ namespace LogansNavigationExtension
 				{
 					return relationalPaths;
 				}
+
 			}
 
 			#region ASSEMBLE FORWARD EXCLUDE LIST ===========================================
@@ -2779,6 +2825,13 @@ namespace LogansNavigationExtension
 						foundAnInvalidRel = true;
 						continue;
 					}
+
+					if ( vert.Relationships[i].PathTo.PointCount <= 1 )
+					{
+						rprt.Log($"relational path point count is 1. Continuing...");
+						continue;
+					}
+
 					//rprt.Log($"relationship valid. Inspecting further...");
 
 					if 
@@ -2826,6 +2879,7 @@ namespace LogansNavigationExtension
 				rprt.Log($"End of for loop. Got '{relationalPaths.Count}' relational paths.", 
 					$"foundInvalidRel: '{foundAnInvalidRel}'...", 
 					$"exclude verts count: '{(excludeVerts == null ? "null" : excludeVerts.Count)}'...");
+
 				if (!foundAnInvalidRel)
 				{
 					rprt.Log_And_End_Method($"did NOT find invalid relationship. " +
@@ -2885,6 +2939,149 @@ namespace LogansNavigationExtension
 
 		#endregion // (END) MAIN API METHODS---------------------
 
+		public int GetAdjacencyDepthToTriangle(int startTriIndx, int endTriIndx )
+		{
+			List<int> backstopTris = new List<int>() { startTriIndx };
+			int runningDepth = 0;
+
+			#region SHORT-CIRCUITING ============================================
+			if (startTriIndx == endTriIndx)
+			{
+				return 0;
+			}
+			#endregion
+
+			bool amFinished = false;
+			while (!amFinished)
+			{
+				runningDepth++;
+				if (runningDepth > Triangles.Length)
+				{
+					Debug.LogError($"runningDepth exceded triangles length!");
+					return -1;
+				}
+
+				#region ASSEMBLE ADJACENT TRIANGLES LIST =================================
+				List<int> adjacentTris = new List<int>();
+				List<int> heldBackStopTris = new List<int>();
+				for (int i = 0; i < backstopTris.Count; i++)
+				{
+					heldBackStopTris.Add(backstopTris[i]);
+				}
+
+				for (int i = 0; i < heldBackStopTris.Count; i++)
+				{
+					for (int i_vrts = 0; i_vrts < 3; i_vrts++)
+					{
+						for (int i_shrd = 0; i_shrd < Triangles[backstopTris[i]].Verts[i_vrts].SharedVertexCoordinates.Length; i_shrd++)
+						{
+							if (Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TrianglesIndex == endTriIndx)
+							{
+								return runningDepth;
+							}
+
+							if
+							(
+								!adjacentTris.Contains(Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TrianglesIndex) &&
+								!backstopTris.Contains(Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TrianglesIndex)
+							)
+							{
+								adjacentTris.Add(Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TrianglesIndex);
+								backstopTris.Add(Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TrianglesIndex);
+
+							}
+						}
+					}
+				}
+			}
+			#endregion
+
+			return -1;
+		}
+
+		public int GetAdjacencyDepthToTriangle_dbg( int startTriIndx, int endTriIndx, ref LNX_MethodDebugReport rprt )
+		{
+			rprt.StartMethod($"GetAdjacencyDepthToTriangle_dbg(startTriIndx: '{startTriIndx}',  endTriIndx: '{endTriIndx}')");
+
+			List<int> backstopTris = new List<int>() { startTriIndx };
+			int runningDepth = 0;
+
+			#region SHORT-CIRCUITING ============================================
+			if( startTriIndx == endTriIndx )
+			{
+				rprt.Log_And_End_Method($"indices the same.");
+				return 0;
+			}
+
+			if (DateTime.Now.Subtract(rprt.DT_Start).TotalSeconds > 12f)
+			{
+				Debug.LogError($"datetime timeout. Returning early for safety...");
+
+				rprt.Log_And_End_Method($"datetime timeout. Returning early for safety...");
+				return -1;
+			}
+			#endregion
+
+			bool amFinished = false;
+			while ( !amFinished )
+			{
+				runningDepth++;
+				rprt.Log($"while() runningDepth: '{runningDepth}'...");
+
+				if (runningDepth > Triangles.Length)
+				{
+					rprt.Log($"runningDepth exceded triangles length!");
+
+					Debug.LogError($"runningDepth exceded triangles length!");
+					return -1;
+				}
+
+				rprt.Log("=======================================================================");
+				#region ASSEMBLE ADJACENT TRIANGLES LIST =================================
+				rprt.Log($"assembling list of adjacent triangles");
+
+				List<int> adjacentTris = new List<int>();
+				List<int> heldBackStopTris = new List<int>();
+				for (int i = 0; i < backstopTris.Count; i++)
+				{
+					heldBackStopTris.Add(backstopTris[i]);
+				}
+
+				for( int i = 0; i < heldBackStopTris.Count; i++ )
+				{
+					for (int i_vrts = 0; i_vrts < 3; i_vrts++)
+					{
+						for (int i_shrd = 0; i_shrd < Triangles[backstopTris[i]].Verts[i_vrts].SharedVertexCoordinates.Length; i_shrd++)
+						{
+							if (Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TrianglesIndex == endTriIndx)
+							{
+								rprt.Log_And_End_Method($"found endtri in adjacent indices. Returning: '{runningDepth + 1}'");
+								return runningDepth;
+							}
+
+							if
+							(
+								!adjacentTris.Contains(Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TrianglesIndex) &&
+								!backstopTris.Contains(Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TrianglesIndex)
+							)
+							{
+								rprt.Log($"adding tri: '{Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TrianglesIndex}' to adjacent list from v{i_vrts}...");
+								adjacentTris.Add(Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TrianglesIndex);
+								backstopTris.Add(Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TrianglesIndex);
+
+							}
+						}
+					}
+				}
+
+				rprt.Log($"finished assembling list of adjacent tris. List length: '{adjacentTris.Count}', backstop: '{backstopTris.Count}'...");
+				rprt.Log("=======================================================================");
+			}
+			#endregion
+
+			return -1;
+		}
+
 		#region DATA ===============================================================
 		/// <summary>
 		/// Calculates and caches certain information that can drastically speed up operations like pathfinding.<para/>
@@ -2898,6 +3095,7 @@ namespace LogansNavigationExtension
 		/// </summary>
 		public void CalculateEfficiencyData()
 		{
+			StringBuilder sb = new StringBuilder();
 			//First, clear collection and make proximal relationships so that 2-way assignment is guaranteed to work...
 			for (int i = 0; i < Triangles.Length; i++)
 			{
@@ -2905,16 +3103,16 @@ namespace LogansNavigationExtension
 				Triangles[i].Verts[1].Relationships = null;
 				Triangles[i].Verts[2].Relationships = null;
 
-				Triangles[i].Verts[0].CreateRelationships(this, true, true, false );
-				Triangles[i].Verts[1].CreateRelationships(this, true, true, false );
-				Triangles[i].Verts[2].CreateRelationships(this, true, true, false );
+				Triangles[i].Verts[0].CreateRelationships(this, true, true, false, ref sb);
+				Triangles[i].Verts[1].CreateRelationships(this, true, true, false, ref sb);
+				Triangles[i].Verts[2].CreateRelationships(this, true, true, false, ref sb);
 			}
 
 			for ( int i = 0; i < Triangles.Length; i++ )
 			{
-				Triangles[i].Verts[0].CreateRelationships(this, false, false, true);
-				Triangles[i].Verts[1].CreateRelationships(this, false, false, true);
-				Triangles[i].Verts[2].CreateRelationships(this, false, false, true);
+				Triangles[i].Verts[0].CreateRelationships(this, false, false, true, ref sb);
+				Triangles[i].Verts[1].CreateRelationships(this, false, false, true, ref sb);
+				Triangles[i].Verts[2].CreateRelationships(this, false, false, true, ref sb);
 			}
 
 			#region CALCULATE TRI KNOWN-VISIBILITY ----------------------------------
@@ -3342,18 +3540,30 @@ namespace LogansNavigationExtension
 		{
 			return VertTouchesTriangle(vert.MyCoordinate, triIndx);
 		}
+
 		#endregion
 
-		#region HIT OPERATIONS ===========================================================
-		/// <summary>
-		/// Tells whether the supplied projection is directionally-terimnal if starting from the supplied hit.
-		/// <para>Note: This method is "extrapolated" meaning it draws it's conclusion from existing relational information present on 
-		/// the hit object and the navmesh components rather than performing an expensive calculation.<br></br>
-		/// This makes it must faster, but it means that the supplied hit and the navmesh must have correct relational information in order for this method to work right.</para>
-		/// </summary>
-		/// <param name="projection"></param>
-		/// <param name="hit"></param>
-		/// <returns></returns>
+		#region TRIANGLE OPERATIONS ==================================================
+		/*
+		public int GetAdjacencyDepthToTriangle_dbg(int otherTriIndx, LNX_NavMesh nm, out float runningDist, int runningDepth,
+			List<int> backstopTriIndices, ref LNX_MethodDebugReport rprt)
+		{
+			rprt.StartMethod($"{this}.GetAdjacencyDepthToTriangle_dbg(otherTriIndx: '{otherTriIndx}'");
+
+		}
+		*/
+		#endregion
+
+			#region HIT OPERATIONS ===========================================================
+			/// <summary>
+			/// Tells whether the supplied projection is directionally-terimnal if starting from the supplied hit.
+			/// <para>Note: This method is "extrapolated" meaning it draws it's conclusion from existing relational information present on 
+			/// the hit object and the navmesh components rather than performing an expensive calculation.<br></br>
+			/// This makes it must faster, but it means that the supplied hit and the navmesh must have correct relational information in order for this method to work right.</para>
+			/// </summary>
+			/// <param name="projection"></param>
+			/// <param name="hit"></param>
+			/// <returns></returns>
 		public bool DirectionIsTerminalFromHit_extrapolated( Vector3 projection, LNX_NavmeshHit hit )
 		{
 			Vector3 fltPrjction = FlatVector(projection);

@@ -64,6 +64,8 @@ namespace LogansNavigationExtension
 			}
 		}
 
+		public int AsRelationalVertIndex => AmValid ? ((TrianglesIndex*3) + ComponentIndex) : -1;
+
 		private static LNX_ComponentCoordinate none = new LNX_ComponentCoordinate()
 		{
 			TrianglesIndex = -1,
@@ -344,6 +346,11 @@ namespace LogansNavigationExtension
 		}
 
 		#endregion
+
+		public LNX_ComponentCoordinate AsVertCoordinate()
+		{
+			return new LNX_ComponentCoordinate(triangleIndex, vertIndex);
+		}
 
 		public static LNX_NavmeshHit None
 		{

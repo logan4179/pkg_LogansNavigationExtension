@@ -16,7 +16,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		/// The Navmesh that is created by calculating it off the scene geometry as opposed to 
 		/// creating from a saved json object.
 		/// </summary>
-        LNX_NavMesh _sceneGeneratedNavmesh;
+        LNX_NavMeshSurface _sceneGeneratedNavmesh;
 
 		LNX_MeshManipulator _lnx_meshManipulator;
 
@@ -28,7 +28,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			Debug.Log( string.Format(LNX_UnitTestUtilities.UnitTestMethodBeginString, nameof(a1_SetupObjects)) );
 			GameObject go = GameObject.Find( LNX_UnitTestUtilities.Name_GeneratedNavmeshGameobject );
 
-			_sceneGeneratedNavmesh = go.GetComponent<LNX_NavMesh>();
+			_sceneGeneratedNavmesh = go.GetComponent<LNX_NavMeshSurface>();
 
 			_lnx_meshManipulator = go.AddComponent<LNX_MeshManipulator>();
 			_lnx_meshManipulator._LNX_NavMesh = _sceneGeneratedNavmesh;

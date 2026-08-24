@@ -8,7 +8,7 @@ namespace LogansNavigationExtension
 {
     public class AngleFinder : MonoBehaviour
     {
-		public LNX_NavMesh _NavMesh;
+		public LNX_NavMeshSurface _NavMesh;
 
 		public LNX_ComponentGrabber Grabber_start;
 		public LNX_ComponentGrabber Grabber_end;

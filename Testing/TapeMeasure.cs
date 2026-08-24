@@ -8,7 +8,8 @@ namespace LogansNavigationExtension
 {
     public class TapeMeasure : MonoBehaviour
     {
-		public List<LNX_ComponentGrabber> RulerGrabbers;
+		//public List<LNX_ComponentGrabber> RulerGrabbers;
+		public List<TapeMeasureNotch> Notches;
 		public List<GameObject> DrawWhenSelectedObjects;
 
 		[Header("SETTINGS")]
@@ -19,6 +20,7 @@ namespace LogansNavigationExtension
 		[TextArea(1, 10)] public string DBG_Class;
 
 		public Color Color_tape;
+		public Color Color_notches;
 		public Color Color_distMarkers;
 		public Color Color_angleLabels;
 
@@ -27,11 +29,11 @@ namespace LogansNavigationExtension
 			int rulerObjectSelectionIndx = -1;
 			bool foundValidSelectedObject = false;
 			DBG_Class = "";
-			if (RulerGrabbers != null && RulerGrabbers.Count > 0)
+			if (Notches != null && Notches.Count > 0)
 			{
-				for (int i = 0; i < RulerGrabbers.Count; i++)
+				for (int i = 0; i < Notches.Count; i++)
 				{
-					if (Selection.activeObject == RulerGrabbers[i].gameObject)
+					if (Selection.activeObject == Notches[i].gameObject)
 					{
 						rulerObjectSelectionIndx = i;
 						foundValidSelectedObject = true;
@@ -56,33 +58,34 @@ namespace LogansNavigationExtension
 				return;
 			}
 
-			if (RulerGrabbers != null && RulerGrabbers.Count > 1)
+			if (Notches != null && Notches.Count > 1)
 			{
 				float totalDist = 0;
 				float distToSelection = 0f;
-				for (int i = 0; i < RulerGrabbers.Count; i++)
+				Notches[0].Dist_FromLast = 0f;
+				Notches[0].Dist_SoFar = 0f;
+
+				for (int i = 0; i < Notches.Count; i++)
 				{
 					Gizmos.color = Color_tape;
 
-					if( i < RulerGrabbers.Count - 1 )
+					Notches[i].DrawMyGizmos(i, Notches.Count, Size_Handles, Color_notches, 
+						i > 0 ? Notches[i-1].transform.position : Notches[i].transform.position, 
+						i < Notches.Count - 1 ? Notches[i+1].transform.position : Notches[i].transform.position, 
+						totalDist, DrawAngles
+					);
+					totalDist += Notches[i].Dist_FromLast;
+
+					if ( i < Notches.Count - 1 )
 					{
-						float dist = Vector3.Distance(RulerGrabbers[i].transform.position, RulerGrabbers[i + 1].transform.position);
-						totalDist += dist;
-						Gizmos.DrawLine(RulerGrabbers[i].transform.position, RulerGrabbers[i + 1].transform.position);
-					
-						Vector3 midPt = (RulerGrabbers[i].transform.position + RulerGrabbers[i + 1].transform.position) / 2f;
-						LNX_DrawingUtils.DrawLabeledPoint(
-							midPt, midPt + (Vector3.up * Size_Handles) + (Vector3.right * 0.01f),
-							dist.ToString("#.##"), Color_distMarkers
-
-						);
-
 						if( rulerObjectSelectionIndx > -1 && rulerObjectSelectionIndx < i )
 						{
-							distToSelection += dist;
+							distToSelection += Notches[i + 1].Dist_FromLast;
 						}
 					}
-					
+
+
+					/*
 					if( DrawAngles && i > 0 )
 					{
 						Gizmos.color = Color_angleLabels;
@@ -116,21 +119,27 @@ namespace LogansNavigationExtension
 							$"ang\n'{Vector3.Angle(vToPrev, vToNext).ToString("#.##")}'", Color_angleLabels
 						);
 					}
+					*/
 				}
 
-				//if (RulerGrabbers.Count > 2)
-				//{
-					Handles.Label(RulerGrabbers[RulerGrabbers.Count-1].transform.position + Vector3.up * Size_Handles, totalDist.ToString("final:\n#.###"));
+				for (int i = 0; i < Notches.Count; i++)
+				{
+					Notches[i].Dist_EntireRuler = totalDist;
+				}
+
+					//if (RulerGrabbers.Count > 2)
+					//{
+					Handles.Label(Notches[Notches.Count-1].transform.position + Vector3.up * Size_Handles, totalDist.ToString("final:\n#.###"));
 				//}
 
 				DBG_Class += $"ruler dist: '{totalDist}'\n" +
 					$"rulerObjectSelectionIndx: '{rulerObjectSelectionIndx}'\n" +
 					$"";
 
-				if ( distToSelection > 0 && rulerObjectSelectionIndx != RulerGrabbers.Count-1 )
+				if ( distToSelection > 0 && rulerObjectSelectionIndx != Notches.Count-1 )
 				{
-					Handles.Label( 
-						RulerGrabbers[rulerObjectSelectionIndx].transform.position + Vector3.up * 0.5f, 
+					Handles.Label(
+						Notches[rulerObjectSelectionIndx].transform.position + Vector3.up * 0.5f, 
 						distToSelection.ToString("#.###")
 					);
 					DBG_Class += $"distToSelection: '{distToSelection}'\n";

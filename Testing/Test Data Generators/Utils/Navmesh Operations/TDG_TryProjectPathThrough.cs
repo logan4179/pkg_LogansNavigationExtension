@@ -11,7 +11,7 @@ namespace LogansNavigationExtension
 		//todo: can get rid of a lot of the code here by implementing component grabbers, and datacapturers, etc
 
 		[Header("REFERENCE")]
-		public LNX_NavMesh _NavMesh;
+		public LNX_NavMeshSurface _NavMesh;
 
 		[Header("START OF DERIVED CLASS-------------------")]
 		public LNX_ComponentGrabber Grabber_StartVert;

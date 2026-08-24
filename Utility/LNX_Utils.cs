@@ -1451,7 +1451,7 @@ namespace LogansNavigationExtension
 		/// <param name="secondaryEdge"></param>
 		/// <param name="pt"></param>
 		/// <returns></returns>
-		public static List<LNX_Vertex> GetMoveVerts_forInsertLoop(LNX_NavMesh nm, LNX_Edge primaryEdge, LNX_Edge secondaryEdge)
+		public static List<LNX_Vertex> GetMoveVerts_forInsertLoop(LNX_NavMeshSurface nm, LNX_Edge primaryEdge, LNX_Edge secondaryEdge)
 		{
 			List<LNX_Vertex> returnVerts = new List<LNX_Vertex>();
 

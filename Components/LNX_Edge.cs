@@ -142,7 +142,7 @@ namespace LogansNavigationExtension
 			SharedEdgeCoordinate = edge.SharedEdgeCoordinate;
 		}
 
-		public void CreateRelationships( LNX_NavMesh nvmsh ) //todo: unit test
+		public void CreateRelationships( LNX_NavMeshSurface nvmsh ) //todo: unit test
 		{
 			for ( int i = 0; i < nvmsh.Triangles.Length; i++ )
 			{
@@ -169,7 +169,7 @@ namespace LogansNavigationExtension
 			}
 		}
 
-		public void CalculateDerivedInfo( LNX_Triangle tri, LNX_NavMesh nm )
+		public void CalculateDerivedInfo( LNX_Triangle tri, LNX_NavMeshSurface nm )
 		{
 			StartPosition = tri.Verts[StartVertCoordinate.ComponentIndex].V_Position;
 			EndPosition = tri.Verts[EndVertCoordinate.ComponentIndex].V_Position;
@@ -789,7 +789,7 @@ namespace LogansNavigationExtension
 		/// <param name="nm"></param>
 		/// <param name="atStart"></param>
 		/// <returns></returns>
-		public float GetCombinedSharedEdgeAngle( LNX_NavMesh nm, bool atStart )
+		public float GetCombinedSharedEdgeAngle( LNX_NavMeshSurface nm, bool atStart )
 		{
 			//DBG_GetSharedAngle = $"{ToString()}.{nameof(GetSharedAngle)}({nameof(atStart)}: '{atStart}') sharedEdgeCoord: '{SharedEdgeCoordinate}'\n";
 			if ( SharedEdgeCoordinate == LNX_ComponentCoordinate.None )
@@ -828,7 +828,7 @@ namespace LogansNavigationExtension
 		/// <param name="otherEdgeCoord"></param>
 		/// <param name="prspctvVrtPos"></param>
 		/// <returns></returns>
-		public float GetContinuousAngleBetween( LNX_NavMesh nm, LNX_ComponentCoordinate otherEdgeCoord, Vector3 prspctvVrtPos )
+		public float GetContinuousAngleBetween( LNX_NavMeshSurface nm, LNX_ComponentCoordinate otherEdgeCoord, Vector3 prspctvVrtPos )
 		{
 			DBG_GetContinuousAngleBetween = $"{ToString()}.{nameof(GetContinuousAngleBetween)}('{otherEdgeCoord}', '{prspctvVrtPos}')\n";
 
@@ -986,7 +986,7 @@ namespace LogansNavigationExtension
 			return AmOnSharedEdgeSpace( edj.StartPosition, edj.EndPosition );
 		}
 
-		public bool AmBoundsEdge(LNX_NavMesh nm) //OTOD: get rid of this now that I have this in the LNX_NavMesh class
+		public bool AmBoundsEdge(LNX_NavMeshSurface nm) //OTOD: get rid of this now that I have this in the LNX_NavMesh class
 		{
 			//note: It's possible to have a navmesh that isn't mostly square shaped. This won't help for that...
 			//Debug.Log($"{nameof(AmBoundsEdge)}(), {nm.SurfaceOrientation}");
@@ -1051,7 +1051,7 @@ namespace LogansNavigationExtension
 			return false;
 		}
 
-		public bool HaveObtuseAngle(LNX_NavMesh nm)
+		public bool HaveObtuseAngle(LNX_NavMeshSurface nm)
 		{
 			if 
 			(
@@ -1069,7 +1069,7 @@ namespace LogansNavigationExtension
 
 
 		#region HELPERS --------------------------------------------------
-		public string GetCurrentInfoString(LNX_NavMesh nm)
+		public string GetCurrentInfoString(LNX_NavMeshSurface nm)
 		{
 			return $"Edge.GetCurrentInfoString()\n" +
 				$"{nameof(MyCoordinate)}: '{MyCoordinate}'\n" +
@@ -1080,12 +1080,12 @@ namespace LogansNavigationExtension
 				$"";
 		}
 
-		public void SayCurrentInfo(LNX_NavMesh nm)
+		public void SayCurrentInfo(LNX_NavMeshSurface nm)
 		{
 			Debug.Log( GetCurrentInfoString(nm) );
 		}
 
-		public string GetAnomolyString( LNX_NavMesh nm )
+		public string GetAnomolyString( LNX_NavMeshSurface nm )
 		{
 			string returnString = string.Empty;
 

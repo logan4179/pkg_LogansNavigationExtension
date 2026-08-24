@@ -43,7 +43,7 @@ namespace LogansNavigationExtension
 		[SerializeField] private Vector3 v_navmeshSurfaceProjection_cached;
 		public Vector3 V_navmeshSurfaceProjection_cached => v_navmeshSurfaceProjection_cached;
 
-		private float totalDistance_cached;
+		[SerializeField] private float totalDistance_cached;
 		/// <summary>Distance of the entire path.</summary>
 		public float TotalDistance => totalDistance_cached;
 
@@ -76,7 +76,7 @@ namespace LogansNavigationExtension
 			totalDistance_cached = -1f;
 		}
 
-		public LNX_Path( LNX_NavMesh nm )
+		public LNX_Path( LNX_NavMeshSurface nm )
 		{
 			//DBG_class = $"ctorA\n";
 			amStraight = true;
@@ -126,6 +126,34 @@ namespace LogansNavigationExtension
 					AddPoint(basePath.pathPoints[i]);
 				}
 			}
+			AddPoint(new LNX_NavmeshHit(endVert));
+		}
+
+		public LNX_Path(LNX_Vertex startVert, LNX_Path basePath, LNX_Vertex endVert)
+		{
+			amStraight = basePath.AmStraight;
+			totalDistance_cached = 0f;
+			v_navmeshSurfaceProjection_cached = basePath.v_navmeshSurfaceProjection_cached;
+
+			pathPoints = new List<LNX_NavmeshHit>();
+
+			if( basePath == null || basePath.pathPoints.Count < 2 )
+			{
+				Debug.LogError($"LNX ERROR! You called a path constructor meant for a path with multiple path points, but supplied " +
+					$"a path model with less than 2 path points. Returning early...");
+				return;
+			}
+
+			AddPoint(new LNX_NavmeshHit(startVert));
+
+			if( basePath.PointCount > 2 )
+			{
+				for (int i = 1; i < basePath.pathPoints.Count - 1; i++)
+				{
+					AddPoint(basePath.pathPoints[i]);
+				}
+			}
+			
 			AddPoint(new LNX_NavmeshHit(endVert));
 		}
 

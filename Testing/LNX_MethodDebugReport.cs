@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -28,6 +29,9 @@ namespace LogansNavigationExtension
 
 		private bool flag_amInAbbreviateMethod = false;
 
+		DateTime dt_start;
+		public DateTime DT_Start => dt_start;
+
 		public void Clear()
 		{
 			rprtString = string.Empty;
@@ -45,6 +49,7 @@ namespace LogansNavigationExtension
 			flag_amInAbbreviateMethod = false;
 
 			methodSignatures = new List<LNXMDR_MethodSignature>();
+			dt_start = DateTime.Now;
 		}
 
 		public void StartReport(string rprtName, int mthdLvlLmt)
@@ -138,7 +143,7 @@ namespace LogansNavigationExtension
 				return;
 			}
 
-			if (rprtString.Length < 70000)
+			if (rprtString.Length < 200000)
 			{
 				rprtString += $"{CurrentInnerTabText}{s}\n";
 			}

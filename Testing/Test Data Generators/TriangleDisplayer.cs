@@ -10,7 +10,7 @@ namespace LNX_Debugging
 	/// </summary>
 	public class TriangleDisplayer : MonoBehaviour
     {
-		public LNX_NavMesh _navmesh;
+		public LNX_NavMeshSurface _navmesh;
 		public LNX_ComponentGrabber TriGrabber;
 		public LNX_Triangle CurrentTri => TriGrabber.CurrentlyGrabbedTriangle;
 		[TextArea(1, 20)]

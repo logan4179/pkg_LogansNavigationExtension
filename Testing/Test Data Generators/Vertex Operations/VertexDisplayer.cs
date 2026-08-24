@@ -10,7 +10,7 @@ namespace LogansNavigationExtension
 	/// </summary>
     public class VertexDisplayer : MonoBehaviour
     {
-		public LNX_NavMesh _navmesh;
+		public LNX_NavMeshSurface _navmesh;
         public LNX_ComponentGrabber VertGrabber;
 		public LNX_ComponentGrabber PathToVertGrabber;
 		public LNX_Vertex CurrentVert => VertGrabber.CurrentlyGrabbedVert;

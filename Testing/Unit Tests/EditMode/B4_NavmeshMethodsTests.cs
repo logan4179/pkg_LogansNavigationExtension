@@ -12,7 +12,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 {
 	public class B4_NavmeshMethodsTests
 	{
-		LNX_NavMesh _testGeneratedLnxNavmesh;
+		LNX_NavMeshSurface _testGeneratedLnxNavmesh;
 
 		TDG_SamplePosition _tdg_samplePosition;
 
@@ -29,7 +29,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				Debug.LogWarning($"Couldn't find serialized navmesh in scene. Making anew...");
 				go = new GameObject();
 				go.name = LNX_UnitTestUtilities.Name_GeneratedNavmeshGameobject; //so that other test scripts can find this object.
-				_testGeneratedLnxNavmesh = go.AddComponent<LNX_NavMesh>();
+				_testGeneratedLnxNavmesh = go.AddComponent<LNX_NavMeshSurface>();
 				Assert.NotNull(_testGeneratedLnxNavmesh);
 				Debug.Log($"scene-generated navmesh created, now calculating triangulation...");
 
@@ -50,7 +50,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				Debug.Log(string.Format(LNX_UnitTestUtilities.UnitTestSectionEndString, "set up scene-generated navmesh"));
 			}
 
-			_testGeneratedLnxNavmesh = go.GetComponent<LNX_NavMesh>();
+			_testGeneratedLnxNavmesh = go.GetComponent<LNX_NavMeshSurface>();
 
 			Assert.NotNull(_testGeneratedLnxNavmesh);
 		}

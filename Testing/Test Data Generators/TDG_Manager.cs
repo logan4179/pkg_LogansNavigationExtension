@@ -12,7 +12,7 @@ namespace LogansNavigationExtension
 		public string LastWriteTime;
 
 		[Header("REFERENCE")]
-		[SerializeField] private LNX_NavMesh _serializedNavmeshModel;
+		[SerializeField] private LNX_NavMeshSurface _serializedNavmeshModel;
 
 		public LNX_NavmeshFullDataSaver _sceneGeneratedNavmeshDataSaver;
 

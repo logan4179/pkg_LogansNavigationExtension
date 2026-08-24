@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 
 namespace LogansNavigationExtension
@@ -147,7 +148,7 @@ namespace LogansNavigationExtension
 			}
 		}
 
-		public LNX_Triangle(int parallelIndex, int areaIndx, List<LNX_AtomicTriangle> atomicTris, LNX_NavMesh navMesh)
+		public LNX_Triangle(int parallelIndex, int areaIndx, List<LNX_AtomicTriangle> atomicTris, LNX_NavMeshSurface navMesh)
 		{
 			//DBG_Class = $"ctor '({DateTime.Now.ToString()})'...\n";
 
@@ -187,16 +188,18 @@ namespace LogansNavigationExtension
 			SampleNormal(navMesh);
 		}
 
-		public void RefreshMe(LNX_NavMesh nm, bool meshContinuityHasChanged)
+		public void RefreshMe(LNX_NavMeshSurface nm, bool meshContinuityHasChanged)
 		{
 			//Debug.Log($"RefreshMe() on {this.ToString()} at {DateTime.Now}");
 
+			StringBuilder sb = new StringBuilder();
+
 			Verts[0].CreateRelationships(nm, dirtyFlag_repositionedVert || meshContinuityHasChanged,
-				dirtyFlag_repositionedVert || meshContinuityHasChanged, false);
+				dirtyFlag_repositionedVert || meshContinuityHasChanged, false, ref sb);
 			Verts[1].CreateRelationships(nm, dirtyFlag_repositionedVert || meshContinuityHasChanged,
-				dirtyFlag_repositionedVert || meshContinuityHasChanged, false);
+				dirtyFlag_repositionedVert || meshContinuityHasChanged, false, ref sb);
 			Verts[2].CreateRelationships(nm, dirtyFlag_repositionedVert || meshContinuityHasChanged,
-				dirtyFlag_repositionedVert || meshContinuityHasChanged, false);
+				dirtyFlag_repositionedVert || meshContinuityHasChanged, false, ref sb);
 
 			if (meshContinuityHasChanged)
 			{
@@ -206,7 +209,7 @@ namespace LogansNavigationExtension
 			}
 		}
 
-		public void CalculateCompletelyVisibleTris(LNX_NavMesh nm, LNX_Edge[] terminalEdges = null)
+		public void CalculateCompletelyVisibleTris(LNX_NavMeshSurface nm, LNX_Edge[] terminalEdges = null)
 		{
 			if (terminalEdges == null) //Note: making this parameter default-null, and therefor optional, means I can save a lot of time in 
 			{                       //LNX_Navmesh.CalculateEfficiencyData() by caching this and continually supplying it to this method in the for loop
@@ -348,7 +351,7 @@ namespace LogansNavigationExtension
 		/// Calculates/recalculates the information a tri derives about itself using the positions of it's vertices. 
 		/// Use this after you edit a tri's components.
 		/// </summary>
-		public void CalculateDerivedInfo(LNX_NavMesh nm)
+		public void CalculateDerivedInfo(LNX_NavMeshSurface nm)
 		{
 			//dbgDerived = $"{this}\n";
 			#region CALCULATE PLANEFACE NORMAL------------------------------
@@ -379,7 +382,7 @@ namespace LogansNavigationExtension
 			//Debug.Log(dbgDerived);
 		}
 
-		public void SampleNormal(LNX_NavMesh nm)
+		public void SampleNormal(LNX_NavMeshSurface nm)
 		{
 			//DbgCalculateTriInfo += $"{nameof(SampleNormal)}() report\n";
 
@@ -1216,7 +1219,7 @@ namespace LogansNavigationExtension
 		/// <param name="vertIndex"></param>
 		/// <param name="pos"></param>
 		/// <param name="positionIsAbsolute"></param>
-		public void MoveVert_managed(LNX_NavMesh nm, int vertIndex, Vector3 pos, bool positionIsAbsolute = false)
+		public void MoveVert_managed(LNX_NavMeshSurface nm, int vertIndex, Vector3 pos, bool positionIsAbsolute = false)
 		{
 			Verts[vertIndex].V_Position = (positionIsAbsolute ? pos : Verts[vertIndex].V_Position + pos);
 
@@ -1627,6 +1630,22 @@ namespace LogansNavigationExtension
 
 			return false;
 		}
+		public bool AmAdjacentToTri(int otherTriIndx ) //todo: unit test
+		{
+			if (otherTriIndx == Index_inCollection)
+			{
+				Debug.LogWarning($"LNX WARNING! {nameof(LNX_Triangle)}.{nameof(AmAdjacentToTri)} was passed it's own index! Was this intentional?");
+				return true;
+			}
+
+			if (GetNumberOfSharedVerts(otherTriIndx) > 0)
+			{
+				return true;
+			}
+
+			return false;
+		}
+
 
 		public bool AmAdjacentToVert(LNX_Vertex vert)
 		{
@@ -1650,6 +1669,29 @@ namespace LogansNavigationExtension
 				count++;
 			}
 			if (Verts[2].SharesVertSpaceWithTri(tri))
+			{
+				count++;
+			}
+
+			return count;
+		}
+		public int GetNumberOfSharedVerts(int otherTriIndx )
+		{
+			if (otherTriIndx == index_inCollection)
+			{
+				return 3;
+			}
+
+			int count = 0;
+			if (Verts[0].HasSharedVertViaTriIndex(otherTriIndx))
+			{
+				count++;
+			}
+			if (Verts[1].HasSharedVertViaTriIndex(otherTriIndx))
+			{
+				count++;
+			}
+			if (Verts[2].HasSharedVertViaTriIndex(otherTriIndx))
 			{
 				count++;
 			}
@@ -1754,6 +1796,31 @@ namespace LogansNavigationExtension
 
 			return indx;
 		}
+
+		public List<int> GetAdjacentTriangles( List<int> avoidTriangles = null )
+		{
+			List<int> rtrnList = new List<int>();
+
+			for ( int i_vrts = 0; i_vrts < 3; i_vrts++ )
+			{
+				if ( Verts[i_vrts].SharedVertexCoordinates != null && Verts[i_vrts].SharedVertexCoordinates.Length > 0 )
+				{
+					for ( int i_shrd = 0; i_shrd < Verts[i_vrts].SharedVertexCoordinates.Length; i_shrd++ )
+					{
+						if 
+						( 
+							!rtrnList.Contains(Verts[i_vrts].SharedVertexCoordinates[i_shrd].TrianglesIndex) &&
+							!avoidTriangles.Contains(Verts[i_vrts].SharedVertexCoordinates[i_shrd].TrianglesIndex)
+						)
+						{
+							rtrnList.Add( Verts[i_vrts].SharedVertexCoordinates[i_shrd].TrianglesIndex );
+						}
+					}
+				}
+			}
+
+			return rtrnList;
+		}
 		#endregion
 
 		#region	RELATIONAL =======================================================
@@ -1799,6 +1866,7 @@ namespace LogansNavigationExtension
 
 			return true;
 		}
+
 		#endregion
 
 		public void LoadWithSerializedData(LNX_SerializedTriData data)
@@ -1807,7 +1875,7 @@ namespace LogansNavigationExtension
 		}
 
 		#region HELPERS --------------------------------------------------
-		public string GetCurrentInfoString(LNX_NavMesh nm)
+		public string GetCurrentInfoString(LNX_NavMeshSurface nm)
 		{
 			string completelyVisibleTrisSTring = $"";
 
@@ -1855,12 +1923,12 @@ namespace LogansNavigationExtension
 				$"";
 		}
 
-		public void SayCurrentInfo(LNX_NavMesh nm)
+		public void SayCurrentInfo(LNX_NavMeshSurface nm)
 		{
 			Debug.Log(GetCurrentInfoString(nm));
 		}
 
-		public string GetAnomolyString(LNX_NavMesh nm)
+		public string GetAnomolyString(LNX_NavMeshSurface nm)
 		{
 			string returnString = string.Empty;
 
@@ -1985,7 +2053,7 @@ namespace LogansNavigationExtension
 			return returnString;
 		}
 
-		public string GetRelationalString(LNX_NavMesh nm)
+		public string GetRelationalString(LNX_NavMeshSurface nm)
 		{
 			return $"LNX_Triangle[{Index_inCollection}].GetRelationalString()\n" +
 				$"Verts----\n" +

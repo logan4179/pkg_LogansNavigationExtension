@@ -11,7 +11,7 @@ namespace LogansNavigationExtension
     [System.Serializable]
     public class LNX_NavmeshFullDataSaver
     {
-        public LNX_NavMesh _Lnx_Navmesh;
+        public LNX_NavMeshSurface _Lnx_Navmesh;
 
         public Vector3[] _Mesh_Vertices;
         public int[] _Mesh_Triangles;

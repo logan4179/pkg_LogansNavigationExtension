@@ -7,7 +7,7 @@ namespace LNX_Debugging
 {
 	public class GetVertRelationshipHelper : MonoBehaviour
 	{
-		public LNX_NavMesh _navmesh;
+		public LNX_NavMeshSurface _navmesh;
 		public LNX_ComponentGrabber PerspVrtGrabber;
 		public LNX_ComponentGrabber ToVrtGrabber;
 
