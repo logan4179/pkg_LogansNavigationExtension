@@ -13,7 +13,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 {
     public class D_DeletingAndAddingTests
     {
-		LNX_NavMesh _serializedLNXNavmesh;
+		LNX_NavMeshSurface _serializedLNXNavmesh;
 
 		LNX_MeshManipulator _lnx_meshManipulator;
 
@@ -29,7 +29,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			Debug.Log($"Making a version of the serialized navmesh just for this test suite...");
 			GameObject go_serializedNavmesh = new GameObject();
 			//go_serializedNavmesh.name = "go_serializedNavmesh_forCtests";
-			_serializedLNXNavmesh = go_serializedNavmesh.AddComponent<LNX_NavMesh>();
+			_serializedLNXNavmesh = go_serializedNavmesh.AddComponent<LNX_NavMeshSurface>();
 			string jsonString = File.ReadAllText(TDG_Manager.filePath_serializedLnxNavMesh);
 			JsonUtility.FromJsonOverwrite(jsonString, _serializedLNXNavmesh);
 

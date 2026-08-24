@@ -33,7 +33,6 @@ namespace LogansNavigationExtension
 
 		[Header("DEBUG")]
 		public bool AllowEffiencyLoading;
-		public bool UseDbgVersion = false;
 		public Color Color_IfTrue;
 		public Color Color_IfFalse;
 
@@ -112,7 +111,7 @@ namespace LogansNavigationExtension
 
 			DateTime dt_opStart = DateTime.Now;
 
-			if (!UseDbgVersion)
+			if (!UseDebugVersion)
 			{
 				DBG_Operation += $"Using StartVert: '{StartVert}', and EndVert: '{EndVert}'...\n" +
 					$"Commencing operation...\n";
@@ -166,9 +165,14 @@ namespace LogansNavigationExtension
 
 			base.OnDrawGizmos();
 
-			DrawStandardFocusTriGizmos(StartTriangle, 0.01f, "", Color.magenta, true, 0.01f, false, false);
-			DrawStandardFocusTriGizmos(EndTriangle, 0.01f, "", Color.magenta, true, 0.01f, false, false);
-
+			if( StartTriangle != null )
+			{
+				DrawStandardFocusTriGizmos(StartTriangle, 0.01f, "", Color.magenta, true, 0.01f, false, false);
+			}
+			if (EndTriangle != null)
+			{
+				DrawStandardFocusTriGizmos(EndTriangle, 0.01f, "", Color.magenta, true, 0.01f, false, false);
+			}
 
 			//DBG_Operation += $"Commencing operation...\n";
 

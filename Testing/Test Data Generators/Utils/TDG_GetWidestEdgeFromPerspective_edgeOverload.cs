@@ -79,8 +79,8 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call SendToProblemPosition()")]
 		public void SendToProblemPosition()
 		{
-			PerspectiveEdgeGrabber.transform.position = _dataCapture_problems.VectorCaptureLists[0].vectors[Index_GoToProblem];
-			OtherTriGrabber.transform.position = _dataCapture_problems.VectorCaptureLists[1].vectors[Index_GoToProblem];
+			PerspectiveEdgeGrabber.transform.position = _dataCapture_problems.VectorCaptureLists[0].vectors[Index_FocusOn];
+			OtherTriGrabber.transform.position = _dataCapture_problems.VectorCaptureLists[1].vectors[Index_FocusOn];
 
 			SampleComponents();
 		}
@@ -155,6 +155,7 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call WriteMeToJson()")]
 		public bool WriteMeToJson()
 		{
+			/*
 			bool rslt = TDG_Manager.WriteTestObjectToJson(TDG_Manager.filePath_testData_isInCenterSweep, this);
 
 			if (rslt)
@@ -162,6 +163,7 @@ namespace LogansNavigationExtension
 				LastWriteTime = System.DateTime.Now.ToString();
 				return true;
 			}
+			*/
 
 			return false;
 		}

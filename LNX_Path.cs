@@ -8,9 +8,9 @@ using UnityEngine;
 namespace LogansNavigationExtension
 {
 	[System.Serializable]
-	public struct LNX_Path
+	public class LNX_Path
 	{
-		[SerializeField] private List<LNX_NavmeshHit> pathPoints;
+		[SerializeField] private List<LNX_NavmeshHit> pathPoints = new List<LNX_NavmeshHit>();
 		public List<LNX_NavmeshHit> PathPoints => pathPoints;
 
 		public int PointCount => (pathPoints != null && pathPoints.Count > -1) ? pathPoints.Count : -1;
@@ -43,7 +43,7 @@ namespace LogansNavigationExtension
 		[SerializeField] private Vector3 v_navmeshSurfaceProjection_cached;
 		public Vector3 V_navmeshSurfaceProjection_cached => v_navmeshSurfaceProjection_cached;
 
-		private float totalDistance_cached;
+		[SerializeField] private float totalDistance_cached;
 		/// <summary>Distance of the entire path.</summary>
 		public float TotalDistance => totalDistance_cached;
 
@@ -54,7 +54,6 @@ namespace LogansNavigationExtension
 		/// constructed with a provided LNX_Navmesh or provided surface normal.
 		/// </summary>
 		public bool AmStraight => amStraight;
-		public bool SpecialPublicBool;
 	
 
 		/// <summary>Tells if this path object has valid data to be used for pathing.</summary>
@@ -62,46 +61,43 @@ namespace LogansNavigationExtension
 		{
 			get
 			{
-				return pathPoints != null && pathPoints.Count > 0;
+				//return (pathPoints != null || pathPoints.Count > 0; //this can cause problems if pathPoints is null because, due to the or operator, it will try to evaluate both of these
+				return !(pathPoints == null || pathPoints.Count <= 0);
 			}
 		}
 
-		[TextArea(1,20)] public string DBG_class;
+		//[TextArea(1,20)] public string DBG_class; //todo: dws
 
-
-		private static LNX_Path none = new LNX_Path();
-
-		public static LNX_Path None
-		{
-			get
-			{
-				return none;
-			}
-		}
 
 		#region CONSTRUCTORS =====================================================
-		public LNX_Path( LNX_NavMesh nm )
+		public LNX_Path()
 		{
-			DBG_class = $"ctorA\n";
+			pathPoints = null;
+			totalDistance_cached = -1f;
+		}
+
+		public LNX_Path( LNX_NavMeshSurface nm )
+		{
+			//DBG_class = $"ctorA\n";
 			amStraight = true;
 			totalDistance_cached = 0f;
 			v_navmeshSurfaceProjection_cached = nm.GetSurfaceProjectionVector();
 			pathPoints = new List<LNX_NavmeshHit>();
-			SpecialPublicBool = true;
 		}
 
 		public LNX_Path( LNX_Path basePath )
 		{
+			/*
 			DBG_class = $"ctorB (1 base path)\n" +
 				$"LNX_Path(basePath: '{basePath}')\n" +
 				$"===================================\n" +
 				$"basePath.DBG_class: '{basePath.DBG_class}'\n" +
 				$"===================================\n" +
 				$"";
-			SpecialPublicBool = true;
+			*/
 
 			amStraight = basePath.AmStraight;
-			totalDistance_cached = basePath.totalDistance_cached;
+			totalDistance_cached = 0f;
 			v_navmeshSurfaceProjection_cached = basePath.v_navmeshSurfaceProjection_cached;
 
 			pathPoints = new List<LNX_NavmeshHit>();
@@ -115,18 +111,65 @@ namespace LogansNavigationExtension
 			}
 		}
 
+		public LNX_Path(LNX_Path basePath, LNX_Vertex endVert)
+		{
+			amStraight = basePath.AmStraight;
+			totalDistance_cached = 0f;
+			v_navmeshSurfaceProjection_cached = basePath.v_navmeshSurfaceProjection_cached;
+
+			pathPoints = new List<LNX_NavmeshHit>();
+
+			if (basePath.pathPoints != null && basePath.pathPoints.Count > 0)
+			{
+				for (int i = 0; i < basePath.pathPoints.Count - 1; i++)
+				{
+					AddPoint(basePath.pathPoints[i]);
+				}
+			}
+			AddPoint(new LNX_NavmeshHit(endVert));
+		}
+
+		public LNX_Path(LNX_Vertex startVert, LNX_Path basePath, LNX_Vertex endVert)
+		{
+			amStraight = basePath.AmStraight;
+			totalDistance_cached = 0f;
+			v_navmeshSurfaceProjection_cached = basePath.v_navmeshSurfaceProjection_cached;
+
+			pathPoints = new List<LNX_NavmeshHit>();
+
+			if( basePath == null || basePath.pathPoints.Count < 2 )
+			{
+				Debug.LogError($"LNX ERROR! You called a path constructor meant for a path with multiple path points, but supplied " +
+					$"a path model with less than 2 path points. Returning early...");
+				return;
+			}
+
+			AddPoint(new LNX_NavmeshHit(startVert));
+
+			if( basePath.PointCount > 2 )
+			{
+				for (int i = 1; i < basePath.pathPoints.Count - 1; i++)
+				{
+					AddPoint(basePath.pathPoints[i]);
+				}
+			}
+			
+			AddPoint(new LNX_NavmeshHit(endVert));
+		}
+
 		public LNX_Path( LNX_Path basePathA, LNX_Path basePathB )
 		{
+			/*
 			DBG_class = $"ctorC (2 base paths)\n" +
 				$"LNX_Path(basePathA: '{basePathA}', basePathB: '{basePathB}')\n" +
 				$"basePathA dbg: '{basePathA}'\n" +
 				$"basePathB dbg: '{basePathB}'\n" +
 
 				$"";
-			SpecialPublicBool = true;
+			*/
 
 			amStraight = basePathA.AmStraight && basePathB.amStraight && basePathA.V_CrowFlies == basePathB.V_CrowFlies;
-			totalDistance_cached = basePathA.totalDistance_cached + basePathB.totalDistance_cached;
+			totalDistance_cached = 0f;
 			v_navmeshSurfaceProjection_cached = basePathA.v_navmeshSurfaceProjection_cached;
 
 			pathPoints = new List<LNX_NavmeshHit>();
@@ -156,7 +199,7 @@ namespace LogansNavigationExtension
 					if ( i == 0 && basePathA.pathPoints != null && basePathA.pathPoints.Count > 0 && 
 						basePathB.StartHit.Position == basePathA.EndHit.Position)
 					{
-						DBG_class += $"first pt of pathB is same as last logged point of A. continuing..\n";
+						//DBG_class += $"first pt of pathB is same as last logged point of A. continuing..\n";
 						continue;
 					}
 					else
@@ -171,8 +214,7 @@ namespace LogansNavigationExtension
 		
 		public LNX_Path( Vector3 nvmshProjectionDir, params LNX_NavmeshHit[] hits)
 		{
-			DBG_class = $"ctorD\n";
-			SpecialPublicBool = true;
+			//DBG_class = $"ctorD\n";
 
 			pathPoints = new List<LNX_NavmeshHit>();
 			totalDistance_cached = 0f;
@@ -219,8 +261,7 @@ namespace LogansNavigationExtension
 
 		public LNX_Path(Vector3 nvmshProjectionDir, List<LNX_NavmeshHit> hits)
 		{
-			DBG_class = $"ctorE\n";
-			SpecialPublicBool = true;
+			//DBG_class = $"ctorE\n";
 
 			pathPoints = new List<LNX_NavmeshHit>();
 			totalDistance_cached = 0f;
@@ -244,26 +285,16 @@ namespace LogansNavigationExtension
 
 		public void AddPoint( LNX_NavmeshHit pt )
 		{
-			//bool dbgCondition = pathPoints.Count == 6 && StartHit.TriangleIndex == 0 && StartHit.VertIndex == 0 && pt.TriangleIndex == 22 && pt.VertIndex == 1;
-			bool dbgCondition = true;
-
-			if ( dbgCondition )
-			{
-				Debug.Log($"<color=green>AddPoint('{pt}') bc: '{pathPoints.Count}', amStraight: '{amStraight}'</color");
-			}
-			DBG_class += $"AddPoint('{pt}') bc: '{pathPoints.Count}', amStraight: '{amStraight}'\n"; //<<<<<<<<<<<<<<<<<<<<<<<<<
+			//DBG_class += $"AddPoint('{pt}') bc: '{pathPoints.Count}', amStraight: '{amStraight}'\n"; //<<<<<<<<<<<<<<<<<<<<<<<<<
 			if (pathPoints == null)
 			{
-				DBG_class += $"collection null. initializing new...\n";
+				//DBG_class += $"collection null. initializing new...\n";
 				pathPoints = new List<LNX_NavmeshHit>();
 			}
 
 			pathPoints.Add( pt );
-			DBG_class += $"aa: '{pathPoints.Count}', amStraight: '{amStraight}'\n"; //<<<<<<<<<<<<<<<<<<<<<<<<<
-			if ( dbgCondition )
-			{
-				Debug.Log($"<color=green>aa: '{pathPoints.Count}', amStraight: '{amStraight}'</color");
-			}
+			//DBG_class += $"aa: '{pathPoints.Count}', amStraight: '{amStraight}'\n"; //<<<<<<<<<<<<<<<<<<<<<<<<<
+
 			if ( pathPoints.Count > 1 )
 			{
 				totalDistance_cached += Vector3.Distance( pathPoints[pathPoints.Count - 2].Position, pt.Position );
@@ -277,8 +308,8 @@ namespace LogansNavigationExtension
 					Vector3 dirNew = LNX_Utils.FlatVector(
 						pt.Position - pathPoints[pathPoints.Count - 2].Position, v_navmeshSurfaceProjection_cached
 					).normalized;//<<
-					DBG_class += $"determining straightness using firstDir: '{LNX_UnitTestUtilities.LongVectorString(firstDir_fltnd)}', " +
-						$"newDir: '{LNX_UnitTestUtilities.LongVectorString(dirNew)}'\n";
+					//DBG_class += $"determining straightness using firstDir: '{LNX_UnitTestUtilities.LongVectorString(firstDir_fltnd)}', " +
+						//$"newDir: '{LNX_UnitTestUtilities.LongVectorString(dirNew)}'\n";
 
 					/*
 					if (dirNew != firstDir_fltnd)
@@ -294,28 +325,16 @@ namespace LogansNavigationExtension
 					}*/
 					if( Vector3.Angle(firstDir_fltnd, dirNew) > 0f )
 					{
-						DBG_class += $"decided not equal. angDiff: '{Vector3.Angle(firstDir_fltnd, dirNew)}'. Changing amStraight to false...\n";
+						//DBG_class += $"decided not equal. angDiff: '{Vector3.Angle(firstDir_fltnd, dirNew)}'. Changing amStraight to false...\n";
 						amStraight = false;
-						if( dbgCondition )
-						{
-							Debug.Log($"decided NOT equal");
-						}
 					}
 					else
 					{
-						DBG_class += $"decided AM equal...\n";
-						if (dbgCondition)
-						{
-							Debug.Log($"decided NOT equal");
-						}
+						//DBG_class += $"decided AM equal...\n";
 					}
 				}
 			}
-			DBG_class += $"ac: '{pathPoints.Count}', amStraight: '{amStraight}'\n";
-			if (dbgCondition)
-			{
-				Debug.Log($"<color=green>AddPoint('{pt}') ac: '{pathPoints.Count}', amStraight: '{amStraight}'</color");
-			}
+			//DBG_class += $"ac: '{pathPoints.Count}', amStraight: '{amStraight}'\n";
 		}
 
 		public LNX_Path Reversed()
@@ -334,6 +353,54 @@ namespace LogansNavigationExtension
 			}
 
 			return new LNX_Path( v_navmeshSurfaceProjection_cached, reversedHits );
+		}
+
+		public LNX_Path Reversed( LNX_Vertex endVertOverride )
+		{
+			List<LNX_NavmeshHit> reversedHits = new List<LNX_NavmeshHit>();
+
+			if (pathPoints.Count == 1)
+			{
+				return new LNX_Path( v_navmeshSurfaceProjection_cached, new LNX_NavmeshHit(endVertOverride) );
+			}
+
+			for (int i = pathPoints.Count - 1; i > 0; i--)
+			{
+				reversedHits.Add(pathPoints[i]);
+			}
+			reversedHits.Add(new LNX_NavmeshHit(endVertOverride));
+
+			return new LNX_Path(v_navmeshSurfaceProjection_cached, reversedHits);
+		}
+
+		public bool ValueEquals( LNX_Path otherPath )
+		{
+
+			if ((pathPoints == null && otherPath.pathPoints != null) ||
+				(pathPoints != null && otherPath.pathPoints == null))
+			{
+				return false;
+			}
+
+			if (pathPoints != null && otherPath.pathPoints != null &&
+				pathPoints.Count != otherPath.pathPoints.Count
+			)
+			{
+				return false;
+			}
+
+			if (pathPoints != null && otherPath.pathPoints != null)
+			{
+				for (int i = 0; i < pathPoints.Count; i++)
+				{
+					if (otherPath.pathPoints[i] != pathPoints[i])
+					{
+						return false;
+					}
+				}
+			}
+
+			return true;
 		}
 		#endregion
 
@@ -387,38 +454,6 @@ namespace LogansNavigationExtension
 			}
 
 			return pathPoints[ptIndx].Position - pathPoints[ptIndx - 1].Position;
-		}
-
-		public bool AmOnCourse( int currentPtIndx, Vector3 pos_passed, float threshold, float dist_checkIfOffCourseBeyondPrev)
-		{
-			if (currentPtIndx == 0 )
-			{
-				if ( Vector3.Distance(pos_passed, pathPoints[currentPtIndx].Position) <= 0.25f )
-				{
-					return true;
-				}
-				else
-				{
-					return false;
-				}
-			}
-			else
-			{
-				float distToPrev = Vector3.Distance(pos_passed, pathPoints[currentPtIndx - 1].Position);
-				//Vector3 v_prevToPos = Vector3.Normalize(pos_passed - PathPoints[currentPtIndx - 1].V_Position);
-
-				float myDot = Vector3.Dot(
-					GetVectorPointingToPreviousPoint(currentPtIndx - 1).normalized, 
-					GetVectorPointingToNextPoint(currentPtIndx-1).normalized
-				);
-
-				return (distToPrev < dist_checkIfOffCourseBeyondPrev || myDot >= threshold);
-			}
-		}
-
-		public float GetCombinedDistance(LNX_Path pth)
-		{
-			return totalDistance_cached + pth.totalDistance_cached;
 		}
 
 		public bool FoundIssue()
@@ -489,8 +524,10 @@ namespace LogansNavigationExtension
 		}
 
 		#region OPERATORS ======================================================
+		/*
 		public static bool operator ==(LNX_Path a, LNX_Path b)
 		{
+			Debug.Log("==");
 			return a.Equals(b);
 		}
 
@@ -501,20 +538,17 @@ namespace LogansNavigationExtension
 
 		public override bool Equals(object obj)
 		{
+			Debug.Log($"equals");
 			if (!(obj is LNX_Path))
 				return false;
 
 			LNX_Path otherPath = (LNX_Path)obj;
-			/*
-			if
-			(
-				otherPath.totalDistance_cached != totalDistance_cached ||
-				otherPath.amStraight != amStraight
-			)
-			{
-				return false;
-			}
-			*/
+			
+			//if(otherPath.totalDistance_cached != totalDistance_cached ||otherPath.amStraight != amStraight)
+			//{
+				//return false;
+			//}
+			
 
 			if( (pathPoints == null && otherPath.pathPoints != null) || 
 				(pathPoints != null && otherPath.pathPoints == null) )
@@ -543,13 +577,6 @@ namespace LogansNavigationExtension
 			return true;
 		}
 
-		public static LNX_Path operator +(LNX_Path p1,
-									 LNX_Path p2)
-		{
-			Debug.Log("it's hapening!");
-			return new LNX_Path( p1, p2 );
-		}
-
 		public override int GetHashCode()
 		{
 		
@@ -557,12 +584,28 @@ namespace LogansNavigationExtension
 				pathPoints, totalDistance_cached, v_navmeshSurfaceProjection_cached, amStraight
 			);
 		}
+		
+
+		public static LNX_Path operator +(LNX_Path p1,
+									 LNX_Path p2)
+		{
+			Debug.Log("it's hapening!");
+			return new LNX_Path( p1, p2 );
+		}
+		*/
 
 		public override string ToString()
 		{
 			if( !AmValid )
 			{
-				return $"[Invalid Path]";
+				if( pathPoints == null )
+				{
+					return $"[Invalid Path(null pts collection)]";
+				}
+				else
+				{
+					return $"[Invalid Path(0 length pts collection)]";
+				}
 			}
 
 			return $"LNX_Path{StartHit}_->_{EndHit}";

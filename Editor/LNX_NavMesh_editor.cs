@@ -9,10 +9,10 @@ using System;
 
 namespace LogansNavigationExtension.CustomEditors
 {
-    [CustomEditor(typeof(LNX_NavMesh)), CanEditMultipleObjects]
+    [CustomEditor(typeof(LNX_NavMeshSurface)), CanEditMultipleObjects]
     public class LNX_NavMesh_editor : Editor
     {
-        LNX_NavMesh _targetScript;
+        LNX_NavMeshSurface _targetScript;
 
 		public VisualTreeAsset m_InspectorPrefab;
 		SerializedObject _lnxNavMesh_so;
@@ -26,7 +26,7 @@ namespace LogansNavigationExtension.CustomEditors
 			Debug.Log($"LNX_NavMesh was onenabled through the editor code."); //from what I can tell, this gets called when you select the object in the heirarcy, NOT when you deactivate and reactivate the object
 
 			//Force target script reference (LNX_NavMesh) to do any initializing I might want it to do below here...
-			_targetScript = (LNX_NavMesh)target;
+			_targetScript = (LNX_NavMeshSurface)target;
 
 			Debug.Log($"Mesh null: '{_targetScript._VisualizationMesh == null}'");
 
@@ -45,7 +45,7 @@ namespace LogansNavigationExtension.CustomEditors
 		public override VisualElement CreateInspectorGUI()
 		{			
 			#region CACHE MAIN OBJECTS -----------------------------
-			_targetScript = (LNX_NavMesh)target;
+			_targetScript = (LNX_NavMeshSurface)target;
 
 			_lnxNavMesh_so = new SerializedObject(_targetScript);
 			_lnxNavMesh_so.Update();

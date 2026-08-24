@@ -62,7 +62,7 @@ namespace LogansNavigationExtension
 		public void RunOperation()
 		{
 			mthdDbg_Report.Clear();
-			ResultRelationship = LNX_VertexRelationship.None;
+			ResultRelationship = null;
 
 			DBG_Operation = $"{DateTime.Now}\n";
 
@@ -103,7 +103,7 @@ namespace LogansNavigationExtension
 
 			ResultRelationship = PerspectiveVertex.Relationships[EndVertex.Index_Relational];
 
-			DBG_Operation += $"result: '{(ResultRelationship == LNX_VertexRelationship.None ? "none" : ResultRelationship)}'\n";
+			DBG_Operation += $"result: '{(ResultRelationship == null ? "NULL" : ResultRelationship)}'\n";
 		}
 
 		protected override void OnDrawGizmos()
@@ -124,7 +124,7 @@ namespace LogansNavigationExtension
 				RunOperation();
 			}
 
-			if ( ResultRelationship != null && ResultPath != LNX_Path.None)
+			if ( ResultRelationship != null && ResultPath != null )
 			{
 				Color oldClr = Gizmos.color;
 				Gizmos.color = Color_PathPoints;

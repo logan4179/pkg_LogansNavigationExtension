@@ -27,7 +27,7 @@ namespace LogansNavigationExtension
 		public void RunOperation() 
 		{
 			DBG_Operation = $"Recalculating at: '{DateTime.Now}'...\n";
-			ResultPath = LNX_Path.None;
+			ResultPath = null;
 			mthdDbg_Report.Clear();
 
 			if( CallingVert == null )
@@ -56,7 +56,7 @@ namespace LogansNavigationExtension
 					$"Commencing operation...\n";
 
 				System.Diagnostics.Stopwatch stpWtch = System.Diagnostics.Stopwatch.StartNew();
-				ResultPath = CallingVert.Ping(EndHit, _navmesh, maxDist, LNX_Path.None, backstopCoords);
+				ResultPath = CallingVert.Ping(EndHit, _navmesh, maxDist, null, backstopCoords);
 				stpWtch.Stop();
 				totalMs = stpWtch.ElapsedMilliseconds;
 				totalTicks = stpWtch.ElapsedTicks;
@@ -70,7 +70,7 @@ namespace LogansNavigationExtension
 
 				mthdDbg_Report.StartReport();
 				System.Diagnostics.Stopwatch stpWtch = System.Diagnostics.Stopwatch.StartNew();
-				ResultPath = CallingVert.Ping_dbg(EndHit, _navmesh, maxDist, LNX_Path.None, ref mthdDbg_Report, backstopCoords);
+				ResultPath = CallingVert.Ping_dbg(EndHit, _navmesh, maxDist, null, ref mthdDbg_Report, backstopCoords);
 				stpWtch.Stop();
 				totalMs = stpWtch.ElapsedMilliseconds;
 				totalTicks = stpWtch.ElapsedTicks;
@@ -115,7 +115,7 @@ namespace LogansNavigationExtension
 			}
 
 
-			if ( ResultPath != LNX_Path.None)
+			if ( ResultPath != null)
 			{
 				Gizmos.color = Color.green;
 			}

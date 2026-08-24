@@ -99,7 +99,7 @@ namespace LogansNavigationExtension
 
 		public LNX_Edge( List<LNX_AtomicTriangle> atomicTris, LNX_Triangle ownerTri, LNX_Vertex strtVrt, LNX_Vertex endVrt, int triIndx, int cmptIndx )
 		{
-			Debug.Log($"ctor. edge: '{ownerTri.Index_inCollection},{cmptIndx}', passed tri ctr: '{ownerTri.V_Center}'");
+			//Debug.Log($"ctor. edge: '{ownerTri.Index_inCollection},{cmptIndx}', passed tri ctr: '{ownerTri.V_Center}'");
 			//StartPosition = strtVrt.V_Position;
 			//EndPosition = endVrt.V_Position;
 
@@ -142,7 +142,7 @@ namespace LogansNavigationExtension
 			SharedEdgeCoordinate = edge.SharedEdgeCoordinate;
 		}
 
-		public void CreateRelationships( LNX_NavMesh nvmsh ) //todo: unit test
+		public void CreateRelationships( LNX_NavMeshSurface nvmsh ) //todo: unit test
 		{
 			for ( int i = 0; i < nvmsh.Triangles.Length; i++ )
 			{
@@ -169,7 +169,7 @@ namespace LogansNavigationExtension
 			}
 		}
 
-		public void CalculateDerivedInfo( LNX_Triangle tri, LNX_NavMesh nm )
+		public void CalculateDerivedInfo( LNX_Triangle tri, LNX_NavMeshSurface nm )
 		{
 			StartPosition = tri.Verts[StartVertCoordinate.ComponentIndex].V_Position;
 			EndPosition = tri.Verts[EndVertCoordinate.ComponentIndex].V_Position;
@@ -230,54 +230,6 @@ namespace LogansNavigationExtension
 		}
 
 		#region API METHODS-----------------------------
-		public Vector3 ClosestPointOnEdge(Vector3 pos)
-		{
-			Vector3 v_vrtToPos = pos - StartPosition;
-			Vector3 v_edge = EndPosition - StartPosition;
-
-			#region SHORT-CIRCUIT ====================================
-			//TODO: efficiency test this method with and without this check to determine how much this check costs. Note: this check 
-			// WILL be triggered in LNX_Triangle.ProjectThroughToPerimeter() in the overload that takes in LNX_Hits as parameters 
-			// when called by LNX_Utils.TryProjectPathThrough()
-			if ( v_vrtToPos.normalized == v_edge.normalized ) //this works bc both of these vectors are calcualted from 'StartPosition'
-			{
-				if ( v_vrtToPos.magnitude <= v_edge.magnitude )
-				{
-					return pos;
-				}
-				else
-				{
-					return EndPosition;
-				}
-			}
-			else if (v_vrtToPos.normalized == -v_edge.normalized)
-			{
-				if (v_vrtToPos.magnitude <= v_edge.magnitude)
-				{
-					return pos;
-				}
-				else
-				{
-					return StartPosition;
-				}
-			}
-			#endregion
-
-			Vector3 v_result = StartPosition + Vector3.Project( v_vrtToPos, v_edge.normalized );
-
-			float dist_startToRslt = Vector3.Distance(v_result, StartPosition);
-			float dist_endToRslt = Vector3.Distance(v_result, EndPosition);
-
-			//Debug.Log($"dist_startToRslt: '{dist_startToRslt}', dist_endToRslt: '{dist_endToRslt}', len: '{EdgeLength}'");
-			if (dist_startToRslt > EdgeLength || dist_endToRslt > EdgeLength)
-			{
-				//Debug.Log("if");
-				v_result = dist_startToRslt < dist_endToRslt ? StartPosition : EndPosition;
-			}
-
-			return v_result;
-		}
-
 		public LNX_NavmeshHit ClosestHitOnEdge(Vector3 pos)
 		{
 			Vector3 v_vrtToPos = pos - StartPosition;
@@ -295,7 +247,13 @@ namespace LogansNavigationExtension
 				}
 				else
 				{
-					return new LNX_NavmeshHit( this, EndPosition, v_navmeshProjectionDirection_cached );
+					return new LNX_NavmeshHit(
+						EndPosition, 
+						v_navmeshProjectionDirection_cached, 
+						MyCoordinate.TrianglesIndex, 
+						EndVertIndex, 
+						MyCoordinate.ComponentIndex
+					);
 				}
 			}
 			else if ( v_vrtToPos.normalized == -v_edge.normalized )
@@ -306,12 +264,18 @@ namespace LogansNavigationExtension
 				}
 				else
 				{
-					return new LNX_NavmeshHit(this, StartPosition, v_navmeshProjectionDirection_cached);
+					return new LNX_NavmeshHit(
+						StartPosition,
+						v_navmeshProjectionDirection_cached,
+						MyCoordinate.TrianglesIndex,
+						StartVertIndex,
+						MyCoordinate.ComponentIndex
+					);
 				}
 			}
 			#endregion
 
-				Vector3 v_result = StartPosition + Vector3.Project(v_vrtToPos, v_edge.normalized);
+			Vector3 v_result = StartPosition + Vector3.Project(v_vrtToPos, v_edge.normalized);
 
 			float dist_startToRslt = Vector3.Distance(v_result, StartPosition);
 			float dist_endToRslt = Vector3.Distance(v_result, EndPosition);
@@ -321,6 +285,21 @@ namespace LogansNavigationExtension
 			{
 				//Debug.Log("if");
 				v_result = dist_startToRslt < dist_endToRslt ? StartPosition : EndPosition;
+			}
+
+			if( LNX_Utils.FlatEquals(v_result, StartPosition, v_navmeshProjectionDirection_cached) )
+			{
+				return new LNX_NavmeshHit(
+					v_result, v_navmeshProjectionDirection_cached,
+					MyCoordinate.TrianglesIndex, StartVertIndex, MyCoordinate.ComponentIndex
+				);
+			}
+			else if (LNX_Utils.FlatEquals(v_result, EndPosition, v_navmeshProjectionDirection_cached))
+			{
+				return new LNX_NavmeshHit(
+					v_result, v_navmeshProjectionDirection_cached,
+					MyCoordinate.TrianglesIndex, EndVertIndex, MyCoordinate.ComponentIndex
+				);
 			}
 
 			return new LNX_NavmeshHit( this, v_result, v_navmeshProjectionDirection_cached );
@@ -810,7 +789,7 @@ namespace LogansNavigationExtension
 		/// <param name="nm"></param>
 		/// <param name="atStart"></param>
 		/// <returns></returns>
-		public float GetCombinedSharedEdgeAngle( LNX_NavMesh nm, bool atStart )
+		public float GetCombinedSharedEdgeAngle( LNX_NavMeshSurface nm, bool atStart )
 		{
 			//DBG_GetSharedAngle = $"{ToString()}.{nameof(GetSharedAngle)}({nameof(atStart)}: '{atStart}') sharedEdgeCoord: '{SharedEdgeCoordinate}'\n";
 			if ( SharedEdgeCoordinate == LNX_ComponentCoordinate.None )
@@ -849,7 +828,7 @@ namespace LogansNavigationExtension
 		/// <param name="otherEdgeCoord"></param>
 		/// <param name="prspctvVrtPos"></param>
 		/// <returns></returns>
-		public float GetContinuousAngleBetween( LNX_NavMesh nm, LNX_ComponentCoordinate otherEdgeCoord, Vector3 prspctvVrtPos )
+		public float GetContinuousAngleBetween( LNX_NavMeshSurface nm, LNX_ComponentCoordinate otherEdgeCoord, Vector3 prspctvVrtPos )
 		{
 			DBG_GetContinuousAngleBetween = $"{ToString()}.{nameof(GetContinuousAngleBetween)}('{otherEdgeCoord}', '{prspctvVrtPos}')\n";
 
@@ -1007,7 +986,7 @@ namespace LogansNavigationExtension
 			return AmOnSharedEdgeSpace( edj.StartPosition, edj.EndPosition );
 		}
 
-		public bool AmBoundsEdge(LNX_NavMesh nm) //OTOD: get rid of this now that I have this in the LNX_NavMesh class
+		public bool AmBoundsEdge(LNX_NavMeshSurface nm) //OTOD: get rid of this now that I have this in the LNX_NavMesh class
 		{
 			//note: It's possible to have a navmesh that isn't mostly square shaped. This won't help for that...
 			//Debug.Log($"{nameof(AmBoundsEdge)}(), {nm.SurfaceOrientation}");
@@ -1072,7 +1051,7 @@ namespace LogansNavigationExtension
 			return false;
 		}
 
-		public bool HaveObtuseAngle(LNX_NavMesh nm)
+		public bool HaveObtuseAngle(LNX_NavMeshSurface nm)
 		{
 			if 
 			(
@@ -1090,7 +1069,7 @@ namespace LogansNavigationExtension
 
 
 		#region HELPERS --------------------------------------------------
-		public string GetCurrentInfoString(LNX_NavMesh nm)
+		public string GetCurrentInfoString(LNX_NavMeshSurface nm)
 		{
 			return $"Edge.GetCurrentInfoString()\n" +
 				$"{nameof(MyCoordinate)}: '{MyCoordinate}'\n" +
@@ -1101,12 +1080,12 @@ namespace LogansNavigationExtension
 				$"";
 		}
 
-		public void SayCurrentInfo(LNX_NavMesh nm)
+		public void SayCurrentInfo(LNX_NavMeshSurface nm)
 		{
 			Debug.Log( GetCurrentInfoString(nm) );
 		}
 
-		public string GetAnomolyString( LNX_NavMesh nm )
+		public string GetAnomolyString( LNX_NavMeshSurface nm )
 		{
 			string returnString = string.Empty;
 
