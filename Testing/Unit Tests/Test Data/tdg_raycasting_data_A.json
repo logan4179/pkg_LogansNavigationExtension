@@ -1,228 +1,2678 @@
 {
-    "LastWriteTime": "",
+    "testName": "",
+    "Description": "",
     "_navmesh": {
-        "instanceID": 27188
+        "instanceID": 53336
     },
-    "_debugger": {
-        "instanceID": 27338
-    },
-    "DrawProblemPoints": false,
-    "index_focusProblem": 5,
-    "problemPositions": [
-        {
-            "x": 7.769999980926514,
-            "y": 0.0,
-            "z": 1.0
-        },
-        {
-            "x": 12.881999969482422,
-            "y": 0.007000000216066837,
-            "z": 0.7080000042915344
-        },
-        {
-            "x": 15.318599700927735,
-            "y": 0.007000000216066837,
-            "z": 0.07986968010663986
-        },
-        {
-            "x": 14.782999992370606,
-            "y": 0.007000000216066837,
-            "z": 1.059000015258789
-        }
-    ],
-    "problemEndPositions": [
-        {
-            "x": 12.034000396728516,
-            "y": 0.0,
-            "z": 3.640000104904175
-        },
-        {
-            "x": 9.479999542236329,
-            "y": 0.019999999552965165,
-            "z": 0.12999999523162843
-        },
-        {
-            "x": 15.359999656677246,
-            "y": 0.0,
-            "z": 0.0
-        },
-        {
-            "x": 15.359999656677246,
-            "y": 0.0,
-            "z": 0.0
-        }
-    ],
-    "Radius_ObjectDebugSpheres": 0.09300000220537186,
+    "Index_FocusOn": 0,
+    "AutoRun": true,
+    "DrawProblemPoints": true,
+    "Radius_ObjectDebugSpheres": 0.052000001072883609,
     "Radius_ProjectPos": 0.10000000149011612,
-    "DBG_Operation": "",
-    "testName": "Raycasting",
-    "startTrans": {
-        "instanceID": 27226
+    "AmInUnitTest": false,
+    "UseDebugVersion": false,
+    "DBG_Operation": "8/11/2026 10:44:20 AM\nusing strtHit: '[t31v-1e-1_pos(7.77, 0.00, 1.00)]', endHit: '[t77v-1e-1_pos(16.44, 0.00, 4.82)]'\nusing real version...\nresult: 'False'\npath: 'LNX_Path[t31v-1e-1_pos(7.77, 0.00, 1.00)]_->_[t77v-1e-1_pos(16.44, 0.00, 4.82)]'\nPath: '16'\npath dist: '9.499769'\ntotal ms: '0', total ticks: '2235'\n",
+    "mthdDbg_Report": {
+        "rprtString": "",
+        "MethodLevelVerbosityLimit": -1
     },
-    "endTrans": {
-        "instanceID": 27130
+    "DbgNotes": "",
+    "startGrabber": {
+        "instanceID": 53420
     },
-    "CapturedStartPositions": [
-        {
-            "x": 7.769999980926514,
-            "y": 0.0,
-            "z": 1.0
-        },
-        {
-            "x": 15.318599700927735,
-            "y": 0.007000000216066837,
-            "z": 0.07986968010663986
-        },
-        {
-            "x": 14.782999992370606,
-            "y": 0.007000000216066837,
-            "z": 1.059000015258789
-        },
-        {
-            "x": 14.782999992370606,
-            "y": 0.007000000216066837,
-            "z": 1.059000015258789
-        },
-        {
-            "x": 14.782999992370606,
-            "y": 0.007000000216066837,
-            "z": 1.059000015258789
-        },
-        {
-            "x": 14.782999992370606,
-            "y": 0.007000000216066837,
-            "z": 1.059000015258789
-        },
-        {
-            "x": 15.318599700927735,
-            "y": 0.007000000216066837,
-            "z": 0.07986968010663986
-        },
-        {
-            "x": 14.782999992370606,
-            "y": 0.007000000216066837,
-            "z": 1.059000015258789
-        },
-        {
-            "x": 14.782999992370606,
-            "y": 0.007000000216066837,
-            "z": 1.059000015258789
-        },
-        {
-            "x": 14.782999992370606,
-            "y": 0.007000000216066837,
-            "z": 1.059000015258789
-        },
-        {
-            "x": 14.782999992370606,
-            "y": 0.007000000216066837,
-            "z": 1.059000015258789
-        },
-        {
-            "x": 14.782999992370606,
-            "y": 0.007000000216066837,
-            "z": 1.059000015258789
-        },
-        {
-            "x": 14.782999992370606,
-            "y": 0.007000000216066837,
-            "z": 1.059000015258789
-        },
-        {
-            "x": 14.782999992370606,
-            "y": 0.007000000216066837,
-            "z": 1.059000015258789
-        }
-    ],
-    "CapturedEndPositions": [
-        {
-            "x": 12.020000457763672,
-            "y": 0.0,
-            "z": 3.5899999141693117
-        },
-        {
-            "x": 15.360000610351563,
-            "y": 0.0,
-            "z": 4.76837158203125e-7
-        },
-        {
-            "x": 15.360000610351563,
-            "y": 0.0,
-            "z": 4.76837158203125e-7
-        },
-        {
-            "x": 15.316699981689454,
-            "y": 0.0,
-            "z": 0.17599999904632569
-        },
-        {
-            "x": 8.866999626159668,
-            "y": 0.2460000067949295,
-            "z": 4.739999771118164
-        },
-        {
-            "x": 9.645999908447266,
-            "y": 0.019999999552965165,
-            "z": 0.13899999856948853
-        },
-        {
-            "x": 15.360000610351563,
-            "y": 0.0,
-            "z": 4.76837158203125e-7
-        },
-        {
-            "x": 9.645999908447266,
-            "y": 0.019999999552965165,
-            "z": 0.0020000000949949028
-        },
-        {
-            "x": 9.645999908447266,
-            "y": 0.019999999552965165,
+    "endGrabber": {
+        "instanceID": 53130
+    },
+    "RaycastResult": false,
+    "ResultPath": {
+        "pathPoints": [
+            {
+                "hitPosition": {
+                    "x": 7.769999980926514,
+                    "y": 0.0006940364837646484,
+                    "z": 1.0
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 31,
+                "edgeIndex": -1,
+                "vertIndex": -1
+            },
+            {
+                "hitPosition": {
+                    "x": 7.819685459136963,
+                    "y": 0.0006940364837646484,
+                    "z": 1.0218913555145264
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 32,
+                "edgeIndex": 0,
+                "vertIndex": -1
+            },
+            {
+                "hitPosition": {
+                    "x": 8.662810325622559,
+                    "y": 0.0006940364837646484,
+                    "z": 1.3933720588684083
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 35,
+                "edgeIndex": 0,
+                "vertIndex": -1
+            },
+            {
+                "hitPosition": {
+                    "x": 9.932953834533692,
+                    "y": 0.0006940364837646484,
+                    "z": 1.9529972076416016
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 34,
+                "edgeIndex": 1,
+                "vertIndex": -1
+            },
+            {
+                "hitPosition": {
+                    "x": 11.434017181396485,
+                    "y": 0.0006940364837646484,
+                    "z": 2.614365577697754
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 39,
+                "edgeIndex": 1,
+                "vertIndex": -1
+            },
+            {
+                "hitPosition": {
+                    "x": 11.530539512634278,
+                    "y": 0.05153246223926544,
+                    "z": 2.656892776489258
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 38,
+                "edgeIndex": 1,
+                "vertIndex": -1
+            },
+            {
+                "hitPosition": {
+                    "x": 11.978012084960938,
+                    "y": 0.056013282388448718,
+                    "z": 2.8540492057800295
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 37,
+                "edgeIndex": 1,
+                "vertIndex": -1
+            },
+            {
+                "hitPosition": {
+                    "x": 13.122603416442871,
+                    "y": 0.06747478246688843,
+                    "z": 3.35835599899292
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 36,
+                "edgeIndex": 1,
+                "vertIndex": -1
+            },
+            {
+                "hitPosition": {
+                    "x": 13.263700485229493,
+                    "y": 0.0006940364837646484,
+                    "z": 3.4205234050750734
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 53,
+                "edgeIndex": 2,
+                "vertIndex": -1
+            },
+            {
+                "hitPosition": {
+                    "x": 13.346627235412598,
+                    "y": 0.0006940364837646484,
+                    "z": 3.4570610523223879
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 70,
+                "edgeIndex": 0,
+                "vertIndex": -1
+            },
+            {
+                "hitPosition": {
+                    "x": 13.841042518615723,
+                    "y": 0.0006940364837646484,
+                    "z": 3.6749000549316408
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 71,
+                "edgeIndex": 0,
+                "vertIndex": -1
+            },
+            {
+                "hitPosition": {
+                    "x": 15.360000610351563,
+                    "y": 0.0006940364837646484,
+                    "z": 4.344152450561523
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 82,
+                "edgeIndex": 0,
+                "vertIndex": -1
+            },
+            {
+                "hitPosition": {
+                    "x": 15.393471717834473,
+                    "y": 0.0006940364837646484,
+                    "z": 4.358899116516113
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 83,
+                "edgeIndex": 1,
+                "vertIndex": -1
+            },
+            {
+                "hitPosition": {
+                    "x": 15.461152076721192,
+                    "y": 0.0006940364837646484,
+                    "z": 4.38871955871582
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 78,
+                "edgeIndex": 0,
+                "vertIndex": -1
+            },
+            {
+                "hitPosition": {
+                    "x": 16.163297653198243,
+                    "y": 0.0006940364837646484,
+                    "z": 4.698084831237793
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 77,
+                "edgeIndex": 1,
+                "vertIndex": -1
+            },
+            {
+                "hitPosition": {
+                    "x": 16.440000534057618,
+                    "y": 0.0006940364837646484,
+                    "z": 4.820000171661377
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 77,
+                "edgeIndex": -1,
+                "vertIndex": -1
+            }
+        ],
+        "v_navmeshSurfaceProjection_cached": {
+            "x": 0.0,
+            "y": 1.0,
             "z": 0.0
         },
+        "amStraight": true,
+        "DBG_class": "ctorD\nAddPoint('[t31v-1e-1_pos(7.77, 0.00, 1.00)]') bc: '0', amStraight: 'True'\naa: '1', amStraight: 'True'\nac: '1', amStraight: 'True'\nAddPoint('[t32v-1e0_pos(7.82, 0.00, 1.02)]') bc: '1', amStraight: 'True'\naa: '2', amStraight: 'True'\nac: '2', amStraight: 'True'\nAddPoint('[t35v-1e0_pos(8.66, 0.00, 1.39)]') bc: '2', amStraight: 'True'\naa: '3', amStraight: 'True'\ndetermining straightness using firstDir: '0.915113, 0, 0.4031976', newDir: '0.9151126, 0, 0.4031985'\ndecided AM equal...\nac: '3', amStraight: 'True'\nAddPoint('[t34v-1e1_pos(9.93, 0.00, 1.95)]') bc: '3', amStraight: 'True'\naa: '4', amStraight: 'True'\ndetermining straightness using firstDir: '0.915113, 0, 0.4031976', newDir: '0.9151126, 0, 0.4031985'\ndecided AM equal...\nac: '4', amStraight: 'True'\nAddPoint('[t39v-1e1_pos(11.43, 0.00, 2.61)]') bc: '4', amStraight: 'True'\naa: '5', amStraight: 'True'\ndetermining straightness using firstDir: '0.915113, 0, 0.4031976', newDir: '0.9151125, 0, 0.4031985'\ndecided AM equal...\nac: '5', amStraight: 'True'\nAddPoint('[t38v-1e1_pos(11.53, 0.05, 2.66)]') bc: '5', amStraight: 'True'\naa: '6', amStraight: 'True'\ndetermining straightness using firstDir: '0.915113, 0, 0.4031976', newDir: '0.9151144, 0, 0.4031943'\ndecided AM equal...\nac: '6', amStraight: 'True'\nAddPoint('[t37v-1e1_pos(11.98, 0.06, 2.85)]') bc: '6', amStraight: 'True'\naa: '7', amStraight: 'True'\ndetermining straightness using firstDir: '0.915113, 0, 0.4031976', newDir: '0.9151125, 0, 0.4031986'\ndecided AM equal...\nac: '7', amStraight: 'True'\nAddPoint('[t36v-1e1_pos(13.12, 0.07, 3.36)]') bc: '7', amStraight: 'True'\naa: '8', amStraight: 'True'\ndetermining straightness using firstDir: '0.915113, 0, 0.4031976', newDir: '0.9151125, 0, 0.4031985'\ndecided AM equal...\nac: '8', amStraight: 'True'\nAddPoint('[t53v-1e2_pos(13.26, 0.00, 3.42)]') bc: '8', amStraight: 'True'\naa: '9', amStraight: 'True'\ndetermining straightness using firstDir: '0.915113, 0, 0.4031976', newDir: '0.9151124, 0, 0.4031988'\ndecided AM equal...\nac: '9', amStraight: 'True'\nAddPoint('[t70v-1e0_pos(13.35, 0.00, 3.46)]') bc: '9', amStraight: 'True'\naa: '10', amStraight: 'True'\ndetermining straightness using firstDir: '0.915113, 0, 0.4031976', newDir: '0.915112, 0, 0.4031997'\ndecided AM equal...\nac: '10', amStraight: 'True'\nAddPoint('[t71v-1e0_pos(13.84, 0.00, 3.67)]') bc: '10', amStraight: 'True'\naa: '11', amStraight: 'True'\ndetermining straightness using firstDir: '0.915113, 0, 0.4031976', newDir: '0.9151128, 0, 0.403198'\ndecided AM equal...\nac: '11', amStraight: 'True'\nAddPoint('[t82v-1e0_pos(15.36, 0.00, 4.34)]') bc: '11', amStraight: 'True'\naa: '12', amStraight: 'True'\ndetermining straightness using firstDir: '0.915113, 0, 0.4031976', newDir: '0.9151126, 0, 0.4031983'\ndecided AM equal...\nac: '12', amStraight: 'True'\nAddPoint('[t83v-1e1_pos(15.39, 0.00, 4.36)]') bc: '12', amStraight: 'True'\naa: '13', amStraight: 'True'\ndetermining straightness using firstDir: '0.915113, 0, 0.4031976', newDir: '0.9151196, 0, 0.4031824'\ndecided AM equal...\nac: '13', amStraight: 'True'\nAddPoint('[t78v-1e0_pos(15.46, 0.00, 4.39)]') bc: '13', amStraight: 'True'\naa: '14', amStraight: 'True'\ndetermining straightness using firstDir: '0.915113, 0, 0.4031976', newDir: '0.9151102, 0, 0.403204'\ndecided AM equal...\nac: '14', amStraight: 'True'\nAddPoint('[t77v-1e1_pos(16.16, 0.00, 4.70)]') bc: '14', amStraight: 'True'\naa: '15', amStraight: 'True'\ndetermining straightness using firstDir: '0.915113, 0, 0.4031976', newDir: '0.9151126, 0, 0.4031985'\ndecided AM equal...\nac: '15', amStraight: 'True'\nAddPoint('[t77v-1e-1_pos(16.44, 0.00, 4.82)]') bc: '15', amStraight: 'True'\naa: '16', amStraight: 'True'\ndetermining straightness using firstDir: '0.915113, 0, 0.4031976', newDir: '0.9151124, 0, 0.4031987'\ndecided AM equal...\nac: '16', amStraight: 'True'\n"
+    },
+    "_LastSavedFile": {
+        "instanceID": 0
+    },
+    "LastWriteTime": "",
+    "ResultEntries": [
         {
-            "x": 9.645999908447266,
-            "y": 0.019999999552965165,
-            "z": -0.008999999612569809
+            "Description": "",
+            "AmProblem": false,
+            "startHit": {
+                "hitPosition": {
+                    "x": 7.769999980926514,
+                    "y": 0.0006940364837646484,
+                    "z": 1.0
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 31,
+                "edgeIndex": -1,
+                "vertIndex": -1
+            },
+            "endHit": {
+                "hitPosition": {
+                    "x": 12.019999504089356,
+                    "y": 0.07273941487073899,
+                    "z": 3.5899996757507326
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 0.9997418522834778,
+                    "z": -0.022721383720636369
+                },
+                "triangleIndex": 37,
+                "edgeIndex": -1,
+                "vertIndex": -1
+            },
+            "outPath": {
+                "pathPoints": [
+                    {
+                        "hitPosition": {
+                            "x": 7.769999980926514,
+                            "y": 0.0006940364837646484,
+                            "z": 1.0
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 31,
+                        "edgeIndex": -1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 7.818416118621826,
+                            "y": 0.0006940364837646484,
+                            "z": 1.0295054912567139
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 32,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 8.607772827148438,
+                            "y": 0.0006940364837646484,
+                            "z": 1.5105490684509278
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 35,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 10.219040870666504,
+                            "y": 0.0006940364837646484,
+                            "z": 2.4924745559692385
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 34,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 11.364201545715332,
+                            "y": 0.0006940364837646484,
+                            "z": 3.1903486251831056
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 39,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 11.48456859588623,
+                            "y": 0.06532356142997742,
+                            "z": 3.263701915740967
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 38,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 11.7593994140625,
+                            "y": 0.06913004070520401,
+                            "z": 3.431187152862549
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 37,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 12.019999504089356,
+                            "y": 0.07273941487073899,
+                            "z": 3.5899996757507326
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 0.9997418522834778,
+                            "z": -0.022721383720636369
+                        },
+                        "triangleIndex": 37,
+                        "edgeIndex": -1,
+                        "vertIndex": -1
+                    }
+                ],
+                "v_navmeshSurfaceProjection_cached": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "amStraight": true,
+                "DBG_class": "ctorD\nAddPoint('[t31v-1e-1_pos(7.77, 0.00, 1.00)]') bc: '0', amStraight: 'True'\naa: '1', amStraight: 'True'\nac: '1', amStraight: 'True'\nAddPoint('[t32v-1e0_pos(7.82, 0.00, 1.03)]') bc: '1', amStraight: 'True'\naa: '2', amStraight: 'True'\nac: '2', amStraight: 'True'\nAddPoint('[t35v-1e0_pos(8.61, 0.00, 1.51)]') bc: '2', amStraight: 'True'\naa: '3', amStraight: 'True'\ndetermining straightness using firstDir: '0.8539258, 0, 0.5203947', newDir: '0.8539267, 0, 0.5203933'\ndecided AM equal...\nac: '3', amStraight: 'True'\nAddPoint('[t34v-1e1_pos(10.22, 0.00, 2.49)]') bc: '3', amStraight: 'True'\naa: '4', amStraight: 'True'\ndetermining straightness using firstDir: '0.8539258, 0, 0.5203947', newDir: '0.8539269, 0, 0.520393'\ndecided AM equal...\nac: '4', amStraight: 'True'\nAddPoint('[t39v-1e1_pos(11.36, 0.00, 3.19)]') bc: '4', amStraight: 'True'\naa: '5', amStraight: 'True'\ndetermining straightness using firstDir: '0.8539258, 0, 0.5203947', newDir: '0.853927, 0, 0.5203929'\ndecided AM equal...\nac: '5', amStraight: 'True'\nAddPoint('[t38v-1e1_pos(11.48, 0.07, 3.26)]') bc: '5', amStraight: 'True'\naa: '6', amStraight: 'True'\ndetermining straightness using firstDir: '0.8539258, 0, 0.5203947', newDir: '0.8539262, 0, 0.520394'\ndecided AM equal...\nac: '6', amStraight: 'True'\nAddPoint('[t37v-1e1_pos(11.76, 0.07, 3.43)]') bc: '6', amStraight: 'True'\naa: '7', amStraight: 'True'\ndetermining straightness using firstDir: '0.8539258, 0, 0.5203947', newDir: '0.8539267, 0, 0.5203933'\ndecided AM equal...\nac: '7', amStraight: 'True'\nAddPoint('[t37v-1e-1_pos(12.02, 0.07, 3.59)]') bc: '7', amStraight: 'True'\naa: '8', amStraight: 'True'\ndetermining straightness using firstDir: '0.8539258, 0, 0.5203947', newDir: '0.8539272, 0, 0.5203925'\ndecided AM equal...\nac: '8', amStraight: 'True'\n"
+            },
+            "OperationResult": false
         },
         {
-            "x": 9.555000305175782,
-            "y": 0.019999999552965165,
-            "z": -0.5809999704360962
+            "Description": "",
+            "AmProblem": false,
+            "startHit": {
+                "hitPosition": {
+                    "x": 15.318599700927735,
+                    "y": 0.0006940364837646484,
+                    "z": 0.07986968010663986
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 70,
+                "edgeIndex": -1,
+                "vertIndex": -1
+            },
+            "endHit": {
+                "hitPosition": {
+                    "x": 15.360000610351563,
+                    "y": 0.0006940364837646484,
+                    "z": 4.76837158203125e-7
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 12,
+                "edgeIndex": -1,
+                "vertIndex": 2
+            },
+            "outPath": {
+                "pathPoints": [
+                    {
+                        "hitPosition": {
+                            "x": 15.318599700927735,
+                            "y": 0.0006940364837646484,
+                            "z": 0.07986968010663986
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 70,
+                        "edgeIndex": -1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 15.360000610351563,
+                            "y": 0.0006940364837646484,
+                            "z": 4.76837158203125e-7
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 12,
+                        "edgeIndex": -1,
+                        "vertIndex": 2
+                    }
+                ],
+                "v_navmeshSurfaceProjection_cached": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "amStraight": true,
+                "DBG_class": "ctorD\nAddPoint('[t70v-1e-1_pos(15.32, 0.00, 0.08)]') bc: '0', amStraight: 'True'\naa: '1', amStraight: 'True'\nac: '1', amStraight: 'True'\nAddPoint('[t12v2e-1_pos(15.36, 0.00, 0.00)]') bc: '1', amStraight: 'True'\naa: '2', amStraight: 'True'\nac: '2', amStraight: 'True'\n"
+            },
+            "OperationResult": false
         },
         {
-            "x": 11.26200008392334,
-            "y": 0.019999999552965165,
-            "z": -3.1040000915527345
+            "Description": "",
+            "AmProblem": false,
+            "startHit": {
+                "hitPosition": {
+                    "x": 14.782999992370606,
+                    "y": 0.0006940364837646484,
+                    "z": 1.059000015258789
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 70,
+                "edgeIndex": -1,
+                "vertIndex": -1
+            },
+            "endHit": {
+                "hitPosition": {
+                    "x": 15.360000610351563,
+                    "y": 0.0006940364837646484,
+                    "z": 4.76837158203125e-7
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 12,
+                "edgeIndex": -1,
+                "vertIndex": 2
+            },
+            "outPath": {
+                "pathPoints": [
+                    {
+                        "hitPosition": {
+                            "x": 14.782999992370606,
+                            "y": 0.0006940364837646484,
+                            "z": 1.059000015258789
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 70,
+                        "edgeIndex": -1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 15.360000610351563,
+                            "y": 0.0006940364837646484,
+                            "z": 4.76837158203125e-7
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 12,
+                        "edgeIndex": -1,
+                        "vertIndex": 2
+                    }
+                ],
+                "v_navmeshSurfaceProjection_cached": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "amStraight": true,
+                "DBG_class": "ctorD\nAddPoint('[t70v-1e-1_pos(14.78, 0.00, 1.06)]') bc: '0', amStraight: 'True'\naa: '1', amStraight: 'True'\nac: '1', amStraight: 'True'\nAddPoint('[t12v2e-1_pos(15.36, 0.00, 0.00)]') bc: '1', amStraight: 'True'\naa: '2', amStraight: 'True'\nac: '2', amStraight: 'True'\n"
+            },
+            "OperationResult": false
         },
         {
-            "x": 11.970000267028809,
-            "y": 0.019999999552965165,
-            "z": -2.822999954223633
+            "Description": "",
+            "AmProblem": false,
+            "startHit": {
+                "hitPosition": {
+                    "x": 14.782999992370606,
+                    "y": 0.0006940364837646484,
+                    "z": 1.059000015258789
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 70,
+                "edgeIndex": -1,
+                "vertIndex": -1
+            },
+            "endHit": {
+                "hitPosition": {
+                    "x": 15.316699981689454,
+                    "y": 0.0006940364837646484,
+                    "z": 0.17599999904632569
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 71,
+                "edgeIndex": -1,
+                "vertIndex": -1
+            },
+            "outPath": {
+                "pathPoints": [
+                    {
+                        "hitPosition": {
+                            "x": 14.782999992370606,
+                            "y": 0.0006940364837646484,
+                            "z": 1.059000015258789
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 70,
+                        "edgeIndex": -1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 15.223563194274903,
+                            "y": 0.0006940364837646484,
+                            "z": 0.3300904333591461
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 71,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 15.316699981689454,
+                            "y": 0.0006940364837646484,
+                            "z": 0.17599999904632569
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 71,
+                        "edgeIndex": -1,
+                        "vertIndex": -1
+                    }
+                ],
+                "v_navmeshSurfaceProjection_cached": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "amStraight": true,
+                "DBG_class": "ctorD\nAddPoint('[t70v-1e-1_pos(14.78, 0.00, 1.06)]') bc: '0', amStraight: 'True'\naa: '1', amStraight: 'True'\nac: '1', amStraight: 'True'\nAddPoint('[t71v-1e0_pos(15.22, 0.00, 0.33)]') bc: '1', amStraight: 'True'\naa: '2', amStraight: 'True'\nac: '2', amStraight: 'True'\nAddPoint('[t71v-1e-1_pos(15.32, 0.00, 0.18)]') bc: '2', amStraight: 'True'\naa: '3', amStraight: 'True'\ndetermining straightness using firstDir: '0.5172707, 0, -0.8558218', newDir: '0.5172803, 0, -0.855816'\ndecided AM equal...\nac: '3', amStraight: 'True'\n"
+            },
+            "OperationResult": false
         },
         {
-            "x": 11.986000061035157,
-            "y": 0.019999999552965165,
-            "z": -2.822999954223633
+            "Description": "",
+            "AmProblem": false,
+            "startHit": {
+                "hitPosition": {
+                    "x": 14.782999992370606,
+                    "y": 0.0006940364837646484,
+                    "z": 1.059000015258789
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 70,
+                "edgeIndex": -1,
+                "vertIndex": -1
+            },
+            "endHit": {
+                "hitPosition": {
+                    "x": 8.866999626159668,
+                    "y": 0.24569375813007356,
+                    "z": 4.739999771118164
+                },
+                "normal": {
+                    "x": -4.771557815530514e-9,
+                    "y": 0.863778829574585,
+                    "z": -0.5038710236549377
+                },
+                "triangleIndex": 62,
+                "edgeIndex": -1,
+                "vertIndex": -1
+            },
+            "outPath": {
+                "pathPoints": [
+                    {
+                        "hitPosition": {
+                            "x": 14.782999992370606,
+                            "y": 0.0006940364837646484,
+                            "z": 1.059000015258789
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 70,
+                        "edgeIndex": -1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 13.14394760131836,
+                            "y": 0.0006940364837646484,
+                            "z": 2.078836441040039
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 53,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 13.10407829284668,
+                            "y": 0.0006940364837646484,
+                            "z": 2.1036431789398195
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 36,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 13.030994415283204,
+                            "y": 0.03999210521578789,
+                            "z": 2.1491167545318605
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 37,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 12.002670288085938,
+                            "y": 0.05453377589583397,
+                            "z": 2.7889509201049806
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 38,
+                        "edgeIndex": 2,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 11.496684074401856,
+                            "y": 0.06168900430202484,
+                            "z": 3.103781223297119
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 39,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 11.36474323272705,
+                            "y": 0.0006940364837646484,
+                            "z": 3.1858763694763185
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 34,
+                        "edgeIndex": 2,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 10.779770851135254,
+                            "y": 0.0006940364837646484,
+                            "z": 3.5498523712158205
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 35,
+                        "edgeIndex": 2,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 9.44558048248291,
+                            "y": 0.0006940364837646484,
+                            "z": 4.380000114440918
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 45,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 9.221490859985352,
+                            "y": 0.11688634008169174,
+                            "z": 4.519431114196777
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 44,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 9.156289100646973,
+                            "y": 0.1506938934326172,
+                            "z": 4.560000419616699
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 59,
+                        "edgeIndex": 2,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 9.00765323638916,
+                            "y": 0.1969355344772339,
+                            "z": 4.6524834632873539
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 60,
+                        "edgeIndex": 2,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 8.963428497314454,
+                            "y": 0.2106940746307373,
+                            "z": 4.680000305175781
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 62,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 8.866999626159668,
+                            "y": 0.24569375813007356,
+                            "z": 4.739999771118164
+                        },
+                        "normal": {
+                            "x": -4.771557815530514e-9,
+                            "y": 0.863778829574585,
+                            "z": -0.5038710236549377
+                        },
+                        "triangleIndex": 62,
+                        "edgeIndex": -1,
+                        "vertIndex": -1
+                    }
+                ],
+                "v_navmeshSurfaceProjection_cached": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "amStraight": true,
+                "DBG_class": "ctorD\nAddPoint('[t70v-1e-1_pos(14.78, 0.00, 1.06)]') bc: '0', amStraight: 'True'\naa: '1', amStraight: 'True'\nac: '1', amStraight: 'True'\nAddPoint('[t53v-1e1_pos(13.14, 0.00, 2.08)]') bc: '1', amStraight: 'True'\naa: '2', amStraight: 'True'\nac: '2', amStraight: 'True'\nAddPoint('[t36v-1e0_pos(13.10, 0.00, 2.10)]') bc: '2', amStraight: 'True'\naa: '3', amStraight: 'True'\ndetermining straightness using firstDir: '-0.8490608, 0, 0.528295', newDir: '-0.8490645, 0, 0.5282891'\ndecided AM equal...\nac: '3', amStraight: 'True'\nAddPoint('[t37v-1e0_pos(13.03, 0.04, 2.15)]') bc: '3', amStraight: 'True'\naa: '4', amStraight: 'True'\ndetermining straightness using firstDir: '-0.8490608, 0, 0.528295', newDir: '-0.849061, 0, 0.5282949'\ndecided AM equal...\nac: '4', amStraight: 'True'\nAddPoint('[t38v-1e2_pos(12.00, 0.05, 2.79)]') bc: '4', amStraight: 'True'\naa: '5', amStraight: 'True'\ndetermining straightness using firstDir: '-0.8490608, 0, 0.528295', newDir: '-0.849061, 0, 0.5282948'\ndecided AM equal...\nac: '5', amStraight: 'True'\nAddPoint('[t39v-1e0_pos(11.50, 0.06, 3.10)]') bc: '5', amStraight: 'True'\naa: '6', amStraight: 'True'\ndetermining straightness using firstDir: '-0.8490608, 0, 0.528295', newDir: '-0.8490608, 0, 0.5282952'\ndecided AM equal...\nac: '6', amStraight: 'True'\nAddPoint('[t34v-1e2_pos(11.36, 0.00, 3.19)]') bc: '6', amStraight: 'True'\naa: '7', amStraight: 'True'\ndetermining straightness using firstDir: '-0.8490608, 0, 0.528295', newDir: '-0.8490605, 0, 0.5282955'\ndecided AM equal...\nac: '7', amStraight: 'True'\nAddPoint('[t35v-1e2_pos(10.78, 0.00, 3.55)]') bc: '7', amStraight: 'True'\naa: '8', amStraight: 'True'\ndetermining straightness using firstDir: '-0.8490608, 0, 0.528295', newDir: '-0.849061, 0, 0.5282947'\ndecided AM equal...\nac: '8', amStraight: 'True'\nAddPoint('[t45v-1e0_pos(9.45, 0.00, 4.38)]') bc: '8', amStraight: 'True'\naa: '9', amStraight: 'True'\ndetermining straightness using firstDir: '-0.8490608, 0, 0.528295', newDir: '-0.8490609, 0, 0.5282949'\ndecided AM equal...\nac: '9', amStraight: 'True'\nAddPoint('[t44v-1e1_pos(9.22, 0.12, 4.52)]') bc: '9', amStraight: 'True'\naa: '10', amStraight: 'True'\ndetermining straightness using firstDir: '-0.8490608, 0, 0.528295', newDir: '-0.8490609, 0, 0.5282949'\ndecided AM equal...\nac: '10', amStraight: 'True'\nAddPoint('[t59v-1e2_pos(9.16, 0.15, 4.56)]') bc: '10', amStraight: 'True'\naa: '11', amStraight: 'True'\ndetermining straightness using firstDir: '-0.8490608, 0, 0.528295', newDir: '-0.8490606, 0, 0.5282955'\ndecided AM equal...\nac: '11', amStraight: 'True'\nAddPoint('[t60v-1e2_pos(9.01, 0.20, 4.65)]') bc: '11', amStraight: 'True'\naa: '12', amStraight: 'True'\ndetermining straightness using firstDir: '-0.8490608, 0, 0.528295', newDir: '-0.8490604, 0, 0.5282958'\ndecided AM equal...\nac: '12', amStraight: 'True'\nAddPoint('[t62v-1e1_pos(8.96, 0.21, 4.68)]') bc: '12', amStraight: 'True'\naa: '13', amStraight: 'True'\ndetermining straightness using firstDir: '-0.8490608, 0, 0.528295', newDir: '-0.8490633, 0, 0.5282912'\ndecided AM equal...\nac: '13', amStraight: 'True'\nAddPoint('[t62v-1e-1_pos(8.87, 0.25, 4.74)]') bc: '13', amStraight: 'True'\naa: '14', amStraight: 'True'\ndetermining straightness using firstDir: '-0.8490608, 0, 0.528295', newDir: '-0.8490595, 0, 0.5282973'\ndecided AM equal...\nac: '14', amStraight: 'True'\n"
+            },
+            "OperationResult": false
+        },
+        {
+            "Description": "",
+            "AmProblem": false,
+            "startHit": {
+                "hitPosition": {
+                    "x": 14.782999992370606,
+                    "y": 0.0006940364837646484,
+                    "z": 1.059000015258789
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 70,
+                "edgeIndex": -1,
+                "vertIndex": -1
+            },
+            "endHit": {
+                "hitPosition": {
+                    "x": 9.645999908447266,
+                    "y": 0.0006940364837646484,
+                    "z": 0.13899999856948853
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 26,
+                "edgeIndex": -1,
+                "vertIndex": -1
+            },
+            "outPath": {
+                "pathPoints": [
+                    {
+                        "hitPosition": {
+                            "x": 14.782999992370606,
+                            "y": 0.0006940364837646484,
+                            "z": 1.059000015258789
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 70,
+                        "edgeIndex": -1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 12.945578575134278,
+                            "y": 0.0006940364837646484,
+                            "z": 0.7299304008483887
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 53,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 12.937390327453614,
+                            "y": 0.0006940364837646484,
+                            "z": 0.728463888168335
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 36,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 12.923175811767579,
+                            "y": 0.007646709680557251,
+                            "z": 0.7259180545806885
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 37,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 12.792956352233887,
+                            "y": 0.007116682827472687,
+                            "z": 0.70259690284729
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 38,
+                        "edgeIndex": 2,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 11.693509101867676,
+                            "y": 0.002641618251800537,
+                            "z": 0.5056939125061035
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 39,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 11.689696311950684,
+                            "y": 0.0006940364837646484,
+                            "z": 0.5050110816955566
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 34,
+                        "edgeIndex": 2,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 11.215019226074219,
+                            "y": 0.0006940364837646484,
+                            "z": 0.42000001668930056
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 27,
+                        "edgeIndex": 2,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 10.766542434692383,
+                            "y": 0.0006940364837646484,
+                            "z": 0.339680939912796
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 28,
+                        "edgeIndex": 2,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 10.544974327087403,
+                            "y": 0.0006940364837646484,
+                            "z": 0.30000001192092898
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 26,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 9.645999908447266,
+                            "y": 0.0006940364837646484,
+                            "z": 0.13899999856948853
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 26,
+                        "edgeIndex": -1,
+                        "vertIndex": -1
+                    }
+                ],
+                "v_navmeshSurfaceProjection_cached": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "amStraight": true,
+                "DBG_class": "ctorD\nAddPoint('[t70v-1e-1_pos(14.78, 0.00, 1.06)]') bc: '0', amStraight: 'True'\naa: '1', amStraight: 'True'\nac: '1', amStraight: 'True'\nAddPoint('[t53v-1e1_pos(12.95, 0.00, 0.73)]') bc: '1', amStraight: 'True'\naa: '2', amStraight: 'True'\nac: '2', amStraight: 'True'\nAddPoint('[t36v-1e0_pos(12.94, 0.00, 0.73)]') bc: '2', amStraight: 'True'\naa: '3', amStraight: 'True'\ndetermining straightness using firstDir: '-0.9843386, 0, -0.1762883', newDir: '-0.9843375, 0, -0.1762946'\ndecided AM equal...\nac: '3', amStraight: 'True'\nAddPoint('[t37v-1e0_pos(12.92, 0.01, 0.73)]') bc: '3', amStraight: 'True'\naa: '4', amStraight: 'True'\ndetermining straightness using firstDir: '-0.9843386, 0, -0.1762883', newDir: '-0.9843373, 0, -0.1762958'\ndecided AM equal...\nac: '4', amStraight: 'True'\nAddPoint('[t38v-1e2_pos(12.79, 0.01, 0.70)]') bc: '4', amStraight: 'True'\naa: '5', amStraight: 'True'\ndetermining straightness using firstDir: '-0.9843386, 0, -0.1762883', newDir: '-0.9843389, 0, -0.1762864'\ndecided AM equal...\nac: '5', amStraight: 'True'\nAddPoint('[t39v-1e0_pos(11.69, 0.00, 0.51)]') bc: '5', amStraight: 'True'\naa: '6', amStraight: 'True'\ndetermining straightness using firstDir: '-0.9843386, 0, -0.1762883', newDir: '-0.9843386, 0, -0.1762879'\ndecided AM equal...\nac: '6', amStraight: 'True'\nAddPoint('[t34v-1e2_pos(11.69, 0.00, 0.51)]') bc: '6', amStraight: 'True'\naa: '7', amStraight: 'True'\ndetermining straightness using firstDir: '-0.9843386, 0, -0.1762883', newDir: '-0.9843392, 0, -0.1762848'\ndecided AM equal...\nac: '7', amStraight: 'True'\nAddPoint('[t27v-1e2_pos(11.22, 0.00, 0.42)]') bc: '7', amStraight: 'True'\naa: '8', amStraight: 'True'\ndetermining straightness using firstDir: '-0.9843386, 0, -0.1762883', newDir: '-0.9843387, 0, -0.1762876'\ndecided AM equal...\nac: '8', amStraight: 'True'\nAddPoint('[t28v-1e2_pos(10.77, 0.00, 0.34)]') bc: '8', amStraight: 'True'\naa: '9', amStraight: 'True'\ndetermining straightness using firstDir: '-0.9843386, 0, -0.1762883', newDir: '-0.9843386, 0, -0.1762882'\ndecided AM equal...\nac: '9', amStraight: 'True'\nAddPoint('[t26v-1e1_pos(10.54, 0.00, 0.30)]') bc: '9', amStraight: 'True'\naa: '10', amStraight: 'True'\ndetermining straightness using firstDir: '-0.9843386, 0, -0.1762883', newDir: '-0.9843389, 0, -0.1762866'\ndecided AM equal...\nac: '10', amStraight: 'True'\nAddPoint('[t26v-1e-1_pos(9.65, 0.00, 0.14)]') bc: '10', amStraight: 'True'\naa: '11', amStraight: 'True'\ndetermining straightness using firstDir: '-0.9843386, 0, -0.1762883', newDir: '-0.9843386, 0, -0.1762881'\ndecided AM equal...\nac: '11', amStraight: 'True'\n"
+            },
+            "OperationResult": false
+        },
+        {
+            "Description": "",
+            "AmProblem": false,
+            "startHit": {
+                "hitPosition": {
+                    "x": 15.318599700927735,
+                    "y": 0.0006940364837646484,
+                    "z": 0.07986968010663986
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 70,
+                "edgeIndex": -1,
+                "vertIndex": -1
+            },
+            "endHit": {
+                "hitPosition": {
+                    "x": 15.360000610351563,
+                    "y": 0.0006940364837646484,
+                    "z": 4.76837158203125e-7
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 12,
+                "edgeIndex": -1,
+                "vertIndex": 2
+            },
+            "outPath": {
+                "pathPoints": [
+                    {
+                        "hitPosition": {
+                            "x": 15.318599700927735,
+                            "y": 0.0006940364837646484,
+                            "z": 0.07986968010663986
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 70,
+                        "edgeIndex": -1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 15.360000610351563,
+                            "y": 0.0006940364837646484,
+                            "z": 4.76837158203125e-7
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 12,
+                        "edgeIndex": -1,
+                        "vertIndex": 2
+                    }
+                ],
+                "v_navmeshSurfaceProjection_cached": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "amStraight": true,
+                "DBG_class": "ctorD\nAddPoint('[t70v-1e-1_pos(15.32, 0.00, 0.08)]') bc: '0', amStraight: 'True'\naa: '1', amStraight: 'True'\nac: '1', amStraight: 'True'\nAddPoint('[t12v2e-1_pos(15.36, 0.00, 0.00)]') bc: '1', amStraight: 'True'\naa: '2', amStraight: 'True'\nac: '2', amStraight: 'True'\n"
+            },
+            "OperationResult": false
+        },
+        {
+            "Description": "",
+            "AmProblem": false,
+            "startHit": {
+                "hitPosition": {
+                    "x": 14.782999992370606,
+                    "y": 0.0006940364837646484,
+                    "z": 1.059000015258789
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 70,
+                "edgeIndex": -1,
+                "vertIndex": -1
+            },
+            "endHit": {
+                "hitPosition": {
+                    "x": 9.645999908447266,
+                    "y": 0.0006940364837646484,
+                    "z": 0.0020000000949949028
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 25,
+                "edgeIndex": -1,
+                "vertIndex": -1
+            },
+            "outPath": {
+                "pathPoints": [
+                    {
+                        "hitPosition": {
+                            "x": 14.782999992370606,
+                            "y": 0.0006940364837646484,
+                            "z": 1.059000015258789
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 70,
+                        "edgeIndex": -1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 12.93814754486084,
+                            "y": 0.0006940364837646484,
+                            "z": 0.6793999671936035
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 53,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 12.93127155303955,
+                            "y": 0.0006940364837646484,
+                            "z": 0.6779851317405701
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 36,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 12.91935920715332,
+                            "y": 0.006501622498035431,
+                            "z": 0.6755340099334717
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 37,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 12.811605453491211,
+                            "y": 0.005997717380523682,
+                            "z": 0.6533622741699219
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 38,
+                        "edgeIndex": 2,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 11.699654579162598,
+                            "y": 0.0007977783679962158,
+                            "z": 0.4245645999908447
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 39,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 11.69945240020752,
+                            "y": 0.0006940364837646484,
+                            "z": 0.42452311515808108
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 34,
+                        "edgeIndex": 2,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 11.677470207214356,
+                            "y": 0.0006940364837646484,
+                            "z": 0.42000001668930056
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 27,
+                        "edgeIndex": 2,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 11.187355995178223,
+                            "y": 0.0006940364837646484,
+                            "z": 0.31915342807769778
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 28,
+                        "edgeIndex": 2,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 11.094271659851075,
+                            "y": 0.0006940364837646484,
+                            "z": 0.30000001192092898
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 26,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 10.291329383850098,
+                            "y": 0.0006940364837646484,
+                            "z": 0.1347857117652893
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 25,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 9.645999908447266,
+                            "y": 0.0006940364837646484,
+                            "z": 0.0020000000949949028
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 25,
+                        "edgeIndex": -1,
+                        "vertIndex": -1
+                    }
+                ],
+                "v_navmeshSurfaceProjection_cached": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "amStraight": false,
+                "DBG_class": "ctorD\nAddPoint('[t70v-1e-1_pos(14.78, 0.00, 1.06)]') bc: '0', amStraight: 'True'\naa: '1', amStraight: 'True'\nac: '1', amStraight: 'True'\nAddPoint('[t53v-1e1_pos(12.94, 0.00, 0.68)]') bc: '1', amStraight: 'True'\naa: '2', amStraight: 'True'\nac: '2', amStraight: 'True'\nAddPoint('[t36v-1e0_pos(12.93, 0.00, 0.68)]') bc: '2', amStraight: 'True'\naa: '3', amStraight: 'True'\ndetermining straightness using firstDir: '-0.9794804, 0, -0.2015396', newDir: '-0.9794798, 0, -0.2015422'\ndecided AM equal...\nac: '3', amStraight: 'True'\nAddPoint('[t37v-1e0_pos(12.92, 0.01, 0.68)]') bc: '3', amStraight: 'True'\naa: '4', amStraight: 'True'\ndetermining straightness using firstDir: '-0.9794804, 0, -0.2015396', newDir: '-0.9794801, 0, -0.2015409'\ndecided AM equal...\nac: '4', amStraight: 'True'\nAddPoint('[t38v-1e2_pos(12.81, 0.01, 0.65)]') bc: '4', amStraight: 'True'\naa: '5', amStraight: 'True'\ndetermining straightness using firstDir: '-0.9794804, 0, -0.2015396', newDir: '-0.9794801, 0, -0.2015408'\ndecided AM equal...\nac: '5', amStraight: 'True'\nAddPoint('[t39v-1e0_pos(11.70, 0.00, 0.42)]') bc: '5', amStraight: 'True'\naa: '6', amStraight: 'True'\ndetermining straightness using firstDir: '-0.9794804, 0, -0.2015396', newDir: '-0.9794803, 0, -0.2015402'\ndecided AM equal...\nac: '6', amStraight: 'True'\nAddPoint('[t34v-1e2_pos(11.70, 0.00, 0.42)]') bc: '6', amStraight: 'True'\naa: '7', amStraight: 'True'\ndetermining straightness using firstDir: '-0.9794804, 0, -0.2015396', newDir: '-0.9795911, 0, -0.201001'\ndecided not equal. angDiff: '0.02797646'. Changing amStraight to false...\nac: '7', amStraight: 'False'\nAddPoint('[t27v-1e2_pos(11.68, 0.00, 0.42)]') bc: '7', amStraight: 'False'\naa: '8', amStraight: 'False'\nac: '8', amStraight: 'False'\nAddPoint('[t28v-1e2_pos(11.19, 0.00, 0.32)]') bc: '8', amStraight: 'False'\naa: '9', amStraight: 'False'\nac: '9', amStraight: 'False'\nAddPoint('[t26v-1e1_pos(11.09, 0.00, 0.30)]') bc: '9', amStraight: 'False'\naa: '10', amStraight: 'False'\nac: '10', amStraight: 'False'\nAddPoint('[t25v-1e1_pos(10.29, 0.00, 0.13)]') bc: '10', amStraight: 'False'\naa: '11', amStraight: 'False'\nac: '11', amStraight: 'False'\nAddPoint('[t25v-1e-1_pos(9.65, 0.00, 0.00)]') bc: '11', amStraight: 'False'\naa: '12', amStraight: 'False'\nac: '12', amStraight: 'False'\n"
+            },
+            "OperationResult": false
+        },
+        {
+            "Description": "",
+            "AmProblem": false,
+            "startHit": {
+                "hitPosition": {
+                    "x": 14.782999992370606,
+                    "y": 0.0006940364837646484,
+                    "z": 1.059000015258789
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 70,
+                "edgeIndex": -1,
+                "vertIndex": -1
+            },
+            "endHit": {
+                "hitPosition": {
+                    "x": 9.645999908447266,
+                    "y": 0.0006940364837646484,
+                    "z": 4.76837158203125e-7
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 2,
+                "edgeIndex": 2,
+                "vertIndex": -1
+            },
+            "outPath": {
+                "pathPoints": [
+                    {
+                        "hitPosition": {
+                            "x": 14.782999992370606,
+                            "y": 0.0006940364837646484,
+                            "z": 1.059000015258789
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 70,
+                        "edgeIndex": -1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 12.93803882598877,
+                            "y": 0.0006940364837646484,
+                            "z": 0.6786585450172424
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 53,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 12.931181907653809,
+                            "y": 0.0006940364837646484,
+                            "z": 0.6772449612617493
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 36,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 12.919302940368653,
+                            "y": 0.006484851241111755,
+                            "z": 0.6747961044311523
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 37,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 12.811875343322754,
+                            "y": 0.005981527268886566,
+                            "z": 0.6526501178741455
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 38,
+                        "edgeIndex": 2,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 11.69974422454834,
+                            "y": 0.0007709115743637085,
+                            "z": 0.4233827590942383
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 39,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 11.699594497680664,
+                            "y": 0.0006940364837646484,
+                            "z": 0.4233517646789551
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 34,
+                        "edgeIndex": 2,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 11.68333625793457,
+                            "y": 0.0006940364837646484,
+                            "z": 0.42000001668930056
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 27,
+                        "edgeIndex": 2,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 11.192848205566407,
+                            "y": 0.0006940364837646484,
+                            "z": 0.3188855051994324
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 28,
+                        "edgeIndex": 2,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 11.101238250732422,
+                            "y": 0.0006940364837646484,
+                            "z": 0.30000001192092898
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 26,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 10.313763618469239,
+                            "y": 0.0006940364837646484,
+                            "z": 0.1376618891954422
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 25,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 9.645999908447266,
+                            "y": 0.0006940364837646484,
+                            "z": 4.76837158203125e-7
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 2,
+                        "edgeIndex": 2,
+                        "vertIndex": -1
+                    }
+                ],
+                "v_navmeshSurfaceProjection_cached": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "amStraight": false,
+                "DBG_class": "ctorD\nAddPoint('[t70v-1e-1_pos(14.78, 0.00, 1.06)]') bc: '0', amStraight: 'True'\naa: '1', amStraight: 'True'\nac: '1', amStraight: 'True'\nAddPoint('[t53v-1e1_pos(12.94, 0.00, 0.68)]') bc: '1', amStraight: 'True'\naa: '2', amStraight: 'True'\nac: '2', amStraight: 'True'\nAddPoint('[t36v-1e0_pos(12.93, 0.00, 0.68)]') bc: '2', amStraight: 'True'\naa: '3', amStraight: 'True'\ndetermining straightness using firstDir: '-0.9794049, 0, -0.2019058', newDir: '-0.9794044, 0, -0.2019085'\ndecided AM equal...\nac: '3', amStraight: 'True'\nAddPoint('[t37v-1e0_pos(12.92, 0.01, 0.67)]') bc: '3', amStraight: 'True'\naa: '4', amStraight: 'True'\ndetermining straightness using firstDir: '-0.9794049, 0, -0.2019058', newDir: '-0.9794052, 0, -0.201905'\ndecided AM equal...\nac: '4', amStraight: 'True'\nAddPoint('[t38v-1e2_pos(12.81, 0.01, 0.65)]') bc: '4', amStraight: 'True'\naa: '5', amStraight: 'True'\ndetermining straightness using firstDir: '-0.9794049, 0, -0.2019058', newDir: '-0.9794056, 0, -0.2019025'\ndecided AM equal...\nac: '5', amStraight: 'True'\nAddPoint('[t39v-1e0_pos(11.70, 0.00, 0.42)]') bc: '5', amStraight: 'True'\naa: '6', amStraight: 'True'\ndetermining straightness using firstDir: '-0.9794049, 0, -0.2019058', newDir: '-0.979405, 0, -0.2019057'\ndecided AM equal...\nac: '6', amStraight: 'True'\nAddPoint('[t34v-1e2_pos(11.70, 0.00, 0.42)]') bc: '6', amStraight: 'True'\naa: '7', amStraight: 'True'\ndetermining straightness using firstDir: '-0.9794049, 0, -0.2019058', newDir: '-0.9792391, 0, -0.2027087'\ndecided not equal. angDiff: '0.04423466'. Changing amStraight to false...\nac: '7', amStraight: 'False'\nAddPoint('[t27v-1e2_pos(11.68, 0.00, 0.42)]') bc: '7', amStraight: 'False'\naa: '8', amStraight: 'False'\nac: '8', amStraight: 'False'\nAddPoint('[t28v-1e2_pos(11.19, 0.00, 0.32)]') bc: '8', amStraight: 'False'\naa: '9', amStraight: 'False'\nac: '9', amStraight: 'False'\nAddPoint('[t26v-1e1_pos(11.10, 0.00, 0.30)]') bc: '9', amStraight: 'False'\naa: '10', amStraight: 'False'\nac: '10', amStraight: 'False'\nAddPoint('[t25v-1e1_pos(10.31, 0.00, 0.14)]') bc: '10', amStraight: 'False'\naa: '11', amStraight: 'False'\nac: '11', amStraight: 'False'\nAddPoint('[t2v-1e2_pos(9.65, 0.00, 0.00)]') bc: '11', amStraight: 'False'\naa: '12', amStraight: 'False'\nac: '12', amStraight: 'False'\n"
+            },
+            "OperationResult": false
+        },
+        {
+            "Description": "",
+            "AmProblem": false,
+            "startHit": {
+                "hitPosition": {
+                    "x": 14.782999992370606,
+                    "y": 0.0006940364837646484,
+                    "z": 1.059000015258789
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 70,
+                "edgeIndex": -1,
+                "vertIndex": -1
+            },
+            "endHit": {
+                "hitPosition": {
+                    "x": 9.645999908447266,
+                    "y": 0.0006940364837646484,
+                    "z": -0.008999999612569809
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 2,
+                "edgeIndex": -1,
+                "vertIndex": -1
+            },
+            "outPath": {
+                "pathPoints": [
+                    {
+                        "hitPosition": {
+                            "x": 14.782999992370606,
+                            "y": 0.0006940364837646484,
+                            "z": 1.059000015258789
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 70,
+                        "edgeIndex": -1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 12.937548637390137,
+                            "y": 0.0006940364837646484,
+                            "z": 0.6753246784210205
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 53,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 12.930778503417969,
+                            "y": 0.0006940364837646484,
+                            "z": 0.6739171147346497
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 36,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 12.919052124023438,
+                            "y": 0.006409458816051483,
+                            "z": 0.6714789867401123
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 37,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 12.813088417053223,
+                            "y": 0.005908772349357605,
+                            "z": 0.6494486331939697
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 38,
+                        "edgeIndex": 2,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 11.709457397460938,
+                            "y": 0.0006940364837646484,
+                            "z": 0.42000001668930056
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 38,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    }
+                ],
+                "v_navmeshSurfaceProjection_cached": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "amStraight": true,
+                "DBG_class": "ctorD\nAddPoint('[t70v-1e-1_pos(14.78, 0.00, 1.06)]') bc: '0', amStraight: 'True'\naa: '1', amStraight: 'True'\nac: '1', amStraight: 'True'\nAddPoint('[t53v-1e1_pos(12.94, 0.00, 0.68)]') bc: '1', amStraight: 'True'\naa: '2', amStraight: 'True'\nac: '2', amStraight: 'True'\nAddPoint('[t36v-1e0_pos(12.93, 0.00, 0.67)]') bc: '2', amStraight: 'True'\naa: '3', amStraight: 'True'\ndetermining straightness using firstDir: '-0.9790644, 0, -0.2035507', newDir: '-0.9790636, 0, -0.203555'\ndecided AM equal...\nac: '3', amStraight: 'True'\nAddPoint('[t37v-1e0_pos(12.92, 0.01, 0.67)]') bc: '3', amStraight: 'True'\naa: '4', amStraight: 'True'\ndetermining straightness using firstDir: '-0.9790644, 0, -0.2035507', newDir: '-0.9790615, 0, -0.2035647'\ndecided AM equal...\nac: '4', amStraight: 'True'\nAddPoint('[t38v-1e2_pos(12.81, 0.01, 0.65)]') bc: '4', amStraight: 'True'\naa: '5', amStraight: 'True'\ndetermining straightness using firstDir: '-0.9790644, 0, -0.2035507', newDir: '-0.9790642, 0, -0.2035521'\ndecided AM equal...\nac: '5', amStraight: 'True'\nAddPoint('[t38v-1e0_pos(11.71, 0.00, 0.42)]') bc: '5', amStraight: 'True'\naa: '6', amStraight: 'True'\ndetermining straightness using firstDir: '-0.9790644, 0, -0.2035507', newDir: '-0.9790644, 0, -0.2035508'\ndecided AM equal...\nac: '6', amStraight: 'True'\n"
+            },
+            "OperationResult": true
+        },
+        {
+            "Description": "",
+            "AmProblem": false,
+            "startHit": {
+                "hitPosition": {
+                    "x": 14.782999992370606,
+                    "y": 0.0006940364837646484,
+                    "z": 1.059000015258789
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 70,
+                "edgeIndex": -1,
+                "vertIndex": -1
+            },
+            "endHit": {
+                "hitPosition": {
+                    "x": 9.555000305175782,
+                    "y": 0.0006940364837646484,
+                    "z": -0.5809999704360962
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 3,
+                "edgeIndex": -1,
+                "vertIndex": -1
+            },
+            "outPath": {
+                "pathPoints": [
+                    {
+                        "hitPosition": {
+                            "x": 14.782999992370606,
+                            "y": 0.0006940364837646484,
+                            "z": 1.059000015258789
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 70,
+                        "edgeIndex": -1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 12.907447814941407,
+                            "y": 0.0006940364837646484,
+                            "z": 0.47064417600631716
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 53,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 12.906087875366211,
+                            "y": 0.0006940364837646484,
+                            "z": 0.4702174663543701
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 36,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 12.903749465942383,
+                            "y": 0.0018186643719673157,
+                            "z": 0.4694836139678955
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 37,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 12.883646011352539,
+                            "y": 0.001675330102443695,
+                            "z": 0.4631772041320801
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 38,
+                        "edgeIndex": 2,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 12.746005058288575,
+                            "y": 0.0006940364837646484,
+                            "z": 0.42000001668930056
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 38,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    }
+                ],
+                "v_navmeshSurfaceProjection_cached": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "amStraight": true,
+                "DBG_class": "ctorD\nAddPoint('[t70v-1e-1_pos(14.78, 0.00, 1.06)]') bc: '0', amStraight: 'True'\naa: '1', amStraight: 'True'\nac: '1', amStraight: 'True'\nAddPoint('[t53v-1e1_pos(12.91, 0.00, 0.47)]') bc: '1', amStraight: 'True'\naa: '2', amStraight: 'True'\nac: '2', amStraight: 'True'\nAddPoint('[t36v-1e0_pos(12.91, 0.00, 0.47)]') bc: '2', amStraight: 'True'\naa: '3', amStraight: 'True'\ndetermining straightness using firstDir: '-0.9541541, 0, -0.2993157', newDir: '-0.9541341, 0, -0.2993796'\ndecided AM equal...\nac: '3', amStraight: 'True'\nAddPoint('[t37v-1e0_pos(12.90, 0.00, 0.47)]') bc: '3', amStraight: 'True'\naa: '4', amStraight: 'True'\ndetermining straightness using firstDir: '-0.9541541, 0, -0.2993157', newDir: '-0.9541192, 0, -0.2994269'\ndecided AM equal...\nac: '4', amStraight: 'True'\nAddPoint('[t38v-1e2_pos(12.88, 0.00, 0.46)]') bc: '4', amStraight: 'True'\naa: '5', amStraight: 'True'\ndetermining straightness using firstDir: '-0.9541541, 0, -0.2993157', newDir: '-0.954154, 0, -0.299316'\ndecided AM equal...\nac: '5', amStraight: 'True'\nAddPoint('[t38v-1e0_pos(12.75, 0.00, 0.42)]') bc: '5', amStraight: 'True'\naa: '6', amStraight: 'True'\ndetermining straightness using firstDir: '-0.9541541, 0, -0.2993157', newDir: '-0.954155, 0, -0.299313'\ndecided AM equal...\nac: '6', amStraight: 'True'\n"
+            },
+            "OperationResult": true
+        },
+        {
+            "Description": "",
+            "AmProblem": false,
+            "startHit": {
+                "hitPosition": {
+                    "x": 14.782999992370606,
+                    "y": 0.0006940364837646484,
+                    "z": 1.059000015258789
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 70,
+                "edgeIndex": -1,
+                "vertIndex": -1
+            },
+            "endHit": {
+                "hitPosition": {
+                    "x": 11.26200008392334,
+                    "y": 0.0006940364837646484,
+                    "z": -3.1040000915527345
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 5,
+                "edgeIndex": -1,
+                "vertIndex": -1
+            },
+            "outPath": {
+                "pathPoints": [
+                    {
+                        "hitPosition": {
+                            "x": 14.782999992370606,
+                            "y": 0.0006940364837646484,
+                            "z": 1.059000015258789
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 70,
+                        "edgeIndex": -1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 14.073140144348145,
+                            "y": 0.0006940364837646484,
+                            "z": 0.2197079360485077
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 69,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 14.031381607055664,
+                            "y": 0.0006940364837646484,
+                            "z": 0.17033573985099793
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 52,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 13.887314796447754,
+                            "y": 0.0006940364837646484,
+                            "z": 0.0
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 12,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 13.020000457763672,
+                            "y": 0.0006940364837646484,
+                            "z": -1.0254558324813843
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 12,
+                        "edgeIndex": 2,
+                        "vertIndex": -1
+                    }
+                ],
+                "v_navmeshSurfaceProjection_cached": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "amStraight": true,
+                "DBG_class": "ctorD\nAddPoint('[t70v-1e-1_pos(14.78, 0.00, 1.06)]') bc: '0', amStraight: 'True'\naa: '1', amStraight: 'True'\nac: '1', amStraight: 'True'\nAddPoint('[t69v-1e1_pos(14.07, 0.00, 0.22)]') bc: '1', amStraight: 'True'\naa: '2', amStraight: 'True'\nac: '2', amStraight: 'True'\nAddPoint('[t52v-1e1_pos(14.03, 0.00, 0.17)]') bc: '2', amStraight: 'True'\naa: '3', amStraight: 'True'\ndetermining straightness using firstDir: '-0.6457777, 0, -0.7635255', newDir: '-0.6457806, 0, -0.763523'\ndecided AM equal...\nac: '3', amStraight: 'True'\nAddPoint('[t12v-1e0_pos(13.89, 0.00, 0.00)]') bc: '3', amStraight: 'True'\naa: '4', amStraight: 'True'\ndetermining straightness using firstDir: '-0.6457777, 0, -0.7635255', newDir: '-0.6457765, 0, -0.7635264'\ndecided AM equal...\nac: '4', amStraight: 'True'\nAddPoint('[t12v-1e2_pos(13.02, 0.00, -1.03)]') bc: '4', amStraight: 'True'\naa: '5', amStraight: 'True'\ndetermining straightness using firstDir: '-0.6457777, 0, -0.7635255', newDir: '-0.6457778, 0, -0.7635254'\ndecided AM equal...\nac: '5', amStraight: 'True'\n"
+            },
+            "OperationResult": true
+        },
+        {
+            "Description": "",
+            "AmProblem": false,
+            "startHit": {
+                "hitPosition": {
+                    "x": 14.782999992370606,
+                    "y": 0.0006940364837646484,
+                    "z": 1.059000015258789
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 70,
+                "edgeIndex": -1,
+                "vertIndex": -1
+            },
+            "endHit": {
+                "hitPosition": {
+                    "x": 11.970000267028809,
+                    "y": 0.0006940364837646484,
+                    "z": -2.822999954223633
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 5,
+                "edgeIndex": -1,
+                "vertIndex": -1
+            },
+            "outPath": {
+                "pathPoints": [
+                    {
+                        "hitPosition": {
+                            "x": 14.782999992370606,
+                            "y": 0.0006940364837646484,
+                            "z": 1.059000015258789
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 70,
+                        "edgeIndex": -1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 14.163631439208985,
+                            "y": 0.0006940364837646484,
+                            "z": 0.20425814390182496
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 69,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 14.129898071289063,
+                            "y": 0.0006940364837646484,
+                            "z": 0.15770547091960908
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 52,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 14.015620231628418,
+                            "y": 0.0006940364837646484,
+                            "z": 0.0
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 12,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 13.020000457763672,
+                            "y": 0.0006940364837646484,
+                            "z": -1.373991847038269
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 12,
+                        "edgeIndex": 2,
+                        "vertIndex": -1
+                    }
+                ],
+                "v_navmeshSurfaceProjection_cached": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "amStraight": true,
+                "DBG_class": "ctorD\nAddPoint('[t70v-1e-1_pos(14.78, 0.00, 1.06)]') bc: '0', amStraight: 'True'\naa: '1', amStraight: 'True'\nac: '1', amStraight: 'True'\nAddPoint('[t69v-1e1_pos(14.16, 0.00, 0.20)]') bc: '1', amStraight: 'True'\naa: '2', amStraight: 'True'\nac: '2', amStraight: 'True'\nAddPoint('[t52v-1e1_pos(14.13, 0.00, 0.16)]') bc: '2', amStraight: 'True'\naa: '3', amStraight: 'True'\ndetermining straightness using firstDir: '-0.5867693, 0, -0.8097541', newDir: '-0.5867701, 0, -0.8097536'\ndecided AM equal...\nac: '3', amStraight: 'True'\nAddPoint('[t12v-1e0_pos(14.02, 0.00, 0.00)]') bc: '3', amStraight: 'True'\naa: '4', amStraight: 'True'\ndetermining straightness using firstDir: '-0.5867693, 0, -0.8097541', newDir: '-0.5867702, 0, -0.8097535'\ndecided AM equal...\nac: '4', amStraight: 'True'\nAddPoint('[t12v-1e2_pos(13.02, 0.00, -1.37)]') bc: '4', amStraight: 'True'\naa: '5', amStraight: 'True'\ndetermining straightness using firstDir: '-0.5867693, 0, -0.8097541', newDir: '-0.586765, 0, -0.8097572'\ndecided AM equal...\nac: '5', amStraight: 'True'\n"
+            },
+            "OperationResult": true
+        },
+        {
+            "Description": "",
+            "AmProblem": false,
+            "startHit": {
+                "hitPosition": {
+                    "x": 14.782999992370606,
+                    "y": 0.0006940364837646484,
+                    "z": 1.059000015258789
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 70,
+                "edgeIndex": -1,
+                "vertIndex": -1
+            },
+            "endHit": {
+                "hitPosition": {
+                    "x": 11.986000061035157,
+                    "y": 0.0006940364837646484,
+                    "z": -2.822999954223633
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 5,
+                "edgeIndex": -1,
+                "vertIndex": -1
+            },
+            "outPath": {
+                "pathPoints": [
+                    {
+                        "hitPosition": {
+                            "x": 14.782999992370606,
+                            "y": 0.0006940364837646484,
+                            "z": 1.059000015258789
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 70,
+                        "edgeIndex": -1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 14.166768074035645,
+                            "y": 0.0006940364837646484,
+                            "z": 0.20372258126735688
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 69,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 14.133298873901368,
+                            "y": 0.0006940364837646484,
+                            "z": 0.15726952254772187
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 52,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 14.01998519897461,
+                            "y": 0.0006940364837646484,
+                            "z": 0.0
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 12,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 13.029850006103516,
+                            "y": 0.0006940364837646484,
+                            "z": -1.3741910457611085
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 13,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 12.969926834106446,
+                            "y": 0.0006940364837646484,
+                            "z": -1.4573618173599244
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 14,
+                        "edgeIndex": 2,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 12.918302536010743,
+                            "y": 0.0006940364837646484,
+                            "z": -1.529014229774475
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 4,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 12.40101432800293,
+                            "y": 0.0006940364837646484,
+                            "z": -2.2469818592071535
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 5,
+                        "edgeIndex": 2,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 11.986000061035157,
+                            "y": 0.0006940364837646484,
+                            "z": -2.822999954223633
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 5,
+                        "edgeIndex": -1,
+                        "vertIndex": -1
+                    }
+                ],
+                "v_navmeshSurfaceProjection_cached": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "amStraight": true,
+                "DBG_class": "ctorD\nAddPoint('[t70v-1e-1_pos(14.78, 0.00, 1.06)]') bc: '0', amStraight: 'True'\naa: '1', amStraight: 'True'\nac: '1', amStraight: 'True'\nAddPoint('[t69v-1e1_pos(14.17, 0.00, 0.20)]') bc: '1', amStraight: 'True'\naa: '2', amStraight: 'True'\nac: '2', amStraight: 'True'\nAddPoint('[t52v-1e1_pos(14.13, 0.00, 0.16)]') bc: '2', amStraight: 'True'\naa: '3', amStraight: 'True'\ndetermining straightness using firstDir: '-0.5845747, 0, -0.8113399', newDir: '-0.5845692, 0, -0.8113438'\ndecided AM equal...\nac: '3', amStraight: 'True'\nAddPoint('[t12v-1e0_pos(14.02, 0.00, 0.00)]') bc: '3', amStraight: 'True'\naa: '4', amStraight: 'True'\ndetermining straightness using firstDir: '-0.5845747, 0, -0.8113399', newDir: '-0.5845752, 0, -0.8113396'\ndecided AM equal...\nac: '4', amStraight: 'True'\nAddPoint('[t13v-1e0_pos(13.03, 0.00, -1.37)]') bc: '4', amStraight: 'True'\naa: '5', amStraight: 'True'\ndetermining straightness using firstDir: '-0.5845747, 0, -0.8113399', newDir: '-0.5845838, 0, -0.8113334'\ndecided AM equal...\nac: '5', amStraight: 'True'\nAddPoint('[t14v-1e2_pos(12.97, 0.00, -1.46)]') bc: '5', amStraight: 'True'\naa: '6', amStraight: 'True'\ndetermining straightness using firstDir: '-0.5845747, 0, -0.8113399', newDir: '-0.5845631, 0, -0.8113483'\ndecided AM equal...\nac: '6', amStraight: 'True'\nAddPoint('[t4v-1e0_pos(12.92, 0.00, -1.53)]') bc: '6', amStraight: 'True'\naa: '7', amStraight: 'True'\ndetermining straightness using firstDir: '-0.5845747, 0, -0.8113399', newDir: '-0.5845624, 0, -0.8113487'\ndecided AM equal...\nac: '7', amStraight: 'True'\nAddPoint('[t5v-1e2_pos(12.40, 0.00, -2.25)]') bc: '7', amStraight: 'True'\naa: '8', amStraight: 'True'\ndetermining straightness using firstDir: '-0.5845747, 0, -0.8113399', newDir: '-0.5845663, 0, -0.8113459'\ndecided AM equal...\nac: '8', amStraight: 'True'\nAddPoint('[t5v-1e-1_pos(11.99, 0.00, -2.82)]') bc: '8', amStraight: 'True'\naa: '9', amStraight: 'True'\ndetermining straightness using firstDir: '-0.5845747, 0, -0.8113399', newDir: '-0.5845656, 0, -0.8113465'\ndecided AM equal...\nac: '9', amStraight: 'True'\n"
+            },
+            "OperationResult": false
+        },
+        {
+            "Description": "",
+            "AmProblem": false,
+            "startHit": {
+                "hitPosition": {
+                    "x": 7.769999980926514,
+                    "y": 0.0006940364837646484,
+                    "z": 1.0
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 31,
+                "edgeIndex": -1,
+                "vertIndex": -1
+            },
+            "endHit": {
+                "hitPosition": {
+                    "x": 16.469999313354493,
+                    "y": 0.0006940364837646484,
+                    "z": 4.289999961853027
+                },
+                "normal": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "triangleIndex": 77,
+                "edgeIndex": -1,
+                "vertIndex": -1
+            },
+            "outPath": {
+                "pathPoints": [
+                    {
+                        "hitPosition": {
+                            "x": 7.769999980926514,
+                            "y": 0.0006940364837646484,
+                            "z": 1.0
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 31,
+                        "edgeIndex": -1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 7.82017183303833,
+                            "y": 0.0006940364837646484,
+                            "z": 1.0189731121063233
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 32,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 8.68504524230957,
+                            "y": 0.0006940364837646484,
+                            "z": 1.3460345268249512
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 35,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 9.84337043762207,
+                            "y": 0.0006940364837646484,
+                            "z": 1.7840683460235596
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 34,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 11.460532188415528,
+                            "y": 0.0006940364837646484,
+                            "z": 2.395615816116333
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 39,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 11.547831535339356,
+                            "y": 0.04634465277194977,
+                            "z": 2.428629159927368
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 38,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 12.06506633758545,
+                            "y": 0.050790052860975268,
+                            "z": 2.6242270469665529
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 37,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 13.096537590026856,
+                            "y": 0.05965510010719299,
+                            "z": 3.014289379119873
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 36,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 13.220125198364258,
+                            "y": 0.0006940364837646484,
+                            "z": 3.061025381088257
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 53,
+                        "edgeIndex": 2,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 13.29240608215332,
+                            "y": 0.0006940364837646484,
+                            "z": 3.0883591175079347
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 70,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 13.976543426513672,
+                            "y": 0.0006940364837646484,
+                            "z": 3.347073554992676
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 71,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 15.360000610351563,
+                            "y": 0.0006940364837646484,
+                            "z": 3.870242118835449
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 82,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 15.396575927734375,
+                            "y": 0.0006940364837646484,
+                            "z": 3.884073495864868
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 83,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 15.470622062683106,
+                            "y": 0.0006940364837646484,
+                            "z": 3.9120750427246095
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 78,
+                        "edgeIndex": 0,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 16.082490921020509,
+                            "y": 0.0006940364837646484,
+                            "z": 4.143459320068359
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 77,
+                        "edgeIndex": 1,
+                        "vertIndex": -1
+                    },
+                    {
+                        "hitPosition": {
+                            "x": 16.469999313354493,
+                            "y": 0.0006940364837646484,
+                            "z": 4.289999961853027
+                        },
+                        "normal": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "triangleIndex": 77,
+                        "edgeIndex": -1,
+                        "vertIndex": -1
+                    }
+                ],
+                "v_navmeshSurfaceProjection_cached": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "amStraight": true,
+                "DBG_class": "ctorD\nAddPoint('[t31v-1e-1_pos(7.77, 0.00, 1.00)]') bc: '0', amStraight: 'True'\naa: '1', amStraight: 'True'\nac: '1', amStraight: 'True'\nAddPoint('[t32v-1e0_pos(7.82, 0.00, 1.02)]') bc: '1', amStraight: 'True'\naa: '2', amStraight: 'True'\nac: '2', amStraight: 'True'\nAddPoint('[t35v-1e0_pos(8.69, 0.00, 1.35)]') bc: '2', amStraight: 'True'\naa: '3', amStraight: 'True'\ndetermining straightness using firstDir: '0.9353531, 0, 0.3537154', newDir: '0.9353535, 0, 0.3537142'\ndecided AM equal...\nac: '3', amStraight: 'True'\nAddPoint('[t34v-1e1_pos(9.84, 0.00, 1.78)]') bc: '3', amStraight: 'True'\naa: '4', amStraight: 'True'\ndetermining straightness using firstDir: '0.9353531, 0, 0.3537154', newDir: '0.9353535, 0, 0.3537145'\ndecided AM equal...\nac: '4', amStraight: 'True'\nAddPoint('[t39v-1e1_pos(11.46, 0.00, 2.40)]') bc: '4', amStraight: 'True'\naa: '5', amStraight: 'True'\ndetermining straightness using firstDir: '0.9353531, 0, 0.3537154', newDir: '0.9353536, 0, 0.3537142'\ndecided AM equal...\nac: '5', amStraight: 'True'\nAddPoint('[t38v-1e1_pos(11.55, 0.05, 2.43)]') bc: '5', amStraight: 'True'\naa: '6', amStraight: 'True'\ndetermining straightness using firstDir: '0.9353531, 0, 0.3537154', newDir: '0.935353, 0, 0.3537155'\ndecided AM equal...\nac: '6', amStraight: 'True'\nAddPoint('[t37v-1e1_pos(12.07, 0.05, 2.62)]') bc: '6', amStraight: 'True'\naa: '7', amStraight: 'True'\ndetermining straightness using firstDir: '0.9353531, 0, 0.3537154', newDir: '0.9353536, 0, 0.353714'\ndecided AM equal...\nac: '7', amStraight: 'True'\nAddPoint('[t36v-1e1_pos(13.10, 0.06, 3.01)]') bc: '7', amStraight: 'True'\naa: '8', amStraight: 'True'\ndetermining straightness using firstDir: '0.9353531, 0, 0.3537154', newDir: '0.9353535, 0, 0.3537143'\ndecided AM equal...\nac: '8', amStraight: 'True'\nAddPoint('[t53v-1e2_pos(13.22, 0.00, 3.06)]') bc: '8', amStraight: 'True'\naa: '9', amStraight: 'True'\ndetermining straightness using firstDir: '0.9353531, 0, 0.3537154', newDir: '0.9353536, 0, 0.3537141'\ndecided AM equal...\nac: '9', amStraight: 'True'\nAddPoint('[t70v-1e0_pos(13.29, 0.00, 3.09)]') bc: '9', amStraight: 'True'\naa: '10', amStraight: 'True'\ndetermining straightness using firstDir: '0.9353531, 0, 0.3537154', newDir: '0.9353539, 0, 0.3537134'\ndecided AM equal...\nac: '10', amStraight: 'True'\nAddPoint('[t71v-1e0_pos(13.98, 0.00, 3.35)]') bc: '10', amStraight: 'True'\naa: '11', amStraight: 'True'\ndetermining straightness using firstDir: '0.9353531, 0, 0.3537154', newDir: '0.9353533, 0, 0.3537147'\ndecided AM equal...\nac: '11', amStraight: 'True'\nAddPoint('[t82v-1e0_pos(15.36, 0.00, 3.87)]') bc: '11', amStraight: 'True'\naa: '12', amStraight: 'True'\ndetermining straightness using firstDir: '0.9353531, 0, 0.3537154', newDir: '0.9353538, 0, 0.3537136'\ndecided AM equal...\nac: '12', amStraight: 'True'\nAddPoint('[t83v-1e1_pos(15.40, 0.00, 3.88)]') bc: '12', amStraight: 'True'\naa: '13', amStraight: 'True'\ndetermining straightness using firstDir: '0.9353531, 0, 0.3537154', newDir: '0.9353534, 0, 0.3537146'\ndecided AM equal...\nac: '13', amStraight: 'True'\nAddPoint('[t78v-1e0_pos(15.47, 0.00, 3.91)]') bc: '13', amStraight: 'True'\naa: '14', amStraight: 'True'\ndetermining straightness using firstDir: '0.9353531, 0, 0.3537154', newDir: '0.9353528, 0, 0.3537163'\ndecided AM equal...\nac: '14', amStraight: 'True'\nAddPoint('[t77v-1e1_pos(16.08, 0.00, 4.14)]') bc: '14', amStraight: 'True'\naa: '15', amStraight: 'True'\ndetermining straightness using firstDir: '0.9353531, 0, 0.3537154', newDir: '0.9353538, 0, 0.3537133'\ndecided AM equal...\nac: '15', amStraight: 'True'\nAddPoint('[t77v-1e-1_pos(16.47, 0.00, 4.29)]') bc: '15', amStraight: 'True'\naa: '16', amStraight: 'True'\ndetermining straightness using firstDir: '0.9353531, 0, 0.3537154', newDir: '0.9353535, 0, 0.3537144'\ndecided AM equal...\nac: '16', amStraight: 'True'\n"
+            },
+            "OperationResult": false
         }
     ],
-    "CapturedRaycastResults": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        true,
-        true,
-        true,
-        false
-    ],
-    "RaycastResult": false,
-    "DBG_NavmeshRaycastRprt": "AmWithinSurfaceProjection() for sourcePosition was succesful\nstart projection: 'Indx '70', at '(14.78, 0.00, 1.06)''\nAmWithinSurfaceProjection() for endPosition was succesful\nend projection: 'Indx '5', at '(11.99, 0.00, -2.82)''\n\nlooping through mesh triangles...\n\n\nwhile0=============================================== \n(currentTri: '70', startPt: '14.783, 0, 1.059')\nprojecting through triangle...\ntri.prjctThrToPerim report----------------\nProjectThroughToPerimeter( (14.78, 0.00, 1.06), (11.99, 0.00, -2.82), -1 )\nmethod succeeded on edge 2. Here are the reports...\nend rprt------------\nprojected to edge: '[70][2]' at '14.16677, 0.0006940365, 0.2037226'. Shared edge is: '[69][1]'\nedge is NOT terminal. Checking to see if we're at the end...\ntest1, Triangles[70].AmAdjacentToTri(5): 'False'\nDecided NOT at the end. Set new current tri to: '69'...\n\nwhile1=============================================== \n(currentTri: '69', startPt: '14.16677, 0.0006940365, 0.2037226')\nprojecting through triangle...\ntri.prjctThrToPerim report----------------\nProjectThroughToPerimeter( (14.17, 0.00, 0.20), (11.99, 0.00, -2.82), 1 )\nmethod succeeded on edge 2. Here are the reports...\nend rprt------------\nprojected to edge: '[69][2]' at '14.1333, 0.0006940365, 0.1572694'. Shared edge is: '[52][1]'\nedge is NOT terminal. Checking to see if we're at the end...\ntest1, Triangles[69].AmAdjacentToTri(5): 'False'\nDecided NOT at the end. Set new current tri to: '52'...\n\nwhile2=============================================== \n(currentTri: '52', startPt: '14.1333, 0.0006940365, 0.1572694')\nprojecting through triangle...\ntri.prjctThrToPerim report----------------\nProjectThroughToPerimeter( (14.13, 0.00, 0.16), (11.99, 0.00, -2.82), 1 )\nmethod succeeded on edge 2. Here are the reports...\nend rprt------------\nprojected to edge: '[52][2]' at '14.01999, 0.0006940365, 0'. Shared edge is: '[12][0]'\nedge is NOT terminal. Checking to see if we're at the end...\ntest1, Triangles[52].AmAdjacentToTri(5): 'False'\nDecided NOT at the end. Set new current tri to: '12'...\n\nwhile3=============================================== \n(currentTri: '12', startPt: '14.01999, 0.0006940365, 0')\nprojecting through triangle...\ntri.prjctThrToPerim report----------------\nProjectThroughToPerimeter( (14.02, 0.00, 0.00), (11.99, 0.00, -2.82), 0 )\nmethod succeeded on edge 1. Here are the reports...\nend rprt------------\nprojected to edge: '[12][1]' at '13.02985, 0.0006940365, -1.374191'. Shared edge is: '[13][0]'\nedge is NOT terminal. Checking to see if we're at the end...\ntest1, Triangles[12].AmAdjacentToTri(5): 'False'\nDecided NOT at the end. Set new current tri to: '13'...\n\nwhile4=============================================== \n(currentTri: '13', startPt: '13.02985, 0.0006940365, -1.374191')\nprojecting through triangle...\ntri.prjctThrToPerim report----------------\nProjectThroughToPerimeter( (13.03, 0.00, -1.37), (11.99, 0.00, -2.82), 0 )\nmethod succeeded on edge 1. Here are the reports...\nend rprt------------\nprojected to edge: '[13][1]' at '12.96993, 0.0006940365, -1.457362'. Shared edge is: '[14][2]'\nedge is NOT terminal. Checking to see if we're at the end...\ntest1, Triangles[13].AmAdjacentToTri(5): 'False'\nDecided NOT at the end. Set new current tri to: '14'...\n\nwhile5=============================================== \n(currentTri: '14', startPt: '12.96993, 0.0006940365, -1.457362')\nprojecting through triangle...\ntri.prjctThrToPerim report----------------\nProjectThroughToPerimeter( (12.97, 0.00, -1.46), (11.99, 0.00, -2.82), 2 )\nmethod succeeded on edge 1. Here are the reports...\nend rprt------------\nprojected to edge: '[14][1]' at '12.9183, 0.0006940365, -1.529014'. Shared edge is: '[4][0]'\nedge is NOT terminal. Checking to see if we're at the end...\ntest1, Triangles[14].AmAdjacentToTri(5): 'True'\nDecided NOT at the end. Set new current tri to: '4'...\n\nwhile6=============================================== \n(currentTri: '4', startPt: '12.9183, 0.0006940365, -1.529014')\nprojecting through triangle...\ntri.prjctThrToPerim report----------------\nProjectThroughToPerimeter( (12.92, 0.00, -1.53), (11.99, 0.00, -2.82), 0 )\nmethod succeeded on edge 1. Here are the reports...\nend rprt------------\nprojected to edge: '[4][1]' at '12.40101, 0.0006940365, -2.246982'. Shared edge is: '[5][2]'\nedge is NOT terminal. Checking to see if we're at the end...\ntest1, Triangles[4].AmAdjacentToTri(5): 'True'\nDecided AM at the end. Stopping...\nfinally returning: 'False'\n",
-    "DBG_NavmeshProjectionRprt": "Searching through '84' tris...\ni: '0'....................\ni: '1'....................\ni: '2'....................\ni: '3'....................\ni: '4'....................\ni: '5'....................\nfound AM in shape project at '(11.99, 0.00, -2.82)'...\ni: '6'....................\ni: '7'....................\ni: '8'....................\ni: '9'....................\ni: '10'....................\ni: '11'....................\ni: '12'....................\ni: '13'....................\ni: '14'....................\ni: '15'....................\ni: '16'....................\ni: '17'....................\ni: '18'....................\ni: '19'....................\ni: '20'....................\ni: '21'....................\ni: '22'....................\ni: '23'....................\ni: '24'....................\ni: '25'....................\ni: '26'....................\ni: '27'....................\ni: '28'....................\ni: '29'....................\ni: '30'....................\ni: '31'....................\ni: '32'....................\ni: '33'....................\ni: '34'....................\ni: '35'....................\ni: '36'....................\ni: '37'....................\ni: '38'....................\ni: '39'....................\ni: '40'....................\ni: '41'....................\ni: '42'....................\ni: '43'....................\ni: '44'....................\ni: '45'....................\ni: '46'....................\ni: '47'....................\ni: '48'....................\ni: '49'....................\ni: '50'....................\ni: '51'....................\ni: '52'....................\ni: '53'....................\ni: '54'....................\ni: '55'....................\ni: '56'....................\ni: '57'....................\ni: '58'....................\ni: '59'....................\ni: '60'....................\ni: '61'....................\ni: '62'....................\ni: '63'....................\ni: '64'....................\ni: '65'....................\ni: '66'....................\ni: '67'....................\ni: '68'....................\ni: '69'....................\ni: '70'....................\ni: '71'....................\ni: '72'....................\ni: '73'....................\ni: '74'....................\ni: '75'....................\ni: '76'....................\ni: '77'....................\ni: '78'....................\ni: '79'....................\ni: '80'....................\ni: '81'....................\ni: '82'....................\ni: '83'....................\nfinished. returning: '5' with pt: '(11.99, 0.00, -2.82)'\n"
+    "Color_PathPoints": {
+        "r": 0.6322159171104431,
+        "g": 0.39654678106307986,
+        "b": 0.8943395614624023,
+        "a": 1.0
+    },
+    "Size_PathPoints": 0.0017000000225380064,
+    "Height_PathPtLabels": 0.027300000190734865,
+    "DbgEntries": true
 }

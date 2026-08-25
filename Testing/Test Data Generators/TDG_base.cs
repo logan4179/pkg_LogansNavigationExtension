@@ -17,12 +17,12 @@ namespace LogansNavigationExtension
 
         [TextArea(1,10)] public string Description;
 
-		[SerializeField] protected LNX_NavMesh _navmesh;
+		[SerializeField] protected LNX_NavMeshSurface _navmesh;
 		public bool AutoRun = true;
+		public int Index_FocusOn = 0;
 
 
 		[Header("PROBLEMS")]
-		public int Index_GoToProblem = 0;
 		public TDG_DataCapture _dataCapture_problems;
 
 		public bool DrawProblemPoints = true;
@@ -61,7 +61,7 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call GoToProblemPoint(base)")]
 		public virtual void GoToProblemPoint()
 		{
-			_dataCapture_problems.SendTo(Index_GoToProblem);
+			_dataCapture_problems.SendTo(Index_FocusOn);
 		}
 
 		public bool SelectionIsOneOfTheFollowing( params GameObject[] gameObjects )

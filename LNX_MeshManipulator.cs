@@ -7,7 +7,7 @@ namespace LogansNavigationExtension
 {
     public class LNX_MeshManipulator : MonoBehaviour
     {
-		[SerializeField] public LNX_NavMesh _LNX_NavMesh;
+		[SerializeField] public LNX_NavMeshSurface _LNX_NavMesh;
 
 		//[Header("FOCUS")]
 		public LNX_Component SelectMode = LNX_Component.None;

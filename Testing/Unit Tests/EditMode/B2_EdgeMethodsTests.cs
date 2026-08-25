@@ -11,7 +11,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 {
     public class B2_EdgeMethodsTests 
     {
-		LNX_NavMesh _serializedLNXNavmesh;
+		LNX_NavMeshSurface _serializedLNXNavmesh;
 
 		//LNX_MeshManipulator _lnx_meshManipulator;
 
@@ -26,7 +26,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 		{
 			GameObject go = GameObject.Find(LNX_UnitTestUtilities.Name_SerializedNavmeshGameobject);
 
-			_serializedLNXNavmesh = go.GetComponent<LNX_NavMesh>();
+			_serializedLNXNavmesh = go.GetComponent<LNX_NavMeshSurface>();
 			Assert.NotNull(_serializedLNXNavmesh);
 
 

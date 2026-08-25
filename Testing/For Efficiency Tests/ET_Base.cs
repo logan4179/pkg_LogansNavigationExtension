@@ -11,7 +11,7 @@ namespace LogansNavigationExtension
 	/// </summary>
     public class ET_Base : MonoBehaviour
     {
-		public LNX_NavMesh _navmesh;
+		public LNX_NavMeshSurface _navmesh;
 
 		public virtual void RunTests()
 		{

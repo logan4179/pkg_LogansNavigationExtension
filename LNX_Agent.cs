@@ -1,6 +1,7 @@
 using NUnit.Framework.Constraints;
 using System;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace LogansNavigationExtension.AI
 {
@@ -21,9 +22,11 @@ namespace LogansNavigationExtension.AI
 
 
 		//[Header("PATHING")]
-		[HideInInspector, NonSerialized] public LNX_Path _CurrentPath;
+		private LNX_Path _currentPath;
+        public LNX_Path CurrentPath => _currentPath;
+
         private int index_currentPathPt = -1;
-        public LNX_NavmeshHit _CurrentPathPt => _CurrentPath.PathPoints[index_currentPathPt];
+        public LNX_NavmeshHit _CurrentPathPt => _currentPath.PathPoints[index_currentPathPt];
 
         /// <summary>
         /// The current hit that describes this agent's position on the navmesh
@@ -41,12 +44,12 @@ namespace LogansNavigationExtension.AI
 
 		void Start()
         {
-            
+            //NavMesh.cal
         }
 
         void FixedUpdate()
         {
-            if ( _CurrentPath != null )
+            if (_currentPath != null )
             {
                 Vector3 v_toNext = Vector3.Normalize( _CurrentPathPt.Position - transform.position );
                 Vector3 v_transUpGoal = Vector3.RotateTowards( VisualTransform.up, _CurrentPathPt.Normal, CurrentRotationSpeed * Time.fixedDeltaTime, 0.0f );
@@ -100,6 +103,12 @@ namespace LogansNavigationExtension.AI
 			}
         }
 
+        public void SetPath( Vector3 endPt )
+        {
+            //_currentPath = 
+
+            index_currentPathPt = 0;
+        }
 	}
 
     public enum MovementMode

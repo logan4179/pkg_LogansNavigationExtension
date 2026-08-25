@@ -19,7 +19,7 @@ namespace LogansNavigationExtension
 		public bool cnsdrClsestOffPerimParameter;
 
 		[Header("REFERENCE")]
-		public LNX_NavMesh _navmesh;
+		public LNX_NavMeshSurface _navmesh;
 
 		[Header("STATS")]
 		public bool AutomaticallyGrab = true;

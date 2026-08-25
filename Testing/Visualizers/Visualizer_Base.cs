@@ -9,7 +9,7 @@ namespace LogansNavigationExtension
     {
 		[TextArea(1, 5)] public string Description;
 
-		[SerializeField] protected LNX_NavMesh _navmesh;
+		[SerializeField] protected LNX_NavMeshSurface _navmesh;
 
 		[Header("DEBUG (BASE)")]
 		[Range(0f, 0.3f)] public float Radius_ObjectDebugSpheres = 0.2f;

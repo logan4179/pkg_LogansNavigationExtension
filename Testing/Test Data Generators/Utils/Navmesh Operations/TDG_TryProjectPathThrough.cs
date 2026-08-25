@@ -11,7 +11,7 @@ namespace LogansNavigationExtension
 		//todo: can get rid of a lot of the code here by implementing component grabbers, and datacapturers, etc
 
 		[Header("REFERENCE")]
-		public LNX_NavMesh _NavMesh;
+		public LNX_NavMeshSurface _NavMesh;
 
 		[Header("START OF DERIVED CLASS-------------------")]
 		public LNX_ComponentGrabber Grabber_StartVert;
@@ -82,6 +82,7 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call WriteMeToJson()")]
 		public bool WriteMeToJson()
 		{
+			/*
 			bool rslt = TDG_Manager.WriteTestObjectToJson(TDG_Manager.filePath_testData_isInCenterSweep, this);
 
 			if (rslt)
@@ -89,6 +90,7 @@ namespace LogansNavigationExtension
 				LastWriteTime = System.DateTime.Now.ToString();
 				return true;
 			}
+			*/
 
 			return false;
 		}

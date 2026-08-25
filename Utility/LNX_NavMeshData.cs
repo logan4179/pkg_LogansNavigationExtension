@@ -22,7 +22,7 @@ namespace LogansNavigationExtension
 			Triangles = null;
 		}
 
-		public LNX_NavMeshData( LNX_NavMesh nm )
+		public LNX_NavMeshData( LNX_NavMeshSurface nm )
 		{
 			Debug.Log( $"ctor. colLength: '{nm.Triangles.Length}'");
 			//GUID = nm.cachedGUID; //todo: dws
@@ -43,7 +43,7 @@ namespace LogansNavigationExtension
 			boundsEdges = nm.BoundsEdges;
 		}
 
-		public void SupplyWithDataFromNavMesh(LNX_NavMesh nm)
+		public void SupplyWithDataFromNavMesh(LNX_NavMeshSurface nm)
 		{
 			//GUID = nm.UniqueID; //todo: dws
 
@@ -96,7 +96,7 @@ namespace LogansNavigationExtension
 		/// </summary>
 		/// <param name="nm"></param>
 		/// <returns></returns>
-		public bool MatchesNavmesh(LNX_NavMesh nm)
+		public bool MatchesNavmesh(LNX_NavMeshSurface nm)
 		{
 			/*
 			if (GUID != nm.GUID) //todo: dws

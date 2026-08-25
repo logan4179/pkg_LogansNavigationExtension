@@ -80,7 +80,7 @@ namespace LogansNavigationExtension.CustomEditors
 
 		private void Btn_fetchTriangulation_action()
 		{
-			_targetScript._LNX_NavMesh.CalculateTriangulation();
+			_targetScript._LNX_NavMesh.CreateFromSceneTriangulation();
 			Debug.Log(_targetScript._LNX_NavMesh.DBG_CalculateTriangulation);
 			_targetScript.ClearSelection();
 		}
