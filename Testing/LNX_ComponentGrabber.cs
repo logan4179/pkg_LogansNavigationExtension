@@ -96,23 +96,30 @@ namespace LogansNavigationExtension
 			Debug.Log($"{nameof(LNX_ComponentGrabber)}.{nameof(OnEnable)}");
 		}
 
-		public LNX_ComponentCoordinate GrabComponent()
+		[ContextMenu("z call GrabComponent()")]
+		public void GrabComponent()
         {
+			#region CURRENT HIT ==============================================
 			CurrentHit = LNX_NavmeshHit.None;
-			CurrentCoordinate = LNX_ComponentCoordinate.None;
 
 			if( Index_TriRestrict != -1 )
 			{
 				if ( !_navmesh.Triangles[Index_TriRestrict].IsInShapeProject(transform.position, out CurrentHit))
 				{
-					return LNX_ComponentCoordinate.None;
+					Debug.LogWarning($"LNX WARNING! IsINShapeProject didn't work..");
+
+					return;
 				}
 			}
 			else if ( !_navmesh.SamplePosition(transform.position, out CurrentHit, 2f, cnsdrClsestOffPerimParameter))
 			{
-				//Debug.LogWarning($"LNX WARNING! GrabComponent couldn't sample navmesh at current grabber position...");
-				return LNX_ComponentCoordinate.None;
+				Debug.LogWarning($"LNX WARNING! GrabComponent couldn't sample navmesh at current grabber position...");
+				return;
 			}
+			#endregion
+
+
+			CurrentCoordinate = LNX_ComponentCoordinate.None;
 
 			if (CurrentCoordinateMode == LNX_Component.Vertex)
             {
@@ -144,8 +151,6 @@ namespace LogansNavigationExtension
 				//Debug.Log($"Sample succesful. Grabbed tri '{CurrentCoordinate}'...");
 
 			}
-
-			return CurrentCoordinate;
         }
 
 		public Vector3 GetCurrentlyGrabbedPosition()

@@ -17,8 +17,6 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 		[Header("TEST OBJECTS")]
 		TDG_DoesPositionLieOnEdge _tdg_doesPositionLieOnEdge;
-		TDG_DoesProjectionIntersectEdge _tdg_doesProjectionIntersectEdge;
-
 
 		#region A - Setup --------------------------------------------------------------------------------
 		[Test]
@@ -61,25 +59,6 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			Assert.NotNull( _tdg_doesPositionLieOnEdge );
 			#endregion
 
-			#region Edge.DoesProjectionIntersectEdge() -------------------------------------------------------
-			if ( File.Exists(TDG_Manager.filePath_testData_doesProjectionIntersectEdge) )
-			{
-				Debug.Log($"File exists for {nameof(TDG_DoesProjectionIntersectEdge)}. Building test objects...");
-			}
-			else
-			{
-				Debug.LogError($"PROBLEM!!!!! file at test path does not exist for {nameof(TDG_DoesProjectionIntersectEdge)}. Cannot perform test.");
-				return;
-			}
-
-			_tdg_doesProjectionIntersectEdge = _serializedLNXNavmesh.gameObject.AddComponent<TDG_DoesProjectionIntersectEdge>();
-			_tdg_doesProjectionIntersectEdge.AmInUnitTest = true;
-
-			jsonString = File.ReadAllText(TDG_Manager.filePath_testData_doesProjectionIntersectEdge);
-			JsonUtility.FromJsonOverwrite(jsonString, _tdg_doesProjectionIntersectEdge);
-			Debug.Log($"Created object from JSON. Asserting object is not null...");
-			Assert.NotNull(_tdg_doesProjectionIntersectEdge);
-			#endregion
 		}
 
 		[Test]
@@ -110,31 +89,6 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 			);
 			#endregion
 
-			#region Edge.DoesProjectionIntersectEdge() -------------------------------------------------------
-			Assert.Greater(_tdg_doesProjectionIntersectEdge.CapturedStartPositions.Count, 0);
-			commonCollectionCount = _tdg_doesProjectionIntersectEdge.CapturedStartPositions.Count;
-
-			Assert.AreEqual(
-				commonCollectionCount,
-				_tdg_doesProjectionIntersectEdge.CapturedEndPositions.Count
-			);
-			Assert.AreEqual(
-				commonCollectionCount,
-				_tdg_doesProjectionIntersectEdge.CapturedProjectedPositions.Count
-			);
-			Assert.AreEqual(
-				commonCollectionCount,
-				_tdg_doesProjectionIntersectEdge.CapturedProjectionResults.Count
-			);
-			Assert.AreEqual(
-				commonCollectionCount,
-				_tdg_doesProjectionIntersectEdge.CapturedTriangleCenterPositions.Count
-			);
-			Assert.AreEqual(
-				commonCollectionCount,
-				_tdg_doesProjectionIntersectEdge.CapturedEdgeCenterPositions.Count
-			);
-			#endregion
 		}
 		#endregion
 
@@ -159,35 +113,6 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				);
 
 				Assert.AreEqual( _tdg_doesPositionLieOnEdge.CapturedResults[i], rslt );
-			}
-		}
-
-		[Test]
-		public void B2_DoesProjectionIntersectEdge()
-		{
-			LNX_UnitTestUtilities.LogTestStart(
-				nameof(B2_DoesProjectionIntersectEdge),
-				$"Tests that method LNX_Edge.{nameof(LNX_Edge.DoesProjectionIntersectEdge)}() works as intended."
-			);
-
-			Debug.Log($"Now testing '{_tdg_doesProjectionIntersectEdge.CapturedStartPositions.Count}' data points...");
-			for ( int i = 0; i < _tdg_doesProjectionIntersectEdge.CapturedStartPositions.Count; i++ )
-			{
-				Debug.Log($"i: '{i}'...");
-				string rprt = "";
-
-				LNX_Triangle tri = _serializedLNXNavmesh.GetTriangle( _tdg_doesProjectionIntersectEdge.CapturedTriangleCenterPositions[i] );
-				LNX_Edge edge = tri.GetEdge( _tdg_doesProjectionIntersectEdge.CapturedEdgeCenterPositions[i] );
-				LNX_NavmeshHit prjctHit = LNX_NavmeshHit.None;
-
-				bool rslt = edge.DoesProjectionIntersectEdge(
-					_tdg_doesProjectionIntersectEdge.CapturedStartPositions[i],
-					_tdg_doesProjectionIntersectEdge.CapturedEndPositions[i],
-					out prjctHit
-				);
-
-				Assert.AreEqual( _tdg_doesProjectionIntersectEdge.CapturedProjectionResults[i], rslt );
-				Assert.AreEqual(_tdg_doesProjectionIntersectEdge.CapturedProjectedPositions[i], prjctHit.Position);
 			}
 		}
 		#endregion

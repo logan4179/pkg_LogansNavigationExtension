@@ -7,6 +7,7 @@ using System.Text;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.LightTransport;
 using UnityEngine.SceneManagement;
 
 
@@ -20,6 +21,8 @@ namespace LogansNavigationExtension
 
 		public LayerMask MyLayerMask;
 
+		/// <summary>Index corresponding to this surface in manager's Surfaces collection. Gets set automatically by manager singleton.</summary>
+		public int MyCollectionIndex = -1;
 		/*
 		public string LayerMaskName;
 
@@ -1191,6 +1194,42 @@ namespace LogansNavigationExtension
 		#endregion
 
 		#region MAIN API METHODS----------------------------------------------------------------
+		public bool PositionIsInShapeProject(Vector3 pos, out LNX_NavmeshHit hit, bool considerPossibilityOfOverlaps = true)
+		{
+			hit = LNX_NavmeshHit.None;
+			float runningClosestDist = float.MaxValue;
+
+			for (int i = 0; i < Triangles.Length; i++)
+			{
+				float currentDist = float.MaxValue;
+				LNX_NavmeshHit crntHit = LNX_NavmeshHit.None;
+
+				if (Triangles[i].IsInShapeProject(pos, out crntHit))
+				{
+					if (!considerPossibilityOfOverlaps)
+					{
+						hit = crntHit;
+						return true;
+					}
+
+					//note: The reason I'm not immediately returning this tri here is because concievably
+					// you could have two navmesh polys "on top of each other", (IE: in line with
+					// each other's normals), which would result in more than one tri considering
+					// this point to be within it's bounds, and you need to decide which one is
+					// the better option...
+					currentDist = Vector3.Distance(pos, crntHit.Position);
+				}
+
+				if (currentDist < runningClosestDist)
+				{
+					hit = crntHit;
+					runningClosestDist = currentDist;
+				}
+			}
+
+			return hit != LNX_NavmeshHit.None;
+			
+		}
 
 		/// <summary>
 		/// Gets a point on the projection of the navmesh using the supplied position. If the supplied position is not on the 
@@ -1284,115 +1323,627 @@ namespace LogansNavigationExtension
 		}
 
 		#region RAYCASTS ======================================================
-		private bool TryProjectThrough(LNX_NavmeshHit startHit, LNX_NavmeshHit endHit)
+		/// <summary>
+		/// Attempts to project a line through the surfaces in the scene.<br></br>
+		/// NOTE: This returns true/false opposite what the raycast method would.
+		/// </summary>
+		/// <param name="startHit"></param>
+		/// <param name="endHit"></param>
+		/// <param name="outPath"></param>
+		/// <param name="allowedDistance"></param>
+		/// <returns>'True' if the projection completes without hitting any obstructions. 'False' if it hits an obstruction before it's end.</returns>
+		public bool TryProjectThrough(LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, out LNX_Path outPath, 
+			bool allowRelationships = false )
 		{
-			#region SHORT-CIRCUITING =======================================
-			if (startHit.TriangleIndex == endHit.TriangleIndex)
+			#region SHORT-CIRCUITING ==================================================
+			if (startHit.TriangleIndex == endHit.TriangleIndex) //If start and end hit are on same triangle...
 			{
+				outPath = new LNX_Path(GetSurfaceProjectionVector(), startHit, endHit);
+				return true;
+			}
+			if (startHit.Position == endHit.Position)
+			{
+				outPath = new LNX_Path(GetSurfaceProjectionVector(), endHit);
+				return true;
+			}
+			if
+			( 
+				startHit.VertIndex > -1 && 
+				VertTouchesTriangle(Triangles[startHit.TriangleIndex].Verts[startHit.VertIndex].MyCoordinate, endHit.TriangleIndex)
+			)
+			{
+				outPath = new LNX_Path(GetSurfaceProjectionVector(), startHit, endHit);
 				return true;
 			}
 			#endregion
 
-			LNX_Triangle currentTri = Triangles[startHit.TriangleIndex];
-			LNX_NavmeshHit currentStartHit = startHit;
-			int currentEdgeIndex = -1;
+			outPath = new LNX_Path(GetSurfaceProjectionVector(), startHit);
 
+			//todo: instead of using FlatHitPosition(startHit) below, cache this value and efficiency test to see if it's worth it
+			// todo: also, a little bit lower, there's a line saying [Vector3 vProject = FlatVector( endHit.Position - startHit.Position ).normalized;],
+			// try pre-caching this as well and efficiency testing
+
+			Vector3 vProject_fltnd = FlatVector(endHit.Position - startHit.Position).normalized;
+
+			if (startHit.VertIndex > -1)
+			{
+				//TODO: could we add another short-circuit here that checks if both the start and end hits are on a vert, and if so, if these verts are shared by a common
+				//triangle? It would effectively be similar to the first short-circuit check above in that we would treat the hits as though theyre both on the same tri
+
+				if ( endHit.VertIndex > -1 & allowRelationships )
+				{
+					if (Triangles[startHit.TriangleIndex].Verts[startHit.VertIndex].IsRelationshipCollectionSuperficiallyValid(Triangles.Length))
+					{
+						LNX_VertexRelationship rel = Triangles[startHit.TriangleIndex].Verts[startHit.VertIndex].GetRelationship(
+							endHit.TriangleIndex, endHit.VertIndex);
+
+						if (rel != null && rel.AmValid)
+						{
+							outPath = new LNX_Path(rel.PathTo); //IMPORTANT! This needs to be a new (different) object so that the pathpoint list doesn't get inadvertently changed
+							return outPath.AmStraight;
+						}
+					}
+				}
+
+				LNX_ComponentCoordinate sweepCoord = Triangles[startHit.TriangleIndex].Verts[startHit.VertIndex].GetVertCoord_viaProjectionSweep(
+					vProject_fltnd, true);
+
+				if (sweepCoord.TrianglesIndex != startHit.TriangleIndex || sweepCoord.ComponentIndex != startHit.VertIndex)
+				{
+					if (sweepCoord == LNX_ComponentCoordinate.None)
+					{
+						if (!VertIsOnTerminalEdge(startHit.TriangleIndex, startHit.VertIndex))
+						{
+							Debug.LogError($"LNX_ERROR! Raycast startHit: ('{startHit}') was on a non-terminal vert, but couldn't get adjusted vert coord via projection sweep. " +
+								$"This shouldn't happen on a non-terminal vert. Maybe the relational/shared-vert information is incorrect or needs to be reloaded. Returning early...");
+						}
+
+						outPath = null;
+						return false;
+					}
+					else
+					{
+						startHit = new LNX_NavmeshHit(
+							startHit.Position, GetSurfaceProjectionVector(),
+							sweepCoord.TrianglesIndex,
+							sweepCoord.ComponentIndex,
+							-1
+						);
+					}
+				}
+			}
+			else if (startHit.EdgeIndex > -1)
+			{
+				if
+				(
+					Vector3.Dot
+					(
+						vProject_fltnd,
+						Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].v_Cross_flat
+					) < 0f
+				) //"if projection points toward 'outside' direction of this edge"...
+				{
+					if (Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].AmTerminal)
+					{
+						outPath = null;
+						return true;
+					}
+					else
+					{
+						LNX_ComponentCoordinate shrdEdgeCoord = Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].SharedEdgeCoordinate;
+						startHit = new LNX_NavmeshHit(
+							Triangles[shrdEdgeCoord.TrianglesIndex].Edges[shrdEdgeCoord.ComponentIndex],
+							startHit.Position,
+							GetSurfaceProjectionVector()
+						);
+					}
+				}
+			}
+
+			#region PROJECT THROUGH TO END HIT ==================================
+			LNX_NavmeshHit currentStartHit = startHit;
 			int safetyTimeout = Triangles.Length;
 			int runningWhileIterations = 0;
 
 			bool amStillProjecting = true;
+
 			while (amStillProjecting)
 			{
-				LNX_NavmeshHit edgePerimHit = LNX_NavmeshHit.None;
-				if (!currentTri.ProjectThroughToPerimeter(currentStartHit, endHit, out edgePerimHit))
+				LNX_NavmeshHit triPerimHit = LNX_NavmeshHit.None;
+
+				if 
+				(
+					!Triangles[currentStartHit.TriangleIndex].ProjectThroughToPerimeter(
+					currentStartHit, endHit, out triPerimHit, true)
+				)
 				{
 					return false;
 				}
 
-				LNX_Edge hitEdge = currentTri.Edges[edgePerimHit.EdgeIndex];
-				currentEdgeIndex = edgePerimHit.EdgeIndex;
-				currentStartHit = edgePerimHit;
-
-				if (hitEdge.AmTerminal)
+				if (triPerimHit.TriangleIndex == outPath.PathPoints[outPath.PathPoints.Count - 1].TriangleIndex)
 				{
-					amStillProjecting = false;
+					outPath.AddPoint(triPerimHit);
+
+					return true;
+				}
+
+				if
+				(
+					triPerimHit.Position == endHit.Position ||
+					Vector3.Distance(triPerimHit.Position, endHit.Position) < 0.001f
+				)
+				{
+					outPath.AddPoint(endHit);
+					return false;
 				}
 				else
 				{
-					if
-					(
-						hitEdge.SharedEdgeCoordinate.TrianglesIndex == endHit.TriangleIndex ||
-						(currentTri.AmAdjacentToTri(Triangles[endHit.TriangleIndex]) && currentTri.IsPositionOnAnyEdge(endHit.Position))
-					)
-					{
-						currentTri = Triangles[endHit.TriangleIndex];
-
-						amStillProjecting = false;
-					}
-					else
-					{
-						currentTri = Triangles[hitEdge.SharedEdgeCoordinate.TrianglesIndex];
-						currentEdgeIndex = hitEdge.SharedEdgeCoordinate.ComponentIndex;
-						currentStartHit = edgePerimHit;
-					}
+					outPath.AddPoint(triPerimHit);
 				}
+
+				if (HitIsOnTriPerimeter_extrapolated(triPerimHit, Triangles[endHit.TriangleIndex]))
+				{
+					if (endHit.Position != triPerimHit.Position) //In case the end position is actually on the perimeter of the destination tri...
+					{
+						outPath.AddPoint(endHit);
+					}
+
+					return false;
+				}
+
+				currentStartHit = triPerimHit;
 
 				runningWhileIterations++;
 				if (runningWhileIterations > safetyTimeout)
 				{
-					Debug.LogError($"while loop went for more than '{safetyTimeout}' iterations. Breaking early...");
+					Debug.LogError($"Raycast('{startHit}', '{endHit}') while loop went for more than '{safetyTimeout}' iterations. Breaking early...");
 					amStillProjecting = false;
-
-					return false;
+					return true;
 				}
-			}
-
-			return currentTri.Index_inCollection == endHit.TriangleIndex;
-		}
-
-		/// <summary>
-		/// Traces a line between two points on a navmesh.
-		/// </summary>
-		/// <returns>True if the ray is terminated before reaching target position. Otherwise returns false.</returns>
-		public bool Raycast( LNX_NavmeshHit lnxStartHit, LNX_NavmeshHit lnxEndHit ) //todo: Unit test!!!
-		{
-			//DBGRaycast = "";
-
-			#region SHORT-CIRCUITING ==================================================
-			if (lnxStartHit.TriangleIndex == lnxEndHit.TriangleIndex) //If start and end hit are on same triangle...
-			{
-				return false;
-			}
-
-			if
-			(
-				Triangles[lnxStartHit.TriangleIndex].HasIndexInKnownFullyVisibleList(lnxEndHit.TriangleIndex) ||
-				Triangles[lnxEndHit.TriangleIndex].HasIndexInKnownFullyVisibleList(lnxStartHit.TriangleIndex)
-			)
-			{
-				return false;
-			}
-
-			if (
-				lnxStartHit.VertIndex > -1 && 
-				lnxEndHit.VertIndex > -1 && 
-				Triangles[lnxStartHit.TriangleIndex].Verts[lnxStartHit.VertIndex].IsRelationshipCollectionValid(this) 
-			)
-			{
-				LNX_VertexRelationship rel = Triangles[lnxStartHit.TriangleIndex].Verts[lnxStartHit.VertIndex].GetRelationship(
-					lnxEndHit.TriangleIndex, lnxEndHit.VertIndex);
-
-				if ( rel.AmValid )
-				{
-					return !rel.PathTo.AmStraight;
-				}
-				
 			}
 			#endregion
 
-			string s = "";
-			return !TryProjectThrough( lnxStartHit, lnxEndHit );
+			return false;
+
 		}
+
+		public bool Raycast(LNX_NavmeshHit startHit, Vector3 projectDir, out LNX_Path outPath, float castDistance,
+			bool allowRelationships = false)
+		{
+			#region SHORT-CIRCUITING ==================================================
+			if (projectDir == Vector3.zero)
+			{
+				Debug.LogWarning($"LNX WARNING! projectDir was passed into method as Vector3.zero. Was this intentional? Returning early.");
+
+				outPath = null;
+				return false;
+			}
+			if (castDistance == 0f)
+			{
+				Debug.LogWarning($"LNX WARNING! allowedDistance was passed into method as 0. Was this intentional? Returning early.");
+				outPath = null;
+				return false;
+			}
+			#endregion
+
+			outPath = new LNX_Path(GetSurfaceProjectionVector(), startHit);
+
+			//todo: instead of using FlatHitPosition(startHit) below, cache this value and efficiency test to see if it's worth it
+			// todo: also, a little bit lower, there's a line saying [Vector3 vProject = FlatVector( endHit.Position - startHit.Position ).normalized;],
+			// try pre-caching this as well and efficiency testing
+
+			Vector3 vProject_fltnd = FlatVector(projectDir).normalized;
+
+			#region CHECK IF START HIT NEEDS TO BE ADJUSTED, OR IS CAUSE TO SHORT-CIRCUIT ========================
+			if (startHit.VertIndex > -1)
+			{
+				LNX_ComponentCoordinate sweepCoord = Triangles[startHit.TriangleIndex].Verts[startHit.VertIndex].GetVertCoord_viaProjectionSweep(
+					vProject_fltnd, true);
+
+				if (sweepCoord == LNX_ComponentCoordinate.None)
+				{
+					if (!VertIsOnTerminalEdge(startHit.TriangleIndex, startHit.VertIndex))
+					{
+						Debug.LogError($"LNX_ERROR! Raycast startHit: ('{startHit}') was on a non-terminal vert, but couldn't get adjusted " +
+							$"vert coord via projection sweep. This shouldn't happen on a non-terminal vert. Maybe the " +
+							$"relational/shared-vert information is incorrect or needs to be reloaded. Returning early...");
+					}
+
+					outPath = null;
+					return false;
+				}
+				else if (sweepCoord.TrianglesIndex != startHit.TriangleIndex || sweepCoord.ComponentIndex != startHit.VertIndex)
+				{
+					startHit = new LNX_NavmeshHit(
+						startHit.Position, GetSurfaceProjectionVector(),
+						sweepCoord.TrianglesIndex,
+						sweepCoord.ComponentIndex,
+						-1
+					);
+				}
+			}
+			else if (startHit.EdgeIndex > -1)
+			{
+				if
+				(
+					Vector3.Dot
+					(
+						vProject_fltnd,
+						Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].v_Cross_flat.normalized
+					) < 0f
+				) //"if projection points toward 'outside' direction of this edge"...
+				{
+					if (Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].AmTerminal)
+					{
+						outPath = null;
+						return true;
+					}
+					else
+					{
+						LNX_ComponentCoordinate shrdEdgeCoord = Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].SharedEdgeCoordinate;
+						startHit = new LNX_NavmeshHit(
+							Triangles[shrdEdgeCoord.TrianglesIndex].Edges[shrdEdgeCoord.ComponentIndex],
+							startHit.Position,
+							GetSurfaceProjectionVector()
+						);
+					}
+				}
+			}
+			#endregion
+
+			#region PROJECT THROUGH TO END HIT ==================================
+			LNX_NavmeshHit currentStartHit = startHit;
+			int safetyTimeout = Triangles.Length;
+			int runningWhileIterations = 0;
+
+			bool amStillProjecting = true;
+
+			while (amStillProjecting)
+			{
+				LNX_NavmeshHit triPerimHit = LNX_NavmeshHit.None;
+
+				if
+				(
+					!Triangles[currentStartHit.TriangleIndex].ProjectThroughToPerimeter(
+					currentStartHit, projectDir, out triPerimHit, true)
+				)
+				{
+					Debug.LogError($"something went wrong with tri{currentStartHit.TriangleIndex}." +
+						$"ProjectThroughToPerimeter(" +
+						$"'{LNX_UnitTestUtilities.LongVectorString(currentStartHit.Position)}', projectDir: '{projectDir}'). " +
+						$"It returned false, which usually shouldn't happen...");
+					return false;
+				}
+
+				float lastDist = Vector3.Distance(triPerimHit.Position, currentStartHit.Position);
+				float wouldBeDist = outPath.TotalDistance + lastDist;
+
+				#region CHECK FOR PROBLEM IN CASE OF HIT LANDING ON SAME TRIANGLE AS LAST ===============================
+				if (triPerimHit.TriangleIndex == currentStartHit.TriangleIndex) //this means we haven't moved to a new triangle. Maybe we've "doubled back"
+				{
+					if
+					(
+						(
+							triPerimHit.EdgeIndex != -1 && 
+							!Triangles[triPerimHit.TriangleIndex].Edges[triPerimHit.EdgeIndex].AmTerminal
+						) ||
+						(
+							triPerimHit.VertIndex > -1 &&
+							Triangles[triPerimHit.TriangleIndex].Verts[triPerimHit.VertIndex].GetVertCoord_viaProjectionSweep(
+							projectDir, true) == LNX_ComponentCoordinate.None
+						)
+					)
+					{
+						Debug.LogError($"LNX ERROR! Triangle.ProjectThroughToPerimeter returned hit: '{triPerimHit}' on same tri " +
+							$"as last one: '{currentStartHit}', but doesn't appear to be on a terminal edge/vert. This is NOT " +
+							$"supposed to happen.");
+						return false;
+					}
+				}
+				#endregion
+
+				#region HANDLE DISTANCE EXCEEDED ================================================================
+				if (wouldBeDist > castDistance)
+				{
+					int edgIndx = -1;
+					if (triPerimHit.VertIndex > -1 && currentStartHit.VertIndex > -1)
+					{
+						//rprt.Log($"start and end are on verts. This means projection lies on edge parallel. Need to figure out which edge...");
+						// In this case, the result should be on an edge...
+						/*
+						if
+						(
+							projectDir.normalized ==
+							Triangles[currentStartHit.TriangleIndex].Verts[currentStartHit.VertIndex].V_ToFirstSiblingVert.normalized
+						)
+						{
+							//todo: this block
+						}
+						*/
+					}
+
+					triPerimHit = new LNX_NavmeshHit(
+						outPath.PathPoints[outPath.PathPoints.Count - 1].Position + projectDir.normalized * (castDistance - outPath.TotalDistance),
+						triPerimHit.Normal,
+						currentStartHit.TriangleIndex,
+						0,
+						edgIndx
+					);
+
+					outPath.AddPoint(triPerimHit);
+					return false;
+				}
+				#endregion
+
+				outPath.AddPoint(triPerimHit);
+
+				if (triPerimHit.TriangleIndex == currentStartHit.TriangleIndex) //can assume NOT terminal because of earlier check
+				{
+					outPath.AddPoint(triPerimHit);
+					return true;
+				}
+
+				if (outPath.TotalDistance == castDistance)
+				{
+					return false;
+				}
+
+				currentStartHit = triPerimHit;
+
+				runningWhileIterations++;
+				if (runningWhileIterations > safetyTimeout)
+				{
+					amStillProjecting = false;
+					return true;
+				}
+			}
+			#endregion
+
+			return false;
+
+		}
+		public bool Raycast_dbg(LNX_NavmeshHit startHit, Vector3 projectDir, out LNX_Path outPath, float castDistance, 
+			ref LNX_MethodDebugReport rprt, bool allowRelationships = false)
+		{
+			rprt.StartMethod($"Raycast_dbg('{startHit}', projectDir: '{projectDir}', castDistance: '{castDistance}')");
+
+			#region SHORT-CIRCUITING ==================================================
+			if (projectDir == Vector3.zero)
+			{
+				Debug.LogWarning($"LNX WARNING! projectDir was passed into method as Vector3.zero. Was this intentional? Returning early.");
+
+				outPath = null;
+				return false;
+			}
+			if (castDistance == 0f)
+			{
+				Debug.LogWarning($"LNX WARNING! allowedDistance was passed into method as 0. Was this intentional? Returning early.");
+				outPath = null;
+				return false;
+			}
+			#endregion
+
+			rprt.Log($"went past short-circuiting...");
+			outPath = new LNX_Path(GetSurfaceProjectionVector(), startHit);
+
+			//todo: instead of using FlatHitPosition(startHit) below, cache this value and efficiency test to see if it's worth it
+			// todo: also, a little bit lower, there's a line saying [Vector3 vProject = FlatVector( endHit.Position - startHit.Position ).normalized;],
+			// try pre-caching this as well and efficiency testing
+
+			Vector3 vProject_fltnd = FlatVector(projectDir).normalized;
+
+			#region CHECK IF START HIT NEEDS TO BE ADJUSTED, OR IS CAUSE TO SHORT-CIRCUIT ========================
+			rprt.Log($"Now checking if startHit needs to be adjusted, or is cause to short-circuit..");
+			if (startHit.VertIndex > -1)
+			{
+				LNX_ComponentCoordinate sweepCoord = Triangles[startHit.TriangleIndex].Verts[startHit.VertIndex].GetVertCoord_viaProjectionSweep(
+					vProject_fltnd, true);
+
+				rprt.Log($"startHit is on vert. Inspecting gathered sweepcoord: '{sweepCoord}'...");
+
+				if ( sweepCoord == LNX_ComponentCoordinate.None )
+				{
+					rprt.Log($"sweep coord is None. Making sure hit vert is terminal...");
+
+					if (!VertIsOnTerminalEdge(startHit.TriangleIndex, startHit.VertIndex))
+					{
+						rprt.Log($"LNX_ERROR! Raycast startHit: ('{startHit}') was on a non-terminal vert, but couldn't get adjusted " +
+							$"vert coord via projection sweep. This shouldn't happen on a non-terminal vert. Maybe the " +
+							$"relational/shared-vert information is incorrect or needs to be reloaded. Returning early...");
+
+						Debug.LogError($"LNX_ERROR! Raycast startHit: ('{startHit}') was on a non-terminal vert, but couldn't get adjusted " +
+							$"vert coord via projection sweep. This shouldn't happen on a non-terminal vert. Maybe the " +
+							$"relational/shared-vert information is incorrect or needs to be reloaded. Returning early...");
+					}
+
+					rprt.Log_And_End_Method($"hit vert is terminal. Returning false and null path...");
+
+					outPath = null;
+					return false;
+				}
+				else if (sweepCoord.TrianglesIndex != startHit.TriangleIndex || sweepCoord.ComponentIndex != startHit.VertIndex)
+				{
+					rprt.Log($"sweep coord is different from starthit coordinates. Adjusting...");
+					startHit = new LNX_NavmeshHit(
+						startHit.Position, GetSurfaceProjectionVector(),
+						sweepCoord.TrianglesIndex,
+						sweepCoord.ComponentIndex,
+						-1
+					);
+					rprt.Log($"adjusted startHit to: '{startHit}'...");
+				}
+			}
+			else if (startHit.EdgeIndex > -1)
+			{
+				rprt.Log($"startHit is on edge. Inspecting edge to see if hit needs to be adjusted...");
+
+				if
+				(
+					Vector3.Dot
+					(
+						vProject_fltnd,
+						Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].v_Cross_flat.normalized
+					) < 0f
+				) //"if projection points toward 'outside' direction of this edge"...
+				{
+					rprt.Log($"found that the projection points towards outside of hit edge based on vcross: " +
+						$"'{Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].v_Cross_flat.normalized}'...");
+
+					if (Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].AmTerminal)
+					{
+						rprt.Log_And_End_Method($"found that edge is terminal. Assuming this method should end here. Returning true and null path");
+						outPath = null;
+						return true;
+					}
+					else
+					{
+						rprt.Log($"found that edge is NOT terminal. adjusting startHit...");
+						LNX_ComponentCoordinate shrdEdgeCoord = Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].SharedEdgeCoordinate;
+						startHit = new LNX_NavmeshHit(
+							Triangles[shrdEdgeCoord.TrianglesIndex].Edges[shrdEdgeCoord.ComponentIndex],
+							startHit.Position,
+							GetSurfaceProjectionVector()
+						);
+						rprt.Log($"adjusted startHit to: '{startHit}'...");
+					}
+				}
+			}
+			#endregion
+
+			rprt.EmptyLine();
+			rprt.Log($"now projecting through...");
+			#region PROJECT THROUGH TO END HIT ==================================
+			LNX_NavmeshHit currentStartHit = startHit;
+			int safetyTimeout = Triangles.Length;
+			int runningWhileIterations = 0;
+
+			bool amStillProjecting = true;
+
+			while (amStillProjecting)
+			{
+				rprt.Log($"while{runningWhileIterations}...");
+
+				LNX_NavmeshHit triPerimHit = LNX_NavmeshHit.None;
+
+				rprt.Log($"projecting through to perimeter...");
+				if
+				(
+					!Triangles[currentStartHit.TriangleIndex].ProjectThroughToPerimeter_dbg(
+					currentStartHit, projectDir, out triPerimHit, ref rprt, true)
+				)
+				{
+					rprt.Log_And_End_Method($"something went wrong with tri{currentStartHit.TriangleIndex}." +
+						$"ProjectThroughToPerimeter('{currentStartHit}', projectDir: '{projectDir}'). " +
+						$"It returned false, which usually shouldn't happen...");
+					Debug.LogError($"something went wrong with tri{currentStartHit.TriangleIndex}." +
+						$"ProjectThroughToPerimeter(" +
+						$"'{LNX_UnitTestUtilities.LongVectorString(currentStartHit.Position)}', projectDir: '{projectDir}'). " +
+						$"It returned false, which usually shouldn't happen...");
+					return false;
+				}
+				rprt.Log($"got triPerimHit: '{triPerimHit}'...");
+
+				float lastDist = Vector3.Distance(triPerimHit.Position, currentStartHit.Position);
+				float wouldBeDist = outPath.TotalDistance + lastDist;
+
+				#region CHECK FOR PROBLEM IN CASE OF HIT LANDING ON SAME TRIANGLE AS LAST ===============================
+				rprt.Log($"chekcing if hit has a coordinate issue...");
+
+				if (triPerimHit.TriangleIndex == currentStartHit.TriangleIndex) //this means we haven't moved to a new triangle. Maybe we've "doubled back"
+				{
+					rprt.Log($"new hit tri same as last...");
+					if
+					(
+						(
+							triPerimHit.EdgeIndex != -1 &&
+							!Triangles[triPerimHit.TriangleIndex].Edges[triPerimHit.EdgeIndex].AmTerminal
+						) ||
+						(
+							triPerimHit.VertIndex > -1 &&
+							Triangles[triPerimHit.TriangleIndex].Verts[triPerimHit.VertIndex].GetVertCoord_viaProjectionSweep(
+							projectDir, true) == LNX_ComponentCoordinate.None
+						)
+					)
+					{
+						rprt.Log_And_End_Method($"LNX ERROR! Triangle.ProjectThroughToPerimeter returned hit: '{triPerimHit}' on same tri " +
+							$"as last one: '{currentStartHit}', but doesn't appear to be on a terminal edge/vert. This is NOT " +
+							$"supposed to happen.");
+						Debug.LogError($"LNX ERROR! Triangle.ProjectThroughToPerimeter returned hit: '{triPerimHit}' on same tri " +
+							$"as last one: '{currentStartHit}', but doesn't appear to be on a terminal edge/vert. This is NOT " +
+							$"supposed to happen.");
+						return false;
+					}
+				}
+				#endregion
+				rprt.Log($"apparently no coordinate issue. Proceeding...");
+
+				#region HANDLE DISTANCE EXCEEDED ================================================================
+				rprt.Log($"checking dist. wouldBeDist: '{wouldBeDist}', castDistance: '{castDistance}'..");
+
+				if (wouldBeDist > castDistance)
+				{
+					rprt.Log($"decided distance was exceeded.");
+
+					int edgIndx = -1;
+					if (triPerimHit.VertIndex > -1 && currentStartHit.VertIndex > -1)
+					{
+						rprt.Log($"start and end are on verts. This means projection lies on edge parallel. Need to figure out which edge...");
+						// In this case, the result should be on an edge...
+						if
+						(
+							projectDir.normalized ==
+							Triangles[currentStartHit.TriangleIndex].Verts[currentStartHit.VertIndex].V_ToFirstSiblingVert.normalized
+						)
+						{
+							rprt.Log($"found that projection runs along ");
+						}
+					}
+
+					triPerimHit = new LNX_NavmeshHit(
+						outPath.PathPoints[outPath.PathPoints.Count - 1].Position + projectDir.normalized * (castDistance - outPath.TotalDistance),
+						triPerimHit.Normal,
+						currentStartHit.TriangleIndex,
+						0,
+						edgIndx
+					);
+					rprt.Log_And_End_Method($"adjusted hit to: '{triPerimHit}'. Adding point and returning false...");
+
+					outPath.AddPoint(triPerimHit);
+					return false;
+				}
+				#endregion
+
+				outPath.AddPoint(triPerimHit);
+
+				if (triPerimHit.TriangleIndex == currentStartHit.TriangleIndex) //can assume terminal because of earlier check
+				{
+					rprt.Log_And_End_Method($"deciding hit is terminal. returning true...");
+					outPath.AddPoint(triPerimHit);
+					return true;
+				}
+
+				if (outPath.TotalDistance == castDistance)
+				{
+					rprt.Log_And_End_Method($"constructed path distance equal to castDistance. Returning false...");
+					return false;
+				}
+
+				currentStartHit = triPerimHit;
+
+				runningWhileIterations++;
+				if (runningWhileIterations > safetyTimeout)
+				{
+					Debug.LogError($"Raycast('{startHit}', '{castDistance}') while loop went for more than '{safetyTimeout}' iterations. Breaking early...");
+					amStillProjecting = false;
+					return true;
+				}
+			}
+			#endregion
+
+			return false;
+
+		}
+
 
 		/// <summary>
 		/// Traces a line between two points on a navmesh.
@@ -1484,8 +2035,8 @@ namespace LogansNavigationExtension
 				(
 					Vector3.Dot
 					(
-						FlatVector(endHit.Position - startHit.Position),
-						Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].v_Cross_flat
+						vProject_fltnd,
+						Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].v_Cross_flat.normalized
 					) < 0f
 				) //projection points toward "outside" direction of this edge...
 				{
@@ -1696,8 +2247,8 @@ namespace LogansNavigationExtension
 				(
 					Vector3.Dot
 					(
-						FlatVector(endHit.Position - startHit.Position), 
-						Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].v_Cross_flat
+						vProject_fltnd, 
+						Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].v_Cross_flat.normalized
 					) < 0f
 				) //projection points toward "outside" direction of this edge...
 				{
@@ -1826,51 +2377,6 @@ namespace LogansNavigationExtension
 			rprt.EndMethod("Raycast_dbg()");
 
 			return true;
-		}
-
-		/// <summary>
-		/// Traces a line between two points on a navmesh.
-		/// </summary>
-		/// <returns>True if the ray is terminated before reaching target position. Otherwise returns false.</returns>
-		public bool Raycast( Vector3 sourcePosition, Vector3 targetPosition, float maxSampleDistance, bool considerOffPerimeter = false ) //todo: Unit test!!!
-		{
-			//DBGRaycast = "";
-
-			LNX_NavmeshHit lnxStartHit = LNX_NavmeshHit.None;
-			LNX_NavmeshHit lnxEndHit = LNX_NavmeshHit.None;
-
-			#region GET START AND END POINTS------------------------------------------
-			if (!SamplePosition(sourcePosition, out lnxStartHit, maxSampleDistance, considerOffPerimeter))
-			{
-				//DBGRaycast += $"tried samplePosition. Still didn't work. Returning early...\n";
-				return true;
-			}
-
-			if (!SamplePosition(targetPosition, out lnxEndHit, maxSampleDistance, considerOffPerimeter))
-			{
-				//DBGRaycast += $"tried samplePosition. Still didn't work. Returning early...\n";
-				return true;
-			}
-			#endregion
-
-			#region SHORT-CIRCUITING ==================================================
-			if (lnxStartHit.TriangleIndex == lnxEndHit.TriangleIndex) //If start and end hit are on same triangle...
-			{
-				return false;
-			}
-
-			if
-			(
-				Triangles[lnxStartHit.TriangleIndex].HasIndexInKnownFullyVisibleList(lnxEndHit.TriangleIndex) ||
-				Triangles[lnxEndHit.TriangleIndex].HasIndexInKnownFullyVisibleList(lnxStartHit.TriangleIndex)
-			) 
-			{
-				return false;
-			}
-			#endregion
-
-			return Raycast(lnxStartHit, lnxEndHit);
-
 		}
 
 		/// <summary>

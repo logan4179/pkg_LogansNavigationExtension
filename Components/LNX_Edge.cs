@@ -782,13 +782,253 @@ namespace LogansNavigationExtension
 			return true;
 		}
 
+		public bool DoesProjectionIntersectEdge(
+			LNX_NavmeshHit startHit, Vector3 projection, out LNX_NavmeshHit outHit,
+			bool includeParallelCheck = true,
+			bool checkIfOriginIsOnEdge = true
+		)
+		{
+			Vector3 prjctOrigin_Flat = LNX_Utils.FlatVector(startHit.Position, v_navmeshProjectionDirection_cached);
+
+			Vector3 v_prjct_flat = LNX_Utils.FlatVector( projection, v_navmeshProjectionDirection_cached ).normalized;
+			Vector3 v_originToEdgeStart_flat = Vector3.Normalize(StartPosition_flat - prjctOrigin_Flat);
+			Vector3 v_originToEdgeEnd_flat = Vector3.Normalize(EndPosition_flat - prjctOrigin_Flat);
+
+			//todo: for efficiency testing, try caching the values of StartPosition, EndPosition, StartPosition_flat, EndPosition_flat in local
+			//variables (and possibly others that I'm not thinking of) to see if this is better than continually calling these properties, because these
+			//values are all properties with their own overhead every time they're called.
+
+			if (includeParallelCheck)
+			{
+				if (v_prjct_flat == V_StartToEnd_flattened) //if the projection and edge are pointed in the same direction...
+				{
+					if (v_originToEdgeEnd_flat == V_StartToEnd_flattened) //this means the projection and the edge are definitely in alignment in 3d space...
+					{
+						outHit = new LNX_NavmeshHit(
+							EndPosition,
+							v_navmeshProjectionDirection_cached,
+							MyCoordinate.TrianglesIndex,
+							EndVertIndex,
+							MyCoordinate.ComponentIndex
+						);
+
+						return true;
+					}
+				}
+				else if (v_prjct_flat == V_EndToStart_flattened) //if the projection and edge are aligned in exactly opposite directions...
+				{
+					if (v_originToEdgeStart_flat == V_EndToStart_flattened) //this means the projection and the edge are definitely in alignment in 3d space...
+					{
+						outHit = new LNX_NavmeshHit(
+							StartPosition, v_navmeshProjectionDirection_cached,
+							MyCoordinate.TrianglesIndex,
+							StartVertIndex,
+							MyCoordinate.ComponentIndex
+						);
+
+						return true;
+					}
+				}
+			}
+			else if (checkIfOriginIsOnEdge) //Note: this needs to be checked AFTER the parallel checks, not before
+			{
+				if (DoesPositionLieOnEdge(startHit.Position, out outHit)) //Note: this needs to be checked AFTER the parallel checks, not before
+				{
+					return true;
+				}
+			}
+
+			#region ANGULAR SHORT-CIRCUIT TEST-------------------------------------------------------
+			float ang_prjct_to_orgnToEdgeStrt = Vector3.Angle(v_prjct_flat, v_originToEdgeStart_flat);
+			float ang_prjct_to_orgnToEdgeEnd = Vector3.Angle(v_prjct_flat, v_originToEdgeEnd_flat);
+			if (ang_prjct_to_orgnToEdgeStrt > 90f && ang_prjct_to_orgnToEdgeEnd > 90f)
+			{
+				outHit = LNX_NavmeshHit.None;
+
+				return false; //short-circuit
+			}
+
+			if (ang_prjct_to_orgnToEdgeStrt + ang_prjct_to_orgnToEdgeEnd > 180f)
+			{
+				outHit = LNX_NavmeshHit.None;
+				return false; //short-circuit
+			}
+
+			//float ang_chevron = ang_prjctTo_orgnToStrt + ang_prjctTo_orgnToEnd; //this is cheap, but is it right?
+			float ang_chevron = Vector3.Angle(v_originToEdgeStart_flat, v_originToEdgeEnd_flat);
+
+			float lrgst = Mathf.Max
+			(
+				ang_prjct_to_orgnToEdgeStrt,
+				ang_prjct_to_orgnToEdgeEnd
+			);
+
+			if (lrgst > ang_chevron)
+			{
+				//dbg_doesProjectionIntersectEdge += $"\nOperation short-circuited bc of dot-prdct check! Returning false...\n";
+				outHit = LNX_NavmeshHit.None;
+				return false; //short-circuit
+			}
+			#endregion
+
+			#region CALCULATE OUT HIT -----------------------------------------------------------
+
+			float lenY = Vector3.Angle(v_prjct_flat, v_originToEdgeStart_flat);
+			float lenA = LNX_Utils.CalculateTriangleEdgeLength(
+				Vector3.Angle(v_prjct_flat, v_originToEdgeStart_flat),
+				Vector3.Angle(V_EndToStart_flattened, -v_prjct_flat),
+				Vector3.Distance(prjctOrigin_Flat, StartPosition_flat)
+			);
+			if (AmFlat)
+			{
+				outHit = new LNX_NavmeshHit(this, StartPosition + (V_StartToEnd * lenA), v_navmeshProjectionDirection_cached);
+			}
+			else
+			{
+				float lenB = LNX_Utils.CalculateTriangleEdgeLength(
+					90f,
+					Vector3.Angle(V_EndToStart, -V_NavmeshProjectionDirection_cached),
+					lenA
+				);
+				outHit = new LNX_NavmeshHit(this, StartPosition + (V_StartToEnd * lenB), V_NavmeshProjectionDirection_cached);
+			}
+			#endregion
+
+			return true;
+		}
+
+		public bool DoesProjectionIntersectEdge_dbg(
+	LNX_NavmeshHit startHit, Vector3 projection, out LNX_NavmeshHit outHit, ref LNX_MethodDebugReport rprt,
+	bool includeParallelCheck = true,
+	bool checkIfOriginIsOnEdge = true
+)
+		{
+			rprt.StartMethod($"DoesProjectionIntersectEdge_dbg(startHit: '{startHit}', prjction: '{projection}')");
+
+			Vector3 projectionOrigin_Flat = LNX_Utils.FlatVector(startHit.Position, v_navmeshProjectionDirection_cached);
+
+			Vector3 v_prjct_flat = LNX_Utils.FlatVector(projection, v_navmeshProjectionDirection_cached).normalized;
+			Vector3 v_originToEdgeStart_flat = Vector3.Normalize(StartPosition_flat - projectionOrigin_Flat);
+			Vector3 v_originToEdgeEnd_flat = Vector3.Normalize(EndPosition_flat - projectionOrigin_Flat);
+
+			//todo: for efficiency testing, try caching the values of StartPosition, EndPosition, StartPosition_flat, EndPosition_flat in local
+			//variables (and possibly others that I'm not thinking of) to see if this is better than continually calling these properties, because these
+			//values are all properties with their own overhead every time they're called.
+
+			rprt.Log($"USING", 
+				$"prjctOrigin_Flat: '{projectionOrigin_Flat}'...",
+				$"v_prjct_flat: '{v_prjct_flat}'"
+				);
+
+
+			if (includeParallelCheck)
+			{
+				rprt.Log($"checking parallel, {v_prjct_flat} == {V_StartToEnd_flattened} ...");
+				if (v_prjct_flat == V_StartToEnd_flattened) //if the projection and edge are pointed in the same direction...
+				{
+					if (v_originToEdgeEnd_flat == V_StartToEnd_flattened) //this means the projection and the edge are definitely in alignment in 3d space...
+					{
+						outHit = new LNX_NavmeshHit(
+							EndPosition,
+							v_navmeshProjectionDirection_cached,
+							MyCoordinate.TrianglesIndex,
+							EndVertIndex,
+							MyCoordinate.ComponentIndex
+						);
+
+						return true;
+					}
+				}
+				else if (v_prjct_flat == V_EndToStart_flattened) //if the projection and edge are aligned in exactly opposite directions...
+				{
+					if (v_originToEdgeStart_flat == V_EndToStart_flattened) //this means the projection and the edge are definitely in alignment in 3d space...
+					{
+						outHit = new LNX_NavmeshHit(
+							StartPosition, v_navmeshProjectionDirection_cached,
+							MyCoordinate.TrianglesIndex,
+							StartVertIndex,
+							MyCoordinate.ComponentIndex
+						);
+
+						return true;
+					}
+				}
+			}
+			else if (checkIfOriginIsOnEdge) //Note: this needs to be checked AFTER the parallel checks, not before
+			{
+				if (DoesPositionLieOnEdge(startHit.Position, out outHit)) //Note: this needs to be checked AFTER the parallel checks, not before
+				{
+					return true;
+				}
+			}
+
+			#region ANGULAR SHORT-CIRCUIT TEST-------------------------------------------------------
+			float ang_prjct_to_orgnToEdgeStrt = Vector3.Angle(v_prjct_flat, v_originToEdgeStart_flat);
+			float ang_prjct_to_orgnToEdgeEnd = Vector3.Angle(v_prjct_flat, v_originToEdgeEnd_flat);
+			if (ang_prjct_to_orgnToEdgeStrt > 90f && ang_prjct_to_orgnToEdgeEnd > 90f)
+			{
+				outHit = LNX_NavmeshHit.None;
+
+				return false; //short-circuit
+			}
+
+			if (ang_prjct_to_orgnToEdgeStrt + ang_prjct_to_orgnToEdgeEnd > 180f)
+			{
+				outHit = LNX_NavmeshHit.None;
+				return false; //short-circuit
+			}
+
+			//float ang_chevron = ang_prjctTo_orgnToStrt + ang_prjctTo_orgnToEnd; //this is cheap, but is it right?
+			float ang_chevron = Vector3.Angle(v_originToEdgeStart_flat, v_originToEdgeEnd_flat);
+
+			float lrgst = Mathf.Max
+			(
+				ang_prjct_to_orgnToEdgeStrt,
+				ang_prjct_to_orgnToEdgeEnd
+			);
+
+			if (lrgst > ang_chevron)
+			{
+				//dbg_doesProjectionIntersectEdge += $"\nOperation short-circuited bc of dot-prdct check! Returning false...\n";
+				outHit = LNX_NavmeshHit.None;
+				return false; //short-circuit
+			}
+			#endregion
+
+			#region CALCULATE OUT HIT -----------------------------------------------------------
+
+			float lenY = Vector3.Angle(v_prjct_flat, v_originToEdgeStart_flat);
+			float lenA = LNX_Utils.CalculateTriangleEdgeLength(
+				Vector3.Angle(v_prjct_flat, v_originToEdgeStart_flat),
+				Vector3.Angle(V_EndToStart_flattened, -v_prjct_flat),
+				Vector3.Distance(projectionOrigin_Flat, StartPosition_flat)
+			);
+			if (AmFlat)
+			{
+				outHit = new LNX_NavmeshHit(this, StartPosition + (V_StartToEnd * lenA), v_navmeshProjectionDirection_cached);
+			}
+			else
+			{
+				float lenB = LNX_Utils.CalculateTriangleEdgeLength(
+					90f,
+					Vector3.Angle(V_EndToStart, -V_NavmeshProjectionDirection_cached),
+					lenA
+				);
+				outHit = new LNX_NavmeshHit(this, StartPosition + (V_StartToEnd * lenB), V_NavmeshProjectionDirection_cached);
+			}
+			#endregion
+
+			return true;
+		}
+
+
 		//public string DBG_GetSharedAngle;
-		/// <summary>
-		/// Returns both the angles, added together, on either side of a shared edge, either at the start or end point.
-		/// </summary>
-		/// <param name="nm"></param>
-		/// <param name="atStart"></param>
-		/// <returns></returns>
+			/// <summary>
+			/// Returns both the angles, added together, on either side of a shared edge, either at the start or end point.
+			/// </summary>
+			/// <param name="nm"></param>
+			/// <param name="atStart"></param>
+			/// <returns></returns>
 		public float GetCombinedSharedEdgeAngle( LNX_NavMeshSurface nm, bool atStart )
 		{
 			//DBG_GetSharedAngle = $"{ToString()}.{nameof(GetSharedAngle)}({nameof(atStart)}: '{atStart}') sharedEdgeCoord: '{SharedEdgeCoordinate}'\n";

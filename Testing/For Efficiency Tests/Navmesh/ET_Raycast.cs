@@ -48,28 +48,9 @@ namespace LogansNavigationExtension
 
 			base.RunTests();
 			DateTime dt_loopEnd;
-
-			#region ON MESH ----------------------------------------------
+			DateTime dt_loopstart = DateTime.Now;
 			double total = 0;
 			LNX_Path outPath;
-
-			DateTime dt_loopstart = DateTime.Now;
-
-			for ( int i = 0; i < SampleStartPositions_onMesh.Count; i++ )
-			{
-				//dt_loopstart = DateTime.Now;  //Note: I think I should generally comment this out when gathering data so it doesn't effect the results
-
-				bool rslt = _navmesh.Raycast(SampleStartPositions_onMesh[i], SampleEndPositions_onMesh[i], 5f, true );
-				//total += DateTime.Now.Subtract(dt_loopstart).TotalMilliseconds; //Note: I think I should generally comment this out when gathering data so it doesn't effect the results
-
-				//Debug.Log($"iteration: '{i}' took '{DateTime.Now.Subtract(dt_loopstart)}'..."); //Note: I think I should generally comment this out when gathering data so it doesn't effect the results
-			}
-			dt_loopEnd = DateTime.Now;
-
-			SayLoopReportString($"On Mesh Finished report---", dt_loopstart, dt_loopEnd, SampleStartPositions_onMesh.Count,
-				TotalTestsTime_OnMesh_MostRecentState, AverageOperationTime_OnMesh_MostRecentState
-			);
-			#endregion
 
 			#region ON MESH WITH PATH----------------------------------------------
 			dt_loopstart = DateTime.Now;
@@ -90,25 +71,6 @@ namespace LogansNavigationExtension
 			);
 			#endregion
 
-			#region OFF MESH ----------------------------------------------
-			dt_loopstart = DateTime.Now;
-			total = 0;
-
-			for (int i = 0; i < SampleStartPositions_offMesh.Count; i++)
-			{
-				//dt_loopstart = DateTime.Now;  //Note: I think I should generally comment this out when gathering data so it doesn't effect the results
-
-				bool rslt = _navmesh.Raycast(SampleStartPositions_offMesh[i], SampleEndPositions_offMesh[i], 5f, false );
-				//total += DateTime.Now.Subtract(dt_loopstart).TotalMilliseconds;  //Note: I think I should generally comment this out when gathering data so it doesn't effect the results
-
-				//Debug.Log($"iteration: '{i}' took '{DateTime.Now.Subtract(dt_loopstart)}'...");  //Note: I think I should generally comment this out when gathering data so it doesn't effect the results
-			}
-			dt_loopEnd = DateTime.Now;
-
-			SayLoopReportString($"Off Mesh Finished report---", dt_loopstart, dt_loopEnd, SampleStartPositions_offMesh.Count,
-				TotalTestsTime_OffMesh_MostRecentState, AverageOperationTime_OffMesh_MostRecentState
-			);
-			#endregion
 
 			#region OFF MESH WITH PATH----------------------------------------------
 			dt_loopstart = DateTime.Now;

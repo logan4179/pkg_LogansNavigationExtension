@@ -485,7 +485,7 @@ namespace LogansNavigationExtension
 			return false;
 		}
 
-		public void DrawMyGizmos( float pointSize, float lblHeight, bool drawFullLabels = false )
+		public void DrawMyGizmos( float pointSize, float lblHeight, int highlightIndex = -1 )
 		{
 			if( pathPoints == null || pathPoints.Count <= 0 )
 			{
@@ -495,30 +495,33 @@ namespace LogansNavigationExtension
 			Vector3 vRise = v_navmeshSurfaceProjection_cached * 0.5f * pointSize;
 			for ( int i = 0; i < pathPoints.Count; i++ )
 			{
+				Color prevColor = Gizmos.color;
+
+				if( highlightIndex > -1 && i == highlightIndex )
+				{
+					Gizmos.color = Color.yellow;
+				}
 				Gizmos.DrawSphere( pathPoints[i].Position, pointSize );
 
 				Gizmos.DrawLine(
 					pathPoints[i].Position, pathPoints[i].Position + (pathPoints[i].Normal * lblHeight)
 				);
 
-				if( drawFullLabels )
-				{
-					Handles.Label(
-						pathPoints[i].Position + (pathPoints[i].Normal * lblHeight * 1.01f), $"{i}\n{pathPoints[i]}" 
-					);
-				}
-				else
-				{
-					Handles.Label(
-						pathPoints[i].Position + (pathPoints[i].Normal * lblHeight * 1.01f), $"{i}"
-					);
-				}
+				Handles.Label(
+					pathPoints[i].Position + (pathPoints[i].Normal * lblHeight * 1.01f), $"{i}"
+				);
+				
 
 				if (i > 0)
 				{
 					Handles.DrawDottedLine(
 						pathPoints[i - 1].Position + vRise, pathPoints[i].Position + vRise, 8f
 					);
+				}
+
+				if (highlightIndex > -1 && i == highlightIndex)
+				{
+					Gizmos.color = prevColor;
 				}
 			}
 		}

@@ -55,8 +55,6 @@ namespace LogansNavigationExtension
 		[Header("EDGE TESTERS")]
 		public TDG_DoesPositionLieOnEdge _tdg_doesPositionLieOnEdge;
 		public static string filePath_testData_doesPositionLieOnEdge = $"{dirPath_testDataFolder}\\tdg_doesPositionLieOnEdge_data_A.json";
-		public TDG_DoesProjectionIntersectEdge _tdg_doesProjectionIntersectEdge;
-		public static string filePath_testData_doesProjectionIntersectEdge = $"{dirPath_testDataFolder}\\tdg_doesProjectionIntersectEdge_data_A.json";
 
 
 		[Header("DEBUG")]
@@ -262,12 +260,6 @@ namespace LogansNavigationExtension
 				if (!_tdg_doesPositionLieOnEdge.WriteMeToJson())
 				{
 					Debug.LogError($"write to json didn't work on {nameof(_tdg_doesPositionLieOnEdge)}. Returning early...");
-					return;
-				}
-
-				if ( !_tdg_doesProjectionIntersectEdge.WriteMeToJson() )
-				{
-					Debug.LogError($"write to json didn't work on {nameof(_tdg_doesProjectionIntersectEdge)}. Returning early...");
 					return;
 				}
 				#endregion

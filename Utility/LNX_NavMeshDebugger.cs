@@ -588,6 +588,9 @@ namespace LogansNavigationExtension
 		{
 			string s = $"\n";
 
+			Debug.Log($"bounds collection null: '{_mgr.Bounds == null}'");
+			
+
 			s += $"lowX: '{_mgr.Bounds[0]}', highX: '{_mgr.Bounds[1]}'\n" +
 				$"lowY: '{_mgr.Bounds[2]}', highY: '{_mgr.Bounds[3]}'\n" +
 				$"lowZ: '{_mgr.Bounds[4]}', highZ: '{_mgr.Bounds[5]}'\n" +

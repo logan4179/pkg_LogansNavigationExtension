@@ -198,7 +198,7 @@ namespace LogansNavigationExtension
 						Gizmos.color = Color.magenta;
 					}
 
-					foundPath.DrawMyGizmos(radius_pthPts, height_pthPts, false);
+					foundPath.DrawMyGizmos(radius_pthPts, height_pthPts);
 
 					Gizmos.DrawLine(
 						_navmesh.Triangles[Index_PathDisplay_tri].Verts[Index_PathDisplay_vert].V_Position,
