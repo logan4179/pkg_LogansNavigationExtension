@@ -62,12 +62,12 @@ namespace LogansNavigationExtension
             LNX_NavmeshHit endHt = SampleClosestHit(endPt, maxSampleDistance, considerClosesetOffPerimeter);
 			path = new LNX_Path();
 
-            if( strtHt != LNX_NavmeshHit.None )
+            if( strtHt == LNX_NavmeshHit.None )
             {
                 Debug.LogError($"LNX ERROR! Couldn't sample start position. Returning early");
                 return false;
             }
-			if ( endHt != LNX_NavmeshHit.None )
+			if ( endHt == LNX_NavmeshHit.None )
 			{
 				Debug.LogError($"LNX ERROR! Couldn't sample end position. Returning early");
 				return false;
@@ -85,6 +85,14 @@ namespace LogansNavigationExtension
 		{
 
 			return Surfaces[0].Raycast_dbg(startHit, projectDir, out outPath, allowedDistance, ref rprt, allowRelationships);
+		}
+		public bool Raycast(LNX_NavmeshHit startHit, LNX_NavmeshHit endHIt, out LNX_Path outPath)
+		{
+			return Surfaces[0].Raycast(startHit, endHIt, out outPath);
+		}
+		public bool Raycast_dbg(LNX_NavmeshHit startHit, LNX_NavmeshHit endHIt, out LNX_Path outPath, ref LNX_MethodDebugReport rprt )
+		{
+			return Surfaces[0].Raycast_dbg(startHit, endHIt, out outPath, ref rprt);
 		}
 	}
 }

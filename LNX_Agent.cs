@@ -4,6 +4,7 @@ using System.Drawing;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Events;
 
 namespace LogansNavigationExtension.AI
 {
@@ -27,6 +28,8 @@ namespace LogansNavigationExtension.AI
 		public Vector3 AverageFootSampleNormal => averageFootSampleNormal;
         private RaycastHit footSampleHit;
         public RaycastHit FootSampleHit => footSampleHit;
+		/// <summary>Restricts to only sample underfoot if position has changed since last frame. More efficient </summary>
+		public bool SampleFootingOnlyWhenPositionHasChanged = true;
 
 		[Header("MOVEMENT SCHEMAS")]
         public MovementSchema[] MovementSchemas;
@@ -45,7 +48,13 @@ namespace LogansNavigationExtension.AI
         public int Index_CurrentPathPt => index_currentPathPt;
         public LNX_NavmeshHit _CurrentPathPt => _currentPath.PathPoints[index_currentPathPt];
 
-		//[Header("PATHING")]
+
+        //[Header("STATE")]
+        private bool movementIsPaused = false;
+        public bool AmPaused => movementIsPaused;
+
+       
+		//[Header("SPATIAL")]
 		/// <summary>
 		/// The current hit that describes this agent's position on the navmesh
 		/// </summary>
@@ -58,26 +67,28 @@ namespace LogansNavigationExtension.AI
         private Vector3 v_managedAgentPos;
         public Vector3 ManagedAgentPosition => v_managedAgentPos;
 
-        //[Header("STATE")]
-        private bool movementIsPaused = false;
-        public bool AmPaused => movementIsPaused;
+        private Vector3 v_toCurrentPathPt;
+        public Vector3 V_toNextPathPt => v_toCurrentPathPt;
 
-       
-		//[Header("SPATIAL")]
-        private Vector3 v_toNextPathPt;
-        public Vector3 V_toNextPathPt => v_toNextPathPt;
+        private float distToCurrentPoint;
+        public float DistanceToNextPt => distToCurrentPoint;
 
-        private float distToNextPt;
-        public float DistanceToNextPt => distToNextPt;
-
-        [Header("OTHER")]
+		[Header("FOLLOWING")]
         public float PathUpdateRefreshDuration = 0.2f;
-		[Tooltip("Distance to follow followtrans to.")] public float FollowDistance = 0.25f;
+		[Tooltip("Distance to follow followtrans to.")] 
+		public float FollowDistance = 0.25f;
+		[Tooltip("How far off the navmesh that the follow trans can be while still sampling a closest position")]
+		public float Distance_SampleFollowTransOffMesh = 2f;
         private float cd_pathRefresh = 0f;
         public float CD_PathRefresnh => cd_pathRefresh;
-		private Vector3 v_lastManagedPosition_cached;
-		private Vector3 v_lastFollowTransPosition_cached;
         private LNX_NavmeshHit lastFollowTransHit;
+		public UnityEvent Event_FollowTransformNoLongerSampled;
+
+
+        //[Header("OTHER")]
+		private Vector3 v_lastTransformPositionAtSample;
+		private Vector3 v_lastFollowTransPosition_cached;
+
 
         [Header("DEBUG")]
         [SerializeField] private bool lockGizmos = false;
@@ -90,7 +101,7 @@ namespace LogansNavigationExtension.AI
 
 		void Start()
         {
-            v_lastManagedPosition_cached = transform.position + (Vector3.right); //this way it's guaranteed to not be the same and sample first time
+            v_lastTransformPositionAtSample = transform.position + (Vector3.right); //this way it's guaranteed to not be the same and sample first time
 
 			for ( int i = 0; i < MovementSchemas.Length; i++ )
             {
@@ -115,14 +126,24 @@ namespace LogansNavigationExtension.AI
 				Rprt_Movement.Log_And_End_Method($"current path is null. Returning early...");
 				return;
 			}
+			if ( index_currentPathPt < 0 )
+			{
+				Rprt_Movement.Log_And_End_Method($"index_currentPathPt is: '{index_currentPathPt}'. Returning early...");
+				return;
+			}
 			#endregion
 
-			#region CALCULATE EFFECTIVE ENTITY POSITION =================================
-			if (transform.position != v_lastManagedPosition_cached)
+			#region SAMPLE UNDER-FOOT / CALCULATE EFFECTIVE ENTITY POSITION =================================
+			bool underfootSampleSuccess = false;
+			if ( !SampleFootingOnlyWhenPositionHasChanged || transform.position != v_lastTransformPositionAtSample)
 			{
-                SamplePosition_managed( ref Rprt_Movement );
+                if( !SampleUnderfoot(ref Rprt_Movement) && CurrentMovementSchema.OnlyMoveIfHaveFooting )
+				{
+					Rprt_Movement.Log_And_End_Method($"current movement scheme dictates underfoot sampling in order to move, but couldn't sample underfoot");
+					return;
+				}
 
-				v_lastManagedPosition_cached = transform.position;
+				v_lastTransformPositionAtSample = transform.position;
 			}
 			#endregion
 
@@ -140,16 +161,27 @@ namespace LogansNavigationExtension.AI
                     {
                         if( _FollowTrans.position != v_lastFollowTransPosition_cached )
                         {
+                            lastFollowTransHit = _manager.SampleClosestHit( _FollowTrans.position, Distance_SampleFollowTransOffMesh, true );
                             v_lastFollowTransPosition_cached = _FollowTrans.position;
-                            lastFollowTransHit = _manager.SampleClosestHit( _FollowTrans.position, 8, true );
                         }
 
-						if ( Vector3.Distance(transform.position, _FollowTrans.position) > FollowDistance )
-						{
-							SetDestination( lastFollowTransHit );
+						if ( lastFollowTransHit == LNX_NavmeshHit.None )
+						{   //IF follow transform can't be sampled. Stop following and invoke event...
+							
+							StopFollowing();
+							cd_pathRefresh = -1f;
+							Event_FollowTransformNoLongerSampled.Invoke();
 						}
+						else
+						{	//If follow transform was succesfully sampled, check if path needs to be refreshed...
 
-                        cd_pathRefresh = PathUpdateRefreshDuration;
+							if (Vector3.Distance(transform.position, _FollowTrans.position) > FollowDistance)
+							{
+								SetDestination(lastFollowTransHit);
+							}
+
+							cd_pathRefresh = PathUpdateRefreshDuration;
+						}
 					}
                 }
             }
@@ -159,13 +191,16 @@ namespace LogansNavigationExtension.AI
                 $"First generating next-point relational properties...");
 
 			#region CALCULATE NEXT-POINT VALUES =================================================
-			v_toNextPathPt = Vector3.Normalize( _CurrentPathPt.Position - v_managedAgentPos );
+			v_toCurrentPathPt = Vector3.Normalize( _CurrentPathPt.Position - v_managedAgentPos );
             Vector3 v_visTrnsUpTgt = Vector3.RotateTowards( VisualTransform.up, _CurrentPathPt.Normal, CurrentRotationSpeed * Time.fixedDeltaTime, 0.0f );
             float alignment_transUp_with_crntPthNrml = Vector3.Dot( VisualTransform.up, _CurrentPathPt.Normal );
-            float alignment_transFwd_with_crntPthPos = Vector3.Dot( VisualTransform.forward, v_toNextPathPt);
+            float alignment_transFwd_with_crntPthPos = Vector3.Dot( VisualTransform.forward, v_toCurrentPathPt);
 
             Quaternion q_finalRot = Quaternion.identity;
+			#endregion
 
+			#region GENERATE ROTATION VALUE ======================================================
+			Rprt_Movement.EmptyLine();
 			if (alignment_transFwd_with_crntPthPos < -0.98f && alignment_transUp_with_crntPthNrml > 0.95f )
 			{
                 Rprt_Movement.Log($"rotating q_finalRot indiscriminately...");
@@ -180,26 +215,34 @@ namespace LogansNavigationExtension.AI
 				Rprt_Movement.Log($"rotating q_finalRot discriminately...");
 				q_finalRot = Quaternion.LookRotation
                 (
-                    Vector3.RotateTowards(VisualTransform.forward, v_toNextPathPt, CurrentRotationSpeed * Time.fixedDeltaTime, 0.0f), 
+                    Vector3.RotateTowards(VisualTransform.forward, v_toCurrentPathPt, CurrentRotationSpeed * Time.fixedDeltaTime, 0.0f), 
                     v_visTrnsUpTgt
                 );
 			}
+			#endregion
 
-            Rprt_Movement.Log($"USING v_toNextPathPt: '{v_toNextPathPt}', nxtPt: '{_CurrentPathPt.Position}'",
+			Rprt_Movement.EmptyLine();
+			Rprt_Movement.Log($"USING v_toNextPathPt: '{v_toCurrentPathPt}', nxtPt: '{_CurrentPathPt.Position}'",
                 $"v_visualTransUpOrientation: '{v_visTrnsUpTgt}'",
                 $"alignment_transUp_with_crntPthNrml: '{alignment_transUp_with_crntPthNrml}'",
                 $"alignment_transFwd_with_crntPthPos: '{alignment_transFwd_with_crntPthPos}'",
 				$"q_finalRot: '{q_finalRot}'"
 				);
-			#endregion
 
 			#region MOVE ENTITY =========================================================
+			Rprt_Movement.EmptyLine();
 			Rprt_Movement.Log($"now moving...");
-			if ( CurrentMovementSchema._MovementMode == MovementMode.Transform_directionallyDriven ) //todo: should I not use fixedupdate for this? If not, I'd have to make an update block just for this case...
+
+			Vector3 v_posBeforeMove = transform.position;
+
+			if ( CurrentMovementSchema._MovementMode == MovementMode.Transform_directionallyDriven )
             {
                 Rprt_Movement.Log($"movement mode Transform_directionallyDriven...");
                 VisualTransform.rotation = q_finalRot;
-                transform.Translate(CurrentMoveSpeed * Time.fixedDeltaTime * v_toNextPathPt);
+
+                transform.Translate(CurrentMoveSpeed * Time.fixedDeltaTime * v_toCurrentPathPt);
+				Rprt_Movement.Log($"projected move amt: '{CurrentMoveSpeed * Time.fixedDeltaTime}'", 
+					$"dist_prev to after move: '{Vector3.Distance(v_posBeforeMove, transform.position)}'");
 			}
 			else if ( CurrentMovementSchema._MovementMode == MovementMode.Transform_forwardDriven )
             {
@@ -210,9 +253,9 @@ namespace LogansNavigationExtension.AI
             {
                 _RigidBody.MoveRotation(q_finalRot);
 
-                if (Vector3.Angle(VisualTransform.forward, v_toNextPathPt) < CurrentMovementSchema.RotationAlignmentThreshold)
+                if (Vector3.Angle(VisualTransform.forward, v_toCurrentPathPt) < CurrentMovementSchema.RotationAlignmentThreshold)
                 {
-                    _RigidBody.MovePosition(_RigidBody.position + (CurrentMoveSpeed * Time.fixedDeltaTime * v_toNextPathPt));
+                    _RigidBody.MovePosition(_RigidBody.position + (CurrentMoveSpeed * Time.fixedDeltaTime * v_toCurrentPathPt));
 
                 }
             }
@@ -220,7 +263,7 @@ namespace LogansNavigationExtension.AI
 			{
 				_RigidBody.MoveRotation(q_finalRot);
 
-				if (Vector3.Angle(VisualTransform.forward, v_toNextPathPt) < CurrentMovementSchema.RotationAlignmentThreshold)
+				if (Vector3.Angle(VisualTransform.forward, v_toCurrentPathPt) < CurrentMovementSchema.RotationAlignmentThreshold)
 				{
 					_RigidBody.MovePosition(_RigidBody.position + (VisualTransform.forward * CurrentMoveSpeed * Time.fixedDeltaTime));
 
@@ -231,49 +274,49 @@ namespace LogansNavigationExtension.AI
 			Rprt_Movement.Log($"moved. Now adjusting currenthit and distance...");
 
 			#region CHECK ADVANCEMENT =====================================================
-			distToNextPt = Vector3.Distance(transform.position, _CurrentPathPt.Position);
-            Rprt_Movement.Log($"Checking if should advance. distToNextPt: '{distToNextPt}' / '{CurrentMovementSchema.Dist_advancePathPoint}', " +
+			distToCurrentPoint = Vector3.Distance(transform.position, _CurrentPathPt.Position);
+            Rprt_Movement.Log($"Checking if should advance. distToNextPt: '{distToCurrentPoint}' / '{CurrentMovementSchema.Dist_advancePathPoint}', " +
                 $"index_currentPathPt: '{index_currentPathPt}'");
-
-            if ( index_currentPathPt < _currentPath.PointCount - 1 )
-            {
-                if( distToNextPt <= MovementSchemas[index_currentMovementSchema].Dist_advancePathPoint )
-                {
-                    Rprt_Movement.Log($"am within advance distance...");
-                    if ( _currentHit != LNX_NavmeshHit.None )
-                    {
-                        LNX_Path rcPath = null;
-                        Vector3 vto = _currentPath.PathPoints[Index_CurrentPathPt + 1].Position - CurrentHit.Position;
-						Rprt_Movement.Log($"current hit is NOT none. Raycasting to decide if should advance. using vto: '{vto}'...");
-
-						//if ( !_manager.Raycast(_currentHit, vto.normalized, out rcPath, vto.magnitude) )
-						if (!_manager.Raycast_dbg(_currentHit, vto.normalized, out rcPath, vto.magnitude, ref Rprt_Movement))
-						{
-							Rprt_Movement.Log($"raycast was false. Advancing...");
-                            index_currentPathPt++;
-                        }
-                        else
-                        {
-                            Rprt_Movement.Log($"Raycast was true. path hit: '{rcPath.EndHit}'");
-                        }
-                    }
-                    else
-                    {
-						index_currentPathPt++;
-					}
-
-
-				}
-            }
-			else
+			
+			if ( distToCurrentPoint <= MovementSchemas[index_currentMovementSchema].Dist_advancePathPoint )
 			{
-				if ( _FollowTrans == null && distToNextPt <= MovementSchemas[index_currentMovementSchema].Dist_advancePathPoint )
+				Rprt_Movement.Log($"am within 'raycast check' distance. Advancing path point...");
+				index_currentPathPt++;
+
+				if ( index_currentPathPt >= _currentPath.PointCount - 1 )
 				{
-                    UnsetPath();
+					if (_FollowTrans == null && distToCurrentPoint <= MovementSchemas[index_currentMovementSchema].Dist_advancePathPoint)
+					{
+						UnsetPath();
+					}
 				}
 			}
-            #endregion
+			else if 
+			(
+				Vector3.Distance(v_posBeforeMove, _CurrentPathPt.Position) < Vector3.Distance(v_posBeforeMove, transform.position)
+			)
+			{
+				Rprt_Movement.Log($"distance suggests overshoot. Checking for overshoot...");
+				Vector3 vNow = Vector3.Normalize(_CurrentPathPt.Position - transform.position);
+				if ( Vector3.Dot(v_toCurrentPathPt, vNow) < -0.1f )
+				{
+					Rprt_Movement.Log($"overshoot happened!");
+					Debug.LogWarning($"overshot happened! old: '{v_toCurrentPathPt}', new: '{vNow}'");
+					Debug.Log($"dist before: '{Vector3.Distance(v_posBeforeMove, _CurrentPathPt.Position)}', " +
+						$"after: '{Vector3.Distance(transform.position, _CurrentPathPt.Position)}'");
+					Debug.Log($"pos before: '{v_posBeforeMove}', after: '{transform.position}'");
+					index_currentPathPt++;
 
+					if (index_currentPathPt >= _currentPath.PointCount - 1)
+					{
+						if (_FollowTrans == null && distToCurrentPoint <= MovementSchemas[index_currentMovementSchema].Dist_advancePathPoint)
+						{
+							UnsetPath();
+						}
+					}
+				}
+			}
+			#endregion
 
 			Rprt_Movement.EndMethod($"FixedUpdate()");
 
@@ -286,19 +329,28 @@ namespace LogansNavigationExtension.AI
 
 		public void SetDestination(LNX_NavmeshHit endHit, float maxSampleDistance = 1f, bool considerClosesetOffPerimeter = true)
 		{
-			Debug.Log($"SetDestination()");
+			//Debug.Log($"SetDestination(endHit: '{endHit}', maxSampleDistance: '{maxSampleDistance}')");
+			//string dbgMthd = $"SetDestination(endHit: '{endHit}', maxSampleDistance: '{maxSampleDistance}')\n";
 
-            SamplePosition_managed();
+			//dbgMthd += $"sampling underfoot...\n";
+            SampleUnderfoot();
+			//dbgMthd += $"sampling complete. _currentHit: '{_currentHit}', footSampleHit: '{footSampleHit}'\n";
 
 			bool rslt = false;
 			if (_currentHit != LNX_NavmeshHit.None)
 			{
+				//dbgMthd += $"_currentHit IS valid. Calling CalculatePath()...\n";
 				rslt = _manager.CalculatePath(_currentHit, endHit, maxSampleDistance, out _currentPath);
+				//dbgMthd += $"CalculatePath() finisned. Rslt: '{rslt}'\n";
 			}
 			else
 			{
-                LNX_NavmeshHit hit = _manager.SampleClosestHit(transform.position, 2f, true);
-				rslt = _manager.CalculatePath(transform.position, endHit.Position, maxSampleDistance, out _currentPath, considerClosesetOffPerimeter);
+				//dbgMthd += $"_currentHit was none. This means the agent is NOT on the navmesh...\n";
+
+				rslt = _manager.CalculatePath(
+					transform.position, endHit.Position, maxSampleDistance, out _currentPath, considerClosesetOffPerimeter
+				); //<<<<<<<<<<<<<<<<<<<<<<<<<<
+				//dbgMthd += $"CalculatePath() finisned. Rslt: '{rslt}'\n";
 			}
 
 			if (rslt)
@@ -309,9 +361,14 @@ namespace LogansNavigationExtension.AI
 			{
 				index_currentPathPt = -1;
 			}
+			//dbgMthd += $"index_currentPathPt: '{index_currentPathPt}'\n";
+
+			//Debug.Log($"rprt-----\n" +
+			//	$"{dbgMthd}");
 		}
 
-        public void StartFollowing( Transform trans )
+
+		public void StartFollowing( Transform trans )
         {
 			Debug.Log($"StartFollowing()");
 
@@ -341,7 +398,7 @@ namespace LogansNavigationExtension.AI
             _currentPath = null;
         }
 
-		public bool SamplePosition_managed()
+		public bool SampleUnderfoot()
 		{
 			#region DETERMINE CURRENTHIT =========================================================
 			_currentHit = LNX_NavmeshHit.None;
@@ -400,7 +457,7 @@ namespace LogansNavigationExtension.AI
 
 			return succesfulHits > 0;
 		}
-		public bool SamplePosition_managed( ref LNX_MethodDebugReport rprt)
+		public bool SampleUnderfoot( ref LNX_MethodDebugReport rprt)
         {
             rprt.StartMethod($"SampleUnderfoot()");
 
@@ -536,7 +593,10 @@ namespace LogansNavigationExtension.AI
 		[Range(0f, 360f), Tooltip("How closely the agent has to be facing the next path target in order to allow movment forward")]
 		public float RotationAlignmentThreshold;
 
-        public bool CheckIfKosher()
+		[Header("OPTIONS")]
+		public bool OnlyMoveIfHaveFooting;
+
+		public bool CheckIfKosher()
         {
             if(moveSpeed <= 0 )
             {
