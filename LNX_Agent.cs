@@ -283,7 +283,7 @@ namespace LogansNavigationExtension.AI
 				Rprt_Movement.Log($"am within 'raycast check' distance. Advancing path point...");
 				index_currentPathPt++;
 
-				if ( index_currentPathPt >= _currentPath.PointCount - 1 )
+				if ( index_currentPathPt > _currentPath.PointCount - 1 )
 				{
 					if (_FollowTrans == null && distToCurrentPoint <= MovementSchemas[index_currentMovementSchema].Dist_advancePathPoint)
 					{
