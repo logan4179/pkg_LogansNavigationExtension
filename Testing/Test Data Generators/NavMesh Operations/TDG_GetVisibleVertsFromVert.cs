@@ -136,7 +136,7 @@ namespace LogansNavigationExtension
 			{
 				Gizmos.DrawSphere( CurrentVert.V_Position, Radius_ObjectDebugSpheres );
 
-				LNX_DrawingUtils.DrawTriGizmos( _navmesh.Triangles[Grabber_Vert.CurrentHit.TriangleIndex], Color.yellow, 
+				LNX_DrawingUtilities.DrawTriGizmos( _navmesh.Triangles[Grabber_Vert.CurrentHit.TriangleIndex], Color.yellow, 
 					false, false, true, 0.02f, true, 0.1f, false, -1f
 				);
 			}

@@ -68,7 +68,7 @@ namespace LogansNavigationExtension
 			{
 				if( _SampledTriangle != null )
 				{
-					LNX_DrawingUtils.DrawStandardFocusTriGizmos(
+					LNX_DrawingUtilities.DrawStandardFocusTriGizmos(
 						_SampledTriangle,
 						1f,
 						_SampledTriangle.Index_inCollection.ToString(), Color.magenta

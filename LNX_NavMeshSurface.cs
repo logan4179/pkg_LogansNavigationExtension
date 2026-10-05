@@ -8,6 +8,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.LightTransport;
+using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 
 
@@ -22,7 +23,7 @@ namespace LogansNavigationExtension
 		public LayerMask MyLayerMask;
 
 		/// <summary>Index corresponding to this surface in manager's Surfaces collection. Gets set automatically by manager singleton.</summary>
-		public int MyCollectionIndex = -1;
+		public int MySurfaceIndex = -1;
 		/*
 		public string LayerMaskName;
 
@@ -100,7 +101,9 @@ namespace LogansNavigationExtension
 
 		public string cachedGUID => serializedDataString; /*string.IsNullOrEmpty(serializedDataString) ? "" : serializedDataString.Split(',')[0];*/
 
-
+		/// <summary>0: updated, 1: just updated, -1: transitioning to updated </summary>
+		[SerializeField, HideInInspector] private int stateFlag;
+		public int StateFlag => stateFlag;
 		#endregion
 
 		#region EFFICIENCY ================================================
@@ -115,6 +118,11 @@ namespace LogansNavigationExtension
 		[Header("VISUAL/DEBUG")]
 		[SerializeField, Tooltip("Whether to draw the mesh visual")] private bool drawVisualizationMesh;
 		[SerializeField] private Color color_visualMesh;
+
+		[SerializeField, Tooltip("Whether to draw the mesh visual")] private bool drawEdges;
+		[SerializeField] private Color color_edges;
+		[SerializeField] private Color color_terminalEdges;
+
 
 		[InitializeOnLoadMethod]
 		private static void OnEditorLoad()
@@ -247,12 +255,12 @@ namespace LogansNavigationExtension
 		#region Triangle fetchers ------------------------------------------------------
 		public LNX_Triangle GetTriangle( LNX_ComponentCoordinate coord )
 		{
-			return Triangles[coord.TrianglesIndex];
+			return Triangles[coord.TriangleIndex];
 		}
 
 		public LNX_Triangle GetTriangle( LNX_Vertex vert )
 		{
-			return Triangles[vert.MyCoordinate.TrianglesIndex];
+			return Triangles[vert.MyCoordinate.TriangleIndex];
 		}
 
 		public LNX_Triangle GetTriangle( Vector3 center )
@@ -303,7 +311,7 @@ namespace LogansNavigationExtension
 		public LNX_Vertex GetVertexAtCoordinate( LNX_ComponentCoordinate coord )
 		{
 			string dbgMe = $"GetVertexAtCoordinate({coord})\n";
-			if( Triangles == null || Triangles.Length <= 0 || coord.TrianglesIndex > Triangles.Length-1 || coord.ComponentIndex > 2 || coord.ComponentIndex < 0 )
+			if( Triangles == null || Triangles.Length <= 0 || coord.TriangleIndex > Triangles.Length-1 || coord.ComponentIndex > 2 || coord.ComponentIndex < 0 )
 			{
 				dbgMe += "returning null...";
 				//Debug.Log(dbgMe);
@@ -314,7 +322,7 @@ namespace LogansNavigationExtension
 				dbgMe += $"found vert";
 				//Debug.Log(dbgMe);
 
-				return Triangles[coord.TrianglesIndex].Verts[coord.ComponentIndex];
+				return Triangles[coord.TriangleIndex].Verts[coord.ComponentIndex];
 			}
 		}
 		public LNX_Vertex GetVertexAtCoordinate( int triIndex, int componentIndex )
@@ -333,18 +341,18 @@ namespace LogansNavigationExtension
 		{
 			List<LNX_Vertex> returnList = new List<LNX_Vertex>();
 
-			if (Triangles == null || Triangles.Length <= 0 || coord.TrianglesIndex > Triangles.Length - 1 || coord.ComponentIndex > 2 || coord.ComponentIndex < 0)
+			if (Triangles == null || Triangles.Length <= 0 || coord.TriangleIndex > Triangles.Length - 1 || coord.ComponentIndex > 2 || coord.ComponentIndex < 0)
 			{
 				return null;
 			}
 			else
 			{
-				LNX_Vertex vert = Triangles[coord.TrianglesIndex].Verts[coord.ComponentIndex];
+				LNX_Vertex vert = Triangles[coord.TriangleIndex].Verts[coord.ComponentIndex];
 				returnList.Add( vert );
 
 				for ( int i = 0; i < vert.SharedVertexCoordinates.Length; i++ ) 
 				{
-					returnList.Add( Triangles[vert.SharedVertexCoordinates[i].TrianglesIndex].Verts[vert.SharedVertexCoordinates[i].TrianglesIndex] );
+					returnList.Add( Triangles[vert.SharedVertexCoordinates[i].TriangleIndex].Verts[vert.SharedVertexCoordinates[i].TriangleIndex] );
 				}
 			}
 
@@ -357,7 +365,7 @@ namespace LogansNavigationExtension
 
 			if 
 			(
-				Triangles == null || Triangles.Length <= 0 || vert.MyCoordinate.TrianglesIndex > Triangles.Length - 1 ||
+				Triangles == null || Triangles.Length <= 0 || vert.MyCoordinate.TriangleIndex > Triangles.Length - 1 ||
 				vert.MyCoordinate.ComponentIndex > 2 || vert.MyCoordinate.ComponentIndex < 0
 			)
 			{
@@ -369,7 +377,7 @@ namespace LogansNavigationExtension
 
 				for (int i = 0; i < vert.SharedVertexCoordinates.Length; i++)
 				{
-					returnList.Add(Triangles[vert.SharedVertexCoordinates[i].TrianglesIndex].Verts[vert.SharedVertexCoordinates[i].TrianglesIndex]);
+					returnList.Add(Triangles[vert.SharedVertexCoordinates[i].TriangleIndex].Verts[vert.SharedVertexCoordinates[i].TriangleIndex]);
 				}
 			}
 
@@ -402,13 +410,13 @@ namespace LogansNavigationExtension
 		#region Edge Fetchers --------------------------------------------------
 		public LNX_Edge GetEdge( LNX_ComponentCoordinate coord )
 		{
-			if (Triangles == null || Triangles.Length <= 0 || coord.TrianglesIndex > Triangles.Length - 1 || coord.ComponentIndex > 2 || coord.ComponentIndex < 0)
+			if (Triangles == null || Triangles.Length <= 0 || coord.TriangleIndex > Triangles.Length - 1 || coord.ComponentIndex > 2 || coord.ComponentIndex < 0)
 			{
 				return null;
 			}
 			else
 			{
-				return Triangles[coord.TrianglesIndex].Edges[coord.ComponentIndex];
+				return Triangles[coord.TriangleIndex].Edges[coord.ComponentIndex];
 			}
 		}
 
@@ -421,6 +429,18 @@ namespace LogansNavigationExtension
 			else
 			{
 				return Triangles[triIndex].Edges[componentIndex];
+			}
+		}
+
+		public LNX_Edge GetEdge( LNX_NavmeshHit hit )
+		{
+			if (Triangles == null || Triangles.Length <= 0 || hit.TriangleIndex > Triangles.Length - 1 || hit.EdgeIndex > 2 || hit.EdgeIndex < 0)
+			{
+				return null;
+			}
+			else
+			{
+				return Triangles[hit.TriangleIndex].Edges[hit.EdgeIndex];
 			}
 		}
 
@@ -461,7 +481,7 @@ namespace LogansNavigationExtension
 		{
 			if
 			(
-				Triangles == null || Triangles.Length <= 0 || vert.MyCoordinate.TrianglesIndex > Triangles.Length - 1 ||
+				Triangles == null || Triangles.Length <= 0 || vert.MyCoordinate.TriangleIndex > Triangles.Length - 1 ||
 				vert.MyCoordinate.ComponentIndex > 2 || vert.MyCoordinate.ComponentIndex < 0
 			)
 			{
@@ -638,6 +658,7 @@ namespace LogansNavigationExtension
 				$"and '{constructedVertices_unique.Count}' unique vertices for the mesh.\n";
 
 			//Debug.Log(DBG_CalculateTriangulation);
+			stateFlag = 1;
 			EditorUtility.SetDirty(this);
 		}
 
@@ -906,7 +927,7 @@ namespace LogansNavigationExtension
 						if (Triangles[i_Triangles].Index_inCollection != i_Triangles)
 						{
 							if (dbgMethod) Debug.Log($"Triangle '{i_Triangles}' had cached index of: '{Triangles[i_Triangles].Index_inCollection}'. Fixing...");
-							Triangles[i_Triangles].ChangeIndex_action(i_Triangles);
+							Triangles[i_Triangles].TriIndexChanged_action(i_Triangles);
 						}
 					}
 
@@ -920,8 +941,11 @@ namespace LogansNavigationExtension
 					{
 						for (int i_Verts = 0; i_Verts < 3; i_Verts++)
 						{
-							if (Triangles[i_Triangles].Verts[i_Verts].Index_VisMesh_Vertices < 0 ||
-								Triangles[i_Triangles].Verts[i_Verts].V_Position != uniqueVerts[Triangles[i_Triangles].Verts[i_Verts].Index_VisMesh_Vertices]) //this is going out of range...
+							if 
+							(
+								Triangles[i_Triangles].Verts[i_Verts].Index_VisMesh_Vertices < 0 ||
+								Triangles[i_Triangles].Verts[i_Verts].V_Position != uniqueVerts[Triangles[i_Triangles].Verts[i_Verts].Index_VisMesh_Vertices]
+							) //this is going out of range...
 							{
 								bool foundUniqueVertMatch = false;
 								for (int i_uniqueVerts = 0; i_uniqueVerts < uniqueVerts.Count; i_uniqueVerts++)
@@ -985,6 +1009,31 @@ namespace LogansNavigationExtension
 			if (dbgMethod) Debug.Log($"end of ReconstructVisualizationMesh()");
 		}
 
+		public void SetSurfaceIndex( int indx )
+		{
+			MySurfaceIndex = indx;
+
+			for (int i = 0; i < Triangles.Length; i++)
+			{
+				Triangles[i].SurfaceIndexChanged_action(indx);
+			}
+		}
+		[ContextMenu("z call SetSurfaceIndex()")]
+		public void SetSurfaceIndex()
+		{
+			for (int i = 0; i < Triangles.Length; i++)
+			{
+				Triangles[i].SurfaceIndexChanged_action(MySurfaceIndex);
+			}
+		}
+
+		public void SetSurfaceOrientation_action()
+		{
+			for (int i = 0; i < Triangles.Length; i++)
+			{
+				Triangles[i].SurfaceOrientationChanged_action(SurfaceOrientation);
+			}
+		}
 		#endregion -------------------------------------------------------
 
 		#region MODIFICATION-----------------------------------------------------------
@@ -1034,7 +1083,7 @@ namespace LogansNavigationExtension
 
 			for ( int i = 0; i < verts.Count; i++ ) 
 			{
-				Triangles[verts[i].MyCoordinate.TrianglesIndex].MoveVert_managed( this, verts[i].MyCoordinate.ComponentIndex, endPos);
+				Triangles[verts[i].MyCoordinate.TriangleIndex].MoveVert_managed( this, verts[i].MyCoordinate.ComponentIndex, endPos);
 
 				if ( verts[i].Index_VisMesh_Vertices > -1 && visMeshValid )
 				{
@@ -1114,7 +1163,7 @@ namespace LogansNavigationExtension
 					if(Triangles[i].Index_inCollection != runningTriIndx)
 					{
 						//Debug.Log($"CHANGIN DA INDEX AT: '{runningTriIndx}'...");
-						Triangles[i].ChangeIndex_action( runningTriIndx );
+						Triangles[i].TriIndexChanged_action( runningTriIndx );
 					}
 
 					runningTriIndx++;
@@ -1332,28 +1381,19 @@ namespace LogansNavigationExtension
 		/// <param name="outPath"></param>
 		/// <param name="allowedDistance"></param>
 		/// <returns>'True' if the projection completes without hitting any obstructions. 'False' if it hits an obstruction before it's end.</returns>
-		public bool TryProjectThrough(LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, out LNX_Path outPath, 
-			bool allowRelationships = false )
+		private bool TryProjectThrough(LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, out LNX_Path outPath )
 		{
 			#region SHORT-CIRCUITING ==================================================
 			if (startHit.TriangleIndex == endHit.TriangleIndex) //If start and end hit are on same triangle...
 			{
 				outPath = new LNX_Path(GetSurfaceProjectionVector(), startHit, endHit);
-				return true;
+				return false;
 			}
+
 			if (startHit.Position == endHit.Position)
 			{
 				outPath = new LNX_Path(GetSurfaceProjectionVector(), endHit);
-				return true;
-			}
-			if
-			( 
-				startHit.VertIndex > -1 && 
-				VertTouchesTriangle(Triangles[startHit.TriangleIndex].Verts[startHit.VertIndex].MyCoordinate, endHit.TriangleIndex)
-			)
-			{
-				outPath = new LNX_Path(GetSurfaceProjectionVector(), startHit, endHit);
-				return true;
+				return false;
 			}
 			#endregion
 
@@ -1370,7 +1410,7 @@ namespace LogansNavigationExtension
 				//TODO: could we add another short-circuit here that checks if both the start and end hits are on a vert, and if so, if these verts are shared by a common
 				//triangle? It would effectively be similar to the first short-circuit check above in that we would treat the hits as though theyre both on the same tri
 
-				if ( endHit.VertIndex > -1 & allowRelationships )
+				if (endHit.VertIndex > -1)
 				{
 					if (Triangles[startHit.TriangleIndex].Verts[startHit.VertIndex].IsRelationshipCollectionSuperficiallyValid(Triangles.Length))
 					{
@@ -1380,32 +1420,42 @@ namespace LogansNavigationExtension
 						if (rel != null && rel.AmValid)
 						{
 							outPath = new LNX_Path(rel.PathTo); //IMPORTANT! This needs to be a new (different) object so that the pathpoint list doesn't get inadvertently changed
-							return outPath.AmStraight;
+							return !outPath.AmStraight;
 						}
 					}
+				}
+
+				if
+				(
+					VertTouchesTriangle(Triangles[startHit.TriangleIndex].Verts[startHit.VertIndex].MyCoordinate, endHit.TriangleIndex)
+				) //note: this is a pretty rare case, but it does happen. Especially through ping operation
+				{
+					outPath = new LNX_Path(GetSurfaceProjectionVector(), startHit, endHit);
+					return false;
 				}
 
 				LNX_ComponentCoordinate sweepCoord = Triangles[startHit.TriangleIndex].Verts[startHit.VertIndex].GetVertCoord_viaProjectionSweep(
 					vProject_fltnd, true);
 
-				if (sweepCoord.TrianglesIndex != startHit.TriangleIndex || sweepCoord.ComponentIndex != startHit.VertIndex)
+				if (sweepCoord.TriangleIndex != startHit.TriangleIndex || sweepCoord.ComponentIndex != startHit.VertIndex)
 				{
 					if (sweepCoord == LNX_ComponentCoordinate.None)
 					{
 						if (!VertIsOnTerminalEdge(startHit.TriangleIndex, startHit.VertIndex))
 						{
 							Debug.LogError($"LNX_ERROR! Raycast startHit: ('{startHit}') was on a non-terminal vert, but couldn't get adjusted vert coord via projection sweep. " +
-								$"This shouldn't happen on a non-terminal vert. Maybe the relational/shared-vert information is incorrect or needs to be reloaded. Returning early...");
+								$"This shouldn't happen on a non-terminal vert. Maybe the relational information is incorrect or needs to be reloaded. Returning early...");
 						}
 
 						outPath = null;
-						return false;
+						return true;
 					}
 					else
 					{
 						startHit = new LNX_NavmeshHit(
 							startHit.Position, GetSurfaceProjectionVector(),
-							sweepCoord.TrianglesIndex,
+							sweepCoord.SurfaceIndex,
+							sweepCoord.TriangleIndex,
 							sweepCoord.ComponentIndex,
 							-1
 						);
@@ -1419,9 +1469,9 @@ namespace LogansNavigationExtension
 					Vector3.Dot
 					(
 						vProject_fltnd,
-						Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].v_Cross_flat
+						Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].v_Cross_flat.normalized
 					) < 0f
-				) //"if projection points toward 'outside' direction of this edge"...
+				) //projection points toward "outside" direction of this edge...
 				{
 					if (Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].AmTerminal)
 					{
@@ -1432,7 +1482,7 @@ namespace LogansNavigationExtension
 					{
 						LNX_ComponentCoordinate shrdEdgeCoord = Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].SharedEdgeCoordinate;
 						startHit = new LNX_NavmeshHit(
-							Triangles[shrdEdgeCoord.TrianglesIndex].Edges[shrdEdgeCoord.ComponentIndex],
+							Triangles[shrdEdgeCoord.TriangleIndex].Edges[shrdEdgeCoord.ComponentIndex],
 							startHit.Position,
 							GetSurfaceProjectionVector()
 						);
@@ -1451,13 +1501,12 @@ namespace LogansNavigationExtension
 			{
 				LNX_NavmeshHit triPerimHit = LNX_NavmeshHit.None;
 
-				if 
-				(
+				if (
 					!Triangles[currentStartHit.TriangleIndex].ProjectThroughToPerimeter(
 					currentStartHit, endHit, out triPerimHit, true)
 				)
 				{
-					return false;
+					return true;
 				}
 
 				if (triPerimHit.TriangleIndex == outPath.PathPoints[outPath.PathPoints.Count - 1].TriangleIndex)
@@ -1503,7 +1552,197 @@ namespace LogansNavigationExtension
 			}
 			#endregion
 
-			return false;
+			return true;
+
+		}
+		private bool TryProjectThrough_dbg(LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, out LNX_Path outPath, ref LNX_MethodDebugReport rprt )
+		{
+			rprt.StartMethod($"TryProjectThrough_dbg(startHit: '{startHit}', endHit: '{endHit}')");
+
+			#region SHORT-CIRCUITING ==================================================
+			if (startHit.TriangleIndex == endHit.TriangleIndex) //If start and end hit are on same triangle...
+			{
+				outPath = new LNX_Path(GetSurfaceProjectionVector(), startHit, endHit);
+				rprt.Log_And_End_Method($"starHit tri index equals endHIt triindex. Returning early...");
+				return false;
+			}
+
+			if (startHit.Position == endHit.Position)
+			{
+				outPath = new LNX_Path(GetSurfaceProjectionVector(), endHit);
+				rprt.Log_And_End_Method($"starHit position equals endHIt position. Returning early...");
+				return false;
+			}
+			#endregion
+
+			outPath = new LNX_Path(GetSurfaceProjectionVector(), startHit);
+
+			//todo: instead of using FlatHitPosition(startHit) below, cache this value and efficiency test to see if it's worth it
+			// todo: also, a little bit lower, there's a line saying [Vector3 vProject = FlatVector( endHit.Position - startHit.Position ).normalized;],
+			// try pre-caching this as well and efficiency testing
+
+			Vector3 vProject_fltnd = FlatVector(endHit.Position - startHit.Position).normalized;
+
+			rprt.Log($"Now checking if startHit needs to be adjusted, or is cause to short-circuit..");
+			if (startHit.VertIndex > -1)
+			{
+				rprt.Log($"startHit is on vert...");
+
+				//TODO: could we add another short-circuit here that checks if both the start and end hits are on a vert, and if so, if these verts are shared by a common
+				//triangle? It would effectively be similar to the first short-circuit check above in that we would treat the hits as though theyre both on the same tri
+
+				if (endHit.VertIndex > -1)
+				{
+					if (Triangles[startHit.TriangleIndex].Verts[startHit.VertIndex].IsRelationshipCollectionSuperficiallyValid(Triangles.Length))
+					{
+						LNX_VertexRelationship rel = Triangles[startHit.TriangleIndex].Verts[startHit.VertIndex].GetRelationship(
+							endHit.TriangleIndex, endHit.VertIndex);
+
+						if (rel != null && rel.AmValid)
+						{
+							outPath = new LNX_Path(rel.PathTo); //IMPORTANT! This needs to be a new (different) object so that the pathpoint list doesn't get inadvertently changed
+							rprt.Log_And_End_Method($"");
+							return !outPath.AmStraight;
+						}
+					}
+				}
+
+				if
+				(
+					VertTouchesTriangle(Triangles[startHit.TriangleIndex].Verts[startHit.VertIndex].MyCoordinate, endHit.TriangleIndex)
+				) //note: this is a pretty rare case, but it does happen. Especially through ping operation
+				{
+					outPath = new LNX_Path(GetSurfaceProjectionVector(), startHit, endHit);
+					rprt.Log_And_End_Method($"");
+					return false;
+				}
+
+				LNX_ComponentCoordinate sweepCoord = Triangles[startHit.TriangleIndex].Verts[startHit.VertIndex].GetVertCoord_viaProjectionSweep(
+					vProject_fltnd, true);
+
+				if (sweepCoord.TriangleIndex != startHit.TriangleIndex || sweepCoord.ComponentIndex != startHit.VertIndex)
+				{
+					if (sweepCoord == LNX_ComponentCoordinate.None)
+					{
+						if (!VertIsOnTerminalEdge(startHit.TriangleIndex, startHit.VertIndex))
+						{
+							Debug.LogError($"LNX_ERROR! Raycast startHit: ('{startHit}') was on a non-terminal vert, but couldn't get adjusted vert coord via projection sweep. " +
+								$"This shouldn't happen on a non-terminal vert. Maybe the relational information is incorrect or needs to be reloaded. Returning early...");
+						}
+
+						outPath = null;
+						rprt.Log_And_End_Method($"");
+						return true;
+					}
+					else
+					{
+						startHit = new LNX_NavmeshHit(
+							startHit.Position, GetSurfaceProjectionVector(),
+							sweepCoord.SurfaceIndex,
+							sweepCoord.TriangleIndex,
+							sweepCoord.ComponentIndex,
+							-1
+						);
+					}
+				}
+			}
+			else if (startHit.EdgeIndex > -1)
+			{
+				if
+				(
+					Vector3.Dot
+					(
+						vProject_fltnd,
+						Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].v_Cross_flat.normalized
+					) < 0f
+				) //projection points toward "outside" direction of this edge...
+				{
+					if (Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].AmTerminal)
+					{
+						outPath = null;
+						rprt.Log_And_End_Method($"");
+						return true;
+					}
+					else
+					{
+						LNX_ComponentCoordinate shrdEdgeCoord = Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].SharedEdgeCoordinate;
+						startHit = new LNX_NavmeshHit(
+							Triangles[shrdEdgeCoord.TriangleIndex].Edges[shrdEdgeCoord.ComponentIndex],
+							startHit.Position,
+							GetSurfaceProjectionVector()
+						);
+					}
+				}
+			}
+
+			#region PROJECT THROUGH TO END HIT ==================================
+			LNX_NavmeshHit currentStartHit = startHit;
+			int safetyTimeout = Triangles.Length;
+			int runningWhileIterations = 0;
+
+			bool amStillProjecting = true;
+
+			while (amStillProjecting)
+			{
+				LNX_NavmeshHit triPerimHit = LNX_NavmeshHit.None;
+
+				if (
+					!Triangles[currentStartHit.TriangleIndex].ProjectThroughToPerimeter(
+					currentStartHit, endHit, out triPerimHit, true)
+				)
+				{
+					rprt.Log_And_End_Method($"");
+					return true;
+				}
+
+				if (triPerimHit.TriangleIndex == outPath.PathPoints[outPath.PathPoints.Count - 1].TriangleIndex)
+				{
+					outPath.AddPoint(triPerimHit);
+					rprt.Log_And_End_Method($"");
+					return true;
+				}
+
+				if
+				(
+					triPerimHit.Position == endHit.Position ||
+					Vector3.Distance(triPerimHit.Position, endHit.Position) < 0.001f
+				)
+				{
+					outPath.AddPoint(endHit);
+					rprt.Log_And_End_Method($"");
+					return false;
+				}
+				else
+				{
+					outPath.AddPoint(triPerimHit);
+				}
+
+				if (HitIsOnTriPerimeter_extrapolated(triPerimHit, Triangles[endHit.TriangleIndex]))
+				{
+					if (endHit.Position != triPerimHit.Position) //In case the end position is actually on the perimeter of the destination tri...
+					{
+						outPath.AddPoint(endHit);
+					}
+
+					rprt.Log_And_End_Method($"");
+					return false;
+				}
+
+				currentStartHit = triPerimHit;
+
+				runningWhileIterations++;
+				if (runningWhileIterations > safetyTimeout)
+				{
+					Debug.LogError($"Raycast('{startHit}', '{endHit}') while loop went for more than '{safetyTimeout}' iterations. Breaking early...");
+					amStillProjecting = false;
+					rprt.Log_And_End_Method($"Raycast('{startHit}', '{endHit}') while loop went for more than '{safetyTimeout}' iterations. Breaking early...");
+					return true;
+				}
+			}
+			#endregion
+
+			rprt.Log_And_End_Method($"");
+			return true;
 
 		}
 
@@ -1552,11 +1791,12 @@ namespace LogansNavigationExtension
 					outPath = null;
 					return false;
 				}
-				else if (sweepCoord.TrianglesIndex != startHit.TriangleIndex || sweepCoord.ComponentIndex != startHit.VertIndex)
+				else if (sweepCoord.TriangleIndex != startHit.TriangleIndex || sweepCoord.ComponentIndex != startHit.VertIndex)
 				{
 					startHit = new LNX_NavmeshHit(
 						startHit.Position, GetSurfaceProjectionVector(),
-						sweepCoord.TrianglesIndex,
+						sweepCoord.SurfaceIndex,
+						sweepCoord.TriangleIndex,
 						sweepCoord.ComponentIndex,
 						-1
 					);
@@ -1582,7 +1822,7 @@ namespace LogansNavigationExtension
 					{
 						LNX_ComponentCoordinate shrdEdgeCoord = Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].SharedEdgeCoordinate;
 						startHit = new LNX_NavmeshHit(
-							Triangles[shrdEdgeCoord.TrianglesIndex].Edges[shrdEdgeCoord.ComponentIndex],
+							Triangles[shrdEdgeCoord.TriangleIndex].Edges[shrdEdgeCoord.ComponentIndex],
 							startHit.Position,
 							GetSurfaceProjectionVector()
 						);
@@ -1665,6 +1905,7 @@ namespace LogansNavigationExtension
 					triPerimHit = new LNX_NavmeshHit(
 						outPath.PathPoints[outPath.PathPoints.Count - 1].Position + projectDir.normalized * (castDistance - outPath.TotalDistance),
 						triPerimHit.Normal,
+						currentStartHit.SurfaceIndex,
 						currentStartHit.TriangleIndex,
 						0,
 						edgIndx
@@ -1761,12 +2002,13 @@ namespace LogansNavigationExtension
 					outPath = null;
 					return false;
 				}
-				else if (sweepCoord.TrianglesIndex != startHit.TriangleIndex || sweepCoord.ComponentIndex != startHit.VertIndex)
+				else if (sweepCoord.TriangleIndex != startHit.TriangleIndex || sweepCoord.ComponentIndex != startHit.VertIndex)
 				{
 					rprt.Log($"sweep coord is different from starthit coordinates. Adjusting...");
 					startHit = new LNX_NavmeshHit(
 						startHit.Position, GetSurfaceProjectionVector(),
-						sweepCoord.TrianglesIndex,
+						sweepCoord.SurfaceIndex,
+						sweepCoord.TriangleIndex,
 						sweepCoord.ComponentIndex,
 						-1
 					);
@@ -1800,7 +2042,7 @@ namespace LogansNavigationExtension
 						rprt.Log($"found that edge is NOT terminal. adjusting startHit...");
 						LNX_ComponentCoordinate shrdEdgeCoord = Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].SharedEdgeCoordinate;
 						startHit = new LNX_NavmeshHit(
-							Triangles[shrdEdgeCoord.TrianglesIndex].Edges[shrdEdgeCoord.ComponentIndex],
+							Triangles[shrdEdgeCoord.TriangleIndex].Edges[shrdEdgeCoord.ComponentIndex],
 							startHit.Position,
 							GetSurfaceProjectionVector()
 						);
@@ -1902,6 +2144,7 @@ namespace LogansNavigationExtension
 					triPerimHit = new LNX_NavmeshHit(
 						outPath.PathPoints[outPath.PathPoints.Count - 1].Position + projectDir.normalized * (castDistance - outPath.TotalDistance),
 						triPerimHit.Normal,
+						currentStartHit.SurfaceIndex,
 						currentStartHit.TriangleIndex,
 						0,
 						edgIndx
@@ -1944,6 +2187,161 @@ namespace LogansNavigationExtension
 
 		}
 
+		public bool Raycast(LNX_NavmeshHit startHit, Vector3 projectDir, out LNX_Path outPath, LNX_NavmeshHit endHit)
+		{
+			#region SHORT-CIRCUITING ==================================================
+			if (projectDir == Vector3.zero)
+			{
+				Debug.LogWarning($"LNX WARNING! projectDir was passed into method as Vector3.zero. Was this intentional? Returning early.");
+
+				outPath = null;
+				return false;
+			}
+			#endregion
+
+			outPath = new LNX_Path(GetSurfaceProjectionVector(), startHit);
+
+			//todo: instead of using FlatHitPosition(startHit) below, cache this value and efficiency test to see if it's worth it
+			// todo: also, a little bit lower, there's a line saying [Vector3 vProject = FlatVector( endHit.Position - startHit.Position ).normalized;],
+			// try pre-caching this as well and efficiency testing
+
+			Vector3 vProject_fltnd = FlatVector(projectDir).normalized;
+
+			#region CHECK IF START HIT NEEDS TO BE ADJUSTED, OR IS CAUSE TO SHORT-CIRCUIT ========================
+			if (startHit.VertIndex > -1)
+			{
+				LNX_ComponentCoordinate sweepCoord = Triangles[startHit.TriangleIndex].Verts[startHit.VertIndex].GetVertCoord_viaProjectionSweep(
+					vProject_fltnd, true);
+
+				if (sweepCoord == LNX_ComponentCoordinate.None)
+				{
+					if (!VertIsOnTerminalEdge(startHit.TriangleIndex, startHit.VertIndex))
+					{
+						Debug.LogError($"LNX_ERROR! Raycast startHit: ('{startHit}') was on a non-terminal vert, but couldn't get adjusted " +
+							$"vert coord via projection sweep. This shouldn't happen on a non-terminal vert. Maybe the " +
+							$"relational/shared-vert information is incorrect or needs to be reloaded. Returning early...");
+					}
+
+					outPath = null;
+					return false;
+				}
+				else if (sweepCoord.TriangleIndex != startHit.TriangleIndex || sweepCoord.ComponentIndex != startHit.VertIndex)
+				{
+					startHit = new LNX_NavmeshHit(
+						startHit.Position, GetSurfaceProjectionVector(),
+						sweepCoord.SurfaceIndex,
+						sweepCoord.TriangleIndex,
+						sweepCoord.ComponentIndex,
+						-1
+					);
+				}
+			}
+			else if (startHit.EdgeIndex > -1)
+			{
+				if
+				(
+					Vector3.Dot
+					(
+						vProject_fltnd,
+						Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].v_Cross_flat.normalized
+					) < 0f
+				) //"if projection points toward 'outside' direction of this edge"...
+				{
+					if (Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].AmTerminal)
+					{
+						outPath = null;
+						return true;
+					}
+					else
+					{
+						LNX_ComponentCoordinate shrdEdgeCoord = Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].SharedEdgeCoordinate;
+						startHit = new LNX_NavmeshHit(
+							Triangles[shrdEdgeCoord.TriangleIndex].Edges[shrdEdgeCoord.ComponentIndex],
+							startHit.Position,
+							GetSurfaceProjectionVector()
+						);
+					}
+				}
+			}
+			#endregion
+
+			#region PROJECT THROUGH TO END HIT ==================================
+			LNX_NavmeshHit currentStartHit = startHit;
+			int safetyTimeout = Triangles.Length;
+			int runningWhileIterations = 0;
+
+			bool amStillProjecting = true;
+
+			while (amStillProjecting)
+			{
+				LNX_NavmeshHit triPerimHit = LNX_NavmeshHit.None;
+
+				if
+				(
+					!Triangles[currentStartHit.TriangleIndex].ProjectThroughToPerimeter(
+					currentStartHit, projectDir, out triPerimHit, true)
+				)
+				{
+					Debug.LogError($"something went wrong with tri{currentStartHit.TriangleIndex}." +
+						$"ProjectThroughToPerimeter(" +
+						$"'{LNX_UnitTestUtilities.LongVectorString(currentStartHit.Position)}', projectDir: '{projectDir}'). " +
+						$"It returned false, which usually shouldn't happen...");
+					return false;
+				}
+
+				#region CHECK FOR PROBLEM IN CASE OF HIT LANDING ON SAME TRIANGLE AS LAST ===============================
+				if (triPerimHit.TriangleIndex == currentStartHit.TriangleIndex) //this means we haven't moved to a new triangle. Maybe we've "doubled back"
+				{
+					if
+					(
+						(
+							triPerimHit.EdgeIndex != -1 &&
+							!Triangles[triPerimHit.TriangleIndex].Edges[triPerimHit.EdgeIndex].AmTerminal
+						) ||
+						(
+							triPerimHit.VertIndex > -1 &&
+							Triangles[triPerimHit.TriangleIndex].Verts[triPerimHit.VertIndex].GetVertCoord_viaProjectionSweep(
+							projectDir, true) == LNX_ComponentCoordinate.None
+						)
+					)
+					{
+						Debug.LogError($"LNX ERROR! Triangle.ProjectThroughToPerimeter returned hit: '{triPerimHit}' on same tri " +
+							$"as last one: '{currentStartHit}', but doesn't appear to be on a terminal edge/vert. This is NOT " +
+							$"supposed to happen.");
+						return false;
+					}
+				}
+				#endregion
+
+				if ( triPerimHit.TriangleIndex == endHit.TriangleIndex )
+				{
+					outPath.AddPoint(triPerimHit);
+					outPath.AddPoint(endHit);
+					return false;
+				}
+
+				outPath.AddPoint(triPerimHit);
+
+				if (triPerimHit.TriangleIndex == currentStartHit.TriangleIndex) //can assume NOT terminal because of earlier check
+				{
+					outPath.AddPoint(triPerimHit);
+					return true;
+				}
+
+				currentStartHit = triPerimHit;
+
+				runningWhileIterations++;
+				if (runningWhileIterations > safetyTimeout)
+				{
+					amStillProjecting = false;
+					return true;
+				}
+			}
+			#endregion
+
+			return false;
+
+		}
 
 		/// <summary>
 		/// Traces a line between two points on a navmesh.
@@ -1951,6 +2349,10 @@ namespace LogansNavigationExtension
 		/// <returns>True if the ray is terminated before reaching target position. Otherwise returns false.</returns>
 		public bool Raycast(LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, out LNX_Path outPath )
 		{
+			return TryProjectThrough(startHit, endHit, out outPath);
+
+			//todo: delete following when satified
+			/*
 			#region SHORT-CIRCUITING ==================================================
 			if (startHit.TriangleIndex == endHit.TriangleIndex) //If start and end hit are on same triangle...
 			{
@@ -2022,6 +2424,7 @@ namespace LogansNavigationExtension
 					{
 						startHit = new LNX_NavmeshHit(
 							startHit.Position, GetSurfaceProjectionVector(),
+							sweepCoord.SurfaceIndex,
 							sweepCoord.TrianglesIndex,
 							sweepCoord.ComponentIndex,
 							-1
@@ -2120,263 +2523,13 @@ namespace LogansNavigationExtension
 			#endregion
 
 			return true;
+			*/
 		}
 		public bool Raycast_dbg(LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, out LNX_Path outPath, ref LNX_MethodDebugReport rprt) 
 		{
 			rprt.StartMethod($"Raycast_dbg(startHit: '{startHit}', endHit: '{endHit}')");
 
-			#region SHORT-CIRCUITING ==================================================
-			if (startHit.TriangleIndex == endHit.TriangleIndex) //If start and end hit are on same triangle...
-			{
-				outPath = new LNX_Path(GetSurfaceProjectionVector(), startHit, endHit);
-				rprt.Log_And_End_Method("startHit and endHit on same tri index. Short-circuiting early...");
-				return false;
-			}
-
-			if( startHit.Position == endHit.Position )
-			{
-				outPath = new LNX_Path(GetSurfaceProjectionVector(), endHit);
-				rprt.Log_And_End_Method("start and end hit are in same  position. Returning already-calculated relational paths...");
-				return false;
-			}
-			#endregion
-
-			outPath = new LNX_Path(GetSurfaceProjectionVector(), startHit);
-
-			//todo: instead of using FlatHitPosition(startHit) below, cache this value and efficiency test to see if it's worth it
-			// todo: also, a little bit lower, there's a line saying [Vector3 vProject = FlatVector( endHit.Position - startHit.Position ).normalized;],
-			// try pre-caching this as well and efficiency testing
-
-			rprt.Log($"no short-circuit. Proceding...");
-
-			Vector3 vProject_fltnd = FlatVector(endHit.Position - startHit.Position).normalized;
-
-			if ( startHit.VertIndex > -1 )
-			{
-				//TODO: could we add another short-circuit here that checks if both the start and end hits are on a vert, and if so, if these verts are shared by a common
-				//triangle? It would effectively be similar to the first short-circuit check above in that we would treat the hits as though theyre both on the same tri
-				rprt.Log($"start hit lies on vert: '{startHit.VertIndex}'...", 
-					"Checking if start vert touches end tri...");
-
-				if( endHit.VertIndex > -1 )
-				{
-					rprt.Log($"Endhit is also on vertex. Investigating if relational short-circuiting can be used...");
-					if (Triangles[startHit.TriangleIndex].Verts[startHit.VertIndex].IsRelationshipCollectionSuperficiallyValid(Triangles.Length) )
-					{
-						rprt.Log($"Relationship collection IS superficially valid. Proceeding with relational check...");
-						LNX_VertexRelationship rel = Triangles[startHit.TriangleIndex].Verts[startHit.VertIndex].GetRelationship(
-							endHit.TriangleIndex, endHit.VertIndex);
-						rprt.Log($"Got existing relationship: '{rel}'...");
-
-						if ( rel != null && rel.AmValid )
-						{
-							outPath = new LNX_Path(rel.PathTo); //IMPORTANT! This needs to be a new (different) object so that the pathpoint list doesn't get inadvertently changed
-
-							rprt.Log($"existing relationship IS valid. used it's path: '{outPath}'. pt count: '{outPath.PointCount}'");
-
-							rprt.Log_And_End_Method($"path.AmStraight: '{outPath.AmStraight}'",
-								$". Now returning '{!outPath.AmStraight}'...");
-							return !outPath.AmStraight;
-						}
-					}
-					else
-					{
-						rprt.Log($"relationship colleciton is NOT valid. Cannot use relational information...");
-					}
-				}
-
-				if 
-				( 
-					VertTouchesTriangle(Triangles[startHit.TriangleIndex].Verts[startHit.VertIndex].MyCoordinate, endHit.TriangleIndex)
-				) //note: this is a pretty rare case, but it does happen. Especially through ping operation
-				{
-					rprt.Log($"start vert DOES indeed lie on endtri. Path end point can be assumed...");
-					outPath = new LNX_Path(GetSurfaceProjectionVector(), startHit, endHit);
-					return false;
-				}
-
-				rprt.Log($"start hit lies on vert: '{startHit.VertIndex}'. Checking if hit needs to be adjusted based on start to end projection...");
-
-				LNX_ComponentCoordinate sweepCoord = Triangles[startHit.TriangleIndex].Verts[startHit.VertIndex].GetVertCoord_viaProjectionSweep_dbg( 
-					vProject_fltnd, true, ref rprt );
-
-				if( sweepCoord.TrianglesIndex == startHit.TriangleIndex && sweepCoord.ComponentIndex == startHit.VertIndex )
-				{
-					rprt.Log($"sweep decided that projection WAS already on the correct vert...");
-				}
-				else
-				{
-					rprt.Log($"Sweep decided it needed to adjust startHIt. Checking which vert the starthit should be adjusted to...");
-
-					if (sweepCoord == LNX_ComponentCoordinate.None)
-					{
-						rprt.Log($"Got 'None' relationship...");
-						if( VertIsOnTerminalEdge(startHit.TriangleIndex, startHit.VertIndex))
-						{
-							rprt.Log($"This vert is on a terminal edge. Assuming raycast is projected toward outside into terminal space. Returning true...");
-						}
-						else
-						{
-							Debug.LogError($"LNX_ERROR! Raycast startHit: ('{startHit}') was on a non-terminal vert, but couldn't get adjusted vert coord via projection sweep. " +
-								$"This shouldn't happen on a non-terminal vert. Maybe the relational information is incorrect or needs to be reloaded. Returning early...");
-							rprt.Log_And_End_Method($"Problem! Got none relationship. Returning true...");
-						}
-
-						outPath = null;
-						return true;
-					}
-					else
-					{
-						rprt.Log($"got rel: '{sweepCoord}' from projectionsweep...");
-
-						startHit = new LNX_NavmeshHit(
-							startHit.Position, GetSurfaceProjectionVector(),
-							sweepCoord.TrianglesIndex,
-							sweepCoord.ComponentIndex,
-							-1
-						);
-
-						rprt.Log($"adjusted starthit to: '{startHit}'...");
-					}
-				}
-			}
-			else if( startHit.EdgeIndex > -1 )
-			{
-				rprt.Log($"startHit was on an edge. Now making sure it's the correct edge...");
-				if 
-				(
-					Vector3.Dot
-					(
-						vProject_fltnd, 
-						Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].v_Cross_flat.normalized
-					) < 0f
-				) //projection points toward "outside" direction of this edge...
-				{
-					rprt.Log($"found that projection points in 'outside' direction of this edge...", 
-						"this will need further investigation...");
-					if (Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].AmTerminal )
-					{
-						outPath = null;
-						rprt.Log_And_End_Method($"this edge is terminal. Made outpath: '{outPath}', and returning true here...");
-						return true;
-					}
-					else
-					{
-						rprt.Log($"this edge is NOT terminal. Switching startHit to be on adjacent edge...");
-						LNX_ComponentCoordinate shrdEdgeCoord = Triangles[startHit.TriangleIndex].Edges[startHit.EdgeIndex].SharedEdgeCoordinate;
-						startHit = new LNX_NavmeshHit(
-							Triangles[shrdEdgeCoord.TrianglesIndex].Edges[shrdEdgeCoord.ComponentIndex],
-							startHit.Position,
-							GetSurfaceProjectionVector()
-						);
-						rprt.Log($"generated new startHit: '{startHit}'...");
-					}
-				}
-			}
-
-			#region PROJECT THROUGH TO END HIT ==================================
-			rprt.Log($"initialized path and added startHIt: '{startHit}'. Path pt count: '{outPath.PointCount}'");
-
-			LNX_NavmeshHit currentStartHit = startHit;
-			int safetyTimeout = Triangles.Length;
-			int runningWhileIterations = 0;
-
-			bool amStillProjecting = true;
-
-			rprt.Log($"Now trying to project through to end hit...");
-			while ( amStillProjecting )
-			{
-				rprt.Log("=========================================================================");
-				rprt.Log($"while{runningWhileIterations}...");
-				LNX_NavmeshHit triPerimHit = LNX_NavmeshHit.None;
-
-				if (
-					!Triangles[currentStartHit.TriangleIndex].ProjectThroughToPerimeter_dbg(
-					currentStartHit, endHit, out triPerimHit, ref rprt, true)
-				)
-				{
-					rprt.Log($"LNX_Triangle.ProjectThroughToPerimeter() was unsuccesful. This means the chain has failed. Returning early...");
-					rprt.EndMethod("Raycast_dbg()");
-					return true;
-				}
-				rprt.Log($"LNX_Triangle.ProjectThroughToPerimeter() got perimeter hit: '{triPerimHit}'...",
-					$"Inspecting perimHit tri index against last logged tri index: '{outPath.EndTriIndex}'..."
-				);
-
-				if( triPerimHit.TriangleIndex == outPath.PathPoints[outPath.PathPoints.Count-1].TriangleIndex )
-				{
-					rprt.Log($"tri perimeter hit index: '{triPerimHit.TriangleIndex}' is the same as previously logged path index. " +
-						$"Need to check if there's a problem...");
-
-					if( DirectionIsTerminalFromHit_extrapolated(vProject_fltnd, triPerimHit) )
-					{
-						rprt.Log_And_End_Method($"found that this hit/projection combination is directionally-terminal. " +
-							$"It seems we've hit a wall. Returning true...");
-					}
-					else
-					{
-						rprt.Log_And_End_Method($"tri perimeter hit does NOT seem to be directionally terminal, which is unexpected. There seems to be a problem. Returning true early...");
-						Debug.Log($"raycast appears to have 'doubled back'. Returning early...");
-					}
-
-					outPath.AddPoint( triPerimHit );
-
-					return true;
-				}
-
-				rprt.Log($"LNX_Triangle.ProjectThroughToPerimeter() WAS succesful...");
-				
-				if
-				( 
-					triPerimHit.Position == endHit.Position ||
-					Vector3.Distance(triPerimHit.Position, endHit.Position) < 0.001f
-				)
-				{
-					rprt.Log($"triperimhit position is same as endhit position.");
-					outPath.AddPoint( endHit );
-					rprt.Log_And_End_Method($"added endhit to outPath. Returning false now...");
-					return false;
-				}
-				else
-				{
-					rprt.Log($"Adding the perimeter hit: '{triPerimHit}' to outPath...");
-					outPath.AddPoint(triPerimHit);
-				}
-				
-				if ( HitIsOnTriPerimeter_extrapolated_dbg(triPerimHit, Triangles[endHit.TriangleIndex], ref rprt) )
-				{
-					rprt.Log($"found that triPerimHit was on same triangle as endHIt.",
-						"This means the while-loop should end here.");
-					if (endHit.Position != triPerimHit.Position) //In case the end position is actually on the perimeter of the destination tri...
-					{
-						rprt.Log($"endhit position and triperimhit position NOT the same. Adding endHit: '{endHit}' to path...");
-						outPath.AddPoint(endHit);
-					}
-
-					rprt.Log($"Now path has: '{outPath.PathPoints.Count}' points. Returning false...");
-
-					rprt.EndMethod("Raycast_dbg()");
-					return false;
-				}
-
-				currentStartHit = triPerimHit;
-
-				runningWhileIterations++;
-				if (runningWhileIterations > safetyTimeout)
-				{
-					Debug.LogError($"Raycast('{startHit}', '{endHit}') while loop went for more than '{safetyTimeout}' iterations. Breaking early...");
-					amStillProjecting = false;
-					rprt.Log($"while loop went for more than '{safetyTimeout}' iterations. Breaking early...");
-					rprt.EndMethod("Raycast_dbg()");
-					return true;
-				}
-			}
-			#endregion
-
-			rprt.Log($"after while loop. Apparently Projecting through to perimeter didn't work. Returning true as default...");
-			rprt.EndMethod("Raycast_dbg()");
-
-			return true;
+			return TryProjectThrough_dbg(startHit, endHit, out outPath, ref rprt);
 		}
 
 		/// <summary>
@@ -2403,7 +2556,7 @@ namespace LogansNavigationExtension
 			}
 			#endregion
 
-			return Raycast( lnxStartHit, lnxEndHit, out outPath );
+			return TryProjectThrough( lnxStartHit, lnxEndHit, out outPath );
 		}
 
 		public bool Raycast_dbg(Vector3 sourcePosition, Vector3 targetPosition, float maxSampleDistance, out LNX_Path outPath, 
@@ -2447,7 +2600,7 @@ namespace LogansNavigationExtension
 			#endregion
 
 			rprt.Log($"no short circuits. Now passing off to deeper overload...");
-			bool rslt = Raycast_dbg( lnxStartHit, lnxEndHit, out outPath, ref rprt );
+			bool rslt = TryProjectThrough_dbg( lnxStartHit, lnxEndHit, out outPath, ref rprt );
 
 			//rprt.Log($"tablvl: '{rprt.MethodLvl}'");
 			rprt.EndMethod("Raycast_dbg()");
@@ -3455,12 +3608,18 @@ namespace LogansNavigationExtension
 			{
 				return 0;
 			}
+			if (startTriIndx < 0 || endTriIndx < 0)
+			{
+				Debug.LogError($"LNX ERROR! one of the supplied tri indices were negative! Returning early...");
+				return -1;
+			}
 			#endregion
 
 			bool amFinished = false;
 			while (!amFinished)
 			{
 				runningDepth++;
+
 				if (runningDepth > Triangles.Length)
 				{
 					Debug.LogError($"runningDepth exceded triangles length!");
@@ -3469,7 +3628,7 @@ namespace LogansNavigationExtension
 
 				#region ASSEMBLE ADJACENT TRIANGLES LIST =================================
 				List<int> adjacentTris = new List<int>();
-				List<int> heldBackStopTris = new List<int>();
+				List<int> heldBackStopTris = new List<int>(); //this way we can iterate over a stable list
 				for (int i = 0; i < backstopTris.Count; i++)
 				{
 					heldBackStopTris.Add(backstopTris[i]);
@@ -3481,23 +3640,28 @@ namespace LogansNavigationExtension
 					{
 						for (int i_shrd = 0; i_shrd < Triangles[backstopTris[i]].Verts[i_vrts].SharedVertexCoordinates.Length; i_shrd++)
 						{
-							if (Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TrianglesIndex == endTriIndx)
+							if (Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TriangleIndex == endTriIndx)
 							{
 								return runningDepth;
 							}
 
 							if
 							(
-								!adjacentTris.Contains(Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TrianglesIndex) &&
-								!backstopTris.Contains(Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TrianglesIndex)
+								!adjacentTris.Contains(Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TriangleIndex) &&
+								!backstopTris.Contains(Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TriangleIndex)
 							)
 							{
-								adjacentTris.Add(Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TrianglesIndex);
-								backstopTris.Add(Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TrianglesIndex);
+								adjacentTris.Add(Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TriangleIndex);
+								backstopTris.Add(Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TriangleIndex);
 
 							}
 						}
 					}
+				}
+
+				if (adjacentTris.Count <= 0)
+				{
+					amFinished = true;
 				}
 			}
 			#endregion
@@ -3518,6 +3682,12 @@ namespace LogansNavigationExtension
 				rprt.Log_And_End_Method($"indices the same.");
 				return 0;
 			}
+			if (startTriIndx < 0 || endTriIndx < 0)
+			{
+				Debug.LogError($"LNX ERROR! one of the supplied tri indices were negative! Returning early...");
+				rprt.Log_And_End_Method($"LNX ERROR! one of the supplied tri indices were negative! Returning early...");
+				return -1;
+			}
 
 			if (DateTime.Now.Subtract(rprt.DT_Start).TotalSeconds > 12f)
 			{
@@ -3532,22 +3702,21 @@ namespace LogansNavigationExtension
 			while ( !amFinished )
 			{
 				runningDepth++;
-				rprt.Log($"while() runningDepth: '{runningDepth}'...");
+				rprt.Log($"while() runningDepth: '{runningDepth}' =============");
 
 				if (runningDepth > Triangles.Length)
 				{
-					rprt.Log($"runningDepth exceded triangles length!");
+					rprt.Log_And_End_Method($"runningDepth exceded triangles length!");
 
 					Debug.LogError($"runningDepth exceded triangles length!");
 					return -1;
 				}
 
-				rprt.Log("=======================================================================");
 				#region ASSEMBLE ADJACENT TRIANGLES LIST =================================
-				rprt.Log($"assembling list of adjacent triangles");
+				rprt.Log($"assembling list of adjacent triangles...");
 
 				List<int> adjacentTris = new List<int>();
-				List<int> heldBackStopTris = new List<int>();
+				List<int> heldBackStopTris = new List<int>(); //this way we can iterate over a stable list
 				for (int i = 0; i < backstopTris.Count; i++)
 				{
 					heldBackStopTris.Add(backstopTris[i]);
@@ -3559,21 +3728,21 @@ namespace LogansNavigationExtension
 					{
 						for (int i_shrd = 0; i_shrd < Triangles[backstopTris[i]].Verts[i_vrts].SharedVertexCoordinates.Length; i_shrd++)
 						{
-							if (Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TrianglesIndex == endTriIndx)
+							if (Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TriangleIndex == endTriIndx)
 							{
-								rprt.Log_And_End_Method($"found endtri in adjacent indices. Returning: '{runningDepth + 1}'");
+								rprt.Log_And_End_Method($"found endtri in adjacent indices. Returning: '{runningDepth}'");
 								return runningDepth;
 							}
 
 							if
 							(
-								!adjacentTris.Contains(Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TrianglesIndex) &&
-								!backstopTris.Contains(Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TrianglesIndex)
+								!adjacentTris.Contains(Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TriangleIndex) &&
+								!backstopTris.Contains(Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TriangleIndex)
 							)
 							{
-								rprt.Log($"adding tri: '{Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TrianglesIndex}' to adjacent list from v{i_vrts}...");
-								adjacentTris.Add(Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TrianglesIndex);
-								backstopTris.Add(Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TrianglesIndex);
+								rprt.Log($"adding tri: '{Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TriangleIndex}' to adjacent list from v{i_vrts}...");
+								adjacentTris.Add(Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TriangleIndex);
+								backstopTris.Add(Triangles[heldBackStopTris[i]].Verts[i_vrts].SharedVertexCoordinates[i_shrd].TriangleIndex);
 
 							}
 						}
@@ -3581,10 +3750,16 @@ namespace LogansNavigationExtension
 				}
 
 				rprt.Log($"finished assembling list of adjacent tris. List length: '{adjacentTris.Count}', backstop: '{backstopTris.Count}'...");
-				rprt.Log("=======================================================================");
+
+				if ( adjacentTris.Count <= 0 )
+				{
+					rprt.Log($"found NO new adjacent tris. Stopping while loop...");
+					amFinished = true;
+				}
 			}
 			#endregion
 
+			rprt.Log_And_End_Method($"finally returning -1...");
 			return -1;
 		}
 
@@ -3661,11 +3836,11 @@ namespace LogansNavigationExtension
 				{
 					if ( IsBoundsVert(i_tris, j) )
 					{
-						boundsVerts_temp.Add( new LNX_ComponentCoordinate(i_tris, j) );
+						boundsVerts_temp.Add( new LNX_ComponentCoordinate(MySurfaceIndex, i_tris, j) );
 					}
 					if ( IsBoundsEdge(i_tris, j) )
 					{
-						boundsEdges_temp.Add(new LNX_ComponentCoordinate(i_tris, j));
+						boundsEdges_temp.Add(new LNX_ComponentCoordinate(MySurfaceIndex, i_tris, j));
 					}
 				}
 			}
@@ -3850,13 +4025,13 @@ namespace LogansNavigationExtension
 			{
 				if 
 				(
-					Triangles[coord.TrianglesIndex].Edges
+					Triangles[coord.TriangleIndex].Edges
 						[
-							Triangles[coord.TrianglesIndex].Verts[coord.ComponentIndex].Index_FirstFormingEdge
+							Triangles[coord.TriangleIndex].Verts[coord.ComponentIndex].Index_FirstFormingEdge
 						].AmTerminal ||
-					Triangles[coord.TrianglesIndex].Edges
+					Triangles[coord.TriangleIndex].Edges
 						[
-							Triangles[coord.TrianglesIndex].Verts[coord.ComponentIndex].Index_SecondFormingEdge
+							Triangles[coord.TriangleIndex].Verts[coord.ComponentIndex].Index_SecondFormingEdge
 						].AmTerminal
 				)
 				{
@@ -3898,7 +4073,7 @@ namespace LogansNavigationExtension
 			{
 				for ( int i = 0; i < boundsVerts.Length; i++ )
 				{
-					if( boundsVerts[i].TrianglesIndex == triIndx && boundsVerts[i].ComponentIndex == vertIndx )
+					if( boundsVerts[i].TriangleIndex == triIndx && boundsVerts[i].ComponentIndex == vertIndx )
 					{
 						return true;
 					}
@@ -3955,17 +4130,17 @@ namespace LogansNavigationExtension
 			if 
 			(
 				firstVertCoordinate == secondVertCoordinate ||
-				Triangles[firstVertCoordinate.TrianglesIndex].Verts[firstVertCoordinate.ComponentIndex].SharesVertSpace_ViaRelational
-					(secondVertCoordinate.TrianglesIndex, secondVertCoordinate.ComponentIndex) ||
-				Triangles[secondVertCoordinate.TrianglesIndex].Verts[secondVertCoordinate.ComponentIndex].SharesVertSpace_ViaRelational
-					(firstVertCoordinate.TrianglesIndex, firstVertCoordinate.ComponentIndex)
+				Triangles[firstVertCoordinate.TriangleIndex].Verts[firstVertCoordinate.ComponentIndex].SharesVertSpace_ViaRelational
+					(secondVertCoordinate.TriangleIndex, secondVertCoordinate.ComponentIndex) ||
+				Triangles[secondVertCoordinate.TriangleIndex].Verts[secondVertCoordinate.ComponentIndex].SharesVertSpace_ViaRelational
+					(firstVertCoordinate.TriangleIndex, firstVertCoordinate.ComponentIndex)
 			)
 			{
 				return true;
 			}
 
-			return Triangles[firstVertCoordinate.TrianglesIndex].Verts[firstVertCoordinate.ComponentIndex].V_Position ==
-				Triangles[secondVertCoordinate.TrianglesIndex].Verts[secondVertCoordinate.ComponentIndex].V_Position;
+			return Triangles[firstVertCoordinate.TriangleIndex].Verts[firstVertCoordinate.ComponentIndex].V_Position ==
+				Triangles[secondVertCoordinate.TriangleIndex].Verts[secondVertCoordinate.ComponentIndex].V_Position;
 		}
 
 		public bool VertTouchesAnotherVertInList( LNX_ComponentCoordinate vert, List<LNX_ComponentCoordinate> vertList )
@@ -4002,25 +4177,25 @@ namespace LogansNavigationExtension
 
 		public bool VertTouchesTriangle(LNX_ComponentCoordinate vertCoordinate, int triIndex ) //todo: unit test
 		{
-			if ( vertCoordinate.TrianglesIndex == triIndex )
+			if ( vertCoordinate.TriangleIndex == triIndex )
 			{
 				return true;
 			}
 
 			if 
 			(
-				Triangles[vertCoordinate.TrianglesIndex].Verts[vertCoordinate.ComponentIndex].SharedVertexCoordinates != null &&
-				Triangles[vertCoordinate.TrianglesIndex].Verts[vertCoordinate.ComponentIndex].SharedVertexCoordinates.Length > 0
+				Triangles[vertCoordinate.TriangleIndex].Verts[vertCoordinate.ComponentIndex].SharedVertexCoordinates != null &&
+				Triangles[vertCoordinate.TriangleIndex].Verts[vertCoordinate.ComponentIndex].SharedVertexCoordinates.Length > 0
 			)
 			{
 				for 
 				(
 					int i = 0; 
-					i < Triangles[vertCoordinate.TrianglesIndex].Verts[vertCoordinate.ComponentIndex].SharedVertexCoordinates.Length; 
+					i < Triangles[vertCoordinate.TriangleIndex].Verts[vertCoordinate.ComponentIndex].SharedVertexCoordinates.Length; 
 					i++
 				)
 				{
-					if (Triangles[vertCoordinate.TrianglesIndex].Verts[vertCoordinate.ComponentIndex].SharedVertexCoordinates[i].TrianglesIndex == triIndex)
+					if (Triangles[vertCoordinate.TriangleIndex].Verts[vertCoordinate.ComponentIndex].SharedVertexCoordinates[i].TriangleIndex == triIndex)
 					{
 						return true;
 					}
@@ -4030,9 +4205,9 @@ namespace LogansNavigationExtension
 			{
 				if
 				(
-					Triangles[triIndex].Verts[0].V_Position == Triangles[vertCoordinate.TrianglesIndex].Verts[vertCoordinate.ComponentIndex].V_Position ||
-					Triangles[triIndex].Verts[1].V_Position == Triangles[vertCoordinate.TrianglesIndex].Verts[vertCoordinate.ComponentIndex].V_Position ||
-					Triangles[triIndex].Verts[2].V_Position == Triangles[vertCoordinate.TrianglesIndex].Verts[vertCoordinate.ComponentIndex].V_Position
+					Triangles[triIndex].Verts[0].V_Position == Triangles[vertCoordinate.TriangleIndex].Verts[vertCoordinate.ComponentIndex].V_Position ||
+					Triangles[triIndex].Verts[1].V_Position == Triangles[vertCoordinate.TriangleIndex].Verts[vertCoordinate.ComponentIndex].V_Position ||
+					Triangles[triIndex].Verts[2].V_Position == Triangles[vertCoordinate.TriangleIndex].Verts[vertCoordinate.ComponentIndex].V_Position
 				)
 				{
 					return true;
@@ -4060,16 +4235,16 @@ namespace LogansNavigationExtension
 		*/
 		#endregion
 
-			#region HIT OPERATIONS ===========================================================
-			/// <summary>
-			/// Tells whether the supplied projection is directionally-terimnal if starting from the supplied hit.
-			/// <para>Note: This method is "extrapolated" meaning it draws it's conclusion from existing relational information present on 
-			/// the hit object and the navmesh components rather than performing an expensive calculation.<br></br>
-			/// This makes it must faster, but it means that the supplied hit and the navmesh must have correct relational information in order for this method to work right.</para>
-			/// </summary>
-			/// <param name="projection"></param>
-			/// <param name="hit"></param>
-			/// <returns></returns>
+		#region HIT OPERATIONS ===========================================================
+		/// <summary>
+		/// Tells whether the supplied projection is directionally-terimnal if starting from the supplied hit.
+		/// <para>Note: This method is "extrapolated" meaning it draws it's conclusion from existing relational information present on 
+		/// the hit object and the navmesh components rather than performing an expensive calculation.<br></br>
+		/// This makes it must faster, but it means that the supplied hit and the navmesh must have correct relational information in order for this method to work right.</para>
+		/// </summary>
+		/// <param name="projection"></param>
+		/// <param name="hit"></param>
+		/// <returns></returns>
 		public bool DirectionIsTerminalFromHit_extrapolated( Vector3 projection, LNX_NavmeshHit hit )
 		{
 			Vector3 fltPrjction = FlatVector(projection);
@@ -4104,15 +4279,15 @@ namespace LogansNavigationExtension
 				else if
 				(
 					(
-						tri.Edges[0].SharedEdgeCoordinate.TrianglesIndex == hit.TriangleIndex &&
+						tri.Edges[0].SharedEdgeCoordinate.TriangleIndex == hit.TriangleIndex &&
 						tri.Edges[0].SharedEdgeCoordinate.ComponentIndex == hit.EdgeIndex
 					) ||
 					(
-						tri.Edges[1].SharedEdgeCoordinate.TrianglesIndex == hit.TriangleIndex &&
+						tri.Edges[1].SharedEdgeCoordinate.TriangleIndex == hit.TriangleIndex &&
 						tri.Edges[1].SharedEdgeCoordinate.ComponentIndex == hit.EdgeIndex
 					) ||
 										(
-						tri.Edges[2].SharedEdgeCoordinate.TrianglesIndex == hit.TriangleIndex &&
+						tri.Edges[2].SharedEdgeCoordinate.TriangleIndex == hit.TriangleIndex &&
 						tri.Edges[2].SharedEdgeCoordinate.ComponentIndex == hit.EdgeIndex
 					)
 				)
@@ -4149,15 +4324,15 @@ namespace LogansNavigationExtension
 				if
 				(
 					(
-						tri.Edges[0].SharedEdgeCoordinate.TrianglesIndex == hit.TriangleIndex &&
+						tri.Edges[0].SharedEdgeCoordinate.TriangleIndex == hit.TriangleIndex &&
 						tri.Edges[0].SharedEdgeCoordinate.ComponentIndex == hit.EdgeIndex
 					) ||
 					(
-						tri.Edges[1].SharedEdgeCoordinate.TrianglesIndex == hit.TriangleIndex &&
+						tri.Edges[1].SharedEdgeCoordinate.TriangleIndex == hit.TriangleIndex &&
 						tri.Edges[1].SharedEdgeCoordinate.ComponentIndex == hit.EdgeIndex
 					) ||
 										(
-						tri.Edges[2].SharedEdgeCoordinate.TrianglesIndex == hit.TriangleIndex &&
+						tri.Edges[2].SharedEdgeCoordinate.TriangleIndex == hit.TriangleIndex &&
 						tri.Edges[2].SharedEdgeCoordinate.ComponentIndex == hit.EdgeIndex
 					)
 				)
@@ -4179,6 +4354,21 @@ namespace LogansNavigationExtension
 
 			rprt.Log_And_End_Method($"made it to end. Returning false...");
 			return false;
+		}
+		
+		public bool HitsAreOnSameIsland( LNX_NavmeshHit hitA, LNX_NavmeshHit hitB )
+		{
+			if
+			( 
+				hitA.SurfaceIndex != MySurfaceIndex || 
+				hitB.SurfaceIndex != MySurfaceIndex ||
+				hitA.SurfaceIndex != hitB.SurfaceIndex
+			)
+			{
+				return false;
+			}
+
+			return GetAdjacencyDepthToTriangle(hitA.TriangleIndex, hitB.TriangleIndex) > -1;
 		}
 		#endregion
 
@@ -4260,8 +4450,12 @@ namespace LogansNavigationExtension
 		public void SayCurrentInfo()
 		{
 			Debug.Log($"" +
+				$"{name}\n" +
+				$"{nameof(MySurfaceIndex)}: '{MySurfaceIndex}'\n" +
 				$"{nameof(serializedDataString)}: '{serializedDataString}'\n" +
 				$"{nameof(SurfaceOrientation)}: '{SurfaceOrientation}'\n" +
+				$"{nameof(GetSurfaceProjectionVector)}: '{GetSurfaceProjectionVector()}'\n" +
+
 				$"Bounds-----\n" +
 				$"{nameof(Bounds_LowestX)}: '{Bounds_LowestX}, {nameof(Bounds_HighestX)}: '{Bounds_HighestX}'\n" +
 				$"{nameof(Bounds_LowestY)}: '{Bounds_LowestY}, {nameof(Bounds_HighestY)}: '{Bounds_HighestY}'\n" +
@@ -4310,7 +4504,6 @@ namespace LogansNavigationExtension
 				anomolyCount++;
 			}
 
-
 			for ( int i = 0; i < Triangles.Length; i++ )
 			{
 				sb_anomolies.AppendLine( $"Triangle[{i}]---" );
@@ -4347,11 +4540,90 @@ namespace LogansNavigationExtension
 			}
 		}
 
+		[ContextMenu("z call CreateRelationships()")]
+		public void CreateRelationships()
+		{
+			for ( int i = 0; i < Triangles.Length; i++ )
+			{
+				Triangles[i].Verts[0].Relationships = null;
+				Triangles[i].Verts[1].Relationships = null;
+				Triangles[i].Verts[2].Relationships = null;
+			}
+
+			StringBuilder sb_triangle = new StringBuilder();
+			DateTime dt_start = DateTime.Now;
+			#region PROXIMAL =================================
+			for (int i = 0; i < Triangles.Length; i++)
+			{
+				Triangles[i].Verts[0].CreateRelationships(this, true, true, false, ref sb_triangle);
+				Triangles[i].Verts[1].CreateRelationships(this, true, true, false, ref sb_triangle);
+				Triangles[i].Verts[2].CreateRelationships(this, true, true, false, ref sb_triangle);
+			}
+			#endregion
+
+			float timeoutAmt = 25f;
+
+			DateTime dt_methodStart = DateTime.Now;
+
+			Debug.Log($"now creating distal relationships...");
+
+			for (int i = 0; i < Triangles.Length; i++)
+			{
+				Debug.Log($"for tri{i} =====================/////////////////////////////////////////////////////");
+
+				sb_triangle.AppendLine($"\nfor tri{i} =====================/////////////////////////////////////////////////////");
+
+				DateTime dt_relStart = DateTime.Now;
+
+				Triangles[i].Verts[0].CreateRelationships(this, false, false, true, ref sb_triangle);
+				Debug.Log($"<color=green>{sb_triangle.ToString()}</color>");
+				sb_triangle = new StringBuilder();
+				if (DateTime.Now.Subtract(dt_relStart).TotalSeconds > timeoutAmt)
+				{
+					Debug.LogError($"timeout hit after creating all relationships for tri{i}vert{0}. Breaking...");
+					break;
+				}
+
+				Triangles[i].Verts[1].CreateRelationships(this, false, false, true, ref sb_triangle);
+				Debug.Log($"<color=green>{sb_triangle.ToString()}</color>");
+				sb_triangle = new StringBuilder();
+				if (DateTime.Now.Subtract(dt_relStart).TotalSeconds > timeoutAmt)
+				{
+					Debug.LogError($"timeout hit after creating all relationships for tri{i}vert{1}. Breaking...");
+					break;
+				}
+
+				Triangles[i].Verts[2].CreateRelationships(this, false, false, true, ref sb_triangle);
+				Debug.Log($"<color=green>{sb_triangle.ToString()}</color>");
+				sb_triangle = new StringBuilder();
+				if (DateTime.Now.Subtract(dt_relStart).TotalSeconds > timeoutAmt)
+				{
+					Debug.LogError($"timeout hit after creating all relationships for tri{i}vert{2}. Breaking...");
+					break;
+				}
+
+			}
+
+			Debug.Log($"finished. Entire operation: '{DateTime.Now.Subtract(dt_methodStart).TotalSeconds}' s");
+		}
 		#endregion
 
 #if UNITY_EDITOR
 		private void OnDrawGizmos()
 		{
+			#region STATE ===================
+			if ( stateFlag == 1 )
+			{
+				Debug.Log($"transitioning to updated...");
+				stateFlag = -1; //transitioning to updated
+			}
+			else if ( stateFlag == -1 )
+			{
+				Debug.Log($"now updated...");
+				stateFlag = 0; //updated
+			}
+			#endregion
+
 			if ( Application.isPlaying || Triangles == null)
 			{
 				return;
@@ -4366,6 +4638,25 @@ namespace LogansNavigationExtension
 				//Debug.Log("got here");
 				Gizmos.color = color_visualMesh;
 				Gizmos.DrawMesh( _VisualizationMesh );
+			}
+
+			Gizmos.color = color_edges;
+			for ( int i = 0; i < Triangles.Length; i++ )
+			{
+				for( int i_edges = 0; i_edges < 3; i_edges++ )
+				{
+					if ( Triangles[i].Edges[i_edges].AmTerminal && color_terminalEdges.a > 0f )
+					{
+						Color oldclr = Gizmos.color;
+						Gizmos.color = color_terminalEdges;
+						LNX_DrawingUtilities.DrawEdgeGizmo(Triangles[i].Edges[i_edges]);
+						Gizmos.color = oldclr;
+					}
+					else
+					{
+						LNX_DrawingUtilities.DrawEdgeGizmo(Triangles[i].Edges[i_edges]);
+					}
+				}
 			}
 		}
 #endif

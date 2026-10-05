@@ -25,7 +25,8 @@ namespace LogansNavigationExtension
 		public Vector3 OriginalPosition => originalPosition;
 
 		public LNX_ComponentCoordinate MyCoordinate;
-		public int TriangleIndex => MyCoordinate.TrianglesIndex;
+		public int SurfaceIndex => MyCoordinate.SurfaceIndex;
+		public int TriangleIndex => MyCoordinate.TriangleIndex;
 		public int ComponentIndex => MyCoordinate.ComponentIndex;
 
 		/// <summary>Index corresponding to the visualization mesh's triangles array that this vertex 
@@ -34,7 +35,7 @@ namespace LogansNavigationExtension
 		{
 			get
 			{
-				return (MyCoordinate.TrianglesIndex * 3) + MyCoordinate.ComponentIndex;
+				return (MyCoordinate.TriangleIndex * 3) + MyCoordinate.ComponentIndex;
 			}
 		}
 
@@ -75,7 +76,7 @@ namespace LogansNavigationExtension
 		/// <summary>Normalized directional vector pointing from this vertex to the center of it's triangle </summary>
 		[HideInInspector] public Vector3 v_toCenter => Vector3.Normalize( v_triCenter_cached - V_Position );
 
-		[HideInInspector] public float DistanceToCenter => Vector3.Distance( V_Position, v_triCenter_cached );
+		[HideInInspector] public float DistanceToTriangleCenter => Vector3.Distance( V_Position, v_triCenter_cached );
 
 		/// <summary>Should be the same as the Surface Orientation setting for the navmesh that this vert's triangle belongs to.</summary>
 		[SerializeField, HideInInspector] private Vector3 v_navmeshProjectionDirection_cached;
@@ -93,13 +94,13 @@ namespace LogansNavigationExtension
 
 
 		/// <summary>Index where you can find this vertex from the perspective of other Vertices.</summary>
-		public int Index_Relational => (MyCoordinate.TrianglesIndex * 3) + MyCoordinate.ComponentIndex;
+		public int Index_Relational => (MyCoordinate.TriangleIndex * 3) + MyCoordinate.ComponentIndex;
 
 		//todo: all these index properties need to be unit tested for accuracy
 		public int Index_FirstSiblingVert => MyCoordinate.ComponentIndex == 0 ? 1 : 0;
-		public LNX_ComponentCoordinate Coordinate_FirstSibling => new LNX_ComponentCoordinate(MyCoordinate.TrianglesIndex, Index_FirstSiblingVert);
+		public LNX_ComponentCoordinate Coordinate_FirstSibling => new LNX_ComponentCoordinate(MyCoordinate.SurfaceIndex, MyCoordinate.TriangleIndex, Index_FirstSiblingVert);
 		//private int firstSiblingRelationshipIndex => MyCoordinate.ComponentIndex == 0 ? (MyCoordinate.TrianglesIndex * 3) + 1 : MyCoordinate.TrianglesIndex * 3;
-		public int firstSiblingRelationshipIndex => (MyCoordinate.TrianglesIndex * 3) + Index_FirstSiblingVert;
+		public int firstSiblingRelationshipIndex => (MyCoordinate.TriangleIndex * 3) + Index_FirstSiblingVert;
 
 		public LNX_VertexRelationship FirstSiblingRelationship
 		{
@@ -113,9 +114,9 @@ namespace LogansNavigationExtension
 		}
 
 		public int Index_SecondSiblingVert => MyCoordinate.ComponentIndex == 2 ? 1 : 2;
-		public LNX_ComponentCoordinate Coordinate_SecondSibling => new LNX_ComponentCoordinate(MyCoordinate.TrianglesIndex, Index_SecondSiblingVert);
+		public LNX_ComponentCoordinate Coordinate_SecondSibling => new LNX_ComponentCoordinate(MyCoordinate.SurfaceIndex, MyCoordinate.TriangleIndex, Index_SecondSiblingVert);
 
-		public int secondSiblingRelationshipIndex => (MyCoordinate.TrianglesIndex * 3) + Index_SecondSiblingVert;
+		public int secondSiblingRelationshipIndex => (MyCoordinate.TriangleIndex * 3) + Index_SecondSiblingVert;
 
 		public LNX_VertexRelationship SecondSiblingRelationship
 		{
@@ -171,49 +172,52 @@ namespace LogansNavigationExtension
 		public int Index_FirstFormingEdge => MyCoordinate.ComponentIndex == 0 ? 1 : 0;
 		/// <summary>Index of 'second' edge (based on index in the edges array) on the containing triangle, that forms this vertex. Note: This index will be the same as the second sibling vertex index </summary>
 		public int Index_SecondFormingEdge => MyCoordinate.ComponentIndex == 2 ? 1 : 2;
+		public LNX_ComponentCoordinate FirstFormingEdgeCoordinate => new LNX_ComponentCoordinate(MyCoordinate.SurfaceIndex, MyCoordinate.TriangleIndex, Index_FirstFormingEdge);
+		public LNX_ComponentCoordinate SecondFormingEdgeCoordinate => new LNX_ComponentCoordinate(MyCoordinate.SurfaceIndex, MyCoordinate.TriangleIndex, Index_SecondFormingEdge);
+
 		#endregion
 		#endregion --------------------------------------------------------------------------------
 
-		public LNX_Vertex ( LNX_Triangle tri, List<LNX_AtomicTriangle> atomicTris, int triIndx, int cmpntIndx )
+		public LNX_Vertex ( LNX_Triangle tri, List<LNX_AtomicTriangle> atomicTris, int cmpntIndx )
         {
 			//Debug.Log($"vert[{triIndx}][{cmpntIndx}] ctor...");
 
-			MyCoordinate = new LNX_ComponentCoordinate( triIndx, cmpntIndx );
+			MyCoordinate = new LNX_ComponentCoordinate(tri.SurfaceIndex, tri.Index_inCollection, cmpntIndx );
 			Vector3 firstSiblingPos = Vector3.zero;
 			Vector3 secondSiblingPos = Vector3.zero;
 
 			if ( cmpntIndx == 0 )
 			{
-				V_Position = atomicTris[triIndx].VertPos0_current;
-				originalPosition = atomicTris[triIndx].VertPos0_orig;
+				V_Position = atomicTris[tri.Index_inCollection].VertPos0_current;
+				originalPosition = atomicTris[tri.Index_inCollection].VertPos0_orig;
 
-				firstSiblingPos = atomicTris[triIndx].VertPos1_current;
-				secondSiblingPos = atomicTris[triIndx].VertPos2_current;
+				firstSiblingPos = atomicTris[tri.Index_inCollection].VertPos1_current;
+				secondSiblingPos = atomicTris[tri.Index_inCollection].VertPos2_current;
 			}
 			else if ( cmpntIndx == 1 )
 			{
-				V_Position = atomicTris[triIndx].VertPos1_current;
-				originalPosition = atomicTris[triIndx].VertPos1_orig;
+				V_Position = atomicTris[tri.Index_inCollection].VertPos1_current;
+				originalPosition = atomicTris[tri.Index_inCollection].VertPos1_orig;
 
-				firstSiblingPos = atomicTris[triIndx].VertPos0_current;
-				secondSiblingPos = atomicTris[triIndx].VertPos2_current;
+				firstSiblingPos = atomicTris[tri.Index_inCollection].VertPos0_current;
+				secondSiblingPos = atomicTris[tri.Index_inCollection].VertPos2_current;
 			}
 			else //( cmpntIndx == 2 )
 			{
-				V_Position = atomicTris[triIndx].VertPos2_current;
-				originalPosition = atomicTris[triIndx].VertPos2_orig;
+				V_Position = atomicTris[tri.Index_inCollection].VertPos2_current;
+				originalPosition = atomicTris[tri.Index_inCollection].VertPos2_orig;
 
-				firstSiblingPos = atomicTris[triIndx].VertPos0_current;
-				secondSiblingPos = atomicTris[triIndx].VertPos1_current;
+				firstSiblingPos = atomicTris[tri.Index_inCollection].VertPos0_current;
+				secondSiblingPos = atomicTris[tri.Index_inCollection].VertPos1_current;
 			}
 
 			v_navmeshProjectionDirection_cached = tri.V_NavmeshProjectionDirection_cached;
 
-			v_triCenter_cached = atomicTris[triIndx].Center;
+			v_triCenter_cached = atomicTris[tri.Index_inCollection].Center;
 
 			if( v_triCenter_cached == Vector3.zero )
 			{
-				Debug.LogError($"{nameof(v_triCenter_cached)}: '{v_triCenter_cached}', from atomic: '{atomicTris[triIndx].Center}'");
+				Debug.LogError($"{nameof(v_triCenter_cached)}: '{v_triCenter_cached}', from atomic: '{atomicTris[tri.Index_inCollection].Center}'");
 			}
 
 			Index_VisMesh_Vertices = -1;
@@ -228,8 +232,8 @@ namespace LogansNavigationExtension
 					v_navmeshProjectionDirection_cached,
 					new LNX_NavmeshHit(this, tri.V_PathingNormal),
 					new LNX_NavmeshHit(
-						firstSiblingPos, tri.V_PathingNormal, 
-						MyCoordinate.TrianglesIndex, Coordinate_FirstSibling.ComponentIndex, -1
+						firstSiblingPos, tri.V_PathingNormal, MyCoordinate.SurfaceIndex,
+						MyCoordinate.TriangleIndex, Coordinate_FirstSibling.ComponentIndex, -1
 					)
 				)
 			);
@@ -239,16 +243,11 @@ namespace LogansNavigationExtension
 					v_navmeshProjectionDirection_cached,
 					new LNX_NavmeshHit(this, tri.V_PathingNormal),
 					new LNX_NavmeshHit(
-						secondSiblingPos, tri.V_PathingNormal, 
-						MyCoordinate.TrianglesIndex, Coordinate_SecondSibling.ComponentIndex, -1
+						secondSiblingPos, tri.V_PathingNormal, MyCoordinate.SurfaceIndex,
+						MyCoordinate.TriangleIndex, Coordinate_SecondSibling.ComponentIndex, -1
 					)
 				)
 			);
-		}
-
-		public void CalculateDerivedInfo(LNX_Triangle tri, LNX_NavMeshSurface nvmsh ) //todo: dws
-		{
-
 		}
 
 		public void CreateRelationships( LNX_NavMeshSurface nvmsh, bool createSiblingRelationships, 
@@ -309,7 +308,7 @@ namespace LogansNavigationExtension
 				List<LNX_ComponentCoordinate> temp_sharedVrtCoords = new List<LNX_ComponentCoordinate>();
 				for (int i = 0; i < nvmsh.Triangles.Length; i++)
 				{
-					if (i == MyCoordinate.TrianglesIndex)
+					if (i == MyCoordinate.TriangleIndex)
 					{
 						//Debug.Log($"continuing because of tri index...");
 						continue;
@@ -400,8 +399,8 @@ namespace LogansNavigationExtension
 					#region CHECK IF TRIANGLE SHARES A VERT WITH ONE OF MY SIBLINGS ============
 					if 
 					(
-						nvmsh.Triangles[i].Verts[0].V_Position == nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[Index_FirstSiblingVert].V_Position ||
-						nvmsh.Triangles[i].Verts[0].V_Position == nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[Index_SecondSiblingVert].V_Position
+						nvmsh.Triangles[i].Verts[0].V_Position == nvmsh.Triangles[MyCoordinate.TriangleIndex].Verts[Index_FirstSiblingVert].V_Position ||
+						nvmsh.Triangles[i].Verts[0].V_Position == nvmsh.Triangles[MyCoordinate.TriangleIndex].Verts[Index_SecondSiblingVert].V_Position
 					)
 					{
 						Relationships[(i * 3) + 0] = new LNX_VertexRelationship(
@@ -414,8 +413,8 @@ namespace LogansNavigationExtension
 					}
 					if
 					(
-						nvmsh.Triangles[i].Verts[1].V_Position == nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[Index_FirstSiblingVert].V_Position ||
-						nvmsh.Triangles[i].Verts[1].V_Position == nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[Index_SecondSiblingVert].V_Position
+						nvmsh.Triangles[i].Verts[1].V_Position == nvmsh.Triangles[MyCoordinate.TriangleIndex].Verts[Index_FirstSiblingVert].V_Position ||
+						nvmsh.Triangles[i].Verts[1].V_Position == nvmsh.Triangles[MyCoordinate.TriangleIndex].Verts[Index_SecondSiblingVert].V_Position
 					)
 					{
 						Relationships[(i * 3) + 1] = new LNX_VertexRelationship(
@@ -428,8 +427,8 @@ namespace LogansNavigationExtension
 					}
 					if
 					(
-						nvmsh.Triangles[i].Verts[2].V_Position == nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[Index_FirstSiblingVert].V_Position ||
-						nvmsh.Triangles[i].Verts[2].V_Position == nvmsh.Triangles[MyCoordinate.TrianglesIndex].Verts[Index_SecondSiblingVert].V_Position
+						nvmsh.Triangles[i].Verts[2].V_Position == nvmsh.Triangles[MyCoordinate.TriangleIndex].Verts[Index_FirstSiblingVert].V_Position ||
+						nvmsh.Triangles[i].Verts[2].V_Position == nvmsh.Triangles[MyCoordinate.TriangleIndex].Verts[Index_SecondSiblingVert].V_Position
 					)
 					{
 						Relationships[(i * 3) + 2] = new LNX_VertexRelationship(
@@ -466,7 +465,7 @@ namespace LogansNavigationExtension
 					DateTime dt_triStart = DateTime.Now;
 
 					//Debug.Log($"<b>for tri{i}...</b>");
-					if( i == MyCoordinate.TrianglesIndex )
+					if( i == MyCoordinate.TriangleIndex )
 					{
 						//Debug.Log($"bypassing because of tri index...");
 						continue;
@@ -545,9 +544,9 @@ namespace LogansNavigationExtension
 									(
 										nvmsh.Triangles[i].Verts[i_vrts].SharedVertexCoordinates[i_otherShrd].AmValid &&
 										(
-											nvmsh.Triangles[i].Verts[i_vrts].SharedVertexCoordinates[i_otherShrd].TrianglesIndex < i ||
+											nvmsh.Triangles[i].Verts[i_vrts].SharedVertexCoordinates[i_otherShrd].TriangleIndex < i ||
 											(
-												nvmsh.Triangles[i].Verts[i_vrts].SharedVertexCoordinates[i_otherShrd].TrianglesIndex == i &&
+												nvmsh.Triangles[i].Verts[i_vrts].SharedVertexCoordinates[i_otherShrd].TriangleIndex == i &&
 												nvmsh.Triangles[i].Verts[i_vrts].SharedVertexCoordinates[i_otherShrd].ComponentIndex < i_vrts
 											)
 										)
@@ -558,7 +557,7 @@ namespace LogansNavigationExtension
 										//Debug.LogError($"happened C. - 'this' vert already has a path to a vert sharing space with 'for' vert");
 										//Debug.Log($"happened to: '{nvmsh.Triangles[i].Verts[i_vrts]}'. shrdSpaceVertCoord: '{shrdSpaceVertCoord}'.");
 
-										int existingRelIndx = nvmsh.Triangles[shrdSpaceVertCoord.TrianglesIndex].Verts[shrdSpaceVertCoord.ComponentIndex].Index_Relational;
+										int existingRelIndx = nvmsh.Triangles[shrdSpaceVertCoord.TriangleIndex].Verts[shrdSpaceVertCoord.ComponentIndex].Index_Relational;
 										//Debug.Log($"rel index: '{existingRelIndx}' (as: '{shrdSpaceVertCoord.AsRelationalVertIndex}')");
 								
 										foundShared = true;
@@ -585,7 +584,7 @@ namespace LogansNavigationExtension
 									for( int i_shrd_other = 0; i_shrd_other < nvmsh.Triangles[i].Verts[i_vrts].SharedVertexCoordinates.Length; i_shrd_other++ )
 									{
 										LNX_ComponentCoordinate otherShrdVrtCrd = nvmsh.Triangles[i].Verts[i_vrts].SharedVertexCoordinates[i_shrd_other];
-										LNX_VertexRelationship rel_shrd_to_otherShrd = nvmsh.Triangles[shrdVrtCoord.TrianglesIndex].Verts[shrdVrtCoord.ComponentIndex].
+										LNX_VertexRelationship rel_shrd_to_otherShrd = nvmsh.Triangles[shrdVrtCoord.TriangleIndex].Verts[shrdVrtCoord.ComponentIndex].
 											Relationships[otherShrdVrtCrd.AsRelationalVertIndex];
 
 										if ( rel_shrd_to_otherShrd != null && rel_shrd_to_otherShrd.AmValid )
@@ -604,9 +603,9 @@ namespace LogansNavigationExtension
 										{
 											if 
 											(
-												nvmsh.Triangles[otherShrdVrtCrd.TrianglesIndex].Verts[otherShrdVrtCrd.ComponentIndex].
+												nvmsh.Triangles[otherShrdVrtCrd.TriangleIndex].Verts[otherShrdVrtCrd.ComponentIndex].
 												Relationships[shrdVrtCoord.AsRelationalVertIndex] != null &&
-												nvmsh.Triangles[otherShrdVrtCrd.TrianglesIndex].Verts[otherShrdVrtCrd.ComponentIndex].
+												nvmsh.Triangles[otherShrdVrtCrd.TriangleIndex].Verts[otherShrdVrtCrd.ComponentIndex].
 												Relationships[shrdVrtCoord.AsRelationalVertIndex].AmValid
 											)
 
@@ -619,7 +618,7 @@ namespace LogansNavigationExtension
 												eBorrowCount++;
 												Relationships[(i * 3) + i_vrts] = new LNX_VertexRelationship(
 													this, nvmsh.Triangles[i].Verts[i_vrts], 
-													nvmsh.Triangles[otherShrdVrtCrd.TrianglesIndex].Verts[otherShrdVrtCrd.ComponentIndex].
+													nvmsh.Triangles[otherShrdVrtCrd.TriangleIndex].Verts[otherShrdVrtCrd.ComponentIndex].
 												Relationships[shrdVrtCoord.AsRelationalVertIndex].PathTo.Reversed()
 												);
 												break;
@@ -710,9 +709,71 @@ namespace LogansNavigationExtension
 			return nrml;
 		}
 
+		public void SurfaceIndexChanged(int newIndex)
+		{
+			MyCoordinate = new LNX_ComponentCoordinate(newIndex, MyCoordinate.TriangleIndex, MyCoordinate.ComponentIndex);
+
+			int nmbrShrdVrtCrdsChngd = 0;
+			int nbrRelsChngd = 0;
+			if ( SharedVertexCoordinates != null && SharedVertexCoordinates.Length > 0 )
+			{
+				for ( int i = 0; i < SharedVertexCoordinates.Length; i++ )
+				{
+					if(SharedVertexCoordinates[i].SurfaceIndex != newIndex )
+					{
+						SharedVertexCoordinates[i] = new LNX_ComponentCoordinate(
+							newIndex, SharedVertexCoordinates[i].TriangleIndex, SharedVertexCoordinates[i].ComponentIndex
+						);
+						nmbrShrdVrtCrdsChngd++;
+					}
+				}
+			}
+
+			if (Relationships != null && Relationships.Length > 0)
+			{
+				for (int i = 0; i < Relationships.Length; i++)
+				{
+					if (Relationships[i].RelatedVertCoordinate.SurfaceIndex != newIndex )
+					{
+						Relationships[i].SurfaceIndexChanged(newIndex);
+					}
+					nbrRelsChngd++;
+				}
+			}
+
+			Debug.Log($"'{nmbrShrdVrtCrdsChngd}' shared vert coords changed, and '{nbrRelsChngd}' vert relationships changed");
+		}
 		public void TriIndexChanged(int newIndex)
 		{
-			MyCoordinate = new LNX_ComponentCoordinate(newIndex, MyCoordinate.ComponentIndex);
+			MyCoordinate = new LNX_ComponentCoordinate(MyCoordinate.SurfaceIndex, newIndex, MyCoordinate.ComponentIndex);
+		}
+
+		public void SurfaceOrientationChanged_action(LNX_Direction orientation)
+		{
+			if (orientation == LNX_Direction.PositiveY)
+			{
+				v_navmeshProjectionDirection_cached = Vector3.up;
+			}
+			else if (orientation == LNX_Direction.NegativeY)
+			{
+				v_navmeshProjectionDirection_cached = Vector3.down;
+			}
+			else if (orientation == LNX_Direction.PositiveZ)
+			{
+				v_navmeshProjectionDirection_cached = Vector3.forward;
+			}
+			else if (orientation == LNX_Direction.NegativeZ)
+			{
+				v_navmeshProjectionDirection_cached = Vector3.back;
+			}
+			else if (orientation == LNX_Direction.PositiveX)
+			{
+				v_navmeshProjectionDirection_cached = Vector3.right;
+			}
+			else if (orientation == LNX_Direction.NegativeX)
+			{
+				v_navmeshProjectionDirection_cached = Vector3.left;
+			}
 		}
 
 		#region API METHODS ------------------------------------------------------------
@@ -833,7 +894,7 @@ namespace LogansNavigationExtension
 		/// <returns></returns>
 		public bool SharesVertSpaceWithTri( LNX_Triangle tri )
 		{
-			if ( tri.Index_inCollection == MyCoordinate.TrianglesIndex )
+			if ( tri.Index_inCollection == MyCoordinate.TriangleIndex )
 			{
 				return true;
 			}
@@ -842,7 +903,7 @@ namespace LogansNavigationExtension
 			{
 				for ( int i = 0; i < SharedVertexCoordinates.Length; i++ )
 				{
-					if ( SharedVertexCoordinates[i].TrianglesIndex == tri.Index_inCollection )
+					if ( SharedVertexCoordinates[i].TriangleIndex == tri.Index_inCollection )
 					{
 						return true;
 					}
@@ -873,7 +934,7 @@ namespace LogansNavigationExtension
 		/// <returns></returns>
 		public bool HasSharedVertViaTriIndex( int triIndx )
 		{
-			if ( triIndx == MyCoordinate.TrianglesIndex )
+			if ( triIndx == MyCoordinate.TriangleIndex )
 			{
 				return true;
 			}
@@ -882,7 +943,7 @@ namespace LogansNavigationExtension
 			{
 				for (int i = 0; i < SharedVertexCoordinates.Length; i++)
 				{
-					if (SharedVertexCoordinates[i].TrianglesIndex == triIndx )
+					if (SharedVertexCoordinates[i].TriangleIndex == triIndx )
 					{
 						return true;
 					}
@@ -919,7 +980,7 @@ namespace LogansNavigationExtension
 
 			for ( int i = 0; i < SharedVertexCoordinates.Length; i++ )
 			{
-				if( SharedVertexCoordinates[i].TrianglesIndex == triIndx &&
+				if( SharedVertexCoordinates[i].TriangleIndex == triIndx &&
 					SharedVertexCoordinates[i].ComponentIndex == vrtIndx
 				)
 				{
@@ -930,18 +991,23 @@ namespace LogansNavigationExtension
 			return false;
 		}
 
+		public bool SharesVertSpace_ViaRelational( LNX_ComponentCoordinate coord )
+		{
+			return SharesVertSpace_ViaRelational(coord.TriangleIndex, coord.ComponentIndex);
+		}
+
 		public bool AreSiblings( LNX_ComponentCoordinate otherVertCoordinate )
 		{
-			return MyCoordinate.TrianglesIndex > -1 &&
-				otherVertCoordinate.TrianglesIndex > -1 &&
-				MyCoordinate.TrianglesIndex == otherVertCoordinate.TrianglesIndex;
+			return MyCoordinate.TriangleIndex > -1 &&
+				otherVertCoordinate.TriangleIndex > -1 &&
+				MyCoordinate.TriangleIndex == otherVertCoordinate.TriangleIndex;
 		}
 
 		public bool AreSiblings( LNX_Vertex otherVert )
 		{
-			return MyCoordinate.TrianglesIndex > -1 && 
-				otherVert.MyCoordinate.TrianglesIndex > -1 && 
-				MyCoordinate.TrianglesIndex == otherVert.MyCoordinate.TrianglesIndex;
+			return MyCoordinate.TriangleIndex > -1 && 
+				otherVert.MyCoordinate.TriangleIndex > -1 && 
+				MyCoordinate.TriangleIndex == otherVert.MyCoordinate.TriangleIndex;
 		}
 
 		public LNX_VertexRelationship GetRelationship( LNX_Vertex otherVert )
@@ -951,7 +1017,7 @@ namespace LogansNavigationExtension
 
 		public LNX_VertexRelationship GetRelationship( LNX_ComponentCoordinate vertCoord )
 		{
-			return Relationships[vertCoord.TrianglesIndex * 3 + (vertCoord.ComponentIndex)];
+			return Relationships[vertCoord.TriangleIndex * 3 + (vertCoord.ComponentIndex)];
 		}
 
 		public LNX_VertexRelationship GetRelationship( int triIndx, int vrtIndx )
@@ -979,11 +1045,11 @@ namespace LogansNavigationExtension
 			for (int i = 0; i < SharedVertexCoordinates.Length; i++)
 			{
 				Vector3 vLegA_flat = Relationships[
-					SharedVertexCoordinates[i].TrianglesIndex * 3 +
+					SharedVertexCoordinates[i].TriangleIndex * 3 +
 					(SharedVertexCoordinates[i].ComponentIndex == 0 ? 1 : 0)
 				].V_to_flat.normalized;
 				Vector3 vLegB_flat = Relationships[
-					SharedVertexCoordinates[i].TrianglesIndex * 3 +
+					SharedVertexCoordinates[i].TriangleIndex * 3 +
 					(SharedVertexCoordinates[i].ComponentIndex == 2 ? 1 : 2)
 				].V_to_flat.normalized;
 
@@ -1024,11 +1090,11 @@ namespace LogansNavigationExtension
 					"calculating 'leg' projections...");
 
 				Vector3 vLegA_flat = Relationships[
-					SharedVertexCoordinates[i].TrianglesIndex * 3 + 
+					SharedVertexCoordinates[i].TriangleIndex * 3 + 
 					(SharedVertexCoordinates[i].ComponentIndex == 0 ? 1 : 0)
 				].V_to_flat.normalized;
 				Vector3 vLegB_flat = Relationships[
-					SharedVertexCoordinates[i].TrianglesIndex * 3 + 
+					SharedVertexCoordinates[i].TriangleIndex * 3 + 
 					(SharedVertexCoordinates[i].ComponentIndex == 2 ? 1 : 2)
 				].V_to_flat.normalized;
 
@@ -1064,7 +1130,7 @@ namespace LogansNavigationExtension
 				if
 				(
 					!rtrnList.Contains(SharedVertexCoordinates[i]) &&
-					!avoidTriangles.Contains(SharedVertexCoordinates[i].TrianglesIndex)
+					!avoidTriangles.Contains(SharedVertexCoordinates[i].TriangleIndex)
 				)
 				{
 					rtrnList.Add( SharedVertexCoordinates[i] );
@@ -1074,9 +1140,9 @@ namespace LogansNavigationExtension
 			return rtrnList;
 		}
 
-		public bool IsRelationshipCollectionValid( LNX_NavMeshSurface nm )
+		public bool IsRelationshipCollectionValid( LNX_NavMeshSurface srfc )
 		{
-			if( Relationships == null || Relationships.Length != (nm.Triangles.Length * 3) )
+			if( Relationships == null || Relationships.Length != (srfc.Triangles.Length * 3) )
 			{
 				return false;
 			}
@@ -1639,8 +1705,8 @@ namespace LogansNavigationExtension
 			string returnString = string.Empty;
 
 			if (
-				MyCoordinate.TrianglesIndex < 0 ||
-				MyCoordinate.TrianglesIndex > nm.Triangles.Length - 1 ||
+				MyCoordinate.TriangleIndex < 0 ||
+				MyCoordinate.TriangleIndex > nm.Triangles.Length - 1 ||
 				MyCoordinate.ComponentIndex < 0 ||
 				MyCoordinate.ComponentIndex > 2
 			)
@@ -1678,14 +1744,23 @@ namespace LogansNavigationExtension
 				returnString += $"{nameof(v_navmeshProjectionDirection_cached)}: '{v_navmeshProjectionDirection_cached}'\n";
 			}
 
-			if( AngleAtBend > 180 || AngleAtBend < float.MinValue )
+
+			if ( !IsRelationshipCollectionValid(nm) )
 			{
-				returnString += $"{nameof(AngleAtBend)}: '{AngleAtBend}'\n";
+				returnString += $"relationship collection NOT valid...\n";
+			}
+			else
+			{
+				if (AngleAtBend > 180 || AngleAtBend < float.MinValue)
+				{
+					returnString += $"{nameof(AngleAtBend)}: '{AngleAtBend}'\n";
+				}
 			}
 
-			if ( DistanceToCenter <= 0 )
+
+			if ( DistanceToTriangleCenter <= 0 )
 			{
-				returnString += $"{nameof(DistanceToCenter)} was '{DistanceToCenter}'\n";
+				returnString += $"{nameof(DistanceToTriangleCenter)} was '{DistanceToTriangleCenter}'\n";
 			}
 
 			#region RElATIONAL------------------------------------------------
@@ -1694,9 +1769,9 @@ namespace LogansNavigationExtension
 				returnString += $"{nameof(Relationships)} collection not set\n";
 			}
 
-			if (SharedVertexCoordinates.Length <= 0 )
+			if (SharedVertexCoordinates == null )
 			{
-				returnString += $"{nameof(SharedVertexCoordinates)} length: '{SharedVertexCoordinates.Length}'\n";
+				returnString += $"{nameof(SharedVertexCoordinates)} was null\n";
 			}
 
 			if ( FirstSiblingRelationship.V_to == Vector3.zero )
@@ -1725,6 +1800,11 @@ namespace LogansNavigationExtension
 				returnString += $"{nameof(V_ToFirstSiblingVert)} was Equal to {nameof(V_ToSecondSiblingVert)}\n";
 			}
 			#endregion
+
+			if ( !string.IsNullOrEmpty(returnString) )
+			{
+				Debug.DrawRay(V_Position, Vector3.up * 5f, Color.magenta, 10f);
+			}
 
 			return returnString;
 		}

@@ -45,7 +45,8 @@ namespace LogansNavigationExtension
 	[System.Serializable]
 	public struct LNX_ComponentCoordinate
 	{
-		public int TrianglesIndex;
+		public int SurfaceIndex;
+		public int TriangleIndex;
 		public int ComponentIndex;
 		/*
 		public int TriangulationAreasIndex;
@@ -60,15 +61,16 @@ namespace LogansNavigationExtension
 		{
 			get
 			{
-				return TrianglesIndex > -1 && ComponentIndex > -1;
+				return TriangleIndex > -1 && ComponentIndex > -1;
 			}
 		}
 
-		public int AsRelationalVertIndex => AmValid ? ((TrianglesIndex*3) + ComponentIndex) : -1;
+		public int AsRelationalVertIndex => AmValid ? ((TriangleIndex*3) + ComponentIndex) : -1;
 
 		private static LNX_ComponentCoordinate none = new LNX_ComponentCoordinate()
 		{
-			TrianglesIndex = -1,
+			SurfaceIndex = -1,
+			TriangleIndex = -1,
 			ComponentIndex = -1,
 		};
 
@@ -80,15 +82,17 @@ namespace LogansNavigationExtension
 			}
 		}
 
-		public LNX_ComponentCoordinate(int triIndx, int cmptIndx)
+		public LNX_ComponentCoordinate(int srfcIndx, int triIndx, int cmptIndx)
 		{
-			TrianglesIndex = triIndx;
+			SurfaceIndex = srfcIndx;
+			TriangleIndex = triIndx;
 			ComponentIndex = cmptIndx;
 		}
 
 		public LNX_ComponentCoordinate(LNX_NavmeshHit hit)
 		{
-			TrianglesIndex = hit.TriangleIndex;
+			SurfaceIndex = hit.SurfaceIndex;
+			TriangleIndex = hit.TriangleIndex;
 			ComponentIndex = -1;
 			if (hit.VertIndex != -1)
 			{
@@ -100,6 +104,7 @@ namespace LogansNavigationExtension
 			}
 		}
 
+		#region OPERATORS ====================================================
 		public static bool operator ==(LNX_ComponentCoordinate a, LNX_ComponentCoordinate b)
 		{
 			return a.Equals(b);
@@ -116,7 +121,7 @@ namespace LogansNavigationExtension
 				return false;
 
 			LNX_ComponentCoordinate coord = (LNX_ComponentCoordinate)obj;
-			if (coord.TrianglesIndex != TrianglesIndex || coord.ComponentIndex != ComponentIndex)
+			if (coord.TriangleIndex != TriangleIndex || coord.ComponentIndex != ComponentIndex)
 			{
 				return false;
 			}
@@ -128,13 +133,14 @@ namespace LogansNavigationExtension
 
 		public override int GetHashCode()
 		{
-			return HashCode.Combine( TrianglesIndex, ComponentIndex );
+			return HashCode.Combine( TriangleIndex, ComponentIndex );
 		}
 
 		public override string ToString()
 		{
-			return this == LNX_ComponentCoordinate.none ? "None" : $"[{TrianglesIndex}][{ComponentIndex}]";
+			return this == LNX_ComponentCoordinate.none ? "None" : $"[{SurfaceIndex}][{TriangleIndex}][{ComponentIndex}]";
 		}
+		#endregion
 	}
 
 	/// <summary>
@@ -274,6 +280,9 @@ namespace LogansNavigationExtension
 		public Vector3 Normal => normal;
 
 
+		[SerializeField] private int surfaceIndex;
+		public int SurfaceIndex => surfaceIndex;
+
 		[SerializeField] private int triangleIndex;
 		public int TriangleIndex => triangleIndex;
 
@@ -282,9 +291,12 @@ namespace LogansNavigationExtension
 
 		[SerializeField] private int vertIndex;
 		public int VertIndex => vertIndex;
-		
 
-		private static LNX_NavmeshHit none = new LNX_NavmeshHit(Vector3.zero, Vector3.zero, -1, -1, -1);
+		[SerializeField] private int linkIndex;
+		public int LinkIndex => linkIndex;
+
+
+		private static LNX_NavmeshHit none = new LNX_NavmeshHit(Vector3.zero, Vector3.zero, -1, -1, -1, -1);
 
 		#region CONSTRUCTORS =============================================================		
 		/* //Unfortunately can't do the following bc default vectors aren't compile-time constants...
@@ -300,56 +312,72 @@ namespace LogansNavigationExtension
 
 		public LNX_NavmeshHit(LNX_Triangle hitTriangle, Vector3 hitpos ) //todo: takw away startpos and maybe even get rid of this overload
 		{
+			surfaceIndex = hitTriangle.SurfaceIndex;
 			hitPosition = hitpos;
 			normal = hitTriangle.V_PathingNormal;
 
 			triangleIndex = hitTriangle.Index_inCollection;
 			edgeIndex = -1;
 			vertIndex = -1;
+			linkIndex = -1;
 		}
 
 		public LNX_NavmeshHit ( LNX_Vertex vert )
 		{
 			hitPosition = vert.V_Position;
 			normal = vert.CalculatePathingNormal();
-			triangleIndex = vert.MyCoordinate.TrianglesIndex;
+			surfaceIndex = vert.SurfaceIndex;
+			triangleIndex = vert.MyCoordinate.TriangleIndex;
 			edgeIndex = -1;
 			vertIndex = vert.ComponentIndex;
+			linkIndex = -1;
 		}
 
 		public LNX_NavmeshHit(LNX_Vertex vert, Vector3 nrml )
 		{
 			hitPosition = vert.V_Position;
 			normal = nrml;
-			triangleIndex = vert.MyCoordinate.TrianglesIndex;
+			surfaceIndex = vert.SurfaceIndex;
+			triangleIndex = vert.MyCoordinate.TriangleIndex;
 			edgeIndex = -1;
 			vertIndex = vert.ComponentIndex;
+			linkIndex = -1;
 		}
 
 		public LNX_NavmeshHit(LNX_Edge edge, Vector3 pos, Vector3 nrml)
 		{
 			hitPosition = pos;
 			normal = nrml;
-			triangleIndex = edge.MyCoordinate.TrianglesIndex;
+			surfaceIndex = edge.SurfaceIndex;
+			triangleIndex = edge.MyCoordinate.TriangleIndex;
 			edgeIndex = edge.MyCoordinate.ComponentIndex;
 			vertIndex = -1;
+			linkIndex = -1;
 		}
 
-		public LNX_NavmeshHit(Vector3 pos, Vector3 nrml, int triIndx, int vertIndx, int edgeIndx)
+		public LNX_NavmeshHit(Vector3 pos, Vector3 nrml, int srfcIndx, int triIndx, int vertIndx, int edgeIndx, int lnkIndx = -1)
 		{
 			hitPosition = pos;
 			normal = nrml;
 
+			surfaceIndex = srfcIndx;
 			triangleIndex = triIndx;
 			edgeIndex = edgeIndx;
 			vertIndex = vertIndx;
+			linkIndex = lnkIndx;
 		}
+
 
 		#endregion
 
 		public LNX_ComponentCoordinate AsVertCoordinate()
 		{
-			return new LNX_ComponentCoordinate(triangleIndex, vertIndex);
+			return new LNX_ComponentCoordinate(surfaceIndex, triangleIndex, vertIndex);
+		}
+
+		public LNX_ComponentCoordinate AsEdgeCoordinate()
+		{
+			return new LNX_ComponentCoordinate(surfaceIndex, triangleIndex, edgeIndex);
 		}
 
 		public static LNX_NavmeshHit None
@@ -396,7 +424,7 @@ namespace LogansNavigationExtension
 
 		public override string ToString()
 		{
-			return $"[t{triangleIndex}v{vertIndex}e{edgeIndex}_pos{Position}]";
+			return $"[s{surfaceIndex}|t{triangleIndex}|v{vertIndex}|e{edgeIndex}|L{linkIndex}_pos{Position}]";
 		}
 
 		//public static explicit operator LNX_ComponentCoordinate(LNX_NavmeshHit hit) =>

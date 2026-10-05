@@ -4,7 +4,7 @@ using UnityEngine.UIElements;
 
 namespace LogansNavigationExtension
 {
-    public class LNX_DrawingUtils
+    public class LNX_DrawingUtilities
     {
 		public static void DrawTriGizmos(LNX_Triangle tri, Color edgeColor, bool drawTriLbls, bool drwEdgs, bool drwEdgeLbls, 
 			float edgeLblLineLength, bool drwVrtLbls, float vrtLblLineLength, bool drwNrmlLns, float nrmlLineLength
@@ -155,7 +155,7 @@ namespace LogansNavigationExtension
 			Gizmos.color = oldColor;
 		}
 
-		public void DrawStandardEdgeFocusGizmos(LNX_Edge edge, float raiseAmount, string lblString, Color clr, 
+		public static void DrawStandardEdgeFocusGizmos(LNX_Edge edge, float raiseAmount, string lblString, Color clr, 
 			bool drawMidPt = false)
 		{
 			Color oldColor = Gizmos.color;
@@ -185,6 +185,33 @@ namespace LogansNavigationExtension
 		public static void DrawEdgeGizmo(LNX_Edge edge)
 		{
 			Gizmos.DrawLine(edge.StartPosition, edge.EndPosition);
+		}
+
+		public static void DrawEdgeGizmo(LNX_Edge edge, float raiseAmount, string lblString, Color clr)
+		{
+			Vector3 vRaise = Vector3.up * raiseAmount;
+
+			if (lblString != "")
+			{
+				Handles.Label(edge.MidPosition + (vRaise * 1.3f), lblString);
+			}
+
+			Gizmos.DrawLine(edge.StartPosition, edge.StartPosition + vRaise);
+
+			Gizmos.DrawLine(edge.StartPosition + vRaise, edge.EndPosition + vRaise);
+			Gizmos.DrawLine(edge.EndPosition, edge.EndPosition + vRaise);
+		}
+
+		public static void DrawEdgeSpan( LNX_NavMeshSurface srfc, LNX_ComponentCoordinate[] span, float raiseAmount, Color clr)
+		{
+			Color oldclr = Gizmos.color;
+			Gizmos.color = clr;
+			for (int i = 0; i < span.Length; i++)
+			{
+				DrawEdgeGizmo(srfc.GetEdge(span[i]), raiseAmount, "", clr);
+			}
+
+			Gizmos.color = oldclr;
 		}
 
 		public static void DrawTriHandles(LNX_Triangle tri, float thickness)

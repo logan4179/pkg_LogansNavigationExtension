@@ -218,7 +218,8 @@ namespace LogansNavigationExtension.CustomEditors
 				//using this simple logic for now...
 				if( !_targetScript.HaveVertsSelected )
 				{
-					_targetScript.TryPointAtComponentViaDirection( SceneView.lastActiveSceneView.camera.transform.position, mouseRay.direction.normalized );
+					_targetScript.TryPointAtComponentViaDirection( SceneView.lastActiveSceneView.camera.transform.position, 
+						mouseRay.direction.normalized );
 				}
 
 				if ( amAttemptingGrab )

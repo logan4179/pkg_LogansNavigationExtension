@@ -10,7 +10,7 @@ using System;
 namespace LogansNavigationExtension.CustomEditors
 {
     [CustomEditor(typeof(LNX_NavMeshSurface)), CanEditMultipleObjects]
-    public class LNX_NavMesh_editor : Editor
+    public class LNX_Surface_editor : Editor
     {
         LNX_NavMeshSurface _targetScript;
 
@@ -21,24 +21,14 @@ namespace LogansNavigationExtension.CustomEditors
 		//result said the reason I was getting an error was because it was marked virtual. The error was
 		//"... should not be used inside OnSceneGUI or OnPreviewGUI. Use the single target property instead...."
 
-		private void OnEnable()
+		private void OnEnable() //gets called when object is selected in heirarchy
 		{
-			Debug.Log($"LNX_NavMesh was onenabled through the editor code."); //from what I can tell, this gets called when you select the object in the heirarcy, NOT when you deactivate and reactivate the object
+			//Debug.Log($"LNX_NavMesh was onenabled through the editor code.");
 
 			//Force target script reference (LNX_NavMesh) to do any initializing I might want it to do below here...
 			_targetScript = (LNX_NavMeshSurface)target;
 
-			Debug.Log($"Mesh null: '{_targetScript._VisualizationMesh == null}'");
-
-			if ( _targetScript._VisualizationMesh != null )
-			{
-				Debug.Log($"LNX_NavMesh was onenabled through the editor code. Mesh verts null: '{_targetScript._VisualizationMesh.vertices == null}'");
-
-				if ( _targetScript._VisualizationMesh.vertices != null )
-				{
-					Debug.Log($"vis mesh vert count: '{_targetScript._VisualizationMesh.vertices.Length}'"); //I'm debugging this currently because I'm considering re-calculating the vis mesh here if the collection is null or 0 count
-				}
-			}
+			//Debug.Log($"Mesh null: '{_targetScript._VisualizationMesh == null}'");
 
 		}
 
@@ -91,7 +81,7 @@ namespace LogansNavigationExtension.CustomEditors
 		{
 			Debug.Log($"surfaceorientation callback");
 
-			//todo: what should I do now to update all the objects???
+			_targetScript.SetSurfaceOrientation_action();
 
 			Debug.Log($"surface orientation changed to: '{_targetScript.GetSurfaceProjectionVector()}'..."); 
 		}

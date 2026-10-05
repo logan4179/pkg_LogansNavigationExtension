@@ -19,6 +19,7 @@ namespace LogansNavigationExtension
 
 		public Vector3 EndPosition => pathPoints[pathPoints.Count - 1].Position;
 		public LNX_NavmeshHit EndHit => pathPoints[pathPoints.Count - 1];
+		
 		public int EndTriIndex => pathPoints[pathPoints.Count - 1].TriangleIndex;
 		public LNX_ComponentCoordinate EndCoordinate_vert
 		{
@@ -30,7 +31,8 @@ namespace LogansNavigationExtension
 				}
 				else
 				{
-					return new LNX_ComponentCoordinate( pathPoints[pathPoints.Count-1].TriangleIndex, pathPoints[pathPoints.Count-1].VertIndex );
+					return new LNX_ComponentCoordinate(pathPoints[pathPoints.Count - 1].SurfaceIndex,
+						pathPoints[pathPoints.Count-1].TriangleIndex, pathPoints[pathPoints.Count-1].VertIndex );
 				}
 			}
 		}
@@ -337,6 +339,14 @@ namespace LogansNavigationExtension
 			//DBG_class += $"ac: '{pathPoints.Count}', amStraight: '{amStraight}'\n";
 		}
 
+		public void AddPath( LNX_Path path )
+		{
+			for (int i = 0; i < path.pathPoints.Count; i++)
+			{
+				AddPoint(path.pathPoints[i]);
+			}
+		}
+
 		public LNX_Path Reversed()
 		{
 			List<LNX_NavmeshHit> reversedHits = new List<LNX_NavmeshHit>();
@@ -403,6 +413,23 @@ namespace LogansNavigationExtension
 			return true;
 		}
 		#endregion
+
+		public void SurfaceIndexChanged( int oldIndex, int newIndx )
+		{
+			if ( pathPoints != null && pathPoints.Count > 0 )
+			{
+				for ( int i = 0; i < pathPoints.Count; i++ )
+				{
+					if (pathPoints[i].SurfaceIndex == oldIndex )
+					{
+						pathPoints[i] = new LNX_NavmeshHit(pathPoints[i].Position, pathPoints[i].Normal,
+							newIndx, pathPoints[i].TriangleIndex, pathPoints[i].VertIndex, pathPoints[i].EdgeIndex
+						);
+					}
+
+				}
+			}
+		}
 
 		public Vector3 GetVectorPointingToPreviousPoint( int ptIndx )
 		{

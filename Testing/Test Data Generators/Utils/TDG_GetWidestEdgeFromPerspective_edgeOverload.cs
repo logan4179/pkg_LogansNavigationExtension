@@ -14,7 +14,7 @@ namespace LogansNavigationExtension
 		public LNX_ComponentGrabber OtherTriGrabber;
 
 		LNX_Edge PerspectiveEdge => PerspectiveEdgeGrabber.CurrentlyGrabbedEdge;
-		public LNX_Triangle PerspectiveTri => _navmesh.Triangles[PerspectiveEdgeGrabber.CurrentCoordinate.TrianglesIndex];
+		public LNX_Triangle PerspectiveTri => _navmesh.Triangles[PerspectiveEdgeGrabber.CurrentCoordinate.TriangleIndex];
 
 		LNX_Triangle OtherTriangle => OtherTriGrabber.CurrentlyGrabbedTriangle;
 

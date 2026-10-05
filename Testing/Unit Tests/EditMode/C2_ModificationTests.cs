@@ -65,7 +65,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 			Debug.Log($"calculating and caching test values...");
 
-			vertToMove = new LNX_ComponentCoordinate() { TrianglesIndex = 0, ComponentIndex = 0 }; //just arbitrarily picking the first tri and vert for this...
+			vertToMove = new LNX_ComponentCoordinate() { TriangleIndex = 0, ComponentIndex = 0 }; //just arbitrarily picking the first tri and vert for this...
 
 			moveVert = _sceneGeneratedNavmesh.GetVertexAtCoordinate( vertToMove );
 			v_moveTo = moveVert.V_Position + (Vector3.up * 0.5f);

@@ -31,7 +31,6 @@ namespace LogansNavigationExtension
 
 		public int Index_SendFocusTriGrabberTo = 0;
 		public LNX_Triangle FocusedTri => Grabber_FocusTri.CurrentlyGrabbedTriangle;
-		public LNX_Edge FocusedEdge => Grabber_FocusEdge.CurrentlyGrabbedEdge;
 		public LNX_Vertex FocusedVert => Grabber_FocusVert.CurrentlyGrabbedVert;
 
 		[Header("DEBUG TRIANGLES")]
@@ -96,7 +95,7 @@ namespace LogansNavigationExtension
 			{
 				//Debug.Log($"focustri: '{FocusedTri}'");
 				//DrawTriGizmos( FocusedTri, true, true, true, true, false, true, false );
-				LNX_DrawingUtils.DrawTriGizmos(FocusedTri, Color.yellow, true, true, true, Length_edgeLblsInward, true, Length_edgeLblsInward * 0.5f,
+				LNX_DrawingUtilities.DrawTriGizmos(FocusedTri, Color.yellow, true, true, true, Length_edgeLblsInward, true, Length_edgeLblsInward * 0.5f,
 					true, Length_normalLines
 				);
 
@@ -114,7 +113,7 @@ namespace LogansNavigationExtension
 					//drawEdgeLabels, DrawEdges, drawVertSpheres, DrawVertLables, drawNormalLines );
 
 				
-					LNX_DrawingUtils.DrawTriGizmos(_mgr.Triangles[i],
+					LNX_DrawingUtilities.DrawTriGizmos(_mgr.Triangles[i],
 						(FocusedTri != null && i == FocusedTri.Index_inCollection) ? Color.yellow : color_edgeLines,  
 						DrawTriLabels, DrawEdges, drawEdgeLabels, Length_edgeLblsInward, DrawVertLables, Length_normalLines * 0.5f,
 						drawNormalLines, Length_normalLines
@@ -125,11 +124,6 @@ namespace LogansNavigationExtension
 				}
 			}
 
-
-			if( FocusedEdge != null )
-			{
-				DrawStandardEdgeFocusGizmos( Grabber_FocusEdge.CurrentlyGrabbedEdge, 0.25f, "", Color.yellow, true);
-			}
 
 			if( FocusedVert != null )
 			{
@@ -152,30 +146,6 @@ namespace LogansNavigationExtension
 				Gizmos.DrawLine(FocusedVert.V_Position, FocusedVert.V_Position + (Vector3.up * 1.2f));
 			}
 			*/
-		}
-
-		public void DrawStandardEdgeFocusGizmos(LNX_Edge edge, float raiseAmount, string lblString, Color clr, bool incldStrtAndEndLbls = false)
-		{
-			Color oldColor = Gizmos.color;
-
-			Gizmos.color = clr;
-			Vector3 vRaise = Vector3.up * raiseAmount;
-
-			Handles.Label(edge.MidPosition + vRaise, edge.ToString());
-
-			Gizmos.DrawLine(edge.StartPosition, edge.StartPosition + vRaise);
-
-
-			Gizmos.DrawLine(edge.StartPosition + vRaise, edge.EndPosition + vRaise);
-			Gizmos.DrawLine(edge.EndPosition, edge.EndPosition + vRaise);
-
-			if (incldStrtAndEndLbls)
-			{
-				Handles.Label(edge.StartPosition + vRaise, "eStrt");
-				Handles.Label(edge.EndPosition + vRaise, "eEnd");
-			}
-
-			Gizmos.color = oldColor;
 		}
 
 		#region HELPERS ========================================
@@ -220,26 +190,6 @@ namespace LogansNavigationExtension
 			}
 
 			Debug.Log($"finished. took: '{DateTime.Now.Subtract(dt_start).TotalMilliseconds}' ms");
-
-
-
-			/*
-			Debug.Log($"now checking validity...");
-			for (int i = 0; i < _mgr.Triangles.Length; i++)
-			{
-				Debug.Log($"checking '{_mgr.Triangles[i].Verts[0].Relationships.Length}' relationships on vert0...");
-				for (int j = 0; j < _mgr.Triangles[i].Verts[0].Relationships.Length; j++)
-				{
-					Debug.Log($"for rel{j}...");
-					Debug.Log($"valid: '{_mgr.Triangles[i].Verts[0].Relationships[j].AmValid}'");
-					
-				}
-
-				_mgr.Triangles[i].Verts[0].Relationships = null;
-				_mgr.Triangles[i].Verts[1].Relationships = null;
-				_mgr.Triangles[i].Verts[2].Relationships = null;
-			}
-			*/
 		}
 
 		public LNX_VertexRelationship FetchedRel;
@@ -549,7 +499,7 @@ namespace LogansNavigationExtension
 		[ContextMenu("z call SaySpecifieddVertRelational()")]
 		public void SaySpecifieddVertRelational()
 		{
-			_mgr.Triangles[Coord_specifiedVrt_sayRelational.TrianglesIndex].Verts[Coord_specifiedVrt_sayRelational.ComponentIndex].
+			_mgr.Triangles[Coord_specifiedVrt_sayRelational.TriangleIndex].Verts[Coord_specifiedVrt_sayRelational.ComponentIndex].
 				SayAllRelationships();
 		}
 

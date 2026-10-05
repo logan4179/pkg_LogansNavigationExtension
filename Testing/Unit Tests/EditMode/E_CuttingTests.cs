@@ -156,7 +156,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 					Debug.Log($"iterating edge: '{i_edges}'...");
 
 					Assert.AreEqual( _lnx_meshManipulator._LNX_NavMesh.Triangles[i_tris].Index_inCollection, 
-						_lnx_meshManipulator._LNX_NavMesh.Triangles[i_tris].Edges[i_edges].MyCoordinate.TrianglesIndex );
+						_lnx_meshManipulator._LNX_NavMesh.Triangles[i_tris].Edges[i_edges].MyCoordinate.TriangleIndex );
 				}
 			}
 		}
@@ -171,7 +171,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 				for (int i_verts = 0; i_verts < 3; i_verts++)
 				{
 					Assert.AreEqual(_lnx_meshManipulator._LNX_NavMesh.Triangles[i_tris].Index_inCollection,
-						_lnx_meshManipulator._LNX_NavMesh.Triangles[i_tris].Verts[i_verts].MyCoordinate.TrianglesIndex);
+						_lnx_meshManipulator._LNX_NavMesh.Triangles[i_tris].Verts[i_verts].MyCoordinate.TriangleIndex);
 				}
 			}
 		}

@@ -71,7 +71,7 @@ namespace LogansNavigationExtension
 			Index_Relational = CurrentVert.Index_Relational;
 			Index_VisMesh_Vertices = CurrentVert.Index_VisMesh_Vertices;
 			v_toCenter = CurrentVert.v_toCenter;
-			DistanceToCenter = CurrentVert.DistanceToCenter;
+			DistanceToCenter = CurrentVert.DistanceToTriangleCenter;
 			CachedSurfaceNormal = CurrentVert.CachedSurfaceNormal;
 			#endregion
 

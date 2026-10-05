@@ -13,19 +13,30 @@ namespace LogansNavigationExtension
 
 		[Header("SAMPLING")]
         [Tooltip("Dictates what component CurrentCoordinate refers to")] public LNX_Component CurrentCoordinateMode;
-		[Tooltip("Restricts sampling to a certain tri. Note: Not yet implemented")]
-		public int Index_TriRestrict = -1;
+
 		[Tooltip("Considers closest off perimeter when sampling currentHit")]
 		public bool cnsdrClsestOffPerimParameter;
 
 		[Header("REFERENCE")]
 		public LNX_NavMeshSurface _navmesh;
 
+		[Header("TRI SPECIFIC")]
+		[Tooltip("Restricts sampling to a certain tri. Note: Not yet implemented")]
+		public int Index_TriRestrict = -1;
+
+		[Header("EDGE SPECIFIC")]
+		public bool SelectOnlyTerminalEdges;
+
 		[Header("STATS")]
 		public bool AutomaticallyGrab = true;
 		public LNX_Component SnapTo = LNX_Component.None;
         [Range(0.05f, 2f), Tooltip("How easy it is to select a component")] 
 		public float Forgiveness = 0.25f;
+
+
+		[Header("RESULTS")]
+		public LNX_NavmeshHit CurrentHit;
+		public LNX_ComponentCoordinate CurrentCoordinate;
 
 		[Header("DEBUG")]
 		[SerializeField] bool drawLabel;
@@ -40,9 +51,7 @@ namespace LogansNavigationExtension
 		public bool RecalculatedLastFrame => recalculatedLastFrame;
 		[SerializeField] bool drawComponentCoordinateInsteadOfLabel = false;
 
-		[Header("RESULTS")]
-		public LNX_NavmeshHit CurrentHit;
-		public LNX_ComponentCoordinate CurrentCoordinate;
+		[SerializeField, TextArea(1, 10)] public string DBG_Component;
 
 
 		public LNX_Triangle CurrentlyGrabbedTriangle
@@ -65,7 +74,7 @@ namespace LogansNavigationExtension
 			{
 				if (CurrentCoordinateMode == LNX_Component.Edge && CurrentCoordinate.ComponentIndex > -1)
 				{
-					return _navmesh.Triangles[CurrentCoordinate.TrianglesIndex].Edges[CurrentCoordinate.ComponentIndex];
+					return _navmesh.Triangles[CurrentCoordinate.TriangleIndex].Edges[CurrentCoordinate.ComponentIndex];
 				}
 				else
 				{
@@ -79,7 +88,7 @@ namespace LogansNavigationExtension
 			{
 				if (CurrentCoordinateMode == LNX_Component.Vertex && CurrentCoordinate.ComponentIndex > -1)
 				{
-					return _navmesh.Triangles[CurrentCoordinate.TrianglesIndex].Verts[CurrentCoordinate.ComponentIndex];
+					return _navmesh.Triangles[CurrentCoordinate.TriangleIndex].Verts[CurrentCoordinate.ComponentIndex];
 				}
 				else
 				{
@@ -127,27 +136,16 @@ namespace LogansNavigationExtension
 			}
 			else if ( CurrentCoordinateMode == LNX_Component.Edge )
 			{
-				float bestDist = Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriangleIndex, 0).MidPosition);
-				int bestEdge = 0;
-
-				if (Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriangleIndex, 1).MidPosition) < bestDist)
-				{
-					bestDist = Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriangleIndex, 1).MidPosition);
-					bestEdge = 1;
-				}
-
-				if (Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriangleIndex, 2).MidPosition) < bestDist)
-				{
-					bestDist = Vector3.Distance(transform.position, _navmesh.GetEdge(CurrentHit.TriangleIndex, 2).MidPosition);
-					bestEdge = 2;
-				}
-
-				CurrentCoordinate = _navmesh.Triangles[CurrentHit.TriangleIndex].Edges[bestEdge].MyCoordinate;
-				//Debug.Log($"Sample succesful. Grabbed edge '{CurrentCoordinate}'...");
+				CurrentHit = LNX_SelectionUtilities.GetBestEdgeHitOnSurface(_navmesh, transform.position, SelectOnlyTerminalEdges );
+				CurrentCoordinate = new LNX_ComponentCoordinate(CurrentHit.SurfaceIndex, CurrentHit.TriangleIndex, CurrentHit.EdgeIndex);
+				DBG_Component = $"Edge: '{CurrentlyGrabbedEdge}'\n" +
+					$"MyCoordinate: '{CurrentlyGrabbedEdge.MyCoordinate}'\n" +
+					$"StartVertCoord: '{CurrentlyGrabbedEdge.StartVertCoordinate}', EndVertCoord: '{CurrentlyGrabbedEdge.EndVertCoordinate}'\n" +
+					$"";
 			}
 			else if( CurrentCoordinateMode == LNX_Component.Triangle )
 			{
-				CurrentCoordinate = new LNX_ComponentCoordinate(CurrentHit.TriangleIndex, -1 );
+				CurrentCoordinate = new LNX_ComponentCoordinate(CurrentHit.SurfaceIndex, CurrentHit.TriangleIndex, -1 );
 				//Debug.Log($"Sample succesful. Grabbed tri '{CurrentCoordinate}'...");
 
 			}
@@ -316,7 +314,7 @@ namespace LogansNavigationExtension
 
 			if (drawFocusTriGizmos && CurrentlyGrabbedTriangle != null)
 			{
-				LNX_DrawingUtils.DrawTriGizmos( CurrentlyGrabbedTriangle, Color.yellow,
+				LNX_DrawingUtilities.DrawTriGizmos( CurrentlyGrabbedTriangle, Color.yellow,
 					false, false, true, 0.02f, true, CurrentlyGrabbedTriangle.ShortestEdgeLength * 0.3f, 
 					drawNormalLines, 0.25f
 				);
