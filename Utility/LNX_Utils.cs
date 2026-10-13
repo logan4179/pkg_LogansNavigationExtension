@@ -339,6 +339,27 @@ namespace LogansNavigationExtension
 			return false;
 		}
 
+		public static bool FlatEquals(Vector3 vectorA, Vector3 vectorB, LNX_Direction flattenDir )
+		{
+			if ( flattenDir == LNX_Direction.PositiveY || flattenDir == LNX_Direction.NegativeY )
+			{
+				return (vectorA.x == vectorB.x) && (vectorA.z == vectorB.z);
+			}
+			else if ( flattenDir == LNX_Direction.PositiveX || flattenDir == LNX_Direction.NegativeX )
+			{
+				return (vectorA.y == vectorB.y) && (vectorA.z == vectorB.z);
+			}
+			else if ( flattenDir == LNX_Direction.PositiveZ || flattenDir == LNX_Direction.NegativeZ )
+			{
+				return (vectorA.x == vectorB.x) && (vectorA.y == vectorB.y);
+			}
+			else
+			{
+				Debug.LogError($"LNX ERROR! Problem with supplied flatten direction. Need a direction in order to flatten!");
+				return false;
+			}
+		}
+
 		public static Vector3 FlooredVector( Vector3 vector, Vector3 floorBase, Vector3 nrml)
 		{
 			if ( nrml == Vector3.up || nrml == Vector3.down )
@@ -410,7 +431,7 @@ namespace LogansNavigationExtension
 			return Vector3.zero;
 		}
 
-		public static bool AmInVectorCone(Vector3 vToPos, Vector3 vLegA, Vector3 vLegB, Vector3 nrml, bool includeOnPerim = false )
+		public static bool AmInVectorCone(Vector3 vToPos, Vector3 vLegA, Vector3 vLegB, Vector3 angleAxis, bool includeOnPerim = false )
 		{
 			vToPos = Vector3.Normalize(vToPos);
 
@@ -439,15 +460,15 @@ namespace LogansNavigationExtension
 			}
 			#endregion
 
-			float ang_crnr = Vector3.SignedAngle(vLegA, vLegB, nrml);
+			float ang_crnr = Vector3.SignedAngle(vLegA, vLegB, angleAxis);
 			//float ang_crnr = Vector3.Angle(vLegA, vLegB);
 
-			float ang_legAToPos = Vector3.SignedAngle(vToPos, vLegA, nrml);
-			float ang_legBToPos = Vector3.SignedAngle(vToPos, vLegB, nrml);
+			float ang_legAToPos = Vector3.SignedAngle(vToPos, vLegA, angleAxis);
+			float ang_legBToPos = Vector3.SignedAngle(vToPos, vLegB, angleAxis);
 
 			if
 			(
-				Mathf.Sign(ang_crnr) != Mathf.Sign(ang_legAToPos) &&
+				Mathf.Sign(ang_crnr) != Mathf.Sign(ang_legAToPos) && //huh? - 10/6/2026 - Note: I think this assumes that vlegA will always point to the left of vToPos and vLegB will always point to the right
 				Mathf.Sign(ang_crnr) == Mathf.Sign(ang_legBToPos)
 			)
 			{
@@ -820,11 +841,11 @@ namespace LogansNavigationExtension
 		{
 			if( AreEdgesAlignedFromTheirPerspectives(edgeA,edgeB) )
 			{
-				return AmInArea(pos, edgeA.StartPosition_flat, edgeA.EndPosition_flat, edgeB.EndPosition_flat, edgeB.StartPosition_flat, edgeA.V_NavmeshProjectionDirection_cached, includeOnBorder, ref dbgString );
+				return AmInArea(pos, edgeA.StartPosition_flat, edgeA.EndPosition_flat, edgeB.EndPosition_flat, edgeB.StartPosition_flat, edgeA.V_SurfaceProjectionDirection_cached, includeOnBorder, ref dbgString );
 			}
 			else
 			{
-				return AmInArea(pos, edgeA.StartPosition_flat, edgeA.EndPosition_flat, edgeB.StartPosition_flat, edgeB.EndPosition_flat, edgeA.V_NavmeshProjectionDirection_cached, includeOnBorder, ref dbgString);
+				return AmInArea(pos, edgeA.StartPosition_flat, edgeA.EndPosition_flat, edgeB.StartPosition_flat, edgeB.EndPosition_flat, edgeA.V_SurfaceProjectionDirection_cached, includeOnBorder, ref dbgString);
 			}
 		}
 
@@ -1093,7 +1114,7 @@ namespace LogansNavigationExtension
 		/// <returns></returns>
 		public static bool AreEdgesAlignedFromTheirPerspectives( LNX_Edge edgeA, LNX_Edge edgeB )
 		{
-			return AreStartAndEndPointsAlignedFromTheirPerspectives(edgeA.StartPosition_flat, edgeA.EndPosition_flat, edgeB.StartPosition_flat, edgeB.EndPosition_flat, edgeA.V_NavmeshProjectionDirection_cached );
+			return AreStartAndEndPointsAlignedFromTheirPerspectives(edgeA.StartPosition_flat, edgeA.EndPosition_flat, edgeB.StartPosition_flat, edgeB.EndPosition_flat, edgeA.V_SurfaceProjectionDirection_cached );
 		}
 
 		/// <summary>
@@ -1164,9 +1185,9 @@ namespace LogansNavigationExtension
 			dbgReport += $"first, checking if start, mid, or end edge positions are in area...\n";
 			if //<<<<<<<<<<<<<3
 			(
-				AmInArea(obstructEdge.MidPosition_flat, crnrA, crnrB, crnrC, crnrD, obstructEdge.V_NavmeshProjectionDirection_cached, includeOnBorder, ref tryMid) ||
-				AmInArea(obstructEdge.StartPosition_flat, crnrA, crnrB, crnrC, crnrD, obstructEdge.V_NavmeshProjectionDirection_cached, includeOnBorder, ref tryStrt) ||
-				AmInArea(obstructEdge.EndPosition_flat, crnrA, crnrB, crnrC, crnrD, obstructEdge.V_NavmeshProjectionDirection_cached, includeOnBorder, ref tryEnd)
+				AmInArea(obstructEdge.MidPosition_flat, crnrA, crnrB, crnrC, crnrD, obstructEdge.V_SurfaceProjectionDirection_cached, includeOnBorder, ref tryMid) ||
+				AmInArea(obstructEdge.StartPosition_flat, crnrA, crnrB, crnrC, crnrD, obstructEdge.V_SurfaceProjectionDirection_cached, includeOnBorder, ref tryStrt) ||
+				AmInArea(obstructEdge.EndPosition_flat, crnrA, crnrB, crnrC, crnrD, obstructEdge.V_SurfaceProjectionDirection_cached, includeOnBorder, ref tryEnd)
 			)
 			{
 				if( !string.IsNullOrEmpty(tryMid) )
@@ -1189,9 +1210,9 @@ namespace LogansNavigationExtension
 
 			if( 
 				VectorsCrossEachOther(
-					obstructEdge.StartPosition_flat, obstructEdge.EndPosition_flat, crnrA, crnrD, obstructEdge.V_NavmeshProjectionDirection_cached, false) ||
+					obstructEdge.StartPosition_flat, obstructEdge.EndPosition_flat, crnrA, crnrD, obstructEdge.V_SurfaceProjectionDirection_cached, false) ||
 				VectorsCrossEachOther(
-					obstructEdge.StartPosition_flat, obstructEdge.EndPosition_flat, crnrB, crnrC, obstructEdge.V_NavmeshProjectionDirection_cached, false)
+					obstructEdge.StartPosition_flat, obstructEdge.EndPosition_flat, crnrB, crnrC, obstructEdge.V_SurfaceProjectionDirection_cached, false)
 			)
 			{
 				return true;

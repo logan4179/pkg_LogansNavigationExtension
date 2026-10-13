@@ -40,7 +40,7 @@ namespace LogansNavigationExtension
 
 		[Header("DEBUG")]
 		[SerializeField] bool drawLabel;
-		[SerializeField] bool drawFocusTriGizmos;
+		[SerializeField] bool highlightGrabbed;
 		[SerializeField] bool drawNormalLines = false;
 		[SerializeField, Range(0f, 0.15f)] private float sphereRadius = 0.02f;
 
@@ -312,13 +312,24 @@ namespace LogansNavigationExtension
 
 			v_lastPos = transform.position;
 
-			if (drawFocusTriGizmos && CurrentlyGrabbedTriangle != null)
+			if ( highlightGrabbed )
 			{
-				LNX_DrawingUtilities.DrawTriGizmos( CurrentlyGrabbedTriangle, Color.yellow,
-					false, false, true, 0.02f, true, CurrentlyGrabbedTriangle.ShortestEdgeLength * 0.3f, 
-					drawNormalLines, 0.25f
-				);
+				if ( /*CurrentCoordinateMode == LNX_Component.Triangle &&*/ CurrentlyGrabbedTriangle != null )
+				{
+					LNX_DrawingUtilities.DrawTriGizmos( CurrentlyGrabbedTriangle, Color.yellow,
+						false, false, true, 0.02f, true, CurrentlyGrabbedTriangle.ShortestEdgeLength * 0.3f, 
+						drawNormalLines, 0.25f
+					);
+				}
+
+				if (CurrentCoordinateMode == LNX_Component.Edge && CurrentlyGrabbedEdge != null )
+				{
+					LNX_DrawingUtilities.DrawStandardEdgeFocusGizmos(
+						CurrentlyGrabbedEdge, 0.1f, CurrentlyGrabbedEdge.ToString(), Color.yellow
+					);
+				}
 			}
+
 			DrawMyGizmos();
 		}
 	}

@@ -9,7 +9,35 @@ namespace LogansNavigationExtension
 {
     public static class LNX_UtilityObjects
     {
+		public static Vector3 DirectionToVector( LNX_Direction dir )
+		{
+			if (dir == LNX_Direction.PositiveY)
+			{
+				return Vector3.up;
+			}
+			else if (dir == LNX_Direction.NegativeY)
+			{
+				return Vector3.down;
+			}
+			else if (dir == LNX_Direction.PositiveZ)
+			{
+				return Vector3.forward;
+			}
+			else if (dir == LNX_Direction.NegativeZ)
+			{
+				return Vector3.back;
+			}
+			else if (dir == LNX_Direction.PositiveX)
+			{
+				return Vector3.right;
+			}
+			else if ( dir == LNX_Direction.NegativeX )
+			{
+				return Vector3.left;
+			}
 
+			return Vector3.zero;
+		}
 	}
 
 
@@ -264,6 +292,34 @@ namespace LogansNavigationExtension
 			return false;
 		}
 	}
+
+	[System.Serializable]
+	public struct LNX_AtomicEdge
+	{
+		public Vector3 StartPosition;
+		public Vector3 EndPosition;
+
+		public Vector3 V_StartToEnd => EndPosition - StartPosition;
+
+		public LNX_AtomicEdge(LNX_Edge edge)
+		{
+			StartPosition = edge.StartPosition;
+			EndPosition = edge.EndPosition;
+		}
+
+		public LNX_AtomicEdge( LNX_Edge edge, LNX_Direction flattenDir )
+		{
+			StartPosition = LNX_Utils.FlatVector(edge.StartPosition, flattenDir);
+			EndPosition = LNX_Utils.FlatVector(edge.EndPosition,flattenDir);
+		}
+
+		public LNX_AtomicEdge( Vector3 strtPos, Vector3 endPos)
+		{
+			StartPosition = strtPos;
+			EndPosition = endPos;
+		}
+	}
+
 
 	[System.Serializable]
 	public struct LNX_NavmeshHit

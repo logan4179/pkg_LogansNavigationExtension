@@ -230,5 +230,17 @@ namespace LogansNavigationExtension
 			Gizmos.DrawLine(pointPos, lineEnd);
 			Handles.Label(lineEnd, lbl);
 		}
+
+		public static void DrawLabeledPoint(Vector3 pointPos, float labelElevation, Vector3 lblOffset,
+			string lbl, Color clr)
+		{
+			Color oldClr = Gizmos.color;
+
+			Gizmos.color = clr;
+
+			Vector3 lineEnd = pointPos + (lblOffset * labelElevation);
+			Gizmos.DrawLine(pointPos, lineEnd);
+			Handles.Label(lineEnd, lbl);
+		}
 	}
 }

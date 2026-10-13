@@ -12,37 +12,37 @@ using UnityEngine.Rendering;
 
 namespace LogansNavigationExtension
 {
-    public class LNX_Manager : MonoBehaviour
-    {
-        public static LNX_Manager Instance;
+	public class LNX_Manager : MonoBehaviour
+	{
+		public static LNX_Manager Instance;
 
-        public List<LNX_NavMeshSurface> Surfaces;
+		public List<LNX_NavMeshSurface> Surfaces;
 		public List<LNX_NavMeshLink> Links;
-        public List<LNX_Agent> Agents;
+		public List<LNX_Agent> Agents;
 
 		[Header("DEBUG")]
 		[SerializeField] private string errorMsg;
 
 		private void Awake()
 		{
-            Instance = this;
+			Instance = this;
 
-            for (int i = 0; i < Surfaces.Count; i++)
-            {
-                
-            }
+			for (int i = 0; i < Surfaces.Count; i++)
+			{
 
-            for (int i = 0; i < Agents.Count; i++)
-            {
-                Agents[i].SetManager(this);
-            }
+			}
+
+			for (int i = 0; i < Agents.Count; i++)
+			{
+				Agents[i].SetManager(this);
+			}
 		}
 
 		void Start()
-        {
+		{
 			for (int i = 0; i < Surfaces.Count; i++)
 			{
-                Surfaces[i].MySurfaceIndex = i;
+				Surfaces[i].MySurfaceIndex = i;
 			}
 
 			for (int i = 0; i < Agents.Count; i++)
@@ -70,7 +70,7 @@ namespace LogansNavigationExtension
 			}
 
 			Debug.Log($"todo: verify that links section works next time I do this");
-			for ( int i = 0; i < Links.Count; i++ )
+			for (int i = 0; i < Links.Count; i++)
 			{
 				Links[i].RefreshSpans(); //todo: need to verify that this works
 			}
@@ -80,88 +80,265 @@ namespace LogansNavigationExtension
 		{
 			Debug.Log($"SetLinkIndices()");
 
-			for(int i = 0; i < Links.Count; i++)
+			for (int i = 0; i < Links.Count; i++)
 			{
 				Links[i].SetLinkIndex(i);
 			}
 		}
 		#endregion
 
-		public LNX_NavmeshHit SampleClosestHit( Vector3 pos, float maxSampleDistance, bool considerClosesetOffPerimeter)
-        {
-            LNX_NavmeshHit returnHit = LNX_NavmeshHit.None;
+		public LNX_NavmeshHit SampleClosestHit(Vector3 pos, float maxSampleDistance, bool considerClosesetOffPerimeter)
+		{
+			LNX_NavmeshHit returnHit = LNX_NavmeshHit.None;
 
-            Surfaces[0].SamplePosition(pos, out returnHit, maxSampleDistance, considerClosesetOffPerimeter );
+			Surfaces[0].SamplePosition(pos, out returnHit, maxSampleDistance, considerClosesetOffPerimeter);
 
-            return returnHit;
-        }
+			return returnHit;
+		}
 
 		#region RAYCASTING ================================================================================
 		public bool Raycast(LNX_NavmeshHit startHit, Vector3 projectDir, out LNX_Path outPath, float allowedDistance, bool allowRelationships = false)
-        {
-            return Surfaces[0].Raycast( startHit, projectDir, out outPath, allowedDistance, allowRelationships );
-        }
-		public bool Raycast_dbg(LNX_NavmeshHit startHit, Vector3 projectDir, out LNX_Path outPath, float allowedDistance, 
-            ref LNX_MethodDebugReport rprt, bool allowRelationships = false)
+		{
+			return Surfaces[0].Raycast(startHit, projectDir, out outPath, allowedDistance, allowRelationships);
+		}
+		public bool Raycast_dbg(LNX_NavmeshHit startHit, Vector3 projectDir, out LNX_Path outPath, float allowedDistance,
+			ref LNX_MethodDebugReport rprt, bool allowRelationships = false)
 		{
 
 			return Surfaces[0].Raycast_dbg(startHit, projectDir, out outPath, allowedDistance, ref rprt, allowRelationships);
 		}
-		public bool Raycast( LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, out LNX_Path outPath )
+		public bool Raycast(LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, out LNX_Path outPath)
 		{
 			return Surfaces[startHit.SurfaceIndex].Raycast(startHit, endHit, out outPath);
 		}
-		public bool Raycast_dbg(LNX_NavmeshHit startHit, LNX_NavmeshHit endHIt, out LNX_Path outPath, ref LNX_MethodDebugReport rprt )
+		public bool Raycast_dbg(LNX_NavmeshHit startHit, LNX_NavmeshHit endHIt, out LNX_Path outPath, ref LNX_MethodDebugReport rprt)
 		{
 			return Surfaces[0].Raycast_dbg(startHit, endHIt, out outPath, ref rprt);
 		}
 
-		public bool Raycast(LNX_NavmeshHit startHit, Vector3 projectDir, LNX_NavmeshHit endHit, out LNX_Path outPath )
+		public bool Raycast(LNX_NavmeshHit startHit, Vector3 projectDir, LNX_NavmeshHit endHit, out LNX_Path outPath)
 		{
 			LNX_Path p = null;
+			outPath = null;
 
 			LNX_Path runningPath = new LNX_Path();
 			LNX_NavmeshHit runningStartHit = startHit;
 			Vector3 runningProjectDir = projectDir;
+			int safetyTimeout = 0;
+			int safetyLimit = 10;
+			for (int i = 0; i < Surfaces.Count; i++)
+			{
+				safetyLimit += Surfaces[i].Triangles.Length;
+			}
 			bool endReached = false;
-			while ( !endReached)
+			while (!endReached)
 			{
 				LNX_Path rcPath = null;
-				if ( Surfaces[runningStartHit.SurfaceIndex].Raycast(runningStartHit, runningProjectDir, out rcPath, endHit) )
+				if (Surfaces[runningStartHit.SurfaceIndex].Raycast(runningStartHit, runningProjectDir, out rcPath, endHit))
 				{
-					runningPath.AddPath( rcPath );
-					if ( rcPath.EndHit == endHit )
+					runningPath.AddPath(rcPath);
+					if (rcPath.EndHit == endHit)
 					{
 						endReached = true;
 					}
 				}
 				else
 				{
-					for ( int i = 0; i < Links.Count; i++ )
+					for (int i = 0; i < Links.Count; i++)
 					{
-						if ( !Links[i].TouchesSurface(runningPath.EndHit.SurfaceIndex) )
+						if (!Links[i].TouchesSurface(runningPath.EndHit.SurfaceIndex))
 						{
 							continue;
 						}
 
-						if ( Links[i].HitIsOnEitherSpan(rcPath.EndHit) )
+						if (Links[i].HitIsOnSpanA(rcPath.EndHit))
 						{
-							runningStartHit = new LNX_NavmeshHit(
-								runningPath.EndHit.Position, runningPath.EndHit.Normal,
-								runningStartHit.SurfaceIndex == Links[i]._SurfaceA.MySurfaceIndex ? Links[i]._SurfaceB.MySurfaceIndex : Links[i]._SurfaceA.MySurfaceIndex,
-								rcPath.EndHit.TriangleIndex, rcPath.EndHit.VertIndex, rcPath.EndHit.EdgeIndex, i
-							);
-
-							break;
+							LNX_NavmeshHit spanBHit = LNX_NavmeshHit.None;
+							if (!Links[i].ProjectFromSurfaceAToSpanB(runningStartHit, projectDir, out spanBHit))
+							{
+								endReached = true;
+								return true;
+							}
+							else
+							{
+								runningStartHit = spanBHit;
+								Quaternion qrot = Quaternion.FromToRotation
+								(
+									Links[i]._SurfaceA.GetSurfaceProjectionVector(),
+									Links[i]._SurfaceB.GetSurfaceProjectionVector()
+								);
+								runningProjectDir = qrot * projectDir;
+							}
+						}
+						else if (Links[i].HitIsOnSpanB(rcPath.EndHit))
+						{
+							LNX_NavmeshHit spanAHit = LNX_NavmeshHit.None;
+							if (!Links[i].ProjectFromSurfaceBToSpanA(runningStartHit, projectDir, out spanAHit))
+							{
+								endReached = true;
+								return true;
+							}
+							else
+							{
+								runningStartHit = spanAHit;
+								Quaternion qrot = Quaternion.FromToRotation
+								(
+									Links[i]._SurfaceB.GetSurfaceProjectionVector(),
+									Links[i]._SurfaceA.GetSurfaceProjectionVector()
+								);
+								runningProjectDir = qrot * projectDir;
+							}
 						}
 					}
+				}
 
+				safetyTimeout++;
+				if ( safetyTimeout > safetyLimit )
+				{
+					Debug.LogError($"safety timeout reached because while went more than '{safetyLimit}' iterations! Breaking early");
+					return false;
 				}
 			}
 
-
 			///////////////////////////////////////////
 			outPath = null;
+			return true;
+		}
+		public bool Raycast_dbg(LNX_NavmeshHit startHit, Vector3 projectDir, LNX_NavmeshHit endHit, out LNX_Path outPath, ref LNX_MethodDebugReport rprt)
+		{
+			rprt.StartMethod($"Raycast_dbg(startHit: '{startHit}', projectDir: '{projectDir}', endHit: '{endHit}')");
+			LNX_Path p = null;
+			outPath = null;
+			projectDir = Surfaces[startHit.SurfaceIndex].FlatVector(projectDir);
+			rprt.Log($"flattened projectDir to: '{projectDir}'...");
+
+			LNX_Path runningPath = new LNX_Path();
+			LNX_NavmeshHit runningStartHit = startHit;
+			Vector3 runningProjectDir = projectDir;
+			int safetyTimeout = 0;
+			int safetyLimit = 10;
+			for (int i = 0; i < Surfaces.Count; i++)
+			{
+				safetyLimit += Surfaces[i].Triangles.Length;
+			}
+			rprt.Log($"safetyLimit initialized to '{safetyLimit}'...",
+				$"now while-looping to end...");
+
+			bool endReached = false;
+			while (!endReached)
+			{
+				rprt.Log($"while{safetyTimeout}============================================");
+				LNX_Path rcPath = null;
+				rprt.Log($"raycasting on surface{runningStartHit.SurfaceIndex} with dir: '{runningProjectDir}'...");
+
+				if ( !Surfaces[runningStartHit.SurfaceIndex].Raycast(runningStartHit, runningProjectDir, out rcPath, endHit))
+				{
+					rprt.Log($"Raycast returned false, so it didn't hit anything. Assuming hit end. rcPath endhit: '{rcPath.EndHit}'...");
+
+					runningPath.AddPath(rcPath);
+					outPath = new LNX_Path(runningPath);
+					endReached = true;
+					rprt.Log_And_End_Method($"decided am on end. Returning false...");
+					return false;
+				}
+				else
+				{
+					rprt.Log($"raycast hit: '{rcPath.EndHit}'. Inspecting hit to decide what's next...");
+					runningPath.AddPath(rcPath);
+
+					rprt.Log($"not yet at end. Checking '{Links.Count}' links to see if one was hit...");
+					bool foundLink = false;
+					for (int i = 0; i < Links.Count; i++)
+					{
+						rprt.Log($"for Link{i}...");
+						if (!Links[i].TouchesSurface(rcPath.EndHit.SurfaceIndex))
+						{
+							rprt.Log($"this link doesn't touch the surface of the endhit so it can't be right. Continuing...");
+							continue;
+						}
+
+						if (Links[i].HitIsOnSpanA(rcPath.EndHit))
+						{
+							rprt.Log($"hit is on spanA of this link. Now trying to project across link...");
+							LNX_NavmeshHit spanBHit = LNX_NavmeshHit.None;
+							if (!Links[i].ProjectFromSurfaceAToSpanB(runningStartHit, projectDir, out spanBHit))
+							{
+								rprt.Log_And_End_Method($"Could NOT project across link. Returning true...");
+								endReached = true;
+								return true;
+							}
+							else
+							{
+								rprt.Log($"Succesfully projected across link. Current runningStartHit: '{runningStartHit}', runningProjectDir: '{runningProjectDir}'",
+									$"Generating next running values...");
+
+								runningStartHit = spanBHit;
+								Quaternion qrot = Quaternion.FromToRotation
+								(
+									Links[i]._SurfaceA.GetSurfaceProjectionVector(),
+									Links[i]._SurfaceB.GetSurfaceProjectionVector()
+								);
+								runningProjectDir = qrot * projectDir;
+								foundLink = true;
+
+								rprt.Log($"runningStartHit: '{runningStartHit}'. runningProjectDir: '{runningProjectDir}'");
+								break;
+							}
+						}
+						else if (Links[i].HitIsOnSpanB(rcPath.EndHit))
+						{
+							rprt.Log($"hit is on spanB of this link. Now trying to project across link...");
+
+							LNX_NavmeshHit spanAHit = LNX_NavmeshHit.None;
+							if (!Links[i].ProjectFromSurfaceBToSpanA(runningStartHit, projectDir, out spanAHit))
+							{
+								rprt.Log_And_End_Method($"Could NOT project across link. Returning true...");
+								endReached = true;
+								return true;
+							}
+							else
+							{
+								rprt.Log($"Succesfully projected across link. Current runningStartHit: '{runningStartHit}', runningProjectDir: '{runningProjectDir}'",
+									$"Generating next running values...");
+								runningStartHit = spanAHit;
+								Quaternion qrot = Quaternion.FromToRotation
+								(
+									Links[i]._SurfaceB.GetSurfaceProjectionVector(),
+									Links[i]._SurfaceA.GetSurfaceProjectionVector()
+								);
+								runningProjectDir = qrot * projectDir;
+								foundLink = true;
+
+								rprt.Log($"runningStartHit: '{runningStartHit}'. runningProjectDir: '{runningProjectDir}'");
+								break;
+							}
+						}
+						else
+						{
+							rprt.Log($"Hit is on neither spans. Continuing...");
+
+						}
+					}
+
+					if (!foundLink)
+					{
+						rprt.Log_And_End_Method($"exhausted all Link possibilities. Returning true...");
+						return true;
+					}
+					
+				}
+
+
+					safetyTimeout++;
+				if (safetyTimeout > safetyLimit)
+				{
+					Debug.LogError($"safety timeout reached because while went more than '{safetyLimit}' iterations! Breaking early");
+					rprt.Log_And_End_Method($"safety timeout reached because while went more than '{safetyLimit}' iterations! Breaking early");
+					return false;
+				}
+			}
+
+			rprt.Log_And_End_Method($"Finally returning true...");
 			return true;
 		}
 		#endregion
