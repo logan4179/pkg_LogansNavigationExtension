@@ -97,11 +97,11 @@ namespace LogansNavigationExtension
 			for ( int i = 0; i < CurrentlyGrabbedVert.SharedVertexCoordinates.Length; i++ )
 			{
 				Vector3 vLegA_flat = CurrentlyGrabbedVert.Relationships[
-					CurrentlyGrabbedVert.SharedVertexCoordinates[i].TrianglesIndex * 3 + 
+					CurrentlyGrabbedVert.SharedVertexCoordinates[i].TriangleIndex * 3 + 
 					(CurrentlyGrabbedVert.SharedVertexCoordinates[i].ComponentIndex == 0 ? 1 : 0)
 				].V_to.normalized;
 				Vector3 vLegB_flat = CurrentlyGrabbedVert.Relationships[
-					CurrentlyGrabbedVert.SharedVertexCoordinates[i].TrianglesIndex * 3 + 
+					CurrentlyGrabbedVert.SharedVertexCoordinates[i].TriangleIndex * 3 + 
 					(CurrentlyGrabbedVert.SharedVertexCoordinates[i].ComponentIndex == 2 ? 1 : 2)
 				].V_to.normalized;
 

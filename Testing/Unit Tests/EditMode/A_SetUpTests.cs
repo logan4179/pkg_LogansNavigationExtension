@@ -323,7 +323,7 @@ namespace LoganLand.LogansNavmeshExtension.Tests
 
 					Debug.Log($"Asserting that iterated vert with coordinate: '{_testGeneratedLnxNavmesh.Triangles[i_tris].Verts[i_verts].MyCoordinate}' " +
 						$"matches position in collection...");
-					Assert.AreEqual( i_tris, _testGeneratedLnxNavmesh.Triangles[i_tris].Verts[i_verts].MyCoordinate.TrianglesIndex );
+					Assert.AreEqual( i_tris, _testGeneratedLnxNavmesh.Triangles[i_tris].Verts[i_verts].MyCoordinate.TriangleIndex );
 					Assert.AreEqual( i_verts, _testGeneratedLnxNavmesh.Triangles[i_tris].Verts[i_verts].MyCoordinate.ComponentIndex );
 				}
 			}

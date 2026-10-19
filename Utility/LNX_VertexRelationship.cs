@@ -15,8 +15,8 @@ namespace LogansNavigationExtension
 		/// <summary>
 		/// Relates this relationship to it's position in the containing collection in the 'owner' LNX_Vertex
 		/// </summary>
-		public int Index_InCollection => RelatedVertCoordinate.TrianglesIndex * 3 + RelatedVertCoordinate.ComponentIndex;
-		public int RelatedTriIndex => RelatedVertCoordinate.TrianglesIndex;
+		public int Index_InCollection => RelatedVertCoordinate.TriangleIndex * 3 + RelatedVertCoordinate.ComponentIndex;
+		public int RelatedTriIndex => RelatedVertCoordinate.TriangleIndex;
 		public int RelatedComponentIndex => RelatedVertCoordinate.ComponentIndex;
 		#endregion
 
@@ -74,23 +74,23 @@ namespace LogansNavigationExtension
 				PathTo = new LNX_Path
 				(
 					nvMsh.GetSurfaceProjectionVector(),
-					new LNX_NavmeshHit(relatedVert, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal)
+					new LNX_NavmeshHit(relatedVert, nvMsh.Triangles[myVert.MyCoordinate.TriangleIndex].V_PathingNormal)
 				);
 				return;
 			}
 			#endregion
 
-			if (myVert.MyCoordinate.TrianglesIndex == relatedVert.MyCoordinate.TrianglesIndex ||
-				relatedVert.SharesVertSpace(nvMsh.Triangles[myVert.Coordinate_FirstSibling.TrianglesIndex].Verts[myVert.Coordinate_FirstSibling.ComponentIndex]) ||
-				relatedVert.SharesVertSpace(nvMsh.Triangles[myVert.Coordinate_SecondSibling.TrianglesIndex].Verts[myVert.Coordinate_SecondSibling.ComponentIndex])
+			if (myVert.MyCoordinate.TriangleIndex == relatedVert.MyCoordinate.TriangleIndex ||
+				relatedVert.SharesVertSpace(nvMsh.Triangles[myVert.Coordinate_FirstSibling.TriangleIndex].Verts[myVert.Coordinate_FirstSibling.ComponentIndex]) ||
+				relatedVert.SharesVertSpace(nvMsh.Triangles[myVert.Coordinate_SecondSibling.TriangleIndex].Verts[myVert.Coordinate_SecondSibling.ComponentIndex])
 			) //"If we're siblings, or share space with sibling"...
 			{
 				//Debug.Log($"Siblings, or in same spot as siblings");
 				PathTo = new LNX_Path
 				(
 					nvMsh.GetSurfaceProjectionVector(),
-					new LNX_NavmeshHit(myVert, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal),
-					new LNX_NavmeshHit(relatedVert, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal)
+					new LNX_NavmeshHit(myVert, nvMsh.Triangles[myVert.MyCoordinate.TriangleIndex].V_PathingNormal),
+					new LNX_NavmeshHit(relatedVert, nvMsh.Triangles[myVert.MyCoordinate.TriangleIndex].V_PathingNormal)
 				);
 			}
 			else
@@ -145,14 +145,14 @@ namespace LogansNavigationExtension
 				PathTo = new LNX_Path
 				(
 					nvMsh.GetSurfaceProjectionVector(),
-					new LNX_NavmeshHit(relatedVert, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal)
+					new LNX_NavmeshHit(relatedVert, nvMsh.Triangles[myVert.MyCoordinate.TriangleIndex].V_PathingNormal)
 				);
 				return;
 			}
 
-			if (myVert.MyCoordinate.TrianglesIndex == relatedVert.MyCoordinate.TrianglesIndex ||
-				relatedVert.SharesVertSpace(nvMsh.Triangles[myVert.Coordinate_FirstSibling.TrianglesIndex].Verts[myVert.Coordinate_FirstSibling.ComponentIndex]) ||
-				relatedVert.SharesVertSpace(nvMsh.Triangles[myVert.Coordinate_SecondSibling.TrianglesIndex].Verts[myVert.Coordinate_SecondSibling.ComponentIndex])
+			if (myVert.MyCoordinate.TriangleIndex == relatedVert.MyCoordinate.TriangleIndex ||
+				relatedVert.SharesVertSpace(nvMsh.Triangles[myVert.Coordinate_FirstSibling.TriangleIndex].Verts[myVert.Coordinate_FirstSibling.ComponentIndex]) ||
+				relatedVert.SharesVertSpace(nvMsh.Triangles[myVert.Coordinate_SecondSibling.TriangleIndex].Verts[myVert.Coordinate_SecondSibling.ComponentIndex])
 			) //"If we're siblings". More performant than using the AreSiblings() method
 			{
 				rprt.Log($"Siblings, or in same spot as siblings");
@@ -160,8 +160,8 @@ namespace LogansNavigationExtension
 				PathTo = new LNX_Path
 				(
 					nvMsh.GetSurfaceProjectionVector(),
-					new LNX_NavmeshHit(myVert, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal),
-					new LNX_NavmeshHit(relatedVert, nvMsh.Triangles[myVert.MyCoordinate.TrianglesIndex].V_PathingNormal)
+					new LNX_NavmeshHit(myVert, nvMsh.Triangles[myVert.MyCoordinate.TriangleIndex].V_PathingNormal),
+					new LNX_NavmeshHit(relatedVert, nvMsh.Triangles[myVert.MyCoordinate.TriangleIndex].V_PathingNormal)
 				);
 				
 			}
@@ -211,11 +211,18 @@ namespace LogansNavigationExtension
 		{
 			DateTime dt_start = DateTime.Now;
 
-			RelatedVertCoordinate = new LNX_ComponentCoordinate(path.EndHit.TriangleIndex, path.EndHit.VertIndex);
+			RelatedVertCoordinate = new LNX_ComponentCoordinate(path.EndHit.SurfaceIndex, path.EndHit.TriangleIndex, path.EndHit.VertIndex);
 			PathTo = new LNX_Path(path);
 		}
 
 		#endregion
+
+		public void SurfaceIndexChanged( int newIndx )
+		{
+			RelatedVertCoordinate = new LNX_ComponentCoordinate( newIndx, RelatedVertCoordinate.TriangleIndex, RelatedVertCoordinate.ComponentIndex );
+
+
+		}
 
 		public bool ValueEquals( LNX_VertexRelationship otherRelationship)
 		{

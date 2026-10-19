@@ -13,10 +13,10 @@ namespace LogansNavigationExtension
 		public bool AtStart = true;
 
 		[Header("PERSPECTIVE")]
-		public LNX_ComponentCoordinate PerspectiveEdgeCoordinate = new LNX_ComponentCoordinate( 0, 0 );
+		public LNX_ComponentCoordinate PerspectiveEdgeCoordinate = new LNX_ComponentCoordinate( 0, 0, 0 );
 		public LNX_Edge PerspectiveEdge => 
-			_navmesh.Triangles[PerspectiveEdgeCoordinate.TrianglesIndex].Edges[PerspectiveEdgeCoordinate.ComponentIndex];
-		public LNX_Triangle PerspectiveTriangle => _navmesh.Triangles[PerspectiveEdgeCoordinate.TrianglesIndex];
+			_navmesh.Triangles[PerspectiveEdgeCoordinate.TriangleIndex].Edges[PerspectiveEdgeCoordinate.ComponentIndex];
+		public LNX_Triangle PerspectiveTriangle => _navmesh.Triangles[PerspectiveEdgeCoordinate.TriangleIndex];
 
 		public LNX_Vertex PerspectiveVert => _navmesh.GetVertexAtCoordinate( AtStart ? PerspectiveEdge.StartVertCoordinate : PerspectiveEdge.EndVertCoordinate );
 				
@@ -106,7 +106,7 @@ namespace LogansNavigationExtension
 
 			if (_navmesh.SamplePosition(transform.position, out hit, 2f, false))
 			{
-				PerspectiveEdgeCoordinate = new LNX_ComponentCoordinate( hit.TriangleIndex, 0 );
+				PerspectiveEdgeCoordinate = new LNX_ComponentCoordinate( _navmesh.MySurfaceIndex, hit.TriangleIndex, 0 );
 				Debug.Log($"Succesful sample! Set new triangle to: '{hit.TriangleIndex}'");
 			}
 			else

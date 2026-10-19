@@ -61,7 +61,7 @@ namespace LogansNavigationExtension
 
 			base.OnDrawGizmos();
 
-			if (EdgeCoordinate.TrianglesIndex < 0 || EdgeCoordinate.ComponentIndex < 0)
+			if (EdgeCoordinate.TriangleIndex < 0 || EdgeCoordinate.ComponentIndex < 0)
 			{
 				DBG_Operation += $"OnDrawGizmos short-circuit. {nameof(EdgeCoordinate)}: '{EdgeCoordinate}'...";
 				return;
@@ -70,7 +70,7 @@ namespace LogansNavigationExtension
 			//CurrentTriangle = _navmesh.GetTriangle( EdgeCoordinate ); //todo: dws
 			//CurrentEdge = _navmesh.GetEdge( EdgeCoordinate ); //todo: dws
 
-			DrawStandardFocusTriGizmos(_navmesh.Triangles[EdgeCoordinate.TrianglesIndex], 1f, $"tri{EdgeCoordinate.TrianglesIndex}", Color.magenta );
+			DrawStandardFocusTriGizmos(_navmesh.Triangles[EdgeCoordinate.TriangleIndex], 1f, $"tri{EdgeCoordinate.TriangleIndex}", Color.magenta );
 			DrawStandardEdgeFocusGizmos(CurrentEdge, 0.1f, "", Color.yellow);
 
 			DBG_Operation += $"Commencing edge operation...\n";
@@ -92,7 +92,7 @@ namespace LogansNavigationExtension
 
 			if ( _navmesh.SamplePosition(transform.position, out hit, 2f, false) )
 			{
-				EdgeCoordinate = new LNX_ComponentCoordinate(hit.TriangleIndex, EdgeCoordinate.ComponentIndex);
+				EdgeCoordinate = new LNX_ComponentCoordinate(_navmesh.MySurfaceIndex, hit.TriangleIndex, EdgeCoordinate.ComponentIndex);
 				//SetDebuggerFocusToMine();
 				Debug.Log($"Succesful sample! Set new edgecoordinate to: '{EdgeCoordinate.ToString()}'");
 			}
@@ -107,7 +107,7 @@ namespace LogansNavigationExtension
 		{
 			Debug.Log($"{nameof(SetDebuggerFocusToMine)}()...");
 
-			_debugger.Grabber_FocusTri.transform.position = _navmesh.Triangles[EdgeCoordinate.TrianglesIndex].V_Center;
+			_debugger.Grabber_FocusTri.transform.position = _navmesh.Triangles[EdgeCoordinate.TriangleIndex].V_Center;
 		}
 
 		[ContextMenu("z GoToProblem()")]

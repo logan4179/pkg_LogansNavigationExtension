@@ -23,7 +23,7 @@ namespace LogansNavigationExtension
 			Dist_SoFar = dstSoFr + Dist_FromLast;
 
 			Gizmos.DrawLine( transform.position, transform.position + (Vector3.up * 0.25f) );
-			LNX_DrawingUtils.DrawLabeledPoint(
+			LNX_DrawingUtilities.DrawLabeledPoint(
 	                transform.position, transform.position + (Vector3.up * 0.25f),
 	                indx.ToString(), clr
             );
@@ -32,7 +32,7 @@ namespace LogansNavigationExtension
 			{
 				Gizmos.DrawLine(vPrev, transform.position);
 				Vector3 midPt = (vPrev + transform.position) / 2f;
-				LNX_DrawingUtils.DrawLabeledPoint(
+				LNX_DrawingUtilities.DrawLabeledPoint(
 					midPt, midPt + (Vector3.up * handleSize) + (Vector3.right * 0.01f),
 					Dist_FromLast.ToString("#.##"), clr
 				);
@@ -63,7 +63,7 @@ namespace LogansNavigationExtension
 					vLblPos = Vector3.up * 0.01f;
 				}
 
-				LNX_DrawingUtils.DrawLabeledPoint(transform.position,
+				LNX_DrawingUtilities.DrawLabeledPoint(transform.position,
 					transform.position + (vLblPos * handleSize * 0.9f),
 					$"ang\n'{Vector3.Angle(vToPrev, vToNext).ToString("#.##")}'", clr
 				);

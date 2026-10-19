@@ -499,7 +499,7 @@ namespace LogansNavigationExtension
 				{
 					DebugSelectedReport += $"trying {Verts_currentlySelected[i].SharedVertexCoordinates[j].ToString()}... ";
 
-					if( amLocked && !indices_lockedTris.Contains(Verts_currentlySelected[i].SharedVertexCoordinates[j].TrianglesIndex) )
+					if( amLocked && !indices_lockedTris.Contains(Verts_currentlySelected[i].SharedVertexCoordinates[j].TriangleIndex) )
 					{
 						continue;
 					}
@@ -617,12 +617,12 @@ namespace LogansNavigationExtension
 			LNX_Edge endEdge1 = null;
 			for ( int i_edges = 0; i_edges < 3; i_edges++ )
 			{
-				if ( tri0.Edges[i_edges] != Edges_currentlySelected[0] && tri0.Edges[i_edges].SharedEdgeCoordinate.TrianglesIndex != tri1.Index_inCollection )
+				if ( tri0.Edges[i_edges] != Edges_currentlySelected[0] && tri0.Edges[i_edges].SharedEdgeCoordinate.TriangleIndex != tri1.Index_inCollection )
 				{
 					endEdge0 = new LNX_Edge(_LNX_NavMesh.GetEdge(tri0.Edges[i_edges].SharedEdgeCoordinate));
 					//Debug.Log($"Found edge index 1 at '{endEdge0}'");
 				}
-				else if (tri1.Edges[i_edges] != Edges_currentlySelected[1] && tri1.Edges[i_edges].SharedEdgeCoordinate.TrianglesIndex != tri0.Index_inCollection)
+				else if (tri1.Edges[i_edges] != Edges_currentlySelected[1] && tri1.Edges[i_edges].SharedEdgeCoordinate.TriangleIndex != tri0.Index_inCollection)
 				{
 					endEdge1 = new LNX_Edge(_LNX_NavMesh.GetEdge(tri1.Edges[i_edges].SharedEdgeCoordinate));
 					//Debug.Log($"Found edge index 2 at '{endEdge1}'");
@@ -722,11 +722,11 @@ namespace LogansNavigationExtension
 					{
 						if( useGizmos )
 						{
-							LNX_DrawingUtils.DrawTriGizmos( _LNX_NavMesh.Triangles[i], Color.red );
+							LNX_DrawingUtilities.DrawTriGizmos( _LNX_NavMesh.Triangles[i], Color.red );
 						}
 						else
 						{
-							LNX_DrawingUtils.DrawTriHandles( _LNX_NavMesh.Triangles[i], Size_SelectedComponent );
+							LNX_DrawingUtilities.DrawTriHandles( _LNX_NavMesh.Triangles[i], Size_SelectedComponent );
 
 						}
 					}
@@ -753,7 +753,7 @@ namespace LogansNavigationExtension
 
 				for ( int i = 0; i < indices_lockedTris.Count; i++ )
 				{
-					LNX_DrawingUtils.DrawTriGizmos( _LNX_NavMesh.Triangles[indices_lockedTris[i]] );
+					LNX_DrawingUtilities.DrawTriGizmos( _LNX_NavMesh.Triangles[indices_lockedTris[i]] );
 
 				}
 			}
@@ -779,7 +779,7 @@ namespace LogansNavigationExtension
 				{
 					//Handles.color = Color.yellow;
 					Gizmos.color = Color.yellow;
-					LNX_DrawingUtils.DrawTriGizmos( PointingAtTri );
+					LNX_DrawingUtilities.DrawTriGizmos( PointingAtTri );
 				}
 			}
 			#endregion

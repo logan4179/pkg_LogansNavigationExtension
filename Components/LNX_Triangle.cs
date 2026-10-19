@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace LogansNavigationExtension
 {
@@ -11,6 +12,10 @@ namespace LogansNavigationExtension
 		/// <summary>Describes this triangle's position inside the containing manager's Triangles array </summary>
 		[SerializeField, HideInInspector] private int index_inCollection;
 		public int Index_inCollection => index_inCollection;
+		/// <summary>Which surface this triangle belongs to </summary>
+		[SerializeField, HideInInspector] private int index_surface;
+		public int SurfaceIndex => index_surface;
+
 		/// <summary>Index where this triangle's vertices start in the visualization mesh's .triangles array. Note: 
 		/// this is just Index_inCollection * 3.</summary>
 		public int MeshIndex_trianglesStart => index_inCollection * 3;
@@ -153,6 +158,7 @@ namespace LogansNavigationExtension
 			//DBG_Class = $"ctor '({DateTime.Now.ToString()})'...\n";
 
 			index_inCollection = parallelIndex;
+			index_surface = navMesh.MySurfaceIndex;
 			dirtyFlag_repositionedVert = false;
 
 			AreaIndex = areaIndx;
@@ -175,14 +181,14 @@ namespace LogansNavigationExtension
 			#endregion
 
 			Verts = new LNX_Vertex[3];
-			Verts[0] = new LNX_Vertex(this, atomicTris, Index_inCollection, 0);
-			Verts[1] = new LNX_Vertex(this, atomicTris, index_inCollection, 1);
-			Verts[2] = new LNX_Vertex(this, atomicTris, index_inCollection, 2);
+			Verts[0] = new LNX_Vertex(this, atomicTris, 0);
+			Verts[1] = new LNX_Vertex(this, atomicTris, 1);
+			Verts[2] = new LNX_Vertex(this, atomicTris, 2);
 
 			Edges = new LNX_Edge[3];
-			Edges[0] = new LNX_Edge(atomicTris, this, Verts[1], Verts[2], index_inCollection, 0);
-			Edges[1] = new LNX_Edge(atomicTris, this, Verts[0], Verts[2], index_inCollection, 1);
-			Edges[2] = new LNX_Edge(atomicTris, this, Verts[0], Verts[1], index_inCollection, 2);
+			Edges[0] = new LNX_Edge(atomicTris, this, Verts[1], Verts[2], 0);
+			Edges[1] = new LNX_Edge(atomicTris, this, Verts[0], Verts[2], 1);
+			Edges[2] = new LNX_Edge(atomicTris, this, Verts[0], Verts[1], 2);
 
 			CalculateDerivedInfo(navMesh);
 			SampleNormal(navMesh);
@@ -230,7 +236,7 @@ namespace LogansNavigationExtension
 					Edges[i].GetCombinedSharedEdgeAngle(nm, false) <= 180f
 				)
 				{
-					temp_fullyVisTriIndices.Add(Edges[i].SharedEdgeCoordinate.TrianglesIndex);
+					temp_fullyVisTriIndices.Add(Edges[i].SharedEdgeCoordinate.TriangleIndex);
 
 					//Now check the next triangle out...
 					nm.GetEdge(Edges[i].SharedEdgeCoordinate);
@@ -245,7 +251,6 @@ namespace LogansNavigationExtension
 			}
 			#endregion
 
-			LNX_ComponentCoordinate obstructEdgeCheck = new LNX_ComponentCoordinate(53, 0);
 
 			for (int i = 0; i < nm.Triangles.Length; i++)
 			{
@@ -370,10 +375,6 @@ namespace LogansNavigationExtension
 			#endregion
 
 			//dbgDerived += $"V_PlaneFaceNormal: '{V_PlaneFaceNormal}'\n";
-
-			Verts[0].CalculateDerivedInfo(this, nm);
-			Verts[1].CalculateDerivedInfo(this, nm);
-			Verts[2].CalculateDerivedInfo(this, nm);
 
 			Edges[0].CalculateDerivedInfo(this, nm);
 			Edges[1].CalculateDerivedInfo(this, nm);
@@ -766,7 +767,8 @@ namespace LogansNavigationExtension
 				{
 					perimHit = new LNX_NavmeshHit(
 						endHit.Position, v_navmeshProjectionDirection_cached,
-						rel.TrianglesIndex,
+						rel.SurfaceIndex,
+						rel.TriangleIndex,
 						rel.ComponentIndex,
 						-1
 					);
@@ -806,7 +808,8 @@ namespace LogansNavigationExtension
 					{
 						perimHit = new LNX_NavmeshHit(
 							Verts[Verts[startHit.VertIndex].Index_FirstSiblingVert].V_Position, v_navmeshProjectionDirection_cached,
-							rel.TrianglesIndex,
+							rel.SurfaceIndex,
+							rel.TriangleIndex,
 							rel.ComponentIndex,
 							-1
 						);
@@ -832,7 +835,8 @@ namespace LogansNavigationExtension
 					{
 						perimHit = new LNX_NavmeshHit(
 							Verts[Verts[startHit.VertIndex].Index_SecondSiblingVert].V_Position, v_navmeshProjectionDirection_cached,
-							rel.TrianglesIndex,
+							rel.SurfaceIndex, 
+							rel.TriangleIndex,
 							rel.ComponentIndex,
 							-1
 						);
@@ -861,7 +865,8 @@ namespace LogansNavigationExtension
 						V_PathingNormal, //todo: actually I need the pathing normal of the adjacent triangle if this edge is not
 										 //terminal, but I don't think I can get that from here as it stands. Could make a method 
 										 //on the vert class to derive the pathing normal based on the relationships
-						Edges[startHit.VertIndex].AmTerminal ? index_inCollection : Edges[startHit.VertIndex].SharedEdgeCoordinate.TrianglesIndex,
+						Edges[startHit.VertIndex].AmTerminal ? index_surface : Edges[startHit.VertIndex].SharedEdgeCoordinate.SurfaceIndex,
+						Edges[startHit.VertIndex].AmTerminal ? index_inCollection : Edges[startHit.VertIndex].SharedEdgeCoordinate.TriangleIndex,
 						-1,
 						Edges[startHit.VertIndex].AmTerminal ? startHit.VertIndex : Edges[startHit.VertIndex].SharedEdgeCoordinate.ComponentIndex
 					);
@@ -880,7 +885,8 @@ namespace LogansNavigationExtension
 					{
 						perimHit = new LNX_NavmeshHit(
 							startHit.Position, v_navmeshProjectionDirection_cached,
-							rel.TrianglesIndex,
+							rel.SurfaceIndex,
+							rel.TriangleIndex,
 							rel.ComponentIndex,
 							-1
 						);
@@ -917,7 +923,8 @@ namespace LogansNavigationExtension
 					{
 						perimHit = new LNX_NavmeshHit(
 							crntEdgeHit.Position, v_navmeshProjectionDirection_cached,
-							Edges[i].SharedEdgeCoordinate.TrianglesIndex,
+							Edges[i].SharedEdgeCoordinate.SurfaceIndex,
+							Edges[i].SharedEdgeCoordinate.TriangleIndex,
 							-1, //todo: there's a chance that this hit could be on a vert, and if so, this needs to be calculated correctly
 							Edges[i].SharedEdgeCoordinate.ComponentIndex
 						);
@@ -1000,7 +1007,8 @@ namespace LogansNavigationExtension
 					rprt.Log($"Got rel: '{rel}'. Using this to form simplified perimHit...");
 					perimHit = new LNX_NavmeshHit(
 						endHit.Position, v_navmeshProjectionDirection_cached,
-						rel.TrianglesIndex,
+						rel.SurfaceIndex,
+						rel.TriangleIndex,
 						rel.ComponentIndex,
 						-1
 					);
@@ -1042,7 +1050,8 @@ namespace LogansNavigationExtension
 						rprt.Log($"Got rel: '{rel}'. Using this to form simplified perimHit...");
 						perimHit = new LNX_NavmeshHit(
 							Verts[Verts[startHit.VertIndex].Index_FirstSiblingVert].V_Position, v_navmeshProjectionDirection_cached,
-							rel.TrianglesIndex,
+							rel.SurfaceIndex,
+							rel.TriangleIndex,
 							rel.ComponentIndex,
 							-1
 						);
@@ -1075,7 +1084,8 @@ namespace LogansNavigationExtension
 						rprt.Log($"Got rel: '{rel}'. Using this to form simplified perimHit...");
 						perimHit = new LNX_NavmeshHit(
 							Verts[Verts[startHit.VertIndex].Index_SecondSiblingVert].V_Position, v_navmeshProjectionDirection_cached,
-							rel.TrianglesIndex,
+							rel.SurfaceIndex,
+							rel.TriangleIndex,
 							rel.ComponentIndex,
 							-1
 						);
@@ -1109,7 +1119,8 @@ namespace LogansNavigationExtension
 						V_PathingNormal, //todo: actually I need the pathing normal of the adjacent triangle if this edge is not
 										 //terminal, but I don't think I can get that from here as it stands. Could make a method 
 										 //on the vert class to derive the pathing normal based on the relationships
-						Edges[startHit.VertIndex].AmTerminal ? index_inCollection : Edges[startHit.VertIndex].SharedEdgeCoordinate.TrianglesIndex,
+						Edges[startHit.VertIndex].AmTerminal ? index_surface : Edges[startHit.VertIndex].SharedEdgeCoordinate.SurfaceIndex,
+						Edges[startHit.VertIndex].AmTerminal ? index_inCollection : Edges[startHit.VertIndex].SharedEdgeCoordinate.TriangleIndex,
 						-1,
 						Edges[startHit.VertIndex].AmTerminal ? startHit.VertIndex : Edges[startHit.VertIndex].SharedEdgeCoordinate.ComponentIndex
 					);
@@ -1137,7 +1148,8 @@ namespace LogansNavigationExtension
 						rprt.Log($"Got rel: '{rel}'. Using this to form simplified perimHit...");
 						perimHit = new LNX_NavmeshHit(
 							startHit.Position, v_navmeshProjectionDirection_cached,
-							rel.TrianglesIndex,
+							rel.SurfaceIndex,
+							rel.TriangleIndex,
 							rel.ComponentIndex,
 							-1
 						);
@@ -1188,7 +1200,8 @@ namespace LogansNavigationExtension
 						rprt.Log($"switching hit to adjacent triangle as instructed by returnHitOnAdjacenttTriangle parameter...");
 						perimHit = new LNX_NavmeshHit(
 							crntEdgeHit.Position, v_navmeshProjectionDirection_cached,
-							Edges[i].SharedEdgeCoordinate.TrianglesIndex,
+							Edges[i].SharedEdgeCoordinate.SurfaceIndex,
+							Edges[i].SharedEdgeCoordinate.TriangleIndex,
 							-1, //todo: there's a chance that this hit could be on a vert, and if so, this needs to be calculated correctly
 							Edges[i].SharedEdgeCoordinate.ComponentIndex
 						);
@@ -1256,7 +1269,8 @@ namespace LogansNavigationExtension
 					{
 						perimHit = new LNX_NavmeshHit(
 							Verts[Verts[startHit.VertIndex].Index_FirstSiblingVert].V_Position, v_navmeshProjectionDirection_cached,
-							rel.TrianglesIndex,
+							rel.SurfaceIndex,
+							rel.TriangleIndex,
 							rel.ComponentIndex,
 							-1
 						);
@@ -1282,7 +1296,8 @@ namespace LogansNavigationExtension
 					{
 						perimHit = new LNX_NavmeshHit(
 							Verts[Verts[startHit.VertIndex].Index_SecondSiblingVert].V_Position, v_navmeshProjectionDirection_cached,
-							rel.TrianglesIndex,
+							rel.SurfaceIndex,
+							rel.TriangleIndex,
 							rel.ComponentIndex,
 							-1
 						);
@@ -1311,7 +1326,8 @@ namespace LogansNavigationExtension
 						V_PathingNormal, //todo: actually I need the pathing normal of the adjacent triangle if this edge is not
 										 //terminal, but I don't think I can get that from here as it stands. Could make a method 
 										 //on the vert class to derive the pathing normal based on the relationships
-						Edges[startHit.VertIndex].AmTerminal ? index_inCollection : Edges[startHit.VertIndex].SharedEdgeCoordinate.TrianglesIndex,
+						Edges[startHit.VertIndex].AmTerminal ? index_surface : Edges[startHit.VertIndex].SharedEdgeCoordinate.SurfaceIndex,
+						Edges[startHit.VertIndex].AmTerminal ? index_inCollection : Edges[startHit.VertIndex].SharedEdgeCoordinate.TriangleIndex,
 						-1,
 						Edges[startHit.VertIndex].AmTerminal ? startHit.VertIndex : Edges[startHit.VertIndex].SharedEdgeCoordinate.ComponentIndex
 					);
@@ -1330,7 +1346,8 @@ namespace LogansNavigationExtension
 					{
 						perimHit = new LNX_NavmeshHit(
 							startHit.Position, v_navmeshProjectionDirection_cached,
-							rel.TrianglesIndex,
+							rel.SurfaceIndex,
+							rel.TriangleIndex,
 							rel.ComponentIndex,
 							-1
 						);
@@ -1367,7 +1384,8 @@ namespace LogansNavigationExtension
 					{
 						perimHit = new LNX_NavmeshHit(
 							crntEdgeHit.Position, v_navmeshProjectionDirection_cached,
-							Edges[i].SharedEdgeCoordinate.TrianglesIndex,
+							Edges[i].SharedEdgeCoordinate.SurfaceIndex,
+							Edges[i].SharedEdgeCoordinate.TriangleIndex,
 							-1, //todo: there's a chance that this hit could be on a vert, and if so, this needs to be calculated correctly
 							Edges[i].SharedEdgeCoordinate.ComponentIndex
 						);
@@ -1438,7 +1456,8 @@ namespace LogansNavigationExtension
 					{
 						perimHit = new LNX_NavmeshHit(
 							Verts[Verts[startHit.VertIndex].Index_FirstSiblingVert].V_Position, v_navmeshProjectionDirection_cached,
-							rel.TrianglesIndex,
+							rel.SurfaceIndex,
+							rel.TriangleIndex,
 							rel.ComponentIndex,
 							-1
 						);
@@ -1471,7 +1490,8 @@ namespace LogansNavigationExtension
 					{
 						perimHit = new LNX_NavmeshHit(
 							Verts[Verts[startHit.VertIndex].Index_SecondSiblingVert].V_Position, v_navmeshProjectionDirection_cached,
-							rel.TrianglesIndex,
+							rel.SurfaceIndex,
+							rel.TriangleIndex,
 							rel.ComponentIndex,
 							-1
 						);
@@ -1507,7 +1527,8 @@ namespace LogansNavigationExtension
 						V_PathingNormal, //todo: actually I need the pathing normal of the adjacent triangle if this edge is not
 										 //terminal, but I don't think I can get that from here as it stands. Could make a method 
 										 //on the vert class to derive the pathing normal based on the relationships
-						Edges[startHit.VertIndex].AmTerminal ? index_inCollection : Edges[startHit.VertIndex].SharedEdgeCoordinate.TrianglesIndex,
+						Edges[startHit.VertIndex].AmTerminal ? index_surface : Edges[startHit.VertIndex].SharedEdgeCoordinate.SurfaceIndex,
+						Edges[startHit.VertIndex].AmTerminal ? index_inCollection : Edges[startHit.VertIndex].SharedEdgeCoordinate.TriangleIndex,
 						-1,
 						Edges[startHit.VertIndex].AmTerminal ? startHit.VertIndex : Edges[startHit.VertIndex].SharedEdgeCoordinate.ComponentIndex
 					);
@@ -1536,7 +1557,8 @@ namespace LogansNavigationExtension
 						rprt.Log($"Got rel: '{rel}'. Using this to form simplified perimHit...");
 						perimHit = new LNX_NavmeshHit(
 							startHit.Position, v_navmeshProjectionDirection_cached,
-							rel.TrianglesIndex,
+							rel.SurfaceIndex,
+							rel.TriangleIndex,
 							rel.ComponentIndex,
 							-1
 						);
@@ -1592,7 +1614,8 @@ namespace LogansNavigationExtension
 
 						perimHit = new LNX_NavmeshHit(
 							crntEdgeHit.Position, v_navmeshProjectionDirection_cached,
-							Edges[i].SharedEdgeCoordinate.TrianglesIndex,
+							Edges[i].SharedEdgeCoordinate.SurfaceIndex,
+							Edges[i].SharedEdgeCoordinate.TriangleIndex,
 							-1, //todo: there's a chance that this hit could be on a vert, and if so, this needs to be calculated correctly
 							Edges[i].SharedEdgeCoordinate.ComponentIndex
 						);
@@ -1647,7 +1670,57 @@ namespace LogansNavigationExtension
 			dirtyFlag_repositionedVert = true;
 		}
 
-		public void ChangeIndex_action(int newIndex)
+		public void SurfaceIndexChanged_action(int newIndex)
+		{
+			index_surface = newIndex;
+
+			Verts[0].SurfaceIndexChanged(newIndex);
+			Verts[1].SurfaceIndexChanged(newIndex);
+			Verts[2].SurfaceIndexChanged(newIndex);
+
+			Edges[0].SurfaceIndexChanged(newIndex);
+			Edges[1].SurfaceIndexChanged(newIndex);
+			Edges[2].SurfaceIndexChanged(newIndex);
+		}
+
+		public void SurfaceOrientationChanged_action(LNX_Direction orientation)
+		{
+			if ( orientation == LNX_Direction.PositiveY )
+			{
+				v_navmeshProjectionDirection_cached = Vector3.up;
+			}
+			else if (orientation == LNX_Direction.NegativeY)
+			{
+				v_navmeshProjectionDirection_cached = Vector3.down;
+			}
+			else if (orientation == LNX_Direction.PositiveZ)
+			{
+				v_navmeshProjectionDirection_cached = Vector3.forward;
+			}
+			else if (orientation == LNX_Direction.NegativeZ)
+			{
+				v_navmeshProjectionDirection_cached = Vector3.back;
+			}
+			else if (orientation == LNX_Direction.PositiveX)
+			{
+				v_navmeshProjectionDirection_cached = Vector3.right;
+			}
+			else if (orientation == LNX_Direction.NegativeX)
+			{
+				v_navmeshProjectionDirection_cached = Vector3.left;
+			}
+
+			Verts[0].SurfaceOrientationChanged_action( orientation );
+			Verts[1].SurfaceOrientationChanged_action( orientation );
+			Verts[2].SurfaceOrientationChanged_action( orientation );
+
+			Edges[0].SurfaceOrientationChanged_action( orientation );
+			Edges[1].SurfaceOrientationChanged_action( orientation );
+			Edges[2].SurfaceOrientationChanged_action( orientation );
+		}
+
+
+		public void TriIndexChanged_action(int newIndex)
 		{
 			index_inCollection = newIndex;
 
@@ -2106,7 +2179,7 @@ namespace LogansNavigationExtension
 		{
 			for (int i = 0; i < 3; i++)
 			{
-				if (Edges[i].SharedEdgeCoordinate.TrianglesIndex == triIndex)
+				if (Edges[i].SharedEdgeCoordinate.TriangleIndex == triIndex)
 				{
 					return true;
 				}
@@ -2212,11 +2285,11 @@ namespace LogansNavigationExtension
 					{
 						if 
 						( 
-							!rtrnList.Contains(Verts[i_vrts].SharedVertexCoordinates[i_shrd].TrianglesIndex) &&
-							!avoidTriangles.Contains(Verts[i_vrts].SharedVertexCoordinates[i_shrd].TrianglesIndex)
+							!rtrnList.Contains(Verts[i_vrts].SharedVertexCoordinates[i_shrd].TriangleIndex) &&
+							!avoidTriangles.Contains(Verts[i_vrts].SharedVertexCoordinates[i_shrd].TriangleIndex)
 						)
 						{
-							rtrnList.Add( Verts[i_vrts].SharedVertexCoordinates[i_shrd].TrianglesIndex );
+							rtrnList.Add( Verts[i_vrts].SharedVertexCoordinates[i_shrd].TriangleIndex );
 						}
 					}
 				}
@@ -2300,6 +2373,7 @@ namespace LogansNavigationExtension
 				$"{nameof(V_Center)}: '{V_Center}'\n" +
 				$"{nameof(MeshIndex_trianglesStart)}: '{MeshIndex_trianglesStart}'\n\n" +
 				$"NORMALS-----------------------\n" +
+				$"{nameof(v_navmeshProjectionDirection_cached)}: '{v_navmeshProjectionDirection_cached}'\n" +
 				$"{nameof(v_sampledNormal)}: '{v_sampledNormal}'\n" +
 				$"{nameof(V_PlaneFaceNormal)}: '{V_PlaneFaceNormal}'\n" +
 				$"{nameof(AmKinked)}: '{AmKinked}'\n" +
@@ -2331,7 +2405,7 @@ namespace LogansNavigationExtension
 			Debug.Log(GetCurrentInfoString(nm));
 		}
 
-		public string GetAnomolyString(LNX_NavMeshSurface nm)
+		public string GetAnomolyString(LNX_NavMeshSurface srfc)
 		{
 			string returnString = string.Empty;
 
@@ -2345,6 +2419,16 @@ namespace LogansNavigationExtension
 				returnString += $"{nameof(MeshIndex_trianglesStart)}: '{MeshIndex_trianglesStart}'\n";
 			}
 
+			if (index_surface < 0)
+			{
+				returnString += $"{nameof(index_surface)}: '{index_surface}'\n";
+			}
+			if (index_surface != srfc.MySurfaceIndex )
+			{
+				returnString += $"{nameof(index_surface)}: '{index_surface}', which is not the same as the index " +
+					$"of the supplied surface: '{srfc.MySurfaceIndex}'...\n";
+			}
+
 			bool correctNumberOfVerts = true;
 
 			if (Verts == null || Verts.Length == 0)
@@ -2352,7 +2436,7 @@ namespace LogansNavigationExtension
 				returnString += $"{nameof(Verts)} collection not set\n";
 				correctNumberOfVerts = false;
 			}
-			else if (Verts.Length != 2)
+			else if (Verts.Length != 3)
 			{
 				correctNumberOfVerts = false;
 			}
@@ -2368,9 +2452,19 @@ namespace LogansNavigationExtension
 				correctNumberOfEdges = false;
 			}
 
+			if ( srfc.GetSurfaceProjectionVector() != v_navmeshProjectionDirection_cached)
+			{
+				returnString += $"{nameof(v_navmeshProjectionDirection_cached)} is '{v_navmeshProjectionDirection_cached}', while " +
+					$"supplied surface projection vector is: '{srfc.GetSurfaceProjectionVector()}'\n";
+			}
 			if (AmKinked)
 			{
 				returnString += $"{nameof(AmKinked)} is true\n";
+			}
+
+			if (!string.IsNullOrEmpty(returnString))
+			{
+				Debug.DrawRay(V_Center, Vector3.up * 5f, Color.magenta, 10f);
 			}
 
 			//Note: Add more checks as you go...
@@ -2378,9 +2472,9 @@ namespace LogansNavigationExtension
 			#region VERTS -------------------------------------------
 			if (correctNumberOfVerts)
 			{
-				string v0_string = Verts[0].GetAnomolyString(nm);
-				string v1_string = Verts[1].GetAnomolyString(nm);
-				string v2_string = Verts[2].GetAnomolyString(nm);
+				string v0_string = Verts[0].GetAnomolyString(srfc);
+				string v1_string = Verts[1].GetAnomolyString(srfc);
+				string v2_string = Verts[2].GetAnomolyString(srfc);
 
 				if
 				(
@@ -2418,9 +2512,9 @@ namespace LogansNavigationExtension
 			#region EDGES -------------------------------------------
 			if (correctNumberOfEdges)
 			{
-				string e0_string = Edges[0].GetAnomolyString(nm);
-				string e1_string = Edges[1].GetAnomolyString(nm);
-				string e2_string = Edges[2].GetAnomolyString(nm);
+				string e0_string = Edges[0].GetAnomolyString(srfc);
+				string e1_string = Edges[1].GetAnomolyString(srfc);
+				string e2_string = Edges[2].GetAnomolyString(srfc);
 
 				if
 				(

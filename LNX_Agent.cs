@@ -340,7 +340,7 @@ namespace LogansNavigationExtension.AI
 			if (_currentHit != LNX_NavmeshHit.None)
 			{
 				//dbgMthd += $"_currentHit IS valid. Calling CalculatePath()...\n";
-				rslt = _manager.CalculatePath(_currentHit, endHit, maxSampleDistance, out _currentPath);
+				rslt = _manager.CalculatePath(_currentHit, endHit, out _currentPath);
 				//dbgMthd += $"CalculatePath() finisned. Rslt: '{rslt}'\n";
 			}
 			else
