@@ -138,7 +138,7 @@ namespace LogansNavigationExtension
 			{
 				CurrentHit = LNX_SelectionUtilities.GetBestEdgeHitOnSurface(_navmesh, transform.position, SelectOnlyTerminalEdges );
 				CurrentCoordinate = new LNX_ComponentCoordinate(CurrentHit.SurfaceIndex, CurrentHit.TriangleIndex, CurrentHit.EdgeIndex);
-				DBG_Component = $"Edge: '{CurrentlyGrabbedEdge}'\n" +
+				DBG_Component = $"Edge: '{CurrentlyGrabbedEdge}', amTerminal: '{CurrentlyGrabbedEdge.AmTerminal}'\n" +
 					$"MyCoordinate: '{CurrentlyGrabbedEdge.MyCoordinate}'\n" +
 					$"StartVertCoord: '{CurrentlyGrabbedEdge.StartVertCoordinate}', EndVertCoord: '{CurrentlyGrabbedEdge.EndVertCoordinate}'\n" +
 					$"";

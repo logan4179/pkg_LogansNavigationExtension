@@ -3671,7 +3671,7 @@ namespace LogansNavigationExtension
 
 		public int GetAdjacencyDepthToTriangle_dbg( int startTriIndx, int endTriIndx, ref LNX_MethodDebugReport rprt )
 		{
-			rprt.StartMethod($"GetAdjacencyDepthToTriangle_dbg(startTriIndx: '{startTriIndx}',  endTriIndx: '{endTriIndx}')");
+			rprt.StartMethod($"{name}.GetAdjacencyDepthToTriangle_dbg(startTriIndx: '{startTriIndx}',  endTriIndx: '{endTriIndx}')");
 
 			List<int> backstopTris = new List<int>() { startTriIndx };
 			int runningDepth = 0;
@@ -3713,8 +3713,6 @@ namespace LogansNavigationExtension
 				}
 
 				#region ASSEMBLE ADJACENT TRIANGLES LIST =================================
-				rprt.Log($"assembling list of adjacent triangles...");
-
 				List<int> adjacentTris = new List<int>();
 				List<int> heldBackStopTris = new List<int>(); //this way we can iterate over a stable list
 				for (int i = 0; i < backstopTris.Count; i++)
@@ -3722,6 +3720,7 @@ namespace LogansNavigationExtension
 					heldBackStopTris.Add(backstopTris[i]);
 				}
 
+				rprt.Log($"assembling list of adjacent triangles...");
 				for( int i = 0; i < heldBackStopTris.Count; i++ )
 				{
 					for (int i_vrts = 0; i_vrts < 3; i_vrts++)
@@ -4611,6 +4610,8 @@ namespace LogansNavigationExtension
 #if UNITY_EDITOR
 		private void OnDrawGizmos()
 		{
+			//Debug.Log($"{name}.odg() clrTerm: '{color_terminalEdges.a}'");
+
 			#region STATE ===================
 			if ( stateFlag == 1 )
 			{
@@ -4648,7 +4649,9 @@ namespace LogansNavigationExtension
 					if ( Triangles[i].Edges[i_edges].AmTerminal && color_terminalEdges.a > 0f )
 					{
 						Color oldclr = Gizmos.color;
+						//Gizmos.color = Color.green;
 						Gizmos.color = color_terminalEdges;
+
 						LNX_DrawingUtilities.DrawEdgeGizmo(Triangles[i].Edges[i_edges]);
 						Gizmos.color = oldclr;
 					}

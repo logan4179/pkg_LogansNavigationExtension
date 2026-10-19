@@ -552,6 +552,13 @@ namespace LogansNavigationExtension
 				}
 			}
 		}
+		public void DrawMyGizmos(float pointSize, float lblHeight, Color clr )
+		{
+			Color oldclr = Gizmos.color;
+			Gizmos.color = clr;
+			DrawMyGizmos(pointSize, lblHeight);
+			Gizmos.color = oldclr;
+		}
 
 		#region OPERATORS ======================================================
 		/*

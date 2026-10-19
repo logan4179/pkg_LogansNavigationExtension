@@ -28,7 +28,7 @@ namespace LogansNavigationExtension
 
 		//[Header("SELECTION")]
 		public bool SetSpans = false;
-		[HideInInspector] public Vector3 HandlePos_spanAStart;
+		[HideInInspector] public Vector3 HandlePos_spanAStart; //todo: try putting these in editor class
 		[HideInInspector] public Vector3 HandlePos_spanAEnd;
 		[HideInInspector] public Vector3 HandlePos_spanBStart;
 		[HideInInspector] public Vector3 HandlePos_spanBEnd;
@@ -40,6 +40,7 @@ namespace LogansNavigationExtension
 		public LNX_MethodDebugReport MthdRprt;
 		[SerializeField, TextArea(1,10)] private string dbg_class;
 
+		#region HELPERS ========================================================
 		public void ReconstructVisualizationMesh()
 		{
 			#region CREATE VISUALIZATION MESH ---------------------------------
@@ -70,10 +71,101 @@ namespace LogansNavigationExtension
 			#endregion
 		}
 
+		[ContextMenu("z call ZeroOutHandles()")]
+		public void ZeroOutHandles()
+		{
+			HandlePos_spanAStart = transform.position + (Vector3.up) + (Vector3.left);
+			HandlePos_spanAEnd = transform.position + (Vector3.up) + (Vector3.right);
+
+			HandlePos_spanBStart = transform.position + (Vector3.down) + (Vector3.left);
+			HandlePos_spanBEnd = transform.position + (Vector3.down) + (Vector3.left);
+		}
+
+		[ContextMenu("z call RefreshSpans()")]
+		public void RefreshSpans()
+		{
+			Debug.Log($"{name}.RefreshSpans()");
+			if ( _SurfaceA == null )
+			{
+				Debug.LogError($"LNX ERROR! _SurfaceA was null");
+				return;
+			}
+			if (_SurfaceB == null)
+			{
+				Debug.LogError($"LNX ERROR! _SurfaceB was null");
+				return;
+			}
+
+			string rprt = string.Empty;
+			LNX_NavmeshHit oldSpnAStrtHit = SpanAStartHit;
+			LNX_NavmeshHit oldSpnAEndHit = SpanAEndHit;
+			LNX_NavmeshHit oldspnBStrtHit = SpanBStartHit;
+			LNX_NavmeshHit oldSpnBEndHit = SpanBEndHit;
+
+			SpanAStartHit = LNX_SelectionUtilities.GetBestEdgeHitOnSurface(_SurfaceA, HandlePos_spanAStart, true, myLinkIndex);
+			SpanAEndHit = LNX_SelectionUtilities.GetBestEdgeHitOnSurface(_SurfaceA, HandlePos_spanAEnd, true, myLinkIndex);
+
+			SpanBStartHit = LNX_SelectionUtilities.GetBestEdgeHitOnSurface(_SurfaceB, HandlePos_spanBStart, true, myLinkIndex);
+			SpanBEndHit = LNX_SelectionUtilities.GetBestEdgeHitOnSurface(_SurfaceB, HandlePos_spanBEnd, true, myLinkIndex);
+
+			HandlePos_spanAStart = SpanAStartHit.Position;
+			HandlePos_spanAEnd = SpanAEndHit.Position;
+			HandlePos_spanBStart = SpanBStartHit.Position;
+			HandlePos_spanBEnd = SpanBEndHit.Position;
+
+			LNX_SelectionUtilities.ResolveTerminalSpan(
+				_SurfaceA, SpanAStartHit.AsEdgeCoordinate(), SpanAEndHit.AsEdgeCoordinate(), out spanA
+			);
+
+			Debug.Log($"startcoord: '{SpanBStartHit}', endcoord: '{SpanBEndHit}'");
+			LNX_SelectionUtilities.ResolveTerminalSpan(
+				_SurfaceB, SpanBStartHit.AsEdgeCoordinate(), SpanBEndHit.AsEdgeCoordinate(), out spanB
+			);
+
+			if ( SpanAStartHit != oldSpnAStrtHit )
+			{
+				rprt += $"changed spanA start to: '{SpanAStartHit}', ";
+			}
+			if (SpanAEndHit != oldSpnAEndHit )
+			{
+				rprt += $"changed spanA end to: '{SpanAEndHit}', ";
+			}
+			if (SpanBStartHit != oldspnBStrtHit)
+			{
+				rprt += $"changed SpanBStartHit to: '{SpanBStartHit}', ";
+			}
+			if (SpanBEndHit != oldSpnBEndHit)
+			{
+				rprt += $"changed SpanBEndHit to: '{SpanBEndHit}', ";
+			}
+
+			if (!string.IsNullOrEmpty(rprt)) 
+			{
+				Debug.Log(name + "\n" + rprt);
+			}
+
+			ReconstructVisualizationMesh();
+			GenerateDbgText();
+		}
+
+		public void SetLinkIndex(int indx)
+		{
+			Debug.Log($"{this}.SetLinkIndex({indx})");
+
+			if (myLinkIndex != indx)
+			{
+				RefreshSpans();
+			}
+
+			myLinkIndex = indx;
+		}
+		#endregion
+
 		#region HANDLES/SPANS ========================================
 		public void UpdateHandles( Vector3 newHndlPos_strtA, Vector3 newHndlPos_endA, Vector3 newHndlPos_strtB, Vector3 newHndlPos_endB )
 		{
 			//Debug.Log($"UpdateHandles(aStart: '{newHndlPos_strtA}', aEnd: '{newHndlPos_endA}', bStart: '{newHndlPos_strtB}', bEnd: '{newHndlPos_endB}')");
+			
 			bool moveChange = false;
 			bool spanAChange = false;
 			bool spanBChange = false;
@@ -81,6 +173,7 @@ namespace LogansNavigationExtension
 			#region UPDATE HANDLES ===============================================
 			if (HandlePos_spanAStart != newHndlPos_strtA )
 			{
+				//Debug.Log($"HandlePos_spanAStart changed...");
 				moveChange = true;
 
 				LNX_NavmeshHit oldHit = SpanAStartHit;
@@ -94,6 +187,8 @@ namespace LogansNavigationExtension
 
 			if ( HandlePos_spanAEnd != newHndlPos_endA )
 			{
+				//Debug.Log($"HandlePos_spanAEnd changed...");
+
 				moveChange = true;
 				LNX_NavmeshHit oldHit = SpanAEndHit;
 				SpanAEndHit = LNX_SelectionUtilities.GetBestEdgeHitOnSurface(_SurfaceA, newHndlPos_endA, true, myLinkIndex);
@@ -107,6 +202,8 @@ namespace LogansNavigationExtension
 
 			if (HandlePos_spanBStart != newHndlPos_strtB)
 			{
+				//Debug.Log($"HandlePos_spanBStart changed...");
+
 				moveChange = true;
 
 				LNX_NavmeshHit oldHit = SpanBStartHit;
@@ -121,10 +218,14 @@ namespace LogansNavigationExtension
 
 			if ( HandlePos_spanBEnd != newHndlPos_endB )
 			{
+				//Debug.Log($"HandlePos_spanBEnd changed. Getting best edge hit on surface...");
+
 				moveChange = true;
 
 				LNX_NavmeshHit oldHit = SpanBEndHit;
 				SpanBEndHit = LNX_SelectionUtilities.GetBestEdgeHitOnSurface(_SurfaceB, newHndlPos_endB, true, myLinkIndex);
+
+				//Debug.Log($"got: '{SpanBEndHit}'...");
 
 				if (SpanBEndHit.EdgeIndex != oldHit.EdgeIndex || SpanBEndHit.TriangleIndex != oldHit.TriangleIndex)
 				{
@@ -137,14 +238,14 @@ namespace LogansNavigationExtension
 			#region CALCULATE SPAN =====================
 			if ( spanAChange )
 			{
-				Debug.Log($"recalculating spanA using '{SpanAStartHit.AsEdgeCoordinate()}' and '{SpanAEndHit.AsEdgeCoordinate()}'...");
+				//Debug.Log($"recalculating spanA using '{SpanAStartHit.AsEdgeCoordinate()}' and '{SpanAEndHit.AsEdgeCoordinate()}'...");
 				LNX_SelectionUtilities.ResolveTerminalSpan(
 					_SurfaceA, SpanAStartHit.AsEdgeCoordinate(), SpanAEndHit.AsEdgeCoordinate(), out spanA
 				);
 			}
 			if (spanBChange)
 			{
-				Debug.Log($"recalculating spanA using '{SpanBStartHit.AsEdgeCoordinate()}' and '{SpanBEndHit.AsEdgeCoordinate()}'...");
+				//Debug.Log($"recalculating spanB using '{SpanBStartHit.AsEdgeCoordinate()}' and '{SpanBEndHit.AsEdgeCoordinate()}'...");
 
 				LNX_SelectionUtilities.ResolveTerminalSpan(
 					_SurfaceB, SpanBStartHit.AsEdgeCoordinate(), SpanBEndHit.AsEdgeCoordinate(), out spanB
@@ -158,59 +259,6 @@ namespace LogansNavigationExtension
 				ReconstructVisualizationMesh();
 				GenerateDbgText();
 			}
-		}
-
-		[ContextMenu("z call ZeroOutHandles()")]
-		public void ZeroOutHandles()
-		{
-			HandlePos_spanAStart = transform.position + (Vector3.up) + (Vector3.left);
-			HandlePos_spanAEnd = transform.position + (Vector3.up) + (Vector3.right);
-
-			HandlePos_spanBStart = transform.position + (Vector3.down) + (Vector3.left);
-			HandlePos_spanBEnd = transform.position + (Vector3.down) + (Vector3.left);
-		}
-
-		[ContextMenu("z call RefreshSpans()")]
-		public void RefreshSpans()
-		{
-			SpanAStartHit = LNX_SelectionUtilities.GetBestEdgeHitOnSurface(_SurfaceA, HandlePos_spanAStart, true, myLinkIndex);
-			SpanAEndHit = LNX_SelectionUtilities.GetBestEdgeHitOnSurface(_SurfaceA, HandlePos_spanAEnd, true, myLinkIndex);
-			SpanBStartHit = LNX_SelectionUtilities.GetBestEdgeHitOnSurface(_SurfaceB, HandlePos_spanBStart, true, myLinkIndex);
-			SpanBEndHit = LNX_SelectionUtilities.GetBestEdgeHitOnSurface(_SurfaceB, HandlePos_spanBEnd, true, myLinkIndex);
-
-			HandlePos_spanAStart = SpanAStartHit.Position;
-			HandlePos_spanAEnd = SpanAEndHit.Position;
-			HandlePos_spanBStart = SpanBStartHit.Position;
-			HandlePos_spanBEnd = SpanBEndHit.Position;
-
-			LNX_SelectionUtilities.ResolveTerminalSpan(
-				_SurfaceA, SpanAStartHit.AsEdgeCoordinate(), SpanAEndHit.AsEdgeCoordinate(), out spanA
-			);
-			LNX_SelectionUtilities.ResolveTerminalSpan(
-				_SurfaceB, SpanBStartHit.AsEdgeCoordinate(), SpanBEndHit.AsEdgeCoordinate(), out spanB
-			);
-
-			ReconstructVisualizationMesh();
-			GenerateDbgText();
-		}
-		#endregion
-
-		#region SETTERS ======================================
-		public void SetLinkIndex( int indx )
-		{
-			Debug.Log($"{this}.SetLinkIndex({indx})");
-
-			myLinkIndex = indx;
-
-			SpanAStartHit = new LNX_NavmeshHit(SpanAStartHit.Position, SpanAStartHit.Normal, SpanAStartHit.SurfaceIndex, 
-				SpanAStartHit.TriangleIndex, SpanAStartHit.VertIndex, SpanAStartHit.EdgeIndex, indx);
-			SpanAEndHit = new LNX_NavmeshHit(SpanAEndHit.Position, SpanAEndHit.Normal, SpanAEndHit.SurfaceIndex,
-				SpanAEndHit.TriangleIndex, SpanAEndHit.VertIndex, SpanAEndHit.EdgeIndex, indx);
-
-			SpanBStartHit = new LNX_NavmeshHit(SpanBStartHit.Position, SpanBStartHit.Normal, SpanBStartHit.SurfaceIndex,
-				SpanBStartHit.TriangleIndex, SpanBStartHit.VertIndex, SpanBStartHit.EdgeIndex, indx);
-			SpanBEndHit = new LNX_NavmeshHit(SpanBEndHit.Position, SpanBEndHit.Normal, SpanBEndHit.SurfaceIndex,
-				SpanBEndHit.TriangleIndex, SpanBEndHit.VertIndex, SpanBEndHit.EdgeIndex, indx);
 		}
 		#endregion
 
@@ -349,7 +397,8 @@ namespace LogansNavigationExtension
 
 			if (hit.SurfaceIndex == _SurfaceA.MySurfaceIndex)
 			{
-				rprt.Log($"hit surface index is same as _SurfaceA.MySurfaceIndex...");
+				rprt.Log($"hit surface index is same as _SurfaceA.MySurfaceIndex ({_SurfaceA.name})...",
+					"Checking adjacency depth from this hit to spanA...");
 
 				int rslt = _SurfaceA.GetAdjacencyDepthToTriangle_dbg(hit.TriangleIndex, spanA[0].TriangleIndex, ref rprt);
 
@@ -358,9 +407,10 @@ namespace LogansNavigationExtension
 			}
 			else if (hit.SurfaceIndex == _SurfaceB.MySurfaceIndex)
 			{
-				rprt.Log($"hit surface index is same as _SurfaceB.MySurfaceIndex...");
+				rprt.Log($"hit surface index is same as _SurfaceB.MySurfaceIndex ({_SurfaceB.name})...",
+					"Checking adjacency depth from this hit to spanB...");
 
-				int rslt = _SurfaceA.GetAdjacencyDepthToTriangle_dbg(hit.TriangleIndex, spanB[0].TriangleIndex, ref rprt);
+				int rslt = _SurfaceB.GetAdjacencyDepthToTriangle_dbg(hit.TriangleIndex, spanB[0].TriangleIndex, ref rprt);
 
 				rprt.Log_And_End_Method($"returning {rslt} > 0...");
 				return rslt > -1;

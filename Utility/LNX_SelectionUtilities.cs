@@ -17,7 +17,8 @@ namespace LogansNavigationExtension
 			return alignment;
 		}
 
-		public static LNX_NavmeshHit GetBestEdgeHitOnSurface(LNX_NavMeshSurface srfc, Vector3 pos, bool onlyTerminal = false, int forceLinkIndx = -1)
+		public static LNX_NavmeshHit GetBestEdgeHitOnSurface(LNX_NavMeshSurface srfc, Vector3 pos, bool onlyTerminal = false, 
+			int returnHitLinkIndex = -1)
 		{
 			LNX_NavmeshHit bestHit = LNX_NavmeshHit.None;
 			float bestDist = float.MaxValue;
@@ -32,10 +33,10 @@ namespace LogansNavigationExtension
 					}
 
 					LNX_NavmeshHit hit = srfc.Triangles[i].Edges[i_edges].ClosestHitOnEdge(pos);
-					if ( forceLinkIndx > -1 )
+					if ( returnHitLinkIndex > -1 )
 					{
 						hit = new LNX_NavmeshHit(hit.Position, hit.Normal, hit.SurfaceIndex, hit.TriangleIndex,
-							hit.VertIndex, hit.EdgeIndex, forceLinkIndx);
+							hit.VertIndex, hit.EdgeIndex, returnHitLinkIndex);
 					}
 					float dist = Vector3.Distance(pos, hit.Position);
 					if (dist < bestDist)
@@ -49,29 +50,38 @@ namespace LogansNavigationExtension
 			return bestHit;
 		}
 		public static LNX_NavmeshHit GetBestEdgeHitOnSurface_dbg(
-			LNX_NavMeshSurface srfc, Vector3 pos, ref LNX_MethodDebugReport rprt, bool onlyTerminal = false, int linkIndx = -1)
+			LNX_NavMeshSurface srfc, Vector3 pos, ref LNX_MethodDebugReport rprt, bool onlyTerminal = false, 
+			int returnHitLinkIndex = -1)
 		{
-			rprt.StartMethod($"GetBestEdgeHitOnSurface_dbg(pos: '{pos}', onlyTrml: '{onlyTerminal}')");
+			rprt.StartMethod($"GetBestEdgeHitOnSurface_dbg(srfc: '{srfc.name}', pos: '{pos}', onlyTrml: '{onlyTerminal}')");
 
 			LNX_NavmeshHit bestHit = LNX_NavmeshHit.None;
 			float bestDist = float.MaxValue;
 
+			rprt.Log($"running through '{srfc.Triangles.Length}' triangles to find closest hit on edge...");
 			for (int i = 0; i < srfc.Triangles.Length; i++)
 			{
+				rprt.Log($"for tri{i}==============================");
 				for (int i_edges = 0; i_edges < 3; i_edges++)
 				{
+					rprt.Log($"for edge{i}...");
+
 					if (onlyTerminal && !srfc.Triangles[i].Edges[i_edges].AmTerminal)
 					{
+						rprt.Log($"this edge is NOT terminal and onlyTerminal is true. Continuing...");
 						continue;
 					}
 
 					LNX_NavmeshHit hit = LNX_NavmeshHit.None;
 
+					rprt.Log($"now getting closestHitOnEdge...");
 					hit = srfc.Triangles[i].Edges[i_edges].ClosestHitOnEdge_dbg(pos, ref rprt);
-					if (linkIndx > -1)
+					rprt.Log($"got hit: '{hit}'...");
+
+					if (returnHitLinkIndex > -1)
 					{
 						hit = new LNX_NavmeshHit(hit.Position, hit.Normal, hit.SurfaceIndex, hit.TriangleIndex,
-							hit.VertIndex, hit.EdgeIndex, linkIndx);
+							hit.VertIndex, hit.EdgeIndex, returnHitLinkIndex);
 					}
 
 					float dist = Vector3.Distance(pos, hit.Position);
