@@ -192,8 +192,13 @@ namespace LogansNavigationExtension.AI
 
 			#region CALCULATE NEXT-POINT VALUES =================================================
 			v_toCurrentPathPt = Vector3.Normalize( _CurrentPathPt.Position - v_managedAgentPos );
-            Vector3 v_visTrnsUpTgt = Vector3.RotateTowards( VisualTransform.up, _CurrentPathPt.Normal, CurrentRotationSpeed * Time.fixedDeltaTime, 0.0f );
-            float alignment_transUp_with_crntPthNrml = Vector3.Dot( VisualTransform.up, _CurrentPathPt.Normal );
+			Vector3 v_visTrnsUpTgt = Vector3.RotateTowards(
+				VisualTransform.up,
+				CurrentMovementSchema.ConformTransformUpToSurface ? _CurrentPathPt.PathingNormal :
+				LNX_UtilityObjects.DirectionToVector(_CurrentPathPt.SurfaceOrientation),
+				CurrentRotationSpeed * Time.fixedDeltaTime, 0.0f
+			);
+            float alignment_transUp_with_crntPthNrml = Vector3.Dot( VisualTransform.up, _CurrentPathPt.PathingNormal );
             float alignment_transFwd_with_crntPthPos = Vector3.Dot( VisualTransform.forward, v_toCurrentPathPt);
 
             Quaternion q_finalRot = Quaternion.identity;
@@ -578,6 +583,8 @@ namespace LogansNavigationExtension.AI
         public float MoveSpeed => moveSpeed;
         [SerializeField] private float movementAcceleration;
         [SerializeField] private bool movementAccelerationIsSloped;
+		[SerializeField] private bool conformTransformUpToSurface;
+		public bool ConformTransformUpToSurface => conformTransformUpToSurface;
 
 		[Header("PATHING")]
 		[Tooltip("Distance within this agent will consider itself 'close enough' and start towards the next point")] 

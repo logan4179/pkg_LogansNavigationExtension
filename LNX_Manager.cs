@@ -121,13 +121,262 @@ namespace LogansNavigationExtension
 
 			return Surfaces[0].Raycast_dbg(startHit, projectDir, out outPath, allowedDistance, ref rprt, allowRelationships);
 		}
-		public bool Raycast(LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, out LNX_Path outPath)
+		public bool Raycast(LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, out LNX_Path outPath, bool crossOverLinks)
 		{
-			return Surfaces[startHit.SurfaceIndex].Raycast(startHit, endHit, out outPath);
+			outPath = new LNX_Path( startHit );
+
+			#region SHORT-CIRCUITING ===============================================
+			if ( startHit.SurfaceIndex != endHit.SurfaceIndex )
+			{
+				Debug.LogError($"LNX ERROR! Calling this Raycast overload on the manager is only meant for " +
+					$"a start and end hit that are on the same surface. The supplied hits ('{startHit}', and '{endHit}')" +
+					$"have different surface indices. This means that the method can't resolve a directional vector." +
+					$"Use the overload that allows you to supply a projection direction if you want to do this. " +
+					$"Returning false early...");
+				return false;
+			}
+			#endregion
+
+			if ( !crossOverLinks )
+			{
+				return Surfaces[startHit.SurfaceIndex].Raycast(startHit, endHit, out outPath);
+			}
+
+			LNX_NavmeshHit runningStartHit = startHit;
+			Vector3 projectDir = Surfaces[startHit.SurfaceIndex].FlatVector(endHit.Position);
+			Vector3 runningProjectDir = projectDir;
+			int safetyTimeout = 0;
+
+			bool amFinished = false;
+			while ( !amFinished )
+			{
+				LNX_Path rcPath = null;
+				if ( !Surfaces[runningStartHit.SurfaceIndex].Raycast(runningStartHit, endHit, out rcPath) )
+				{
+					amFinished = true;
+				}
+				else
+				{
+					int linkIndx = GetIndexOfLinkTouchingHit(rcPath.EndHit);
+
+					if ( linkIndx == -1 )
+					{
+						amFinished = true;
+						break;
+					}
+
+					if ( Links[linkIndx].HitIsOnSpanA(rcPath.EndHit) )
+					{
+						LNX_NavmeshHit spanBHit = LNX_NavmeshHit.None;
+						if ( !Links[linkIndx].ProjectFromSurfaceAToSpanB(runningStartHit, projectDir, out spanBHit) )
+						{
+							amFinished = true;
+							return true;
+						}
+						else
+						{
+							runningStartHit = spanBHit;
+							Quaternion qrot = Quaternion.FromToRotation
+							(
+								Links[linkIndx]._SurfaceA.GetSurfaceProjectionVector(),
+								Links[linkIndx]._SurfaceB.GetSurfaceProjectionVector()
+							);
+							runningProjectDir = qrot * projectDir;
+							break;
+						}
+					}
+					else if (Links[linkIndx].HitIsOnSpanB(rcPath.EndHit))
+					{
+						LNX_NavmeshHit spanAHit = LNX_NavmeshHit.None;
+						if (!Links[linkIndx].ProjectFromSurfaceBToSpanA(runningStartHit, projectDir, out spanAHit))
+						{
+							amFinished = true;
+							return true;
+						}
+						else
+						{
+							runningStartHit = spanAHit;
+							Quaternion qrot = Quaternion.FromToRotation
+							(
+								Links[linkIndx]._SurfaceB.GetSurfaceProjectionVector(),
+								Links[linkIndx]._SurfaceA.GetSurfaceProjectionVector()
+							);
+							runningProjectDir = qrot * projectDir;
+							break;
+						}
+					}
+					else
+					{
+						return true;
+					}
+				}
+
+				safetyTimeout++;
+				if (safetyTimeout > Surfaces.Count + 1)
+				{
+					Debug.LogError($"safety timeout reached because while went more than '{Surfaces.Count + 1}' iterations! Breaking early");
+					return false;
+				}
+			}
+
+			return false;
+
 		}
-		public bool Raycast_dbg(LNX_NavmeshHit startHit, LNX_NavmeshHit endHIt, out LNX_Path outPath, ref LNX_MethodDebugReport rprt)
+		public bool Raycast_dbg(LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, out LNX_Path outPath, 
+			bool crossOverLinks, ref LNX_MethodDebugReport rprt)
 		{
-			return Surfaces[0].Raycast_dbg(startHit, endHIt, out outPath, ref rprt);
+			rprt.StartMethod($"Raycast_dbg(startHit: '{startHit}', endHit: '{endHit}', crossOverLinks: '{crossOverLinks}')");
+
+			outPath = new LNX_Path(startHit);
+
+			#region SHORT-CIRCUITING ===============================================
+			if (startHit.SurfaceIndex != endHit.SurfaceIndex)
+			{
+				Debug.LogError($"LNX ERROR! Calling this Raycast overload on the manager is only meant for " +
+					$"a start and end hit that are on the same surface. The supplied hits ('{startHit}', and '{endHit}')" +
+					$"have different surface indices. This means that the method can't resolve a directional vector." +
+					$"Use the overload that allows you to supply a projection direction if you want to do this. " +
+					$"Returning false early...");
+
+				rprt.Log_And_End_Method($"LNX ERROR! Calling this Raycast overload on the manager is only meant for " +
+					$"a start and end hit that are on the same surface. The supplied hits ('{startHit}', and '{endHit}')" +
+					$"have different surface indices. This means that the method can't resolve a directional vector." +
+					$"Use the overload that allows you to supply a projection direction if you want to do this. " +
+					$"Returning false early...");
+				return false;
+			}
+			#endregion
+
+			if (!crossOverLinks)
+			{
+				rprt.Log_And_End_Method($"NOT crossing over links. Calling surface raycast once and ending method...");
+				return Surfaces[startHit.SurfaceIndex].Raycast(startHit, endHit, out outPath);
+			}
+
+			LNX_NavmeshHit runningStartHit = startHit;
+			Vector3 projectDir = Surfaces[startHit.SurfaceIndex].FlatVector(endHit.Position - startHit.Position);
+			Vector3 runningProjectDir = projectDir;
+			int safetyTimeout = 0;
+
+			rprt.Log($"crossing over links. While-looping until end...");
+			bool amFinished = false;
+			while (!amFinished)
+			{
+				rprt.Log($"while{safetyTimeout}==========================////////////////////////");
+				LNX_Path rcPath = null;
+				rprt.Log($"raycasting using runningStartHit: '{runningStartHit}, dir: '{runningProjectDir}'...");
+				if ( !Surfaces[runningStartHit.SurfaceIndex].Raycast(runningStartHit, runningProjectDir, out rcPath, endHit) )
+				{
+					rprt.Log($"raycast returned false, meaning no obstruction was hit, and end SHOULD have been reached.",
+						$"got path: '{rcPath}'. Adding this path to existing path...");
+					outPath.AddPath( rcPath );
+					amFinished = true;
+					rprt.Log_And_End_Method($"new path has '{outPath.PathPoints}' points. Now returning false...");
+					return false;
+				}
+				else
+				{
+					rprt.Log($"raycast returned true, meaning it DID hit an obstruction. Now appending path to outPath...");
+					outPath.AddPath(rcPath);
+					rprt.Log($"new path has '{outPath.PathPoints.Count}' points...");
+
+					rprt.Log($"Now investigating if raycast hit a link span...");
+
+					LNX_ComponentCoordinate linkHitInfo = GetLinkInfoAtHit(rcPath.EndHit);
+					//LNX_ComponentCoordinate linkHitInfo = GetLinkInfoAtHit_dbg(rcPath.EndHit, ref rprt);
+
+					rprt.Log($"got linkHitInfo: '{linkHitInfo}'...");
+
+					if (linkHitInfo.TriangleIndex == -1)
+					{
+						rprt.Log($"linkIndex of -1 means it should have hit a true termination and stop now. Returning true...");
+						amFinished = true;
+						return true;
+					}
+					else
+					{
+						rprt.Log($"raycast DID indeed hit a link span...");
+					}
+
+					rprt.Log($"link goes from surfaceA: '{Links[linkHitInfo.TriangleIndex]._SurfaceA}' " +
+						$"to surfaceB: '{Links[linkHitInfo.TriangleIndex]._SurfaceB}'..");
+
+					if ( linkHitInfo.ComponentIndex == 1 ) //hit is on spanA...
+					{
+						rprt.Log($"found that hit is on SpanA of link '{linkHitInfo.TriangleIndex}'. Trying to project to spanB...");
+
+						LNX_NavmeshHit spanBHit = LNX_NavmeshHit.None;
+						//if (!Links[linkHitInfo.TriangleIndex].ProjectFromSurfaceAToSpanB(runningStartHit, runningProjectDir, out spanBHit))
+						if (!Links[linkHitInfo.TriangleIndex].ProjectFromSurfaceAToSpanB_dbg(runningStartHit, runningProjectDir, out spanBHit, ref rprt))
+						{
+							rprt.Log_And_End_Method($"could NOT project to spanB. Assuming true termination hit and returning true...");
+							amFinished = true;
+							return true;
+						}
+						else
+						{
+							rprt.Log($"Projected succesfully to spanB at hit: '{spanBHit}'. Adding hit to outPath...");
+							outPath.AddPoint( spanBHit );
+
+							rprt.Log($"now re-orienting projection direction...");
+							runningStartHit = spanBHit;
+							Quaternion qrot = LNX_Utils.GetRotationBetweenDirections(
+								Links[linkHitInfo.TriangleIndex]._SurfaceA.SurfaceOrientation,
+								Links[linkHitInfo.TriangleIndex]._SurfaceB.SurfaceOrientation
+							);
+							//runningProjectDir = qrot * projectDir;
+							runningProjectDir = qrot * runningProjectDir;
+
+							rprt.Log($"Used rotation: '{qrot}' to create new runningProjectDir: '{runningProjectDir}'...");
+						}
+					}
+					else if ( linkHitInfo.ComponentIndex == 2 ) //hit is on spanB...
+					{
+						rprt.Log($"found that hit is on SpanB of link '{linkHitInfo.ComponentIndex}'. Trying to project to spanA...");
+
+						LNX_NavmeshHit spanAHit = LNX_NavmeshHit.None;
+						if (!Links[linkHitInfo.TriangleIndex].ProjectFromSurfaceBToSpanA(runningStartHit, runningProjectDir, out spanAHit))
+						{
+							rprt.Log_And_End_Method($"could NOT project to spanA. Assuming true termination hit and returning true...");
+
+							amFinished = true;
+							return true;
+						}
+						else
+						{
+							rprt.Log($"Projected succesfully to spanA at hit: '{spanAHit}'. Adding hit to outPath...");
+							outPath.AddPoint(spanAHit);
+
+							rprt.Log($"now re-orienting projection direction...");
+							runningStartHit = spanAHit;
+							Quaternion qrot = LNX_Utils.GetRotationBetweenDirections(
+								Links[linkHitInfo.TriangleIndex]._SurfaceB.SurfaceOrientation,
+								Links[linkHitInfo.TriangleIndex]._SurfaceA.SurfaceOrientation
+							);
+							//runningProjectDir = qrot * projectDir;
+							runningProjectDir = qrot * runningProjectDir; 
+							rprt.Log($"Used rotation: '{qrot}' to create new runningProjectDir: '{runningProjectDir}'...");
+						}
+					}
+					else
+					{
+						rprt.Log_And_End_Method($"Apparently hit is on neither span. Assuming terminal hit and returning true...");
+						return true;
+					}
+				}
+
+				safetyTimeout++;
+				if (safetyTimeout > Surfaces.Count + 1)
+				{
+					Debug.LogError($"safety timeout reached because while went more than '{Surfaces.Count + 1}' iterations! Breaking early");
+					rprt.Log_And_End_Method($"safety timeout reached because while went more than '{Surfaces.Count + 1}' iterations! Breaking early");
+					return false;
+				}
+			}
+
+			rprt.Log_And_End_Method($"Finally returning false...");
+			return false;
+
 		}
 
 		public bool Raycast(LNX_NavmeshHit startHit, Vector3 projectDir, LNX_NavmeshHit endHit, out LNX_Path outPath)
@@ -389,7 +638,7 @@ namespace LogansNavigationExtension
 		#endregion
 
 		#region PATHING ===================================================================================
-		public bool CalculatePath( LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, out LNX_Path path ) //OUTDATED! UPDATE TO DBG VERSION
+		public bool CalculatePath( LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, out LNX_Path path )
 		{
 			path = null;
 
@@ -400,37 +649,49 @@ namespace LogansNavigationExtension
 				Surfaces[startHit.SurfaceIndex].HitsAreOnSameIsland(startHit, endHit)
 			)
 			{
-				if ( !Raycast(startHit, endHit, out path) )
+				if (!Raycast(startHit, endHit, out path, true))
 				{
 					return true;
 				}
 			}
 
-			if ( Links.Count > 0 )
+			if (Links.Count > 0)
 			{
-				List<LNX_Path> furledPaths = CalculatePossibleSurfaceSequences( startHit, endHit );
+				List<LNX_Path> furledPaths = CalculatePossibleSurfaceSequences(startHit, endHit);
 				float bestDist = -1f;
 
-				for ( int i = 0; i < furledPaths.Count; i++ )
+				if (furledPaths != null)
 				{
-					Vector3 v = UnfurlPathToVector( furledPaths[i] );
-					LNX_Path rcPath = null;
-					if ( !Raycast(startHit, v, endHit, out rcPath) )
+					for (int i = 0; i < furledPaths.Count; i++)
 					{
-						if
-						(
-							rcPath != null &&
-							( rcPath.TotalDistance < bestDist || bestDist != -1f )
-						)
+						if (furledPaths[i].PathPoints.Count < 2)
 						{
-							path = new LNX_Path( rcPath );
-							bestDist = rcPath.TotalDistance;
+							continue;
+						}
+
+						//Vector3 v = UnfurlPathToVector(furledPaths[i]); //todo: dws
+						//Vector3 v = UnfurlPathToVector_dbg( furledPaths[i], ref rprt ); //todo: dws
+						Vector3 v = furledPaths[i].UnfurledToDirectionalVector();
+
+						LNX_Path rcPath = null;
+
+						if (!Raycast(startHit, v, endHit, out rcPath))
+						{
+							if
+							(
+								rcPath != null &&
+								(rcPath.TotalDistance < bestDist || bestDist == -1f)
+							)
+							{
+								path = new LNX_Path(rcPath);
+								bestDist = rcPath.TotalDistance;
+							}
 						}
 					}
 				}
 			}
 
-			if ( path != null )
+			if (path != null)
 			{
 				return true;
 			}
@@ -439,7 +700,6 @@ namespace LogansNavigationExtension
 			#region PATHFIND ======================================================
 
 			#endregion
-
 			return false;
 		}
 		public bool CalculatePath_dbg(LNX_NavmeshHit startHit, LNX_NavmeshHit endHit, 
@@ -458,7 +718,7 @@ namespace LogansNavigationExtension
 			)
 			{
 				rprt.Log($"start and end hits are on same island. Raycasting...");
-				if ( !Raycast(startHit, endHit, out path) )
+				if ( !Raycast(startHit, endHit, out path, true) )
 				{
 					rprt.Log_And_End_Method($"Raycast false, meaning no obstruction. Returning true...");
 					return true;
@@ -495,8 +755,9 @@ namespace LogansNavigationExtension
 						}
 
 						rprt.Log("now unfurling path to vector...");
-						Vector3 v = UnfurlPathToVector(furledPaths[i]);
-						//Vector3 v = UnfurlPathToVector_dbg( furledPaths[i], ref rprt );
+						//Vector3 v = UnfurlPathToVector(furledPaths[i]); //todo: dws
+						//Vector3 v = UnfurlPathToVector_dbg( furledPaths[i], ref rprt ); //todo: dws
+						Vector3 v = furledPaths[i].UnfurledToDirectionalVector();
 
 						rprt.Log($"got directional vector: '{v}'. Raycasting in this direction...");
 						LNX_Path rcPath = null;
@@ -604,7 +865,7 @@ namespace LogansNavigationExtension
 
 					for (int i_nwLnks = 0; i_nwLnks < newLinks.Count; i_nwLnks++)
 					{
-						LNX_Path cont = CreateFurlContinuation(rollingSequences[i], newLinks[i_nwLnks]);
+						LNX_Path cont = CreateFurlSequenceContinuation(rollingSequences[i], newLinks[i_nwLnks]);
 
 						if
 						(
@@ -698,7 +959,7 @@ namespace LogansNavigationExtension
 					for ( int i_nwLnks = 0; i_nwLnks < newLinks.Count; i_nwLnks++ )
 					{
 						rprt.Log($"for newLink ({Links[newLinks[i_nwLnks]]})...");
-						LNX_Path cont = CreateFurlContinuation(rollingSequences[i], newLinks[i_nwLnks]);
+						LNX_Path cont = CreateFurlSequenceContinuation(rollingSequences[i], newLinks[i_nwLnks]);
 						//LNX_Path cont = Links[newLinks[i_nwLnks]].CreateSequenceContinuation_dbg(rollingSequences[i], ref rprt);
 
 						rprt.Log($"created continuation path from this link that leads to surface: '{cont.EndHit.SurfaceIndex}'...");
@@ -752,7 +1013,7 @@ namespace LogansNavigationExtension
 			return returnSequences;
 		}
 
-		private LNX_Path CreateFurlContinuation(LNX_Path basePath, int linkIndx)
+		private LNX_Path CreateFurlSequenceContinuation(LNX_Path basePath, int linkIndx)
 		{
 			#region SHORT-CIRCUITING =============================
 			if
@@ -775,14 +1036,18 @@ namespace LogansNavigationExtension
 			{
 				rtrnPath.AddPoint
 				(
-					LNX_Utils.FlattenHitToHit(Links[linkIndx].SpanBStartHit, basePath.EndHit, Links[linkIndx]._SurfaceA.SurfaceOrientation)
+					LNX_Utils.FlattenHitToHit(
+						Links[linkIndx].SpanBStartHit, 
+						basePath.EndHit, 
+						Links[linkIndx]._SurfaceA.SurfaceOrientation)
 				);
 			}
 			else if (basePath.EndHit.SurfaceIndex == Links[linkIndx]._SurfaceB.MySurfaceIndex)
 			{
 				rtrnPath.AddPoint
 				(
-					LNX_Utils.FlattenHitToHit(Links[linkIndx].SpanAStartHit, basePath.EndHit, Links[linkIndx]._SurfaceB.SurfaceOrientation)
+					LNX_Utils.FlattenHitToHit(Links[linkIndx].SpanAStartHit, basePath.EndHit, 
+					Links[linkIndx]._SurfaceB.SurfaceOrientation)
 				);
 			}
 
@@ -908,6 +1173,138 @@ namespace LogansNavigationExtension
 			return returnCollection;
 		}
 
+		/// <summary>
+		/// Returns information about whether a link exists at hit location, and which span the hit touches.
+		/// </summary>
+		/// <param name="hit"></param>
+		/// <returns>LNX_ComponentCoordinate.TriangleIndex = Link Index
+		/// <para>LNX_ComponentCoordinate.ComponentIndex = which span (1 = spanA, 2 = spanB)</para>
+		/// </returns>
+		private LNX_ComponentCoordinate GetLinkInfoAtHit( LNX_NavmeshHit hit )
+		{
+			int lnkIndx = -1;
+			int whichSpan = -1;
+
+			for (int i = 0; i < Links.Count; i++)
+			{
+				if (Links[i].TouchesSurfaceIsland(hit))
+				{
+					if (Links[i].HitIsOnSpanA(hit))
+					{
+						lnkIndx = i;
+						whichSpan = 1;
+						break;
+					}
+					else if (Links[i].HitIsOnSpanB(hit))
+					{
+						lnkIndx = i;
+						whichSpan = 2;
+						break;
+					}
+				}
+			}
+
+			if (lnkIndx < 0)
+			{
+				return LNX_ComponentCoordinate.None;
+			}
+
+			return new LNX_ComponentCoordinate(-1, lnkIndx, whichSpan);
+		}
+		private LNX_ComponentCoordinate GetLinkInfoAtHit_dbg(LNX_NavmeshHit hit, ref LNX_MethodDebugReport rprt )
+		{
+			rprt.StartMethod($"GetLinkInfoAtHit_dbg(hit: '{hit}')");
+			int lnkIndx = -1;
+			int whichSpan = -1;
+
+			rprt.Log($"checking each link...");
+			for (int i = 0; i < Links.Count; i++)
+			{
+				rprt.Log($"for{i}=======================",
+				$"using Link: '{Links[i]}'...");
+
+				if (Links[i].TouchesSurfaceIsland(hit))
+				{
+					rprt.Log($"Link DOES touch surface island. Figuring on which span...");
+
+					if (Links[i].HitIsOnSpanA(hit))
+					{
+						rprt.Log($"found that hit is on spanA...");
+						lnkIndx = i;
+						whichSpan = 1;
+						rprt.Log($"set lnkIndx: '{lnkIndx}', whichSpan: '{whichSpan}'...");
+						break;
+					}
+					else if (Links[i].HitIsOnSpanB(hit))
+					{
+						rprt.Log($"found that hit is on spanB...");
+						lnkIndx = i;
+						whichSpan = 2;
+						rprt.Log($"set lnkIndx: '{lnkIndx}', whichSpan: '{whichSpan}'...");
+						break;
+					}
+					else
+					{
+						rprt.Log($"apparently hit is on neither link span...");
+					}
+				}
+				else
+				{
+					rprt.Log($"apparently link does NOT touch surface island of hit...");
+				}
+			}
+
+			if (lnkIndx < 0)
+			{
+				rprt.Log_And_End_Method($"finally returning none...");
+				return LNX_ComponentCoordinate.None;
+			}
+
+			rprt.Log_And_End_Method($"finally lnkIndx: '{lnkIndx}'. Returning valid coordinate...");
+			return new LNX_ComponentCoordinate(-1, lnkIndx, whichSpan);
+		}
+		public int GetIndexOfLinkTouchingHit(LNX_NavmeshHit hit)
+		{
+			for (int i = 0; i < Links.Count; i++)
+			{
+				if ( Links[i].TouchesSurfaceIsland(hit) && Links[i].HitIsOnEitherSpan(hit) )
+				{
+					return i;
+				}
+			}
+
+			return -1;
+		}
+		public int GetIndexOfLinkTouchingHit_dbg(LNX_NavmeshHit hit, ref LNX_MethodDebugReport rprt)
+		{
+			rprt.StartMethod($"GetIndexOfLinkTouchingHit_dbg(hit: '{hit}')");
+			for (int i = 0; i < Links.Count; i++)
+			{
+				rprt.Log($"for{i}=======================",
+					$"checking Link: '{Links[i]}'...");
+
+				rprt.Log($"first condition: '{Links[i].TouchesSurfaceIsland(hit)}'");
+
+				if 
+				(
+					Links[i].TouchesSurfaceIsland(hit) && 
+					//Links[i].HitIsOnEitherSpan(hit))
+					Links[i].HitIsOnEitherSpan_dbg(hit, ref rprt)
+				)
+				{
+				rprt.Log_And_End_Method($"Found that link contacts hit. returning '{i}'...");
+					return i;
+				}
+				else
+				{
+					rprt.Log($"apparently link does NOT touch hit...");
+				}
+			}
+
+			rprt.Log_And_End_Method($"finally returning -1...");
+			return -1;
+		}
+
 		#region PATH METHODS =====================================================
 		public bool PathTouchesLink(LNX_Path path, int linkIndx)
 		{
@@ -921,6 +1318,13 @@ namespace LogansNavigationExtension
 
 			return false;
 		}
+
+		/*
+		Note about UnfurlPathToVector(): Technically, the same functionality exists on the path class, but I don't know
+		if I'm going to keep that because technically I consider a 'furl sequence' different from a path, even though 
+		a 'furl sequence' is stored on a path object. Because I consider it different, it might not make sense to put this 
+		on the path object.
+		*/
 		public Vector3 UnfurlPathToVector( LNX_Path furledPath )
 		{
 			#region SHORT-CIRCUITING ====================================
@@ -1047,14 +1451,9 @@ namespace LogansNavigationExtension
 			return LNX_Utils.FlattenVectorToVector(
 				v - furledPath.StartPosition, furledPath.StartPosition, Surfaces[furledPath.StartHit.SurfaceIndex].SurfaceOrientation
 			); //This returns a "relative" vector
-			
-
-			/*
-			return LNX_Utils.FlattenVectorToVector(
-				v, furledPath.StartPosition, Surfaces[furledPath.StartHit.SurfaceIndex].SurfaceOrientation
-			); //for "absolute" vector. I don't think this makes sense because I think unfurling a path only makes sense in the context of a relative vector
-			*/
 		}
+		
+
 		/*
 		public bool VectorClearsLinks( LNX_NavmeshHit originHit, Vector3 vDir, LNX_Path path )
 		{

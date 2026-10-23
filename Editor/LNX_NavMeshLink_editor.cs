@@ -40,7 +40,7 @@ namespace LogansNavigationExtension.CustomEditors
 				if ( _targetScript.HandlePos_spanAStart != newHandlePosition_startA )
 				{
 					hndlPosUpdated = true;
-					Debug.Log($"span A start moving. SpanAStartHit: '{_targetScript.SpanAStartHit}', newHandlePosition: '{newHandlePosition_startA}'");
+					//Debug.Log($"span A start moving. SpanAStartHit: '{_targetScript.SpanAStartHit}', newHandlePosition: '{newHandlePosition_startA}'");
 					//_targetScript.HandlePos_spanAStart = newHandlePosition_startA;
 
 					//LNX_Edge edge = _targetScript._Manager.GetEdge(_targetScript.Coord_StartEdgeA);
@@ -53,7 +53,7 @@ namespace LogansNavigationExtension.CustomEditors
 				if (_targetScript.HandlePos_spanAEnd != newHandlePosition_endA)
 				{
 					hndlPosUpdated = true;
-					Debug.Log($"span A end moving. SpanAEndHit: '{_targetScript.SpanAEndHit}', newHandlePosition: '{newHandlePosition_endA}'");
+					//Debug.Log($"span A end moving. SpanAEndHit: '{_targetScript.SpanAEndHit}', newHandlePosition: '{newHandlePosition_endA}'");
 
 					//_targetScript.HandlePos_spanAEnd = newHandlePosition_endA;
 
@@ -66,7 +66,7 @@ namespace LogansNavigationExtension.CustomEditors
 				if (_targetScript.HandlePos_spanBStart != newHandlePosition_startB)
 				{
 					hndlPosUpdated = true;
-					Debug.Log($"span B start moving. HandlePos_spanBStart: '{_targetScript.HandlePos_spanBStart}', newHandlePosition: '{newHandlePosition_startB}'");
+					//Debug.Log($"span B start moving. HandlePos_spanBStart: '{_targetScript.HandlePos_spanBStart}', newHandlePosition: '{newHandlePosition_startB}'");
 					//_targetScript.HandlePos_spanBStart = newHandlePosition_startB;
 
 					//LNX_Edge edge = _targetScript._Manager.GetEdge(_targetScript.Coord_StartEdgeB);
@@ -78,7 +78,7 @@ namespace LogansNavigationExtension.CustomEditors
 				if (_targetScript.HandlePos_spanBEnd != newHandlePosition_endB)
 				{
 					hndlPosUpdated = true;
-					Debug.Log($"span B end moving. HandlePos_spanBEnd: '{_targetScript.HandlePos_spanBEnd}', newHandlePosition: '{newHandlePosition_endB}'");
+					//Debug.Log($"span B end moving. HandlePos_spanBEnd: '{_targetScript.HandlePos_spanBEnd}', newHandlePosition: '{newHandlePosition_endB}'");
 
 					//_targetScript.HandlePos_spanBEnd = newHandlePosition_endB;
 

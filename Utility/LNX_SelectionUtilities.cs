@@ -18,7 +18,7 @@ namespace LogansNavigationExtension
 		}
 
 		public static LNX_NavmeshHit GetBestEdgeHitOnSurface(LNX_NavMeshSurface srfc, Vector3 pos, bool onlyTerminal = false, 
-			int returnHitLinkIndex = -1)
+			int forcedLinkIndex = -1)
 		{
 			LNX_NavmeshHit bestHit = LNX_NavmeshHit.None;
 			float bestDist = float.MaxValue;
@@ -33,10 +33,10 @@ namespace LogansNavigationExtension
 					}
 
 					LNX_NavmeshHit hit = srfc.Triangles[i].Edges[i_edges].ClosestHitOnEdge(pos);
-					if ( returnHitLinkIndex > -1 )
+					if ( forcedLinkIndex > -1 )
 					{
-						hit = new LNX_NavmeshHit(hit.Position, hit.Normal, hit.SurfaceIndex, hit.TriangleIndex,
-							hit.VertIndex, hit.EdgeIndex, returnHitLinkIndex);
+						hit = new LNX_NavmeshHit(hit.Position, hit.PathingNormal, hit.SurfaceOrientation, hit.SurfaceIndex, hit.TriangleIndex,
+							hit.VertIndex, hit.EdgeIndex, forcedLinkIndex);
 					}
 					float dist = Vector3.Distance(pos, hit.Position);
 					if (dist < bestDist)
@@ -80,7 +80,8 @@ namespace LogansNavigationExtension
 
 					if (returnHitLinkIndex > -1)
 					{
-						hit = new LNX_NavmeshHit(hit.Position, hit.Normal, hit.SurfaceIndex, hit.TriangleIndex,
+						hit = new LNX_NavmeshHit(hit.Position, hit.PathingNormal, hit.SurfaceOrientation, 
+							hit.SurfaceIndex, hit.TriangleIndex,
 							hit.VertIndex, hit.EdgeIndex, returnHitLinkIndex);
 					}
 
