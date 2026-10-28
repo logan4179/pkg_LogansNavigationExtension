@@ -40,10 +40,7 @@ namespace LogansNavigationExtension
 
 		/// <summary>A Vector pointing in a straight line from start to end.</summary>
 		public Vector3 V_CrowFlies => pathPoints[pathPoints.Count-1].Position - pathPoints[0].Position;
-		public Vector3 V_CrowFiles_flat => LNX_Utils.FlatVector(pathPoints[pathPoints.Count - 1].Position - pathPoints[0].Position, v_navmeshSurfaceProjection_cached);
-
-		[SerializeField] private Vector3 v_navmeshSurfaceProjection_cached;
-		public Vector3 V_navmeshSurfaceProjection_cached => v_navmeshSurfaceProjection_cached;
+		public Vector3 V_CrowFiles_flat => LNX_Utils.FlatVector(pathPoints[pathPoints.Count - 1].Position - pathPoints[0].Position, StartHit.GetSurfaceProjectionVector());
 
 		[SerializeField] private float totalDistance_cached;
 		/// <summary>Distance of the entire path.</summary>
@@ -78,12 +75,18 @@ namespace LogansNavigationExtension
 			totalDistance_cached = -1f;
 		}
 
+		public LNX_Path( LNX_NavmeshHit hit )
+		{
+			amStraight = true;
+			totalDistance_cached = 0f;
+			pathPoints = new List<LNX_NavmeshHit>() { hit };
+		}
+
 		public LNX_Path( LNX_NavMeshSurface nm )
 		{
 			//DBG_class = $"ctorA\n";
 			amStraight = true;
 			totalDistance_cached = 0f;
-			v_navmeshSurfaceProjection_cached = nm.GetSurfaceProjectionVector();
 			pathPoints = new List<LNX_NavmeshHit>();
 		}
 
@@ -100,7 +103,6 @@ namespace LogansNavigationExtension
 
 			amStraight = basePath.AmStraight;
 			totalDistance_cached = 0f;
-			v_navmeshSurfaceProjection_cached = basePath.v_navmeshSurfaceProjection_cached;
 
 			pathPoints = new List<LNX_NavmeshHit>();
 
@@ -117,7 +119,6 @@ namespace LogansNavigationExtension
 		{
 			amStraight = basePath.AmStraight;
 			totalDistance_cached = 0f;
-			v_navmeshSurfaceProjection_cached = basePath.v_navmeshSurfaceProjection_cached;
 
 			pathPoints = new List<LNX_NavmeshHit>();
 
@@ -135,7 +136,6 @@ namespace LogansNavigationExtension
 		{
 			amStraight = basePath.AmStraight;
 			totalDistance_cached = 0f;
-			v_navmeshSurfaceProjection_cached = basePath.v_navmeshSurfaceProjection_cached;
 
 			pathPoints = new List<LNX_NavmeshHit>();
 
@@ -172,7 +172,6 @@ namespace LogansNavigationExtension
 
 			amStraight = basePathA.AmStraight && basePathB.amStraight && basePathA.V_CrowFlies == basePathB.V_CrowFlies;
 			totalDistance_cached = 0f;
-			v_navmeshSurfaceProjection_cached = basePathA.v_navmeshSurfaceProjection_cached;
 
 			pathPoints = new List<LNX_NavmeshHit>();
 
@@ -221,7 +220,6 @@ namespace LogansNavigationExtension
 			pathPoints = new List<LNX_NavmeshHit>();
 			totalDistance_cached = 0f;
 			amStraight = true;
-			v_navmeshSurfaceProjection_cached = nvmshProjectionDir;
 
 			if (hits == null || hits.Length <= 0)
 			{
@@ -261,14 +259,13 @@ namespace LogansNavigationExtension
 			*/
 		}
 
-		public LNX_Path(Vector3 nvmshProjectionDir, List<LNX_NavmeshHit> hits)
+		public LNX_Path(List<LNX_NavmeshHit> hits)
 		{
 			//DBG_class = $"ctorE\n";
 
 			pathPoints = new List<LNX_NavmeshHit>();
 			totalDistance_cached = 0f;
 			amStraight = true;
-			v_navmeshSurfaceProjection_cached = nvmshProjectionDir;
 
 			if (hits == null || hits.Count <= 0)
 			{
@@ -303,36 +300,43 @@ namespace LogansNavigationExtension
 
 				if ( amStraight && PathPoints.Count > 2 ) //no need to check straightness if path count is 2 or less
 				{
-					Vector3 firstDir_fltnd = LNX_Utils.FlatVector(
-						pathPoints[1].Position - pathPoints[0].Position, v_navmeshSurfaceProjection_cached
-					).normalized; //todo: can get rid of these two variables, and just do the if statement with these expressions. Want to efficiency test doing this
-
-					Vector3 dirNew = LNX_Utils.FlatVector(
-						pt.Position - pathPoints[pathPoints.Count - 2].Position, v_navmeshSurfaceProjection_cached
-					).normalized;//<<
-					//DBG_class += $"determining straightness using firstDir: '{LNX_UnitTestUtilities.LongVectorString(firstDir_fltnd)}', " +
-						//$"newDir: '{LNX_UnitTestUtilities.LongVectorString(dirNew)}'\n";
-
-					/*
-					if (dirNew != firstDir_fltnd)
+					if (EndHit.SurfaceOrientation == pt.SurfaceOrientation )
 					{
-						// todo: issue: for some reason, this check sometimes gets erroneously triggered due to the vectors being slighly
-						// different (by like a 10,000th of a percentage, extremely small floating point precision difference). My tests
-						// show that when this happens, using Vector3.Angle() to test directionality instead seems a little more reliable
-						// at considering the two angles to be the same. I wonder if LNX_Triangle.ProjectOnPerimeter() is still not perfect
-						// and perhaps producing a projection that is just a little off. Using the following angle check instead seems pretty
-						// okay for now. Perhaps one day I should revisit this and improve it?
-						DBG_class += $"decided not equal. angDiff: '{Vector3.Angle(firstDir_fltnd, dirNew)}'. Changing amStraight to false...\n";
-						amStraight = false;
-					}*/
-					if( Vector3.Angle(firstDir_fltnd, dirNew) > 0f )
-					{
-						//DBG_class += $"decided not equal. angDiff: '{Vector3.Angle(firstDir_fltnd, dirNew)}'. Changing amStraight to false...\n";
-						amStraight = false;
+						Vector3 firstDir_fltnd = LNX_Utils.FlatVector(
+							pathPoints[1].Position - pathPoints[0].Position, pt.GetSurfaceProjectionVector()
+						).normalized; //todo: can get rid of these two variables, and just do the if statement with these expressions. Want to efficiency test doing this
+
+						Vector3 dirNew = LNX_Utils.FlatVector(
+							pt.Position - pathPoints[pathPoints.Count - 2].Position, pt.GetSurfaceProjectionVector()
+						).normalized;//<<
+						//DBG_class += $"determining straightness using firstDir: '{LNX_UnitTestUtilities.LongVectorString(firstDir_fltnd)}', " +
+							//$"newDir: '{LNX_UnitTestUtilities.LongVectorString(dirNew)}'\n";
+
+						/*
+						if (dirNew != firstDir_fltnd)
+						{
+							// todo: issue: for some reason, this check sometimes gets erroneously triggered due to the vectors being slighly
+							// different (by like a 10,000th of a percentage, extremely small floating point precision difference). My tests
+							// show that when this happens, using Vector3.Angle() to test directionality instead seems a little more reliable
+							// at considering the two angles to be the same. I wonder if LNX_Triangle.ProjectOnPerimeter() is still not perfect
+							// and perhaps producing a projection that is just a little off. Using the following angle check instead seems pretty
+							// okay for now. Perhaps one day I should revisit this and improve it?
+							DBG_class += $"decided not equal. angDiff: '{Vector3.Angle(firstDir_fltnd, dirNew)}'. Changing amStraight to false...\n";
+							amStraight = false;
+						}*/
+						if( Vector3.Angle(firstDir_fltnd, dirNew) > 0f )
+						{
+							//DBG_class += $"decided not equal. angDiff: '{Vector3.Angle(firstDir_fltnd, dirNew)}'. Changing amStraight to false...\n";
+							amStraight = false;
+						}
+						else
+						{
+							//DBG_class += $"decided AM equal...\n";
+						}
 					}
 					else
 					{
-						//DBG_class += $"decided AM equal...\n";
+						amStraight = false;
 					}
 				}
 			}
@@ -353,7 +357,7 @@ namespace LogansNavigationExtension
 
 			if( pathPoints.Count == 1 )
 			{
-				return new LNX_Path( v_navmeshSurfaceProjection_cached, pathPoints[0] );
+				return new LNX_Path( pathPoints[0] );
 			}
 
 			for ( int i = pathPoints.Count-1; i > -1; i-- )
@@ -362,25 +366,57 @@ namespace LogansNavigationExtension
 				reversedHits.Add( pathPoints[i] );
 			}
 
-			return new LNX_Path( v_navmeshSurfaceProjection_cached, reversedHits );
+			return new LNX_Path( reversedHits );
 		}
 
-		public LNX_Path Reversed( LNX_Vertex endVertOverride )
+		public Vector3 UnfurledToDirectionalVector()
 		{
-			List<LNX_NavmeshHit> reversedHits = new List<LNX_NavmeshHit>();
-
-			if (pathPoints.Count == 1)
+			#region SHORT-CIRCUITING ====================================
+			if (PointCount < 2)
 			{
-				return new LNX_Path( v_navmeshSurfaceProjection_cached, new LNX_NavmeshHit(endVertOverride) );
+				Debug.LogError($"LNX ERROR! You called UnfurledToDirectionalVector(), on a path with a point count less than 2. Returning early...");
+				return Vector3.zero;
+			}
+			#endregion
+
+			Vector3 v = StartPosition;
+
+			Quaternion runningRot = Quaternion.identity;
+
+			for (int i = 0; i < PointCount - 1; i++)
+			{
+				Vector3 vto = LNX_Utils.FlattenVectorToVector(
+					PathPoints[i + 1].Position - PathPoints[i].Position,
+					PathPoints[i].Position,
+					PathPoints[i].SurfaceOrientation
+				);
+
+				if
+				(
+					i > 0 && //because the first two points should NOT need to be rotated
+					PathPoints[i].SurfaceOrientation !=
+					PathPoints[i - 1].SurfaceOrientation
+				)
+				{
+					Quaternion qrot = Quaternion.FromToRotation
+					(
+						PathPoints[i].GetSurfaceProjectionVector(),
+						PathPoints[i - 1].GetSurfaceProjectionVector()
+					);
+
+					runningRot = runningRot * qrot;
+					v += runningRot * vto;
+
+				}
+				else
+				{
+					v += vto;
+				}
 			}
 
-			for (int i = pathPoints.Count - 1; i > 0; i--)
-			{
-				reversedHits.Add(pathPoints[i]);
-			}
-			reversedHits.Add(new LNX_NavmeshHit(endVertOverride));
-
-			return new LNX_Path(v_navmeshSurfaceProjection_cached, reversedHits);
+			return LNX_Utils.FlattenVectorToVector(
+				v - StartPosition, StartPosition, StartHit.SurfaceOrientation
+			);
 		}
 
 		public bool ValueEquals( LNX_Path otherPath )
@@ -422,8 +458,9 @@ namespace LogansNavigationExtension
 				{
 					if (pathPoints[i].SurfaceIndex == oldIndex )
 					{
-						pathPoints[i] = new LNX_NavmeshHit(pathPoints[i].Position, pathPoints[i].Normal,
-							newIndx, pathPoints[i].TriangleIndex, pathPoints[i].VertIndex, pathPoints[i].EdgeIndex
+						pathPoints[i] = new LNX_NavmeshHit(pathPoints[i].Position, pathPoints[i].PathingNormal, 
+							PathPoints[i].SurfaceOrientation, newIndx, pathPoints[i].TriangleIndex, 
+							pathPoints[i].VertIndex, pathPoints[i].EdgeIndex
 						);
 					}
 
@@ -512,6 +549,7 @@ namespace LogansNavigationExtension
 			return false;
 		}
 
+#if UNITY_EDITOR
 		public void DrawMyGizmos( float pointSize, float lblHeight, int highlightIndex = -1 )
 		{
 			if( pathPoints == null || pathPoints.Count <= 0 )
@@ -519,7 +557,6 @@ namespace LogansNavigationExtension
 				return;
 			}
 
-			Vector3 vRise = v_navmeshSurfaceProjection_cached * 0.5f * pointSize;
 			for ( int i = 0; i < pathPoints.Count; i++ )
 			{
 				Color prevColor = Gizmos.color;
@@ -531,13 +568,14 @@ namespace LogansNavigationExtension
 				Gizmos.DrawSphere( pathPoints[i].Position, pointSize );
 
 				Gizmos.DrawLine(
-					pathPoints[i].Position, pathPoints[i].Position + (pathPoints[i].Normal * lblHeight)
+					pathPoints[i].Position, pathPoints[i].Position + (pathPoints[i].PathingNormal * lblHeight)
 				);
 
 				Handles.Label(
-					pathPoints[i].Position + (pathPoints[i].Normal * lblHeight * 1.01f), $"{i}"
+					pathPoints[i].Position + (pathPoints[i].PathingNormal * lblHeight * 1.01f), $"{i}"
 				);
 				
+				Vector3 vRise = pathPoints[i].GetSurfaceProjectionVector() * 0.5f * pointSize;
 
 				if (i > 0)
 				{
@@ -559,6 +597,7 @@ namespace LogansNavigationExtension
 			DrawMyGizmos(pointSize, lblHeight);
 			Gizmos.color = oldclr;
 		}
+#endif
 
 		#region OPERATORS ======================================================
 		/*

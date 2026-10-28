@@ -31,7 +31,7 @@ namespace LogansNavigationExtension
 		[HideInInspector] public Vector3 V_Center; //todo: look into possibly making this a property calculated as needed as long as it won't hamper performance too much
 
 		/// <summary>The center of the triangle "flattened" with respect to the surface orientation of the navmesh.</summary>
-		public Vector3 V_FlattenedCenter => LNX_Utils.FlatVector(V_Center, v_navmeshProjectionDirection_cached);
+		public Vector3 V_FlattenedCenter => LNX_Utils.FlatVector(V_Center, v_surfaceOrientation_cached);
 		/// <summary>Distance around the triangle</summary>
 		public float Perimeter
 		{
@@ -74,7 +74,7 @@ namespace LogansNavigationExtension
 		{
 			get
 			{
-				return Vector3.Angle(v_navmeshProjectionDirection_cached, V_PlaneFaceNormal);
+				return Vector3.Angle(v_surfaceOrientation_cached, V_PlaneFaceNormal);
 			}
 		}
 
@@ -83,12 +83,12 @@ namespace LogansNavigationExtension
 		{
 			get
 			{
-				return Quaternion.FromToRotation(v_navmeshProjectionDirection_cached, V_PlaneFaceNormal);
+				return Quaternion.FromToRotation(v_surfaceOrientation_cached, V_PlaneFaceNormal);
 			}
 		}
 
 		/// <summary>Whether this triangle's face direction is oriented correctly </summary>
-		public bool AmKinked => Vector3.Dot(v_navmeshProjectionDirection_cached, V_PlaneFaceNormal) <= 0f; //note: this will only work if the plane face normal is calculated correctly. Will need to make sure to do that
+		public bool AmKinked => Vector3.Dot(v_surfaceOrientation_cached, V_PlaneFaceNormal) <= 0f; //note: this will only work if the plane face normal is calculated correctly. Will need to make sure to do that
 
 
 		[Header("RELATIONAL")]
@@ -140,16 +140,16 @@ namespace LogansNavigationExtension
 		[HideInInspector] public Vector3 V_PlaneFaceNormal;
 		/// <summary>This is the normal used for shape projecting. It should be the same as the SurfaceOrientation 
 
-		[SerializeField] private Vector3 v_navmeshProjectionDirection_cached;
+		[SerializeField] private Vector3 v_surfaceOrientation_cached;
 
 		/// of the LNX_Navmesh this triangle belongs to, getting cached from a passed reference during the constructor.</summary>
-		public Vector3 V_NavmeshProjectionDirection_cached => v_navmeshProjectionDirection_cached;
+		public Vector3 V_SurfaceOrientation_cached => v_surfaceOrientation_cached;
 		/// <summary>Gets the best normal this triangle is able to provide for traversing over it's surface. </summary>
 		public Vector3 V_PathingNormal
 		{
 			get
 			{
-				return V_PlaneFaceNormal != Vector3.zero ? V_PlaneFaceNormal : v_navmeshProjectionDirection_cached;
+				return V_PlaneFaceNormal != Vector3.zero ? V_PlaneFaceNormal : v_surfaceOrientation_cached;
 			}
 		}
 
@@ -162,7 +162,7 @@ namespace LogansNavigationExtension
 			dirtyFlag_repositionedVert = false;
 
 			AreaIndex = areaIndx;
-			v_navmeshProjectionDirection_cached = navMesh.GetSurfaceProjectionVector();
+			v_surfaceOrientation_cached = navMesh.GetSurfaceProjectionVector();
 
 			V_Center = atomicTris[parallelIndex].Center;
 
@@ -174,7 +174,7 @@ namespace LogansNavigationExtension
 				Vector3.Normalize(atomicTris[parallelIndex].VertPos0_current - atomicTris[parallelIndex].VertPos1_current),
 				Vector3.Normalize(atomicTris[parallelIndex].VertPos2_current - atomicTris[parallelIndex].VertPos1_current)
 			).normalized;
-			if (Vector3.Dot(v_navmeshProjectionDirection_cached, V_PlaneFaceNormal) > Vector3.Dot(v_navmeshProjectionDirection_cached, -V_PlaneFaceNormal))
+			if (Vector3.Dot(v_surfaceOrientation_cached, V_PlaneFaceNormal) > Vector3.Dot(v_surfaceOrientation_cached, -V_PlaneFaceNormal))
 			{
 				V_PlaneFaceNormal = -V_PlaneFaceNormal;
 			}
@@ -366,8 +366,8 @@ namespace LogansNavigationExtension
 				Vector3.Normalize(Verts[2].V_Position - Verts[1].V_Position)
 			).normalized;
 			//dbgDerived += $"comparing '{Vector3.Dot(v_navmeshProjectionDirection_cached, V_PlaneFaceNormal)}' to '{Vector3.Dot(v_navmeshProjectionDirection_cached, -V_PlaneFaceNormal)}'...\n";
-			if (Vector3.Dot(v_navmeshProjectionDirection_cached, -V_PlaneFaceNormal) >
-				Vector3.Dot(v_navmeshProjectionDirection_cached, V_PlaneFaceNormal))
+			if (Vector3.Dot(v_surfaceOrientation_cached, -V_PlaneFaceNormal) >
+				Vector3.Dot(v_surfaceOrientation_cached, V_PlaneFaceNormal))
 			{
 				//dbgDerived += "pfn was reversed\n";
 				V_PlaneFaceNormal = -V_PlaneFaceNormal;
@@ -420,9 +420,9 @@ namespace LogansNavigationExtension
 
 			#region CALCULATE SAMPLED NORMAL--------------------------------------------------
 			if (
-				v_navmeshProjectionDirection_cached != Vector3.zero &&
-				Physics.Linecast(V_Center + (v_navmeshProjectionDirection_cached * 0.3f),
-				V_Center + (-v_navmeshProjectionDirection_cached * 0.3f),
+				v_surfaceOrientation_cached != Vector3.zero &&
+				Physics.Linecast(V_Center + (v_surfaceOrientation_cached * 0.3f),
+				V_Center + (-v_surfaceOrientation_cached * 0.3f),
 				out rcHit, nm.MyLayerMask))
 			{
 				//DbgCalculateTriInfo += $"linecast success. hit at: '{rcHit.point}'\n";
@@ -443,7 +443,7 @@ namespace LogansNavigationExtension
 			//todo: I can short-circuit here depending on "flat distance" from tri center to pos, and I belive it will make this and everything that
 			//relies on it way more performant, but I need to efficiency test when I do...
 			surfaceHit = LNX_NavmeshHit.None;
-			Vector3 fltndPos = LNX_Utils.FlatVector(pos, v_navmeshProjectionDirection_cached);
+			Vector3 fltndPos = LNX_Utils.FlatVector(pos, v_surfaceOrientation_cached);
 
 			#region CHECK IF ON EDGES =============================================
 			if (Edges[0].DoesPositionLieOnEdge(fltndPos, out surfaceHit))
@@ -466,7 +466,7 @@ namespace LogansNavigationExtension
 					fltndPos, Verts[0].V_flattenedPosition,
 					Verts[1].V_flattenedPosition,
 					Verts[2].V_flattenedPosition,
-					v_navmeshProjectionDirection_cached, false //Note: I'm purposefully leaving this false because true would cause this to do a redundant checking of the verts and edges, when that's already been checked earlier...
+					v_surfaceOrientation_cached, false //Note: I'm purposefully leaving this false because true would cause this to do a redundant checking of the verts and edges, when that's already been checked earlier...
 				)
 			)
 			{
@@ -519,7 +519,7 @@ namespace LogansNavigationExtension
 			//todo: currently, it doesn't set projectedPos to the correct "out" value
 			//todo: I can short-circuit here depending on distance, and it will make this and everything that relies on it way more performant...
 			surfaceHit = LNX_NavmeshHit.None;
-			Vector3 fltndPos = LNX_Utils.FlatVector(pos, v_navmeshProjectionDirection_cached);
+			Vector3 fltndPos = LNX_Utils.FlatVector(pos, v_surfaceOrientation_cached);
 			rprt.Log($"flattened pos to: '{fltndPos}'...",
 				"First checking each edge.DoesPositionLieOnEdge()..."
 			);
@@ -550,7 +550,7 @@ namespace LogansNavigationExtension
 					fltndPos, Verts[0].V_flattenedPosition,
 					Verts[1].V_flattenedPosition,
 					Verts[2].V_flattenedPosition,
-					v_navmeshProjectionDirection_cached, false //Note: I'm purposefully leaving this false because true would cause this to do a redundant checking of the verts and edges, when that's already been checked earlier...
+					v_surfaceOrientation_cached, false //Note: I'm purposefully leaving this false because true would cause this to do a redundant checking of the verts and edges, when that's already been checked earlier...
 				)
 			)
 			{
@@ -737,8 +737,8 @@ namespace LogansNavigationExtension
 				return false;
 			}
 
-			Vector3 ftndInrPos = LNX_Utils.FlatVector(startHit.Position, v_navmeshProjectionDirection_cached);
-			Vector3 ftndOuterPos = LNX_Utils.FlatVector(endHit.Position, v_navmeshProjectionDirection_cached);
+			Vector3 ftndInrPos = LNX_Utils.FlatVector(startHit.Position, v_surfaceOrientation_cached);
+			Vector3 ftndOuterPos = LNX_Utils.FlatVector(endHit.Position, v_surfaceOrientation_cached);
 			if (ftndInrPos == ftndOuterPos) //short-circuit
 			{
 				return false;
@@ -751,7 +751,10 @@ namespace LogansNavigationExtension
 			int touchedVert = -1;
 			if (
 				endHit.VertIndex != -1 &&
-				TouchesVertAtCoordinate_ViaRelational(endHit.TriangleIndex, endHit.VertIndex, out touchedVert)
+				TouchesVertAtCoordinate_ViaRelational
+				(
+					endHit.TriangleIndex, endHit.VertIndex, out touchedVert
+				)
 			)
 			{
 				//todo: need to check that projection is in center sweep...
@@ -766,7 +769,7 @@ namespace LogansNavigationExtension
 				else
 				{
 					perimHit = new LNX_NavmeshHit(
-						endHit.Position, v_navmeshProjectionDirection_cached,
+						endHit.Position, v_surfaceOrientation_cached, v_surfaceOrientation_cached,
 						rel.SurfaceIndex,
 						rel.TriangleIndex,
 						rel.ComponentIndex,
@@ -807,7 +810,8 @@ namespace LogansNavigationExtension
 					else
 					{
 						perimHit = new LNX_NavmeshHit(
-							Verts[Verts[startHit.VertIndex].Index_FirstSiblingVert].V_Position, v_navmeshProjectionDirection_cached,
+							Verts[Verts[startHit.VertIndex].Index_FirstSiblingVert].V_Position, 
+							v_surfaceOrientation_cached, v_surfaceOrientation_cached,
 							rel.SurfaceIndex,
 							rel.TriangleIndex,
 							rel.ComponentIndex,
@@ -834,7 +838,8 @@ namespace LogansNavigationExtension
 					else
 					{
 						perimHit = new LNX_NavmeshHit(
-							Verts[Verts[startHit.VertIndex].Index_SecondSiblingVert].V_Position, v_navmeshProjectionDirection_cached,
+							Verts[Verts[startHit.VertIndex].Index_SecondSiblingVert].V_Position, 
+							v_surfaceOrientation_cached, v_surfaceOrientation_cached,
 							rel.SurfaceIndex, 
 							rel.TriangleIndex,
 							rel.ComponentIndex,
@@ -865,6 +870,7 @@ namespace LogansNavigationExtension
 						V_PathingNormal, //todo: actually I need the pathing normal of the adjacent triangle if this edge is not
 										 //terminal, but I don't think I can get that from here as it stands. Could make a method 
 										 //on the vert class to derive the pathing normal based on the relationships
+						v_surfaceOrientation_cached,
 						Edges[startHit.VertIndex].AmTerminal ? index_surface : Edges[startHit.VertIndex].SharedEdgeCoordinate.SurfaceIndex,
 						Edges[startHit.VertIndex].AmTerminal ? index_inCollection : Edges[startHit.VertIndex].SharedEdgeCoordinate.TriangleIndex,
 						-1,
@@ -884,7 +890,8 @@ namespace LogansNavigationExtension
 					else
 					{
 						perimHit = new LNX_NavmeshHit(
-							startHit.Position, v_navmeshProjectionDirection_cached,
+							startHit.Position, v_surfaceOrientation_cached,
+							v_surfaceOrientation_cached,
 							rel.SurfaceIndex,
 							rel.TriangleIndex,
 							rel.ComponentIndex,
@@ -922,7 +929,7 @@ namespace LogansNavigationExtension
 					if (returnHitOnAdjacenttTriangle && !Edges[i].AmTerminal)
 					{
 						perimHit = new LNX_NavmeshHit(
-							crntEdgeHit.Position, v_navmeshProjectionDirection_cached,
+							crntEdgeHit.Position, v_surfaceOrientation_cached, v_surfaceOrientation_cached,
 							Edges[i].SharedEdgeCoordinate.SurfaceIndex,
 							Edges[i].SharedEdgeCoordinate.TriangleIndex,
 							-1, //todo: there's a chance that this hit could be on a vert, and if so, this needs to be calculated correctly
@@ -967,8 +974,8 @@ namespace LogansNavigationExtension
 				return false;
 			}
 
-			Vector3 ftndInrPos = LNX_Utils.FlatVector(startHit.Position, v_navmeshProjectionDirection_cached);
-			Vector3 ftndOuterPos = LNX_Utils.FlatVector(endHit.Position, v_navmeshProjectionDirection_cached);
+			Vector3 ftndInrPos = LNX_Utils.FlatVector(startHit.Position, v_surfaceOrientation_cached);
+			Vector3 ftndOuterPos = LNX_Utils.FlatVector(endHit.Position, v_surfaceOrientation_cached);
 			if (ftndInrPos == ftndOuterPos) //short-circuit
 			{
 				rprt.Log($"Found flattened positions are the same. returning early...");
@@ -1006,7 +1013,7 @@ namespace LogansNavigationExtension
 				{
 					rprt.Log($"Got rel: '{rel}'. Using this to form simplified perimHit...");
 					perimHit = new LNX_NavmeshHit(
-						endHit.Position, v_navmeshProjectionDirection_cached,
+						endHit.Position, v_surfaceOrientation_cached, v_surfaceOrientation_cached,
 						rel.SurfaceIndex,
 						rel.TriangleIndex,
 						rel.ComponentIndex,
@@ -1049,7 +1056,8 @@ namespace LogansNavigationExtension
 					{
 						rprt.Log($"Got rel: '{rel}'. Using this to form simplified perimHit...");
 						perimHit = new LNX_NavmeshHit(
-							Verts[Verts[startHit.VertIndex].Index_FirstSiblingVert].V_Position, v_navmeshProjectionDirection_cached,
+							Verts[Verts[startHit.VertIndex].Index_FirstSiblingVert].V_Position, 
+							v_surfaceOrientation_cached, v_surfaceOrientation_cached,
 							rel.SurfaceIndex,
 							rel.TriangleIndex,
 							rel.ComponentIndex,
@@ -1083,7 +1091,8 @@ namespace LogansNavigationExtension
 					{
 						rprt.Log($"Got rel: '{rel}'. Using this to form simplified perimHit...");
 						perimHit = new LNX_NavmeshHit(
-							Verts[Verts[startHit.VertIndex].Index_SecondSiblingVert].V_Position, v_navmeshProjectionDirection_cached,
+							Verts[Verts[startHit.VertIndex].Index_SecondSiblingVert].V_Position, 
+							v_surfaceOrientation_cached, v_surfaceOrientation_cached,
 							rel.SurfaceIndex,
 							rel.TriangleIndex,
 							rel.ComponentIndex,
@@ -1119,6 +1128,7 @@ namespace LogansNavigationExtension
 						V_PathingNormal, //todo: actually I need the pathing normal of the adjacent triangle if this edge is not
 										 //terminal, but I don't think I can get that from here as it stands. Could make a method 
 										 //on the vert class to derive the pathing normal based on the relationships
+						v_surfaceOrientation_cached,
 						Edges[startHit.VertIndex].AmTerminal ? index_surface : Edges[startHit.VertIndex].SharedEdgeCoordinate.SurfaceIndex,
 						Edges[startHit.VertIndex].AmTerminal ? index_inCollection : Edges[startHit.VertIndex].SharedEdgeCoordinate.TriangleIndex,
 						-1,
@@ -1147,7 +1157,7 @@ namespace LogansNavigationExtension
 					{
 						rprt.Log($"Got rel: '{rel}'. Using this to form simplified perimHit...");
 						perimHit = new LNX_NavmeshHit(
-							startHit.Position, v_navmeshProjectionDirection_cached,
+							startHit.Position, v_surfaceOrientation_cached, v_surfaceOrientation_cached,
 							rel.SurfaceIndex,
 							rel.TriangleIndex,
 							rel.ComponentIndex,
@@ -1199,7 +1209,7 @@ namespace LogansNavigationExtension
 					{
 						rprt.Log($"switching hit to adjacent triangle as instructed by returnHitOnAdjacenttTriangle parameter...");
 						perimHit = new LNX_NavmeshHit(
-							crntEdgeHit.Position, v_navmeshProjectionDirection_cached,
+							crntEdgeHit.Position, v_surfaceOrientation_cached, v_surfaceOrientation_cached,
 							Edges[i].SharedEdgeCoordinate.SurfaceIndex,
 							Edges[i].SharedEdgeCoordinate.TriangleIndex,
 							-1, //todo: there's a chance that this hit could be on a vert, and if so, this needs to be calculated correctly
@@ -1242,7 +1252,7 @@ namespace LogansNavigationExtension
 			}
 			#endregion
 
-			Vector3 v_projection_flat = LNX_Utils.FlatVector( vProjection, v_navmeshProjectionDirection_cached );
+			Vector3 v_projection_flat = LNX_Utils.FlatVector( vProjection, v_surfaceOrientation_cached );
 
 			#region HANDLE ENDHIT BEING ON ONE OF MY VERTS========================================
 			// ...
@@ -1268,7 +1278,8 @@ namespace LogansNavigationExtension
 					else
 					{
 						perimHit = new LNX_NavmeshHit(
-							Verts[Verts[startHit.VertIndex].Index_FirstSiblingVert].V_Position, v_navmeshProjectionDirection_cached,
+							Verts[Verts[startHit.VertIndex].Index_FirstSiblingVert].V_Position, 
+							v_surfaceOrientation_cached, v_surfaceOrientation_cached,
 							rel.SurfaceIndex,
 							rel.TriangleIndex,
 							rel.ComponentIndex,
@@ -1295,7 +1306,8 @@ namespace LogansNavigationExtension
 					else
 					{
 						perimHit = new LNX_NavmeshHit(
-							Verts[Verts[startHit.VertIndex].Index_SecondSiblingVert].V_Position, v_navmeshProjectionDirection_cached,
+							Verts[Verts[startHit.VertIndex].Index_SecondSiblingVert].V_Position, 
+							v_surfaceOrientation_cached, v_surfaceOrientation_cached,
 							rel.SurfaceIndex,
 							rel.TriangleIndex,
 							rel.ComponentIndex,
@@ -1326,6 +1338,7 @@ namespace LogansNavigationExtension
 						V_PathingNormal, //todo: actually I need the pathing normal of the adjacent triangle if this edge is not
 										 //terminal, but I don't think I can get that from here as it stands. Could make a method 
 										 //on the vert class to derive the pathing normal based on the relationships
+						v_surfaceOrientation_cached,
 						Edges[startHit.VertIndex].AmTerminal ? index_surface : Edges[startHit.VertIndex].SharedEdgeCoordinate.SurfaceIndex,
 						Edges[startHit.VertIndex].AmTerminal ? index_inCollection : Edges[startHit.VertIndex].SharedEdgeCoordinate.TriangleIndex,
 						-1,
@@ -1345,7 +1358,9 @@ namespace LogansNavigationExtension
 					else
 					{
 						perimHit = new LNX_NavmeshHit(
-							startHit.Position, v_navmeshProjectionDirection_cached,
+							startHit.Position, 
+							v_surfaceOrientation_cached,
+							v_surfaceOrientation_cached,
 							rel.SurfaceIndex,
 							rel.TriangleIndex,
 							rel.ComponentIndex,
@@ -1383,7 +1398,7 @@ namespace LogansNavigationExtension
 					if (returnHitOnAdjacenttTriangle && !Edges[i].AmTerminal)
 					{
 						perimHit = new LNX_NavmeshHit(
-							crntEdgeHit.Position, v_navmeshProjectionDirection_cached,
+							crntEdgeHit.Position, v_surfaceOrientation_cached, v_surfaceOrientation_cached,
 							Edges[i].SharedEdgeCoordinate.SurfaceIndex,
 							Edges[i].SharedEdgeCoordinate.TriangleIndex,
 							-1, //todo: there's a chance that this hit could be on a vert, and if so, this needs to be calculated correctly
@@ -1424,7 +1439,7 @@ namespace LogansNavigationExtension
 			}
 			#endregion
 
-			Vector3 v_projection_flat = LNX_Utils.FlatVector(vProjection, v_navmeshProjectionDirection_cached);
+			Vector3 v_projection_flat = LNX_Utils.FlatVector(vProjection, v_surfaceOrientation_cached);
 			rprt.Log($"using flat projection: '{v_projection_flat}'...");
 
 			#region HANDLE STARTHIT BEING ON A VERT =============================
@@ -1455,7 +1470,8 @@ namespace LogansNavigationExtension
 					else
 					{
 						perimHit = new LNX_NavmeshHit(
-							Verts[Verts[startHit.VertIndex].Index_FirstSiblingVert].V_Position, v_navmeshProjectionDirection_cached,
+							Verts[Verts[startHit.VertIndex].Index_FirstSiblingVert].V_Position, 
+							v_surfaceOrientation_cached, v_surfaceOrientation_cached,
 							rel.SurfaceIndex,
 							rel.TriangleIndex,
 							rel.ComponentIndex,
@@ -1489,7 +1505,8 @@ namespace LogansNavigationExtension
 					else
 					{
 						perimHit = new LNX_NavmeshHit(
-							Verts[Verts[startHit.VertIndex].Index_SecondSiblingVert].V_Position, v_navmeshProjectionDirection_cached,
+							Verts[Verts[startHit.VertIndex].Index_SecondSiblingVert].V_Position, 
+							v_surfaceOrientation_cached, v_surfaceOrientation_cached,
 							rel.SurfaceIndex,
 							rel.TriangleIndex,
 							rel.ComponentIndex,
@@ -1527,6 +1544,7 @@ namespace LogansNavigationExtension
 						V_PathingNormal, //todo: actually I need the pathing normal of the adjacent triangle if this edge is not
 										 //terminal, but I don't think I can get that from here as it stands. Could make a method 
 										 //on the vert class to derive the pathing normal based on the relationships
+						v_surfaceOrientation_cached,
 						Edges[startHit.VertIndex].AmTerminal ? index_surface : Edges[startHit.VertIndex].SharedEdgeCoordinate.SurfaceIndex,
 						Edges[startHit.VertIndex].AmTerminal ? index_inCollection : Edges[startHit.VertIndex].SharedEdgeCoordinate.TriangleIndex,
 						-1,
@@ -1556,7 +1574,7 @@ namespace LogansNavigationExtension
 					{
 						rprt.Log($"Got rel: '{rel}'. Using this to form simplified perimHit...");
 						perimHit = new LNX_NavmeshHit(
-							startHit.Position, v_navmeshProjectionDirection_cached,
+							startHit.Position, v_surfaceOrientation_cached, v_surfaceOrientation_cached,
 							rel.SurfaceIndex,
 							rel.TriangleIndex,
 							rel.ComponentIndex,
@@ -1613,7 +1631,7 @@ namespace LogansNavigationExtension
 						rprt.Log($"switching hit to adjacent triangle as instructed by returnHitOnAdjacenttTriangle parameter...");
 
 						perimHit = new LNX_NavmeshHit(
-							crntEdgeHit.Position, v_navmeshProjectionDirection_cached,
+							crntEdgeHit.Position, v_surfaceOrientation_cached, v_surfaceOrientation_cached,
 							Edges[i].SharedEdgeCoordinate.SurfaceIndex,
 							Edges[i].SharedEdgeCoordinate.TriangleIndex,
 							-1, //todo: there's a chance that this hit could be on a vert, and if so, this needs to be calculated correctly
@@ -1687,27 +1705,27 @@ namespace LogansNavigationExtension
 		{
 			if ( orientation == LNX_Direction.PositiveY )
 			{
-				v_navmeshProjectionDirection_cached = Vector3.up;
+				v_surfaceOrientation_cached = Vector3.up;
 			}
 			else if (orientation == LNX_Direction.NegativeY)
 			{
-				v_navmeshProjectionDirection_cached = Vector3.down;
+				v_surfaceOrientation_cached = Vector3.down;
 			}
 			else if (orientation == LNX_Direction.PositiveZ)
 			{
-				v_navmeshProjectionDirection_cached = Vector3.forward;
+				v_surfaceOrientation_cached = Vector3.forward;
 			}
 			else if (orientation == LNX_Direction.NegativeZ)
 			{
-				v_navmeshProjectionDirection_cached = Vector3.back;
+				v_surfaceOrientation_cached = Vector3.back;
 			}
 			else if (orientation == LNX_Direction.PositiveX)
 			{
-				v_navmeshProjectionDirection_cached = Vector3.right;
+				v_surfaceOrientation_cached = Vector3.right;
 			}
 			else if (orientation == LNX_Direction.NegativeX)
 			{
-				v_navmeshProjectionDirection_cached = Vector3.left;
+				v_surfaceOrientation_cached = Vector3.left;
 			}
 
 			Verts[0].SurfaceOrientationChanged_action( orientation );
@@ -1867,7 +1885,7 @@ namespace LogansNavigationExtension
 		{
 			if (includeFlattened)
 			{
-				Vector3 v = LNX_Utils.FlatVector(pos, v_navmeshProjectionDirection_cached);
+				Vector3 v = LNX_Utils.FlatVector(pos, v_surfaceOrientation_cached);
 				if (Verts[0].V_flattenedPosition == v)
 				{
 					return 0;
@@ -2047,15 +2065,15 @@ namespace LogansNavigationExtension
 			float genrtdY = 0f;
 			float genrtdZ = 0f;
 
-			if (v_navmeshProjectionDirection_cached == Vector3.up || v_navmeshProjectionDirection_cached == Vector3.down)
+			if (v_surfaceOrientation_cached == Vector3.up || v_surfaceOrientation_cached == Vector3.down)
 			{
 				genrtdY = Mathf.Min(Verts[0].V_Position.y, Mathf.Min(Verts[1].V_Position.y, Verts[2].V_Position.y));
 			}
-			else if (v_navmeshProjectionDirection_cached == Vector3.forward || v_navmeshProjectionDirection_cached == Vector3.back)
+			else if (v_surfaceOrientation_cached == Vector3.forward || v_surfaceOrientation_cached == Vector3.back)
 			{
 				genrtdZ = Mathf.Min(Verts[0].V_Position.z, Mathf.Min(Verts[1].V_Position.z, Verts[2].V_Position.z));
 			}
-			else if (v_navmeshProjectionDirection_cached == Vector3.right || v_navmeshProjectionDirection_cached == Vector3.left)
+			else if (v_surfaceOrientation_cached == Vector3.right || v_surfaceOrientation_cached == Vector3.left)
 			{
 				genrtdX = Mathf.Min(Verts[0].V_Position.x, Mathf.Min(Verts[1].V_Position.x, Verts[2].V_Position.x));
 			}
@@ -2067,7 +2085,7 @@ namespace LogansNavigationExtension
 		{
 			if (flatten)
 			{
-				pos = LNX_Utils.FlatVector(pos, v_navmeshProjectionDirection_cached);
+				pos = LNX_Utils.FlatVector(pos, v_surfaceOrientation_cached);
 			}
 
 			if (Edges[0].DoesPositionLieOnEdge(pos))
@@ -2213,7 +2231,7 @@ namespace LogansNavigationExtension
 		{
 			int indx = 0;
 			float runningLowestDimension = float.MaxValue;
-			if (v_navmeshProjectionDirection_cached == Vector3.up)
+			if (v_surfaceOrientation_cached == Vector3.up)
 			{
 				runningLowestDimension = Verts[0].V_Position.y;
 				if (Verts[1].V_Position.y < runningLowestDimension)
@@ -2227,7 +2245,7 @@ namespace LogansNavigationExtension
 					indx = 2;
 				}
 			}
-			else if (v_navmeshProjectionDirection_cached == Vector3.down)
+			else if (v_surfaceOrientation_cached == Vector3.down)
 			{
 				runningLowestDimension = Verts[0].V_Position.y;
 				if (Verts[1].V_Position.y > runningLowestDimension)
@@ -2241,7 +2259,7 @@ namespace LogansNavigationExtension
 					indx = 2;
 				}
 			}
-			if (v_navmeshProjectionDirection_cached == Vector3.right)
+			if (v_surfaceOrientation_cached == Vector3.right)
 			{
 				runningLowestDimension = Verts[0].V_Position.x;
 				if (Verts[1].V_Position.x < runningLowestDimension)
@@ -2255,7 +2273,7 @@ namespace LogansNavigationExtension
 					indx = 2;
 				}
 			}
-			if (v_navmeshProjectionDirection_cached == Vector3.left)
+			if (v_surfaceOrientation_cached == Vector3.left)
 			{
 				runningLowestDimension = Verts[0].V_Position.x;
 				if (Verts[1].V_Position.x > runningLowestDimension)
@@ -2373,7 +2391,7 @@ namespace LogansNavigationExtension
 				$"{nameof(V_Center)}: '{V_Center}'\n" +
 				$"{nameof(MeshIndex_trianglesStart)}: '{MeshIndex_trianglesStart}'\n\n" +
 				$"NORMALS-----------------------\n" +
-				$"{nameof(v_navmeshProjectionDirection_cached)}: '{v_navmeshProjectionDirection_cached}'\n" +
+				$"{nameof(v_surfaceOrientation_cached)}: '{v_surfaceOrientation_cached}'\n" +
 				$"{nameof(v_sampledNormal)}: '{v_sampledNormal}'\n" +
 				$"{nameof(V_PlaneFaceNormal)}: '{V_PlaneFaceNormal}'\n" +
 				$"{nameof(AmKinked)}: '{AmKinked}'\n" +
@@ -2452,9 +2470,9 @@ namespace LogansNavigationExtension
 				correctNumberOfEdges = false;
 			}
 
-			if ( srfc.GetSurfaceProjectionVector() != v_navmeshProjectionDirection_cached)
+			if ( srfc.GetSurfaceProjectionVector() != v_surfaceOrientation_cached)
 			{
-				returnString += $"{nameof(v_navmeshProjectionDirection_cached)} is '{v_navmeshProjectionDirection_cached}', while " +
+				returnString += $"{nameof(v_surfaceOrientation_cached)} is '{v_surfaceOrientation_cached}', while " +
 					$"supplied surface projection vector is: '{srfc.GetSurfaceProjectionVector()}'\n";
 			}
 			if (AmKinked)

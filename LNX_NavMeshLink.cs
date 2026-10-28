@@ -18,11 +18,11 @@ namespace LogansNavigationExtension
 		[HideInInspector] public LNX_NavmeshHit SpanBEndHit;
 
 		//[Header("OTHER")]
-		[SerializeField] private int myLinkIndex;
+		[SerializeField, HideInInspector] private int myLinkIndex;
 		public int MyLinkIndex => myLinkIndex;
 		[SerializeField, HideInInspector] private Mesh _VisualizationMesh;
-		[SerializeField] private LNX_ComponentCoordinate[] spanA;
-		[SerializeField] private LNX_ComponentCoordinate[] spanB;
+		[SerializeField, HideInInspector] private LNX_ComponentCoordinate[] spanA;
+		[SerializeField, HideInInspector] private LNX_ComponentCoordinate[] spanB;
 		//[SerializeField, HideInInspector] private LNX_NavmeshHit[] spanA;
 		//[SerializeField, HideInInspector] private LNX_NavmeshHit[] spanB;
 
@@ -146,6 +146,24 @@ namespace LogansNavigationExtension
 
 			ReconstructVisualizationMesh();
 			GenerateDbgText();
+		}
+
+		[ContextMenu("z call AddToManagerInScene()")]
+		public void AddToManagerInScene()
+		{
+			LNX_Manager mgr = FindAnyObjectByType<LNX_Manager>();
+			Debug.Log($"found: '{mgr}'");
+
+			if ( !mgr.Links.Contains(this))
+			{
+				mgr.Links.Add( this );
+				myLinkIndex = mgr.Links.IndexOf(this);
+				Debug.Log($"myLInkINdex: '{myLinkIndex}'.");
+			}
+			else
+			{
+				Debug.LogWarning($"manager collection already contianed this link at index: '{mgr.Links.IndexOf(this)}'");
+			}
 		}
 
 		public void SetLinkIndex(int indx)
@@ -367,7 +385,7 @@ namespace LogansNavigationExtension
 			return (srfc == _SurfaceA || srfc == _SurfaceB);
 		}
 
-		public bool TouchesSurfaceIsland( LNX_NavmeshHit hit )
+		public bool TouchesSameSurfaceIsland( LNX_NavmeshHit hit )
 		{
 			if (_SurfaceA == null && _SurfaceB == null)
 			{
@@ -386,9 +404,9 @@ namespace LogansNavigationExtension
 				return false;
 			}
 		}
-		public bool TouchesSurfaceIsland_dbg( LNX_NavmeshHit hit, ref LNX_MethodDebugReport rprt )
+		public bool TouchesSameSurfaceIsland_dbg( LNX_NavmeshHit hit, ref LNX_MethodDebugReport rprt )
 		{
-			rprt.StartMethod($"{name}.TouchesSurfaceIsland_dbg(hit: '{hit}')");
+			rprt.StartMethod($"{name}.TouchesSameSurfaceIsland_dbg(hit: '{hit}')");
 			if (_SurfaceA == null && _SurfaceB == null)
 			{
 				rprt.Log_And_End_Method($"surfaces are not set. Short-circuit returning false...");
@@ -400,7 +418,8 @@ namespace LogansNavigationExtension
 				rprt.Log($"hit surface index is same as _SurfaceA.MySurfaceIndex ({_SurfaceA.name})...",
 					"Checking adjacency depth from this hit to spanA...");
 
-				int rslt = _SurfaceA.GetAdjacencyDepthToTriangle_dbg(hit.TriangleIndex, spanA[0].TriangleIndex, ref rprt);
+				//int rslt = _SurfaceA.GetAdjacencyDepthToTriangle_dbg(hit.TriangleIndex, spanA[0].TriangleIndex, ref rprt);
+				int rslt = _SurfaceA.GetAdjacencyDepthToTriangle(hit.TriangleIndex, spanA[0].TriangleIndex);
 
 				rprt.Log_And_End_Method($"returning {rslt} > 0...");
 				return rslt > -1;
@@ -410,7 +429,8 @@ namespace LogansNavigationExtension
 				rprt.Log($"hit surface index is same as _SurfaceB.MySurfaceIndex ({_SurfaceB.name})...",
 					"Checking adjacency depth from this hit to spanB...");
 
-				int rslt = _SurfaceB.GetAdjacencyDepthToTriangle_dbg(hit.TriangleIndex, spanB[0].TriangleIndex, ref rprt);
+				//int rslt = _SurfaceB.GetAdjacencyDepthToTriangle_dbg(hit.TriangleIndex, spanB[0].TriangleIndex, ref rprt);
+				int rslt = _SurfaceB.GetAdjacencyDepthToTriangle(hit.TriangleIndex, spanB[0].TriangleIndex);
 
 				rprt.Log_And_End_Method($"returning {rslt} > 0...");
 				return rslt > -1;
@@ -423,178 +443,7 @@ namespace LogansNavigationExtension
 			}
 		}
 
-		public bool HitIsOnEitherSpan(LNX_NavmeshHit hit )
-		{
-			#region SHORT-CIRCUITING ===============================
-			if (hit.SurfaceIndex != _SurfaceA.MySurfaceIndex &&
-				hit.SurfaceIndex != _SurfaceB.MySurfaceIndex)
-			{
-				return false;
-			}
 
-			if (hit.EdgeIndex == -1 && hit.VertIndex == -1)
-			{
-				return false;
-			}
-			#endregion
-
-			if (hit.SurfaceIndex == _SurfaceA.MySurfaceIndex)
-			{
-				for (int i = 0; i < spanA.Length; i++)
-				{
-					if (_SurfaceA.GetEdge(spanA[i]).HitTouchesEdge(hit))
-					{
-						if (i == 0)
-						{
-							LNX_Vertex nxtVrt = null;
-
-							if
-							(
-								_SurfaceA.GetEdge(spanA[0]).StartPosition == _SurfaceA.GetEdge(spanA[1]).StartPosition ||
-								_SurfaceA.GetEdge(spanA[0]).EndPosition == _SurfaceA.GetEdge(spanA[1]).StartPosition
-							)
-							{
-								nxtVrt = _SurfaceA.GetVertexAtCoordinate(_SurfaceA.GetEdge(spanA[1]).StartVertCoordinate);
-							}
-							else if
-							(
-								_SurfaceA.GetEdge(spanA[0]).StartPosition == _SurfaceA.GetEdge(spanA[1]).EndPosition ||
-								_SurfaceA.GetEdge(spanA[0]).EndPosition == _SurfaceA.GetEdge(spanA[1]).EndPosition
-							)
-							{
-								nxtVrt = _SurfaceA.GetVertexAtCoordinate(_SurfaceA.GetEdge(spanA[1]).EndVertCoordinate);
-							}
-
-							if
-							(
-								LNX_Utils.PositionIsDistallyWithin
-								(
-									hit.Position, SpanAStartHit.Position, nxtVrt.V_Position
-								)
-							)
-							{
-								return true;
-							}
-						}
-						else if (i == spanA.Length - 1)
-						{
-							LNX_Vertex prevVrt = null;
-
-							if
-							(
-								_SurfaceA.GetEdge(spanA[i - 1]).StartPosition == _SurfaceA.GetEdge(spanA[i]).StartPosition ||
-								_SurfaceA.GetEdge(spanA[i - 1]).EndPosition == _SurfaceA.GetEdge(spanA[i]).StartPosition
-							)
-							{
-								prevVrt = _SurfaceA.GetVertexAtCoordinate(_SurfaceA.GetEdge(spanA[i]).StartVertCoordinate);
-							}
-							else if
-							(
-							_SurfaceA.GetEdge(spanA[i - 1]).StartPosition == _SurfaceA.GetEdge(spanA[i]).EndPosition ||
-							_SurfaceA.GetEdge(spanA[i - 1]).EndPosition == _SurfaceA.GetEdge(spanA[i]).EndPosition
-							)
-							{
-								prevVrt = _SurfaceA.GetVertexAtCoordinate(_SurfaceA.GetEdge(spanA[i]).EndVertCoordinate);
-							}
-
-							if
-							(
-								LNX_Utils.PositionIsDistallyWithin
-								(
-									hit.Position, SpanAEndHit.Position, prevVrt.V_Position
-								)
-							)
-							{
-								return true;
-							}
-						}
-						else //In this case, we can assume it's definitely on the span...
-						{
-							return true;
-						}
-					}
-				}
-			}
-			else if (hit.SurfaceIndex == _SurfaceB.MySurfaceIndex)
-			{
-				for (int i = 0; i < spanB.Length; i++)
-				{
-					if (_SurfaceB.GetEdge(spanB[i]).HitTouchesEdge(hit))
-					{
-						if (i == 0)
-						{
-							LNX_Vertex nxtVrt = null;
-
-							if
-							(
-								_SurfaceB.GetEdge(spanB[0]).StartPosition == _SurfaceB.GetEdge(spanB[1]).StartPosition ||
-								_SurfaceB.GetEdge(spanB[0]).EndPosition == _SurfaceB.GetEdge(spanB[1]).StartPosition
-							)
-							{
-								nxtVrt = _SurfaceB.GetVertexAtCoordinate(_SurfaceB.GetEdge(spanB[1]).StartVertCoordinate);
-							}
-							else if
-							(
-								_SurfaceB.GetEdge(spanB[0]).StartPosition == _SurfaceB.GetEdge(spanB[1]).EndPosition ||
-								_SurfaceB.GetEdge(spanB[0]).EndPosition == _SurfaceB.GetEdge(spanB[1]).EndPosition
-							)
-							{
-								nxtVrt = _SurfaceB.GetVertexAtCoordinate(_SurfaceB.GetEdge(spanB[1]).EndVertCoordinate);
-							}
-
-							if
-							(
-								LNX_Utils.PositionIsDistallyWithin
-								(
-									hit.Position, SpanBStartHit.Position, nxtVrt.V_Position
-								)
-							)
-							{
-								return true;
-							}
-						}
-						else if (i == spanB.Length - 1)
-						{
-							LNX_Vertex prevVrt = null;
-
-							if
-							(
-								_SurfaceB.GetEdge(spanB[i - 1]).StartPosition == _SurfaceB.GetEdge(spanB[i]).StartPosition ||
-								_SurfaceB.GetEdge(spanB[i - 1]).EndPosition == _SurfaceB.GetEdge(spanB[i]).StartPosition
-							)
-							{
-								prevVrt = _SurfaceB.GetVertexAtCoordinate(_SurfaceB.GetEdge(spanB[i]).StartVertCoordinate);
-							}
-							else if
-							(
-							_SurfaceB.GetEdge(spanB[i - 1]).StartPosition == _SurfaceB.GetEdge(spanB[i]).EndPosition ||
-							_SurfaceB.GetEdge(spanB[i - 1]).EndPosition == _SurfaceB.GetEdge(spanB[i]).EndPosition
-							)
-							{
-								prevVrt = _SurfaceB.GetVertexAtCoordinate(_SurfaceB.GetEdge(spanB[i]).EndVertCoordinate);
-							}
-
-							if
-							(
-								LNX_Utils.PositionIsDistallyWithin
-								(
-									hit.Position, SpanBEndHit.Position, prevVrt.V_Position
-								)
-							)
-							{
-								return true;
-							}
-						}
-						else //In this case, we can assume it's definitely on the span...
-						{
-							return true;
-						}
-					}
-				}
-			}
-
-			return false;
-		}
 		public bool HitIsOnSpanA( LNX_NavmeshHit hit )
 		{
 			#region SHORT-CIRCUITING ===============================
@@ -609,9 +458,13 @@ namespace LogansNavigationExtension
 			}
 			#endregion
 
-
 			if (hit.SurfaceIndex == _SurfaceA.MySurfaceIndex)
 			{
+				if (spanA.Length == 1) //as I recently found out, this needs to be handled differently than when there are multiple edges in a span...
+				{
+					return LNX_Utils.PositionIsDistallyWithin(hit.Position, SpanAStartHit.Position, SpanAEndHit.Position);
+				}
+
 				for (int i = 0; i < spanA.Length; i++)
 				{
 					if (_SurfaceA.GetEdge(spanA[i]).HitTouchesEdge(hit))
@@ -707,6 +560,211 @@ namespace LogansNavigationExtension
 
 			if (hit.SurfaceIndex == _SurfaceB.MySurfaceIndex)
 			{
+				if (spanB.Length == 1) //as I recently found out, this needs to be handled differently than when there are multiple edges in a span...
+				{
+					return LNX_Utils.PositionIsDistallyWithin( hit.Position, SpanBStartHit.Position, SpanBEndHit.Position );
+				}
+
+				for (int i = 0; i < spanB.Length; i++)
+				{
+					if (_SurfaceB.GetEdge(spanB[i]).HitTouchesEdge(hit))
+					{
+						if (i == 0)
+						{
+							LNX_Vertex nxtVrt = null;
+
+							if
+							(
+								_SurfaceB.GetEdge(spanB[0]).StartPosition == _SurfaceB.GetEdge(spanB[1]).StartPosition ||
+								_SurfaceB.GetEdge(spanB[0]).EndPosition == _SurfaceB.GetEdge(spanB[1]).StartPosition
+							)
+							{
+								nxtVrt = _SurfaceB.GetVertexAtCoordinate(_SurfaceB.GetEdge(spanB[1]).StartVertCoordinate);
+							}
+							else if
+							(
+								_SurfaceB.GetEdge(spanB[0]).StartPosition == _SurfaceB.GetEdge(spanB[1]).EndPosition ||
+								_SurfaceB.GetEdge(spanB[0]).EndPosition == _SurfaceB.GetEdge(spanB[1]).EndPosition
+							)
+							{
+								nxtVrt = _SurfaceB.GetVertexAtCoordinate(_SurfaceB.GetEdge(spanB[1]).EndVertCoordinate);
+							}
+
+							if
+							(
+								LNX_Utils.PositionIsDistallyWithin
+								(
+									hit.Position, SpanBStartHit.Position, nxtVrt.V_Position
+								)
+							)
+							{
+								return true;
+							}
+						}
+						else if (i == spanB.Length - 1)
+						{
+							LNX_Vertex prevVrt = null;
+
+							if
+							(
+								_SurfaceB.GetEdge(spanB[i - 1]).StartPosition == _SurfaceB.GetEdge(spanB[i]).StartPosition ||
+								_SurfaceB.GetEdge(spanB[i - 1]).EndPosition == _SurfaceB.GetEdge(spanB[i]).StartPosition
+							)
+							{
+								prevVrt = _SurfaceB.GetVertexAtCoordinate(_SurfaceB.GetEdge(spanB[i]).StartVertCoordinate);
+							}
+							else if
+							(
+							_SurfaceB.GetEdge(spanB[i - 1]).StartPosition == _SurfaceB.GetEdge(spanB[i]).EndPosition ||
+							_SurfaceB.GetEdge(spanB[i - 1]).EndPosition == _SurfaceB.GetEdge(spanB[i]).EndPosition
+							)
+							{
+								prevVrt = _SurfaceB.GetVertexAtCoordinate(_SurfaceB.GetEdge(spanB[i]).EndVertCoordinate);
+							}
+
+							if
+							(
+								LNX_Utils.PositionIsDistallyWithin
+								(
+									hit.Position, SpanBEndHit.Position, prevVrt.V_Position
+								)
+							)
+							{
+								return true;
+							}
+						}
+						else //In this case, we can assume it's definitely on the span...
+						{
+							return true;
+						}
+					}
+				}
+			}
+
+			return false;
+		}
+
+		public bool HitIsOnEitherSpan(LNX_NavmeshHit hit)
+		{
+			#region SHORT-CIRCUITING ===============================
+			if (hit.SurfaceIndex != _SurfaceA.MySurfaceIndex &&
+				hit.SurfaceIndex != _SurfaceB.MySurfaceIndex)
+			{
+				return false;
+			}
+
+			if (hit.EdgeIndex == -1 && hit.VertIndex == -1)
+			{
+				return false;
+			}
+			#endregion
+
+			if (hit.SurfaceIndex == _SurfaceA.MySurfaceIndex)
+			{
+				if (spanA.Length == 1) //as I recently found out, this needs to be handled differently than when there are multiple edges in a span...
+				{
+					if
+					(
+						LNX_Utils.PositionIsDistallyWithin
+						(
+							hit.Position, SpanAStartHit.Position, SpanAEndHit.Position
+						)
+					)
+					{
+						return true;
+					}
+				}
+
+				for (int i = 0; i < spanA.Length; i++)
+				{
+					if (_SurfaceA.GetEdge(spanA[i]).HitTouchesEdge(hit))
+					{
+						if (i == 0)
+						{
+							LNX_Vertex nxtVrtInSpan = null;
+
+							if
+							(
+								_SurfaceA.GetEdge(spanA[0]).StartPosition == _SurfaceA.GetEdge(spanA[1]).StartPosition ||
+								_SurfaceA.GetEdge(spanA[0]).EndPosition == _SurfaceA.GetEdge(spanA[1]).StartPosition
+							)
+							{
+								nxtVrtInSpan = _SurfaceA.GetVertexAtCoordinate(_SurfaceA.GetEdge(spanA[1]).StartVertCoordinate);
+							}
+							else if
+							(
+								_SurfaceA.GetEdge(spanA[0]).StartPosition == _SurfaceA.GetEdge(spanA[1]).EndPosition ||
+								_SurfaceA.GetEdge(spanA[0]).EndPosition == _SurfaceA.GetEdge(spanA[1]).EndPosition
+							)
+							{
+								nxtVrtInSpan = _SurfaceA.GetVertexAtCoordinate(_SurfaceA.GetEdge(spanA[1]).EndVertCoordinate);
+							}
+
+							if
+							(
+								LNX_Utils.PositionIsDistallyWithin
+								(
+									hit.Position, SpanAStartHit.Position, nxtVrtInSpan.V_Position
+								)
+							)
+							{
+								return true;
+							}
+						}
+						else if (i == spanA.Length - 1)
+						{
+							LNX_Vertex prevVrt = null;
+
+							if
+							(
+								_SurfaceA.GetEdge(spanA[i - 1]).StartPosition == _SurfaceA.GetEdge(spanA[i]).StartPosition ||
+								_SurfaceA.GetEdge(spanA[i - 1]).EndPosition == _SurfaceA.GetEdge(spanA[i]).StartPosition
+							)
+							{
+								prevVrt = _SurfaceA.GetVertexAtCoordinate(_SurfaceA.GetEdge(spanA[i]).StartVertCoordinate);
+							}
+							else if
+							(
+							_SurfaceA.GetEdge(spanA[i - 1]).StartPosition == _SurfaceA.GetEdge(spanA[i]).EndPosition ||
+							_SurfaceA.GetEdge(spanA[i - 1]).EndPosition == _SurfaceA.GetEdge(spanA[i]).EndPosition
+							)
+							{
+								prevVrt = _SurfaceA.GetVertexAtCoordinate(_SurfaceA.GetEdge(spanA[i]).EndVertCoordinate);
+							}
+
+							if
+							(
+								LNX_Utils.PositionIsDistallyWithin
+								(
+									hit.Position, SpanAEndHit.Position, prevVrt.V_Position
+								)
+							)
+							{
+								return true;
+							}
+						}
+						else //In this case, we can assume it's definitely on the span...
+						{
+							return true;
+						}
+					}
+				}
+			}
+			else if (hit.SurfaceIndex == _SurfaceB.MySurfaceIndex)
+			{
+				if (spanB.Length == 1) //as I recently found out, this needs to be handled differently than when there are multiple edges in a span...
+				{
+					if
+					(
+						LNX_Utils.PositionIsDistallyWithin
+						(
+							hit.Position, SpanBStartHit.Position, SpanBEndHit.Position
+						)
+					)
+					{
+						return true;
+					}
+				}
 				for (int i = 0; i < spanB.Length; i++)
 				{
 					if (_SurfaceB.GetEdge(spanB[i]).HitTouchesEdge(hit))
@@ -789,7 +847,7 @@ namespace LogansNavigationExtension
 		public bool HitIsOnEitherSpan_dbg(LNX_NavmeshHit hit, ref LNX_MethodDebugReport rprt )
 		{
 			rprt.StartMethod($"HitIsOnEitherSpan_dbg('{hit}')");
-			rprt.Log($"note, SurfaceA srface index: '{_SurfaceA.MySurfaceIndex}, Surfaceb: '{_SurfaceB.MySurfaceIndex}'");
+			rprt.Log($"note, SurfaceA srface index: '{_SurfaceA.MySurfaceIndex}, SurfaceB: '{_SurfaceB.MySurfaceIndex}'");
 
 			#region SHORT-CIRCUITING ===============================
 			if (hit.SurfaceIndex != _SurfaceA.MySurfaceIndex &&
@@ -809,27 +867,44 @@ namespace LogansNavigationExtension
 
 			if ( hit.SurfaceIndex == _SurfaceA.MySurfaceIndex )
 			{
-				rprt.Log($"hit surface index is same as surfaceA index. Inspecting SpanA...");
+				rprt.Log($"hit surface index is same as surfaceA index. Inspecting '{spanA.Length}' edges on SpanA...");
+
+				if ( spanA.Length == 1 ) //as I recently found out, this needs to be handled differently than when there are multiple edges in a span...
+				{
+					rprt.Log($"checking if hit position is distally withinb spanAstartHit and SpanAEndHit...");
+					if
+					(
+						LNX_Utils.PositionIsDistallyWithin
+						(
+							hit.Position, SpanAStartHit.Position, SpanAEndHit.Position
+						)
+					)
+					{
+						rprt.Log_And_End_Method($"decided hit was, indeed, distally within. Returning true...");
+						return true;
+					}
+				}
+
 				for (int i = 0; i < spanA.Length; i++ )
 				{
 					rprt.Log($"for{i} ('{spanA[i]}')=======================",
-						$"edge: '{_SurfaceA.GetEdge(spanA[i])}'...");
+						$"(using edge: '{_SurfaceA.GetEdge(spanA[i])}')...");
 					if ( _SurfaceA.GetEdge(spanA[i]).HitTouchesEdge(hit) )
 					{
 						rprt.Log($"hit touches this this edge. Investigating further...");
 						if ( i == 0 )
 						{
-							rprt.Log($"element is on the beginning of span, so position needs special inspection...");
-							LNX_Vertex nxtVrt = null;
+							rprt.Log($"element is on the beginning edge of span, so position needs special inspection...");
+							LNX_Vertex nxtVrtInSpan = null;
 
 							if
 							(
-								_SurfaceA.GetEdge(spanA[0]).StartPosition == _SurfaceA.GetEdge(spanA[1]).StartPosition ||
+								_SurfaceA.GetEdge(spanA[0]).StartPosition == _SurfaceA.GetEdge(spanA[1]).StartPosition || 
 								_SurfaceA.GetEdge(spanA[0]).EndPosition == _SurfaceA.GetEdge(spanA[1]).StartPosition
 							)
 							{
-								nxtVrt = _SurfaceA.GetVertexAtCoordinate(_SurfaceA.GetEdge(spanA[1]).StartVertCoordinate);
-								rprt.Log($"a) set nxtVrt to: '{nxtVrt}'...");
+								nxtVrtInSpan = _SurfaceA.GetVertexAtCoordinate(_SurfaceA.GetEdge(spanA[1]).StartVertCoordinate);
+								rprt.Log($"a) set nxtVrtInSpan to: '{nxtVrtInSpan}'...");
 							}
 							else if
 							(
@@ -837,8 +912,8 @@ namespace LogansNavigationExtension
 								_SurfaceA.GetEdge(spanA[0]).EndPosition == _SurfaceA.GetEdge(spanA[1]).EndPosition
 							)
 							{
-								nxtVrt = _SurfaceA.GetVertexAtCoordinate(_SurfaceA.GetEdge(spanA[1]).EndVertCoordinate);
-								rprt.Log($"b) set nxtVrt to: '{nxtVrt}'...");
+								nxtVrtInSpan = _SurfaceA.GetVertexAtCoordinate(_SurfaceA.GetEdge(spanA[1]).EndVertCoordinate);
+								rprt.Log($"b) set nxtVrtInSpan to: '{nxtVrtInSpan}'...");
 							}
 
 							rprt.Log($"checking if hit position is distally within spanAstartHit and next vert...");
@@ -846,7 +921,7 @@ namespace LogansNavigationExtension
 							(
 								LNX_Utils.PositionIsDistallyWithin
 								(
-									hit.Position, SpanAStartHit.Position, nxtVrt.V_Position
+									hit.Position, SpanAStartHit.Position, nxtVrtInSpan.V_Position
 								)
 							)
 							{
@@ -898,17 +973,33 @@ namespace LogansNavigationExtension
 			}
 			else if (hit.SurfaceIndex == _SurfaceB.MySurfaceIndex )
 			{
-				rprt.Log($"hit surface index is same as surfaceB index. Inspecting SpanB...");
+				rprt.Log($"hit surface index is same as surfaceB index. Inspecting '{spanB.Length}' edges on SpanB...");
+
+				if (spanB.Length == 1) //as I recently found out, this needs to be handled differently than when there are multiple edges in a span...
+				{
+					rprt.Log($"checking if hit position is distally within SpanBStartHit and SpanAEndHit...");
+					if
+					(
+						LNX_Utils.PositionIsDistallyWithin
+						(
+							hit.Position, SpanBStartHit.Position, SpanBEndHit.Position
+						)
+					)
+					{
+						rprt.Log_And_End_Method($"decided hit was, indeed, distally within. Returning true...");
+						return true;
+					}
+				}
 				for (int i = 0; i < spanB.Length; i++)
 				{
 					rprt.Log($"for{i}=======================",
-						$"edge: '{_SurfaceB.GetEdge(spanA[i])}'..."); 
+						$"(using edge: '{_SurfaceB.GetEdge(spanA[i])}')..."); 
 					if (_SurfaceB.GetEdge(spanB[i]).HitTouchesEdge(hit))
 					{
 						rprt.Log($"hit touches this this edge. Investigating further...");
 						if (i == 0)
 						{
-							rprt.Log($"element is on the beginning of span, so position needs special inspection...");
+							rprt.Log($"element is on the beginning edge of span, so position needs special inspection...");
 							LNX_Vertex nxtVrt = null;
 
 							if
@@ -986,154 +1077,58 @@ namespace LogansNavigationExtension
 				}
 			}
 
+			rprt.Log_And_End_Method($"finally returning false...");
 			return false;
 		}
 
-		public bool ProjectFromSurfaceAToSpanB(LNX_NavmeshHit projectionOrigin, Vector3 projectionDirection, 
+		public bool ProjectOntoSpanB(LNX_NavmeshHit projectionOrigin, Vector3 projectionDirection, 
 			out LNX_NavmeshHit projectedHit)
 		{
 			projectedHit = LNX_NavmeshHit.None;
 
-			#region SHORT-CIRCUITING =================================
-			if (projectionOrigin.SurfaceIndex != _SurfaceA.MySurfaceIndex)
-			{
-				return false;
-			}
-			#endregion
-
-			Vector3 origin = _SurfaceA.FlatVector(projectionOrigin.Position);
-			projectionDirection = _SurfaceA.FlatVector(projectionDirection).normalized;
-			Vector3 v_leg1 = _SurfaceA.FlatVector(SpanBStartHit.Position - origin).normalized;
-			Vector3 v_leg2 = _SurfaceA.FlatVector(SpanBEndHit.Position - origin).normalized;
-
-			#region SHORT-CIRCUITING =================================
-			if
-			(
-				!LNX_Utils.AmInVectorCone
-				(
-					projectionDirection, v_leg1, v_leg2, _SurfaceA.GetSurfaceProjectionVector(), true
-				)
-			)
-			{
-				return false;
-			}
-			#endregion
+			Vector3 origin = LNX_Utils.FlatVector(projectionOrigin.Position, projectionOrigin.SurfaceOrientation);
+			projectionDirection = LNX_Utils.FlatVector(projectionDirection, projectionOrigin.SurfaceOrientation).normalized;
 
 			for (int i = 0; i < spanB.Length; i++)
 			{
-				Vector3 intersectPos = Vector3.zero;
-
-				if (_SurfaceB.GetEdge(spanB[i]).FlatProject(origin, projectionDirection, _SurfaceA.SurfaceOrientation, out intersectPos))
+				if (_SurfaceB.GetEdge(spanB[i]).ProjectOntoEdge(projectionOrigin, projectionDirection, out projectedHit))
 				{
-					//Debug.DrawLine(intersectPos, intersectPos + (Vector3.up * 1f), Color.magenta, 2f);
-					Vector3 v_nxtPrjct = GetAtoBCardinalDirection(projectionDirection);
-					Vector3 nxtOrigin = _SurfaceB.FlatVector(intersectPos);
-					Vector3 nxtIntersectPos = Vector3.zero;
-
-					//if (!_SurfaceB.GetEdge(spanB[i]).FlatProject(nxtOrigin, v_nxtPrjct, out nxtIntersectPos, true))
-					if (!_SurfaceB.GetEdge(spanB[i]).FlatProject(nxtOrigin, v_nxtPrjct, out nxtIntersectPos, true))
-
-					{
-						Debug.LogError($"LNX ERROR! Something went wrong projecting onto spanA");
-						return false;
-					}
-					else
-					{
-						projectedHit = new LNX_NavmeshHit(
-							_SurfaceB.GetEdge(spanB[i]),
-							intersectPos + new Vector3(nxtIntersectPos.x * v_nxtPrjct.x, nxtIntersectPos.y * v_nxtPrjct.y, nxtIntersectPos.z * v_nxtPrjct.z), //todo: what do we do right here?
-							_SurfaceB.Triangles[spanB[i].TriangleIndex].V_PathingNormal
-						);
-						return true;
-					}
+					return true;
 				}
 			}
 
 			return false;
 		}
-		public bool ProjectFromSurfaceAToSpanB_dbg(LNX_NavmeshHit projectionOrigin, Vector3 projectionDirection,
+		public bool ProjectOntoSpanB_dbg(LNX_NavmeshHit projectionOrigin, Vector3 projectionDirection,
 	out LNX_NavmeshHit projectedHit, ref LNX_MethodDebugReport rprt )
 		{
-			rprt.StartMethod($"ProjectFromSurfaceAToSpanB_dbg(projectionOrigin: '{projectionOrigin}', " +
+			rprt.StartMethod($"ProjectOntoSpanB_dbg(projectionOrigin: '{projectionOrigin}', " +
 				$"projectionDirection: '{projectionDirection}')");
 
 			rprt.Log($"_SurfaceA orientation '{_SurfaceA.SurfaceOrientation}'",
 				$"_surfaceB orientation: '{_SurfaceB.SurfaceOrientation}'");
 			projectedHit = LNX_NavmeshHit.None;
 
-			#region SHORT-CIRCUITING =================================
-			if (projectionOrigin.SurfaceIndex != _SurfaceA.MySurfaceIndex)
-			{
-				rprt.Log_And_End_Method($"SS1: projectionOrigin.SurfaceIndex != _SurfaceA.MySurfaceIndex. Returning false...");
-				return false;
-			}
-			#endregion
-
-			Vector3 origin = _SurfaceA.FlatVector(projectionOrigin.Position);
-			projectionDirection = _SurfaceA.FlatVector(projectionDirection).normalized;
-			Vector3 v_leg1 = _SurfaceA.FlatVector(SpanBStartHit.Position - origin).normalized;
-			Vector3 v_leg2 = _SurfaceA.FlatVector(SpanBEndHit.Position - origin).normalized;
+			Vector3 origin = LNX_Utils.FlatVector(projectionOrigin.Position, projectionOrigin.SurfaceOrientation);
+			projectionDirection = LNX_Utils.FlatVector(projectionDirection, projectionOrigin.SurfaceOrientation).normalized;
 
 			rprt.Log($"Created values...",
 				$"origin: '{origin}'",
-				$"projectionDirection: '{projectionDirection}'",
-				$"v_leg1: '{v_leg1}', v_leg2: '{v_leg2}'");
-
-			#region SHORT-CIRCUITING =================================
-			if
-			(
-				!LNX_Utils.AmInVectorCone
-				(
-					projectionDirection, v_leg1, v_leg2, _SurfaceA.GetSurfaceProjectionVector(), true
-				)
-			)
-			{
-				rprt.Log_And_End_Method($"SS2: AmInVectorCone fail. Returning false...");
-
-				return false;
-			}
-			#endregion
+				$"projectionDirection: '{LNX_UnitTestUtilities.LongVectorString(projectionDirection)}'");
 
 			rprt.EmptyLine();
 			rprt.Log($"for-looping through spanB with '{spanB.Length}' values...");
-			for (int i = 0; i < spanB.Length; i++)
+			for ( int i = 0; i < spanB.Length; i++ )
 			{
 				rprt.Log($"for{i}======================================",
 					$"spanB[{i}]: '{spanB[i]}'...",
 					$"using edge: '{_SurfaceB.GetEdge(spanB[i])}, cachedSrfcOrient: '{_SurfaceB.GetEdge(spanB[i]).V_SurfaceProjectionDirection_cached}'...",
-					"now flat projecting against this edge flattened to surface A...");
+					$"now flat projecting direction: '{projectionDirection}' against this span edge flattened to surface A...");
 
-				Vector3 intersectPos = Vector3.zero;
-
-				if (_SurfaceB.GetEdge(spanB[i]).FlatProject(origin, projectionDirection, _SurfaceA.SurfaceOrientation, out intersectPos))
+				if ( _SurfaceB.GetEdge(spanB[i]).ProjectOntoEdge(projectionOrigin, projectionDirection, out projectedHit) )
 				{
-					rprt.Log($"FlatProject true. intersectPos: '{intersectPos}'...");
-					//Debug.DrawLine(intersectPos, intersectPos + (Vector3.up * 1f), Color.magenta, 2f);
-					Vector3 v_nxtPrjct = GetAtoBCardinalDirection(projectionDirection);
-					Vector3 nxtOrigin = _SurfaceB.FlatVector(intersectPos);
-					Vector3 nxtIntersectPos = Vector3.zero;
-
-					rprt.Log($"now projecting against this edge flattened to surfaceB...");
-
-					//if (!_SurfaceB.GetEdge(spanB[i]).FlatProject(nxtOrigin, v_nxtPrjct, out nxtIntersectPos, true))
-					if (!_SurfaceB.GetEdge(spanB[i]).FlatProject_dbg(nxtOrigin, v_nxtPrjct, out nxtIntersectPos, true, ref rprt))
-
-					{
-						Debug.LogError($"LNX ERROR! Something went wrong projecting onto spanA");
-						rprt.Log_And_End_Method($"LNX ERROR! Something went wrong projecting onto spanA");
-						return false;
-					}
-					else
-					{
-						rprt.Log($"Flat project succesful. got intersectpos: '{nxtIntersectPos}'...");
-						projectedHit = new LNX_NavmeshHit(
-							_SurfaceB.GetEdge(spanB[i]),
-							intersectPos + /*(nxtIntersectPos)*/new Vector3(nxtIntersectPos.x * v_nxtPrjct.x, nxtIntersectPos.y * v_nxtPrjct.y, nxtIntersectPos.z * v_nxtPrjct.z), //todo: what do we do right here?
-							_SurfaceB.Triangles[spanB[i].TriangleIndex].V_PathingNormal
-						);
-						rprt.Log($"Created projectedHit: '{projectedHit}'. Returning true...");
-						return true;
-					}
+					rprt.Log($"FlatProject succesful. got edgeHit: '{projectedHit}'...");
+					return true;
 				}
 				else
 				{
@@ -1145,147 +1140,54 @@ namespace LogansNavigationExtension
 			rprt.Log_And_End_Method($"finally, returning false. projectedHit: '{projectedHit}'...");
 			return false;
 		}
-		public bool ProjectFromSurfaceBToSpanA(LNX_NavmeshHit projectionOrigin, Vector3 projectionDirection, out LNX_NavmeshHit projectedHit )
+		public bool ProjectOntoSpanA(LNX_NavmeshHit projectionOrigin, Vector3 projectionDirection,
+			out LNX_NavmeshHit projectedHit)
 		{
 			projectedHit = LNX_NavmeshHit.None;
 
-			#region SHORT-CIRCUITING =================================
-			if (projectionOrigin.SurfaceIndex != _SurfaceB.MySurfaceIndex)
-			{
-				return false;
-			}
-			#endregion
-
-			Vector3 origin = _SurfaceB.FlatVector(projectionOrigin.Position);
-			projectionDirection = _SurfaceB.FlatVector(projectionDirection).normalized;
-			Vector3 v_leg1 = _SurfaceB.FlatVector(SpanAStartHit.Position - origin).normalized;
-			Vector3 v_leg2 = _SurfaceB.FlatVector(SpanAEndHit.Position - origin).normalized;
-
-			#region SHORT-CIRCUITING =================================
-			if
-			(
-				!LNX_Utils.AmInVectorCone
-				(
-					projectionDirection, v_leg1, v_leg2, _SurfaceB.GetSurfaceProjectionVector(), true
-				)
-			)
-			{
-				return false;
-			}
-			#endregion
+			Vector3 origin = LNX_Utils.FlatVector(projectionOrigin.Position, projectionOrigin.SurfaceOrientation);
+			projectionDirection = LNX_Utils.FlatVector(projectionDirection, projectionOrigin.SurfaceOrientation).normalized;
 
 			for (int i = 0; i < spanA.Length; i++)
 			{
-				Vector3 intersectPos = Vector3.zero;
-
-				if (_SurfaceA.GetEdge(spanA[i]).FlatProject(origin, projectionDirection, _SurfaceB.SurfaceOrientation, out intersectPos))
+				if (_SurfaceA.GetEdge(spanA[i]).ProjectOntoEdge(projectionOrigin, projectionDirection, out projectedHit))
 				{
-					Vector3 v_nxtPrjct = GetBtoACardinalDirection(projectionDirection);
-					Vector3 nxtOrigin = _SurfaceA.FlatVector(intersectPos);
-					Vector3 nxtIntersectPos = Vector3.zero;
-
-					if (!_SurfaceA.GetEdge(spanA[i]).FlatProject(nxtOrigin, v_nxtPrjct, out nxtIntersectPos, true))
-					{
-						Debug.LogError($"LNX ERROR! Something went wrong projecting onto spanA");
-						return false;
-					}
-					else
-					{
-						projectedHit = new LNX_NavmeshHit(
-							_SurfaceA.GetEdge(spanA[i]),
-							intersectPos + /*(nxtIntersectPos)*/new Vector3(nxtIntersectPos.x * v_nxtPrjct.x, nxtIntersectPos.y * v_nxtPrjct.y, nxtIntersectPos.z * v_nxtPrjct.z), //todo: what do we do right here?
-							_SurfaceA.Triangles[spanA[i].TriangleIndex].V_PathingNormal
-						);
-						return true;
-					}
+					return true;
 				}
 			}
 
 			return false;
 		}
-		public bool ProjectFromSurfaceBToSpanA_dbg(LNX_NavmeshHit projectionOrigin, Vector3 projectionDirection,
-			out LNX_NavmeshHit projectedHit, ref LNX_MethodDebugReport rprt)
+		public bool ProjectOntoSpanA_dbg(LNX_NavmeshHit projectionOrigin, Vector3 projectionDirection,
+	out LNX_NavmeshHit projectedHit, ref LNX_MethodDebugReport rprt)
 		{
-			rprt.StartMethod($"ProjectFromSurfaceAToSpanB_dbg(projectionOrigin: '{projectionOrigin}', " +
+			rprt.StartMethod($"ProjectOntoSpanA_dbg(projectionOrigin: '{projectionOrigin}', " +
 				$"projectionDirection: '{projectionDirection}')");
 
-			rprt.Log($"_SurfaceB orientation '{_SurfaceB.SurfaceOrientation}'",
-				$"_surfaceA orientation: '{_SurfaceA.SurfaceOrientation}'");
+			rprt.Log($"_SurfaceA orientation '{_SurfaceA.SurfaceOrientation}'",
+				$"_surfaceB orientation: '{_SurfaceB.SurfaceOrientation}'");
 			projectedHit = LNX_NavmeshHit.None;
 
-			#region SHORT-CIRCUITING =================================
-			if (projectionOrigin.SurfaceIndex != _SurfaceB.MySurfaceIndex)
-			{
-				rprt.Log_And_End_Method($"SS1: projectionOrigin.SurfaceIndex != _SurfaceB.MySurfaceIndex. Returning false...");
-				return false;
-			}
-			#endregion
-
-			Vector3 origin = _SurfaceB.FlatVector(projectionOrigin.Position);
-			projectionDirection = _SurfaceB.FlatVector(projectionDirection).normalized;
-			Vector3 v_leg1 = _SurfaceB.FlatVector(SpanAStartHit.Position - origin).normalized;
-			Vector3 v_leg2 = _SurfaceB.FlatVector(SpanAEndHit.Position - origin).normalized;
+			Vector3 origin = LNX_Utils.FlatVector(projectionOrigin.Position, projectionOrigin.SurfaceOrientation);
+			projectionDirection = LNX_Utils.FlatVector(projectionDirection, projectionOrigin.SurfaceOrientation).normalized;
 
 			rprt.Log($"Created values...",
 				$"origin: '{origin}'",
-				$"projectionDirection: '{projectionDirection}'",
-				$"v_leg1: '{v_leg1}', v_leg2: '{v_leg2}'");
-
-			#region SHORT-CIRCUITING =================================
-			if
-			(
-				!LNX_Utils.AmInVectorCone
-				(
-					projectionDirection, v_leg1, v_leg2, _SurfaceB.GetSurfaceProjectionVector(), true
-				)
-			)
-			{
-				rprt.Log_And_End_Method($"SS2: AmInVectorCone fail. Returning false...");
-
-				return false;
-			}
-			#endregion
+				$"projectionDirection: '{LNX_UnitTestUtilities.LongVectorString(projectionDirection)}'");
 
 			rprt.EmptyLine();
-			rprt.Log($"for-looping through spanA with '{spanA.Length}' values...");
+			rprt.Log($"for-looping through spanB with '{spanB.Length}' values...");
 			for (int i = 0; i < spanA.Length; i++)
 			{
 				rprt.Log($"for{i}======================================",
-					$"spanA[{i}]: '{spanA[i]}'...",
-					$"using edge: '{_SurfaceA.GetEdge(spanA[i])}, cachedSrfcOrient: '{_SurfaceA.GetEdge(spanA[i]).V_SurfaceProjectionDirection_cached}'...",
-					"now flat projecting against this edge flattened to surface B...");
+					$"spspanAanB[{i}]: '{spanA[i]}'...",
+					$"using edge: '{_SurfaceB.GetEdge(spanB[i])}, cachedSrfcOrient: '{_SurfaceB.GetEdge(spanB[i]).V_SurfaceProjectionDirection_cached}'...",
+					$"now flat projecting direction: '{projectionDirection}' against this span edge flattened to origin surface...");
 
-				Vector3 intersectPos = Vector3.zero;
-
-				if (_SurfaceA.GetEdge(spanA[i]).FlatProject(origin, projectionDirection, _SurfaceB.SurfaceOrientation, out intersectPos))
+				if (_SurfaceA.GetEdge(spanA[i]).ProjectOntoEdge(projectionOrigin, projectionDirection, out projectedHit))
 				{
-					rprt.Log($"FlatProject true. intersectPos: '{intersectPos}'...");
-					//Debug.DrawLine(intersectPos, intersectPos + (Vector3.up * 1f), Color.magenta, 2f);
-					Vector3 v_nxtPrjct = GetBtoACardinalDirection(projectionDirection);
-					Vector3 nxtOrigin = _SurfaceA.FlatVector(intersectPos);
-					Vector3 nxtIntersectPos = Vector3.zero;
-
-					rprt.Log($"now projecting against this edge flattened to surfaceA...");
-
-					//if (!_SurfaceB.GetEdge(spanB[i]).FlatProject(nxtOrigin, v_nxtPrjct, out nxtIntersectPos, true))
-					if (!_SurfaceA.GetEdge(spanA[i]).FlatProject_dbg(nxtOrigin, v_nxtPrjct, out nxtIntersectPos, true, ref rprt))
-
-					{
-						Debug.LogError($"LNX ERROR! Something went wrong projecting onto spanA");
-						rprt.Log_And_End_Method($"LNX ERROR! Something went wrong projecting onto spanB");
-						return false;
-					}
-					else
-					{
-						rprt.Log($"Flat project succesful. got intersectpos: '{nxtIntersectPos}'...");
-						projectedHit = new LNX_NavmeshHit(
-							_SurfaceA.GetEdge(spanA[i]),
-							intersectPos + /*(nxtIntersectPos)*/new Vector3(nxtIntersectPos.x * v_nxtPrjct.x, nxtIntersectPos.y * v_nxtPrjct.y, nxtIntersectPos.z * v_nxtPrjct.z), //todo: what do we do right here?
-							_SurfaceA.Triangles[spanA[i].TriangleIndex].V_PathingNormal
-						);
-						rprt.Log($"Created projectedHit: '{projectedHit}'. Returning true...");
-						return true;
-					}
+					rprt.Log($"FlatProject succesful. got edgeHit: '{projectedHit}'...");
+					return true;
 				}
 				else
 				{
@@ -1297,169 +1199,217 @@ namespace LogansNavigationExtension
 			rprt.Log_And_End_Method($"finally, returning false. projectedHit: '{projectedHit}'...");
 			return false;
 		}
-		private Vector3 GetAtoBCardinalDirection(Vector3 originalProjection)
+
+		public bool ProjectionClearsSpans( LNX_NavmeshHit startHit, Vector3 projectionDirection, bool checkShortCircuits = true )
 		{
-			if (_SurfaceA.SurfaceOrientation == _SurfaceB.SurfaceOrientation)
+			#region SHORT-CIRCUITING ================================
+			if ( checkShortCircuits && projectionDirection == Vector3.zero )
 			{
-				return originalProjection;
+				Debug.LogError($"LNX ERROR! ProjectionClearsSpan() was passed a projection direction vector ({projectionDirection}) " +
+					$"that was equal to Vector3.zero. Cannot proceed. Returning false early...");
+				return false;
+			}
+			#endregion
+
+			if ( startHit.SurfaceIndex == _SurfaceA.MySurfaceIndex )
+			{
+				Vector3 origin = _SurfaceA.FlatVector( startHit.Position );
+				projectionDirection = _SurfaceA.FlatVector( projectionDirection ).normalized;
+
+				if
+				(
+					!LNX_Utils.AmInVectorCone
+					(
+						projectionDirection,
+						_SurfaceA.FlatVector(SpanAStartHit.Position - origin).normalized,
+						_SurfaceA.FlatVector(SpanAEndHit.Position - origin).normalized, 
+						_SurfaceA.GetSurfaceProjectionVector(), true
+					)
+				)
+				{
+					return false;
+				}
+
+				if
+				(
+					!LNX_Utils.AmInVectorCone
+					(
+						projectionDirection,
+						_SurfaceA.FlatVector(SpanBStartHit.Position - origin).normalized,
+						_SurfaceA.FlatVector(SpanBEndHit.Position - origin).normalized, 
+						_SurfaceA.GetSurfaceProjectionVector(), true
+					)
+				)
+				{
+					return false;
+				}
+			}
+			else if (startHit.SurfaceIndex == _SurfaceB.MySurfaceIndex)
+			{
+				Vector3 origin = _SurfaceB.FlatVector(startHit.Position);
+				projectionDirection = _SurfaceB.FlatVector(projectionDirection).normalized;
+
+				if
+				(
+					!LNX_Utils.AmInVectorCone
+					(
+						projectionDirection,
+						_SurfaceB.FlatVector(SpanAStartHit.Position - origin).normalized,
+						_SurfaceB.FlatVector(SpanAEndHit.Position - origin).normalized,
+						_SurfaceB.GetSurfaceProjectionVector(), true
+					)
+				)
+				{
+					return false;
+				}
+
+				if
+				(
+					!LNX_Utils.AmInVectorCone
+					(
+						projectionDirection,
+						_SurfaceB.FlatVector(SpanBStartHit.Position - origin).normalized,
+						_SurfaceB.FlatVector(SpanBEndHit.Position - origin).normalized,
+						_SurfaceB.GetSurfaceProjectionVector(), true
+					)
+				)
+				{
+					return false;
+				}
+			}
+			else
+			{
+				Debug.LogError($"LNX ERROR! startHit: '{startHit}' was on a surface not belonging to this link. Returning ");
+				return false;
 			}
 
-			if (_SurfaceA.SurfaceOrientation == LNX_Direction.PositiveY)
-			{
-				if ( SpanBStartHit.Position.y > SpanAStartHit.Position.y )
-				{
-					return Vector3.up;
-				}
-				else
-				{
-					return Vector3.down;
-				}
-			}
-			else if (_SurfaceA.SurfaceOrientation == LNX_Direction.NegativeY)
-			{
-				if ( SpanBStartHit.Position.y < SpanAStartHit.Position.y )
-				{
-					return Vector3.down;
-				}
-				else
-				{
-					return Vector3.up;
-				}
-			}
-
-			if (_SurfaceA.SurfaceOrientation == LNX_Direction.PositiveX)
-			{
-				if ( SpanBStartHit.Position.x > SpanAStartHit.Position.x)
-				{
-					return Vector3.right;
-				}
-				else
-				{
-					return Vector3.left;
-				}
-			}
-			if (_SurfaceA.SurfaceOrientation == LNX_Direction.NegativeX)
-			{
-				if ( SpanBStartHit.Position.x < SpanAStartHit.Position.x )
-				{
-					return Vector3.left;
-				}
-				else
-				{
-					return Vector3.right;
-				}
-			}
-
-			if (_SurfaceA.SurfaceOrientation == LNX_Direction.PositiveZ)
-			{
-				if ( SpanBStartHit.Position.z > SpanAStartHit.Position.z )
-				{
-					return Vector3.forward;
-				}
-				else
-				{
-					return Vector3.back;
-				}
-			}
-			if ( _SurfaceA.SurfaceOrientation == LNX_Direction.NegativeZ )
-			{
-				if ( SpanBStartHit.Position.z < SpanAStartHit.Position.z)
-				{
-					return Vector3.back;
-				}
-				else
-				{
-					return Vector3.forward;
-				}
-			}
-
-			Debug.LogError($"error. Shouldn't have gotten here");
-			return Vector3.zero;
+			return true;
 		}
-		private Vector3 GetBtoACardinalDirection(Vector3 originalProjection)
+		public bool ProjectionClearsSpans_dbg(LNX_NavmeshHit startHit, Vector3 projectionDirection, ref LNX_MethodDebugReport rprt, bool checkShortCircuits = true)
 		{
-			if ( _SurfaceB.SurfaceOrientation == _SurfaceA.SurfaceOrientation )
+			rprt.StartMethod($"ProjectionClearsSpans_dbg(startHit: '{startHit}', projectionDirection: '{projectionDirection}')");
+
+			#region SHORT-CIRCUITING ================================
+			if (checkShortCircuits && projectionDirection == Vector3.zero)
 			{
-				return originalProjection;
+				Debug.LogError($"LNX ERROR! ProjectionClearsSpan() was passed a projection direction vector ({projectionDirection}) " +
+					$"that was equal to Vector3.zero. Cannot proceed. Returning false early...");
+				rprt.Log($"LNX ERROR! ProjectionClearsSpan() was passed a projection direction vector ({projectionDirection}) " +
+					$"that was equal to Vector3.zero. Cannot proceed. Returning false early...");
+				return false;
+			}
+			#endregion
+
+			if (startHit.SurfaceIndex == _SurfaceA.MySurfaceIndex)
+			{
+				rprt.Log($"startHit is on _surfaceA...");
+				Vector3 origin = _SurfaceA.FlatVector(startHit.Position);
+				projectionDirection = _SurfaceA.FlatVector(projectionDirection).normalized;
+
+				rprt.Log($"running AmInVectorCone test against SpanAStartHit: '{SpanAStartHit}', and SpanAEndHit: '{SpanAEndHit}'...");
+				if
+				(
+					!LNX_Utils.AmInVectorCone
+					(
+						projectionDirection,
+						_SurfaceA.FlatVector(SpanAStartHit.Position - origin).normalized,
+						_SurfaceA.FlatVector(SpanAEndHit.Position - origin).normalized,
+						_SurfaceA.GetSurfaceProjectionVector(), true
+					)
+				)
+				{
+					rprt.Log_And_End_Method($"failed first AmInVectorCone() check. Returning false...");
+					return false;
+				}
+				else
+				{
+					rprt.Log($"passed first AmInVectorCone() check...");
+				}
+
+				rprt.Log($"running AmInVectorCone test against SpanBStartHit: '{SpanBStartHit}', and SpanBEndHit: '{SpanBEndHit}'...");
+				if
+				(
+					!LNX_Utils.AmInVectorCone_dbg
+					(
+						projectionDirection,
+						_SurfaceA.FlatVector(SpanBStartHit.Position - origin).normalized,
+						_SurfaceA.FlatVector(SpanBEndHit.Position - origin).normalized,
+						_SurfaceA.GetSurfaceProjectionVector(), 
+						ref rprt, true
+					)
+				)
+				{
+					rprt.Log_And_End_Method($"failed second AmInVectorCone() check. Returning false...");
+					return false;
+				}
+				else
+				{
+					rprt.Log($"passed second AmInVectorCone() check...");
+				}
+			}
+			else if (startHit.SurfaceIndex == _SurfaceB.MySurfaceIndex)
+			{
+				rprt.Log($"startHit is on _surfaceB...");
+
+				Vector3 origin = _SurfaceB.FlatVector(startHit.Position);
+				projectionDirection = _SurfaceB.FlatVector(projectionDirection).normalized;
+
+				rprt.Log($"running AmInVectorCone test against SpanAStartHit: '{SpanAStartHit}', and SpanAEndHit: '{SpanAEndHit}'...");
+				if
+				(
+					!LNX_Utils.AmInVectorCone
+					(
+						projectionDirection,
+						_SurfaceB.FlatVector(SpanAStartHit.Position - origin).normalized,
+						_SurfaceB.FlatVector(SpanAEndHit.Position - origin).normalized,
+						_SurfaceB.GetSurfaceProjectionVector(), true
+					)
+				)
+				{
+					rprt.Log_And_End_Method($"failed first AmInVectorCone() check. Returning false...");
+					return false;
+				}
+				else
+				{
+					rprt.Log($"passed first AmInVectorCone() check...");
+				}
+
+				rprt.Log($"running AmInVectorCone test against SpanBStartHit: '{SpanBStartHit}', and SpanBEndHit: '{SpanBEndHit}'...");
+				if
+				(
+					!LNX_Utils.AmInVectorCone
+					(
+						projectionDirection,
+						_SurfaceB.FlatVector(SpanBStartHit.Position - origin).normalized,
+						_SurfaceB.FlatVector(SpanBEndHit.Position - origin).normalized,
+						_SurfaceB.GetSurfaceProjectionVector(), true
+					)
+				)
+				{
+					rprt.Log_And_End_Method($"failed second AmInVectorCone() check. Returning false...");
+					return false;
+				}
+				else
+				{
+					rprt.Log($"passed second AmInVectorCone() check...");
+				}
+			}
+			else
+			{
+				Debug.LogError($"LNX ERROR! startHit: '{startHit}' was on a surface not belonging to this link. Returning ");
+				rprt.Log_And_End_Method($"LNX ERROR! startHit: '{startHit}' was on a surface not belonging to this link. Returning ");
+
+				return false;
 			}
 
-			if ( _SurfaceB.SurfaceOrientation == LNX_Direction.PositiveY )
-			{
-				if ( SpanAStartHit.Position.y > SpanBStartHit.Position.y )
-				{
-					return Vector3.up;
-				}
-				else
-				{
-					return Vector3.down;
-				}
-			}
-			else if ( _SurfaceB.SurfaceOrientation == LNX_Direction.NegativeY )
-			{
-				if ( SpanAStartHit.Position.y < SpanBStartHit.Position.y)
-				{
-					return Vector3.down;
-				}
-				else
-				{
-					return Vector3.up;
-				}
-			}
-			
-			if ( _SurfaceB.SurfaceOrientation == LNX_Direction.PositiveX )
-			{
-				if ( SpanAStartHit.Position.x > SpanBStartHit.Position.x )
-				{
-					return Vector3.right;
-				}
-				else
-				{
-					return Vector3.left;
-				}
-			}
-			if ( _SurfaceB.SurfaceOrientation == LNX_Direction.NegativeX )
-			{
-				if ( SpanAStartHit.Position.x < SpanBStartHit.Position.x )
-				{
-					return Vector3.left;
-				}
-				else
-				{
-					return Vector3.right;
-				}
-			}
-
-			if ( _SurfaceB.SurfaceOrientation == LNX_Direction.PositiveZ )
-			{
-				if ( SpanAStartHit.Position.z > SpanBStartHit.Position.z)
-				{
-					return Vector3.forward;
-				}
-				else
-				{
-					return Vector3.back;
-				}
-			}
-			if (_SurfaceB.SurfaceOrientation == LNX_Direction.NegativeZ )
-			{
-				if ( SpanAStartHit.Position.z < SpanBStartHit.Position.z )
-				{
-					return Vector3.back;
-				}
-				else
-				{
-					return Vector3.forward;
-				}
-			}
-
-			Debug.LogError($"error. Shouldn't have gotten here");
-			return Vector3.zero;
+			rprt.Log_And_End_Method($"finally returning true...");
+			return true;
 		}
-
 		[ContextMenu("z call GenerateDbgText")]
 		public void GenerateDbgText()
 		{
-			dbg_class = $"A: '{_SurfaceA}' --> B: '{_SurfaceB}'\n" +
+			dbg_class = $"myLinkIndex: '{myLinkIndex}'\n" +
+				$"A: '{_SurfaceA}' --> B: '{_SurfaceB}'\n" +
 			$"SpanA ({spanA.Length}) ==================================\n";
 			for (int i = 0; i < spanA.Length; i++)
 			{

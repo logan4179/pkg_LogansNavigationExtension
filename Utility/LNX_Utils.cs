@@ -144,6 +144,154 @@ namespace LogansNavigationExtension
 			return 0;
 		} //todo: dws?
 
+		#region LNX UTILITY OPERATIONS =====================================================
+		public static Quaternion GetRotationBetweenDirections( LNX_Direction dirA, LNX_Direction dirB )
+		{
+			if ( dirA == LNX_Direction.PositiveX )
+			{
+				if ( dirB == LNX_Direction.NegativeX )
+				{
+					return Quaternion.FromToRotation( Vector3.right, Vector3.left );
+				}
+				else if ( dirB == LNX_Direction.PositiveY )
+				{
+					return Quaternion.FromToRotation( Vector3.right, Vector3.up );
+				}
+				else if (dirB == LNX_Direction.NegativeY)
+				{
+					return Quaternion.FromToRotation( Vector3.right, Vector3.down );
+				}
+				else if ( dirB == LNX_Direction.PositiveZ )
+				{
+					return Quaternion.FromToRotation(Vector3.right, Vector3.forward );
+				}
+				else if ( dirB == LNX_Direction.NegativeZ )
+				{
+					return Quaternion.FromToRotation( Vector3.right, Vector3.back );
+				}
+			}
+			else if ( dirA == LNX_Direction.NegativeX )
+			{
+				if (dirB == LNX_Direction.PositiveX)
+				{
+					return Quaternion.FromToRotation(Vector3.left, Vector3.right);
+				}
+				else if (dirB == LNX_Direction.PositiveY)
+				{
+					return Quaternion.FromToRotation(Vector3.left, Vector3.up);
+				}
+				else if (dirB == LNX_Direction.NegativeY)
+				{
+					return Quaternion.FromToRotation(Vector3.left, Vector3.down);
+				}
+				else if (dirB == LNX_Direction.PositiveZ)
+				{
+					return Quaternion.FromToRotation(Vector3.left, Vector3.forward);
+				}
+				else if (dirB == LNX_Direction.NegativeZ)
+				{
+					return Quaternion.FromToRotation(Vector3.left, Vector3.back);
+				}
+			}
+			else if (dirA == LNX_Direction.PositiveY )
+			{
+				if ( dirB == LNX_Direction.PositiveX )
+				{
+					return Quaternion.FromToRotation(Vector3.up, Vector3.right);
+				}
+				if (dirB == LNX_Direction.NegativeX)
+				{
+					return Quaternion.FromToRotation(Vector3.up, Vector3.left);
+				}
+				else if (dirB == LNX_Direction.NegativeY)
+				{
+					return Quaternion.FromToRotation(Vector3.up, Vector3.down);
+				}
+				else if (dirB == LNX_Direction.PositiveZ)
+				{
+					return Quaternion.FromToRotation(Vector3.up, Vector3.forward);
+				}
+				else if (dirB == LNX_Direction.NegativeZ)
+				{
+					return Quaternion.FromToRotation(Vector3.up, Vector3.back);
+				}
+			}
+			else if ( dirA == LNX_Direction.NegativeY )
+			{
+				if (dirB == LNX_Direction.PositiveX)
+				{
+					return Quaternion.FromToRotation(Vector3.down, Vector3.right);
+				}
+				if (dirB == LNX_Direction.NegativeX)
+				{
+					return Quaternion.FromToRotation(Vector3.down, Vector3.left);
+				}
+				else if (dirB == LNX_Direction.PositiveY)
+				{
+					return Quaternion.FromToRotation(Vector3.down, Vector3.up);
+				}
+				else if (dirB == LNX_Direction.PositiveZ)
+				{
+					return Quaternion.FromToRotation(Vector3.down, Vector3.forward);
+				}
+				else if (dirB == LNX_Direction.NegativeZ)
+				{
+					return Quaternion.FromToRotation(Vector3.down, Vector3.back);
+				}
+			}
+			else if ( dirA == LNX_Direction.PositiveZ )
+			{
+				if (dirB == LNX_Direction.PositiveX)
+				{
+					return Quaternion.FromToRotation(Vector3.forward, Vector3.right);
+				}
+				if (dirB == LNX_Direction.NegativeX)
+				{
+					return Quaternion.FromToRotation(Vector3.forward, Vector3.left);
+				}
+				else if ( dirB == LNX_Direction.PositiveY )
+				{
+					return Quaternion.FromToRotation(Vector3.forward, Vector3.up );
+				}
+				else if ( dirB == LNX_Direction.NegativeY )
+				{
+					return Quaternion.FromToRotation( Vector3.forward, Vector3.down );
+				}
+				else if (dirB == LNX_Direction.NegativeZ)
+				{
+					return Quaternion.FromToRotation(Vector3.forward, Vector3.back);
+				}
+			}
+			else if ( dirA == LNX_Direction.NegativeZ )
+			{
+				if (dirB == LNX_Direction.PositiveX)
+				{
+					return Quaternion.FromToRotation(Vector3.back, Vector3.right);
+				}
+				if (dirB == LNX_Direction.NegativeX)
+				{
+					return Quaternion.FromToRotation(Vector3.back, Vector3.left);
+				}
+				else if (dirB == LNX_Direction.PositiveY)
+				{
+					return Quaternion.FromToRotation(Vector3.back, Vector3.up);
+				}
+				else if (dirB == LNX_Direction.NegativeY)
+				{
+					return Quaternion.FromToRotation(Vector3.back, Vector3.down);
+				}
+				else if (dirB == LNX_Direction.PositiveZ)
+				{
+					return Quaternion.FromToRotation(Vector3.back, Vector3.forward);
+				}
+			}
+
+			Debug.LogWarning($"LNX WARNING! GetRotationBetweenDirections() was passed two directions: '{dirA}', and '{dirB}' " +
+				$"that apparently weren't covered by method as a possible combination. Returning default Quaternion.identity...");
+			return Quaternion.identity;
+		}
+		#endregion
+
 		#region MATH OPERATIONS --------------------------------------
 		/// <summary>
 		/// Solves for lenX
@@ -384,7 +532,7 @@ namespace LogansNavigationExtension
 				return new LNX_NavmeshHit
 				( 
 					new Vector3(hitToFlatten.Position.x, hitWithFlattenBase.Position.y, hitToFlatten.Position.z),
-					hitToFlatten.Normal, hitToFlatten.SurfaceIndex, hitToFlatten.TriangleIndex, 
+					hitToFlatten.PathingNormal, hitToFlatten.SurfaceOrientation, hitToFlatten.SurfaceIndex, hitToFlatten.TriangleIndex, 
 					hitToFlatten.VertIndex, hitToFlatten.EdgeIndex, hitToFlatten.LinkIndex
 				);
 			}
@@ -393,7 +541,7 @@ namespace LogansNavigationExtension
 				return new LNX_NavmeshHit
 				(
 					new Vector3(hitWithFlattenBase.Position.x, hitToFlatten.Position.y, hitToFlatten.Position.z),
-					hitToFlatten.Normal, hitToFlatten.SurfaceIndex, hitToFlatten.TriangleIndex, 
+					hitToFlatten.PathingNormal, hitToFlatten.SurfaceOrientation, hitToFlatten.SurfaceIndex, hitToFlatten.TriangleIndex, 
 					hitToFlatten.VertIndex, hitToFlatten.EdgeIndex, hitToFlatten.LinkIndex
 				);
 			}
@@ -402,7 +550,7 @@ namespace LogansNavigationExtension
 				return new LNX_NavmeshHit
 				(
 					new Vector3(hitToFlatten.Position.x, hitToFlatten.Position.y, hitWithFlattenBase.Position.z),
-					hitToFlatten.Normal, hitToFlatten.SurfaceIndex, hitToFlatten.TriangleIndex, 
+					hitToFlatten.PathingNormal, hitToFlatten.SurfaceOrientation, hitToFlatten.SurfaceIndex, hitToFlatten.TriangleIndex, 
 					hitToFlatten.VertIndex, hitToFlatten.EdgeIndex, hitToFlatten.LinkIndex
 				);
 			}
@@ -468,7 +616,121 @@ namespace LogansNavigationExtension
 
 			if
 			(
+				Mathf.Sign(ang_crnr) != Mathf.Sign(ang_legAToPos) && 
+				Mathf.Sign(ang_crnr) == Mathf.Sign(ang_legBToPos)
+			)
+			{
+				return true;
+			}
+
+			return false;
+		}
+		public static bool AmInVectorCone_dbg(Vector3 vToPos, Vector3 vLegA, Vector3 vLegB, Vector3 angleAxis, 
+			ref LNX_MethodDebugReport rprt, bool includeOnPerim = false)
+		{
+			rprt.StartMethod($"AmInVectorCone_dbg(vToPos: '{vToPos}', vLegA: '{vLegA}', vLegB: '{vLegB}', angleAxis: '{angleAxis}')");
+			vToPos = Vector3.Normalize(vToPos);
+
+			rprt.Log($"vToPos normalized to: '{vToPos}'...");
+
+			#region SHORT-CIRCUITING ==========================================
+			if (vToPos == vLegA || vToPos == vLegB)
+			{
+				rprt.Log($"(vToPos == vLegA || vToPos == vLegB) short-circuit block entered...");
+				if (includeOnPerim)
+				{
+					rprt.Log_And_End_Method($"includeOnPerim TRUE. Returning true...");
+					return true;
+				}
+				else
+				{
+					rprt.Log_And_End_Method($"includeOnPerim FALSE. Returning false...");
+					return false;
+				}
+			}
+
+			if (vLegA == -vLegB)
+			{
+				rprt.Log_And_End_Method($"vLegA == -vLegB. Returning true...");
+				return true; //because the "sweep cone" in this case would be a full 180 degrees, and it wouldn't matter which side.
+							 //todo: Maybe I should actually log a warning here?
+			}
+
+			if (vLegA == vLegB)
+			{
+				rprt.Log_And_End_Method($"vLegA == vLegB. Returning false...");
+
+				return false;
+			}
+			#endregion
+
+			float ang_crnr = Vector3.SignedAngle(vLegA, vLegB, angleAxis);
+			//float ang_crnr = Vector3.Angle(vLegA, vLegB);
+
+			float ang_legAToPos = Vector3.SignedAngle(vToPos, vLegA, angleAxis);
+			float ang_legBToPos = Vector3.SignedAngle(vToPos, vLegB, angleAxis);
+
+			rprt.Log($"using---",
+				$"ang_crnr: '{ang_crnr}'",
+				$"ang_legAToPos: '{ang_legAToPos}'",
+				$"ang_legBToPos: '{ang_legBToPos}'");
+
+			rprt.Log($"checking Sign of angles...");
+			if
+			(
 				Mathf.Sign(ang_crnr) != Mathf.Sign(ang_legAToPos) && //huh? - 10/6/2026 - Note: I think this assumes that vlegA will always point to the left of vToPos and vLegB will always point to the right
+				Mathf.Sign(ang_crnr) == Mathf.Sign(ang_legBToPos)
+			)
+			{
+				rprt.Log_And_End_Method($"sign check true. Returning true...");
+				return true;
+			}
+
+			rprt.Log_And_End_Method($"sign check false. Returning false...");
+
+			return false;
+		}
+		public static bool AmInVectorCone(Vector3 vToPos, Vector3 vLegA, Vector3 vLegB, LNX_Direction surfaceOrientation, 
+			bool includeOnPerim = false)
+		{
+			vToPos = Vector3.Normalize(vToPos);
+
+			#region SHORT-CIRCUITING ==========================================
+			if (vToPos == vLegA || vToPos == vLegB)
+			{
+				if (includeOnPerim)
+				{
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			}
+
+			if (vLegA == -vLegB)
+			{
+				return true; //because the "sweep cone" in this case would be a full 180 degrees, and it wouldn't matter which side.
+							 //todo: Maybe I should actually log a warning here?
+			}
+
+			if (vLegA == vLegB)
+			{
+				return false;
+			}
+			#endregion
+
+			Vector3 angleAxis = LNX_UtilityObjects.DirectionToVector(surfaceOrientation);
+
+			float ang_crnr = Vector3.SignedAngle(vLegA, vLegB, angleAxis);
+			//float ang_crnr = Vector3.Angle(vLegA, vLegB);
+
+			float ang_legAToPos = Vector3.SignedAngle(vToPos, vLegA, angleAxis);
+			float ang_legBToPos = Vector3.SignedAngle(vToPos, vLegB, angleAxis);
+
+			if
+			(
+				Mathf.Sign(ang_crnr) != Mathf.Sign(ang_legAToPos) &&
 				Mathf.Sign(ang_crnr) == Mathf.Sign(ang_legBToPos)
 			)
 			{
@@ -909,19 +1171,19 @@ namespace LogansNavigationExtension
 			dbgString = $"GetWidestEdgeFromPerspective(vprsp: '{vPerspective}', tri: '{triangle}')...\n";
 
 			float ang_perspToE0 = Vector3.Angle(
-				triangle.Verts[triangle.Edges[0].StartVertIndex].V_flattenedPosition - FlatVector(vPerspective, triangle.V_NavmeshProjectionDirection_cached),
-				triangle.Verts[triangle.Edges[0].EndVertIndex].V_flattenedPosition - FlatVector(vPerspective, triangle.V_NavmeshProjectionDirection_cached)
+				triangle.Verts[triangle.Edges[0].StartVertIndex].V_flattenedPosition - FlatVector(vPerspective, triangle.V_SurfaceOrientation_cached),
+				triangle.Verts[triangle.Edges[0].EndVertIndex].V_flattenedPosition - FlatVector(vPerspective, triangle.V_SurfaceOrientation_cached)
 			);
 			float runningWidestAngle = ang_perspToE0;
 			int runningWidestEdge = 0;
 
 			float ang_perspToE1 = Vector3.Angle(
-				triangle.Verts[triangle.Edges[1].StartVertIndex].V_flattenedPosition - FlatVector(vPerspective, triangle.V_NavmeshProjectionDirection_cached),
-				triangle.Verts[triangle.Edges[1].EndVertIndex].V_flattenedPosition - FlatVector(vPerspective, triangle.V_NavmeshProjectionDirection_cached)
+				triangle.Verts[triangle.Edges[1].StartVertIndex].V_flattenedPosition - FlatVector(vPerspective, triangle.V_SurfaceOrientation_cached),
+				triangle.Verts[triangle.Edges[1].EndVertIndex].V_flattenedPosition - FlatVector(vPerspective, triangle.V_SurfaceOrientation_cached)
 			);
 			float ang_perspToE2 = Vector3.Angle(
-				triangle.Verts[triangle.Edges[2].StartVertIndex].V_flattenedPosition - FlatVector(vPerspective, triangle.V_NavmeshProjectionDirection_cached),
-				triangle.Verts[triangle.Edges[2].EndVertIndex].V_flattenedPosition - FlatVector(vPerspective, triangle.V_NavmeshProjectionDirection_cached)
+				triangle.Verts[triangle.Edges[2].StartVertIndex].V_flattenedPosition - FlatVector(vPerspective, triangle.V_SurfaceOrientation_cached),
+				triangle.Verts[triangle.Edges[2].EndVertIndex].V_flattenedPosition - FlatVector(vPerspective, triangle.V_SurfaceOrientation_cached)
 			);
 
 			dbgString += $"angle from persp to edge0: '{ang_perspToE0}'\n";

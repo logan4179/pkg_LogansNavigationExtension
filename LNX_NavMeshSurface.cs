@@ -1453,7 +1453,9 @@ namespace LogansNavigationExtension
 					else
 					{
 						startHit = new LNX_NavmeshHit(
-							startHit.Position, GetSurfaceProjectionVector(),
+							startHit.Position, 
+							GetSurfaceProjectionVector(),
+							GetSurfaceProjectionVector(),
 							sweepCoord.SurfaceIndex,
 							sweepCoord.TriangleIndex,
 							sweepCoord.ComponentIndex,
@@ -1637,7 +1639,8 @@ namespace LogansNavigationExtension
 					else
 					{
 						startHit = new LNX_NavmeshHit(
-							startHit.Position, GetSurfaceProjectionVector(),
+							startHit.Position, 
+							GetSurfaceProjectionVector(), GetSurfaceProjectionVector(),
 							sweepCoord.SurfaceIndex,
 							sweepCoord.TriangleIndex,
 							sweepCoord.ComponentIndex,
@@ -1794,7 +1797,8 @@ namespace LogansNavigationExtension
 				else if (sweepCoord.TriangleIndex != startHit.TriangleIndex || sweepCoord.ComponentIndex != startHit.VertIndex)
 				{
 					startHit = new LNX_NavmeshHit(
-						startHit.Position, GetSurfaceProjectionVector(),
+						startHit.Position, 
+						GetSurfaceProjectionVector(), GetSurfaceProjectionVector(),
 						sweepCoord.SurfaceIndex,
 						sweepCoord.TriangleIndex,
 						sweepCoord.ComponentIndex,
@@ -1904,7 +1908,7 @@ namespace LogansNavigationExtension
 
 					triPerimHit = new LNX_NavmeshHit(
 						outPath.PathPoints[outPath.PathPoints.Count - 1].Position + projectDir.normalized * (castDistance - outPath.TotalDistance),
-						triPerimHit.Normal,
+						triPerimHit.PathingNormal, triPerimHit.SurfaceOrientation,
 						currentStartHit.SurfaceIndex,
 						currentStartHit.TriangleIndex,
 						0,
@@ -2006,7 +2010,8 @@ namespace LogansNavigationExtension
 				{
 					rprt.Log($"sweep coord is different from starthit coordinates. Adjusting...");
 					startHit = new LNX_NavmeshHit(
-						startHit.Position, GetSurfaceProjectionVector(),
+						startHit.Position, 
+						GetSurfaceProjectionVector(), GetSurfaceProjectionVector(),
 						sweepCoord.SurfaceIndex,
 						sweepCoord.TriangleIndex,
 						sweepCoord.ComponentIndex,
@@ -2143,7 +2148,7 @@ namespace LogansNavigationExtension
 
 					triPerimHit = new LNX_NavmeshHit(
 						outPath.PathPoints[outPath.PathPoints.Count - 1].Position + projectDir.normalized * (castDistance - outPath.TotalDistance),
-						triPerimHit.Normal,
+						triPerimHit.PathingNormal, triPerimHit.SurfaceOrientation,
 						currentStartHit.SurfaceIndex,
 						currentStartHit.TriangleIndex,
 						0,
@@ -2228,7 +2233,8 @@ namespace LogansNavigationExtension
 				else if (sweepCoord.TriangleIndex != startHit.TriangleIndex || sweepCoord.ComponentIndex != startHit.VertIndex)
 				{
 					startHit = new LNX_NavmeshHit(
-						startHit.Position, GetSurfaceProjectionVector(),
+						startHit.Position, 
+						GetSurfaceProjectionVector(), GetSurfaceProjectionVector(),
 						sweepCoord.SurfaceIndex,
 						sweepCoord.TriangleIndex,
 						sweepCoord.ComponentIndex,

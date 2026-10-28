@@ -38,7 +38,37 @@ namespace LogansNavigationExtension
 
 			return Vector3.zero;
 		}
+		public static LNX_Direction VectorToDirection(Vector3 vProjection)
+		{
+			if ( vProjection == Vector3.up )
+			{
+				return LNX_Direction.PositiveY;
+			}
+			else if ( vProjection == Vector3.down )
+			{
+				return LNX_Direction.NegativeY;
+			}
+			else if ( vProjection == Vector3.forward )
+			{
+				return LNX_Direction.PositiveZ;
+			}
+			else if ( vProjection == Vector3.back )
+			{
+				return LNX_Direction.NegativeZ;
+			}
+			else if ( vProjection == Vector3.right )
+			{
+				return LNX_Direction.PositiveX;
+			}
+			else if ( vProjection == Vector3.left )
+			{
+				return LNX_Direction.NegativeX;
+			}
+
+			return LNX_Direction.None;
+		}
 	}
+
 
 
 	#region ENUMS-----------------------------------------
@@ -61,6 +91,7 @@ namespace LogansNavigationExtension
 	[System.Serializable]
 	public enum LNX_Direction
 	{
+		None = -1,
 		PositiveY = 0,
 		NegativeY = 1,
 		PositiveX = 2,
@@ -332,9 +363,11 @@ namespace LogansNavigationExtension
 		//private Vector3 startPosition;
 		//public Vector3 StartPosition => startPosition;
 
-		[SerializeField] private Vector3 normal;
-		public Vector3 Normal => normal;
+		[SerializeField] private Vector3 pathingNormal;
+		public Vector3 PathingNormal => pathingNormal;
 
+		[SerializeField] private LNX_Direction surfaceOrientation;
+		public LNX_Direction SurfaceOrientation => surfaceOrientation;
 
 		[SerializeField] private int surfaceIndex;
 		public int SurfaceIndex => surfaceIndex;
@@ -352,7 +385,7 @@ namespace LogansNavigationExtension
 		public int LinkIndex => linkIndex;
 
 
-		private static LNX_NavmeshHit none = new LNX_NavmeshHit(Vector3.zero, Vector3.zero, -1, -1, -1, -1);
+		private static LNX_NavmeshHit none = new LNX_NavmeshHit(Vector3.zero, Vector3.zero, Vector3.zero, -1, -1, -1, -1);
 
 		#region CONSTRUCTORS =============================================================		
 		/* //Unfortunately can't do the following bc default vectors aren't compile-time constants...
@@ -370,7 +403,8 @@ namespace LogansNavigationExtension
 		{
 			surfaceIndex = hitTriangle.SurfaceIndex;
 			hitPosition = hitpos;
-			normal = hitTriangle.V_PathingNormal;
+			pathingNormal = hitTriangle.V_PathingNormal;
+			surfaceOrientation = LNX_UtilityObjects.VectorToDirection(hitTriangle.V_SurfaceOrientation_cached);
 
 			triangleIndex = hitTriangle.Index_inCollection;
 			edgeIndex = -1;
@@ -381,7 +415,9 @@ namespace LogansNavigationExtension
 		public LNX_NavmeshHit ( LNX_Vertex vert )
 		{
 			hitPosition = vert.V_Position;
-			normal = vert.CalculatePathingNormal();
+			pathingNormal = vert.CalculatePathingNormal();
+			surfaceOrientation = LNX_UtilityObjects.VectorToDirection(vert.CachedSurfaceNormal);
+
 			surfaceIndex = vert.SurfaceIndex;
 			triangleIndex = vert.MyCoordinate.TriangleIndex;
 			edgeIndex = -1;
@@ -392,7 +428,9 @@ namespace LogansNavigationExtension
 		public LNX_NavmeshHit(LNX_Vertex vert, Vector3 nrml )
 		{
 			hitPosition = vert.V_Position;
-			normal = nrml;
+			pathingNormal = nrml;
+			surfaceOrientation = LNX_UtilityObjects.VectorToDirection(vert.CachedSurfaceNormal);
+
 			surfaceIndex = vert.SurfaceIndex;
 			triangleIndex = vert.MyCoordinate.TriangleIndex;
 			edgeIndex = -1;
@@ -400,10 +438,12 @@ namespace LogansNavigationExtension
 			linkIndex = -1;
 		}
 
-		public LNX_NavmeshHit(LNX_Edge edge, Vector3 pos, Vector3 nrml)
+		public LNX_NavmeshHit(LNX_Edge edge, Vector3 pos, Vector3 pthgNrml)
 		{
 			hitPosition = pos;
-			normal = nrml;
+			pathingNormal = pthgNrml;
+			surfaceOrientation = LNX_UtilityObjects.VectorToDirection(edge.V_SurfaceProjectionDirection_cached );
+
 			surfaceIndex = edge.SurfaceIndex;
 			triangleIndex = edge.MyCoordinate.TriangleIndex;
 			edgeIndex = edge.MyCoordinate.ComponentIndex;
@@ -411,10 +451,11 @@ namespace LogansNavigationExtension
 			linkIndex = -1;
 		}
 
-		public LNX_NavmeshHit(Vector3 pos, Vector3 nrml, int srfcIndx, int triIndx, int vertIndx, int edgeIndx, int lnkIndx = -1)
+		public LNX_NavmeshHit(Vector3 pos, Vector3 nrml, LNX_Direction srfcOrientation, int srfcIndx, int triIndx, int vertIndx, int edgeIndx, int lnkIndx = -1)
 		{
 			hitPosition = pos;
-			normal = nrml;
+			pathingNormal = nrml;
+			surfaceOrientation = srfcOrientation;
 
 			surfaceIndex = srfcIndx;
 			triangleIndex = triIndx;
@@ -422,7 +463,19 @@ namespace LogansNavigationExtension
 			vertIndex = vertIndx;
 			linkIndex = lnkIndx;
 		}
+		public LNX_NavmeshHit(Vector3 pos, Vector3 pthngNrml, Vector3 srfcOrientation, int srfcIndx, 
+			int triIndx, int vertIndx, int edgeIndx, int lnkIndx = -1)
+		{
+			hitPosition = pos;
+			pathingNormal = pthngNrml;
+			surfaceOrientation = LNX_UtilityObjects.VectorToDirection(srfcOrientation);
 
+			surfaceIndex = srfcIndx;
+			triangleIndex = triIndx;
+			edgeIndex = edgeIndx;
+			vertIndex = vertIndx;
+			linkIndex = lnkIndx;
+		}
 
 		#endregion
 
@@ -444,6 +497,43 @@ namespace LogansNavigationExtension
 			}
 		}
 
+		/// <summary>
+		/// This returns the direction that the navmesh, as a whole, should be considered "facing", for 
+		/// projection purposes. IE: This should be the direction that the unity object 
+		/// (which has the navmesh component)'s UP direction is facing.
+		/// </summary>
+		/// <returns></returns>
+		public Vector3 GetSurfaceProjectionVector()
+		{
+			if (SurfaceOrientation == LNX_Direction.PositiveY)
+			{
+				return Vector3.up;
+			}
+			else if (SurfaceOrientation == LNX_Direction.NegativeY)
+			{
+				return Vector3.down;
+			}
+			else if (SurfaceOrientation == LNX_Direction.PositiveX)
+			{
+				return Vector3.right;
+			}
+			else if (SurfaceOrientation == LNX_Direction.NegativeX)
+			{
+				return Vector3.left;
+			}
+			else if (SurfaceOrientation == LNX_Direction.PositiveZ)
+			{
+				return Vector3.forward;
+			}
+			else if (SurfaceOrientation == LNX_Direction.NegativeZ)
+			{
+				return Vector3.back;
+			}
+
+			return Vector3.zero;
+		}
+
+
 		#region OPERATORS ===============================================
 		public override bool Equals(object obj)
 		{
@@ -452,7 +542,7 @@ namespace LogansNavigationExtension
 
 			LNX_NavmeshHit hit = (LNX_NavmeshHit)obj;
 			if ( hit.triangleIndex != triangleIndex || hit.hitPosition != hitPosition ||
-				hit.vertIndex != vertIndex || hit.edgeIndex != edgeIndex || hit.normal != normal
+				hit.vertIndex != vertIndex || hit.edgeIndex != edgeIndex || hit.pathingNormal != pathingNormal
 			)
 			{
 				return false;
@@ -465,7 +555,7 @@ namespace LogansNavigationExtension
 
 		public override int GetHashCode()
 		{
-			return HashCode.Combine( hitPosition, normal, triangleIndex, vertIndex, edgeIndex );
+			return HashCode.Combine( hitPosition, pathingNormal, triangleIndex, vertIndex, edgeIndex );
 		}
 
 		public static bool operator ==(LNX_NavmeshHit a, LNX_NavmeshHit b)

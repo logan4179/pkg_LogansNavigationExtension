@@ -211,7 +211,7 @@ namespace LogansNavigationExtension
 				secondSiblingPos = atomicTris[tri.Index_inCollection].VertPos1_current;
 			}
 
-			v_navmeshProjectionDirection_cached = tri.V_NavmeshProjectionDirection_cached;
+			v_navmeshProjectionDirection_cached = tri.V_SurfaceOrientation_cached;
 
 			v_triCenter_cached = atomicTris[tri.Index_inCollection].Center;
 
@@ -232,7 +232,7 @@ namespace LogansNavigationExtension
 					v_navmeshProjectionDirection_cached,
 					new LNX_NavmeshHit(this, tri.V_PathingNormal),
 					new LNX_NavmeshHit(
-						firstSiblingPos, tri.V_PathingNormal, MyCoordinate.SurfaceIndex,
+						firstSiblingPos, tri.V_PathingNormal, tri.V_SurfaceOrientation_cached, MyCoordinate.SurfaceIndex,
 						MyCoordinate.TriangleIndex, Coordinate_FirstSibling.ComponentIndex, -1
 					)
 				)
@@ -243,7 +243,7 @@ namespace LogansNavigationExtension
 					v_navmeshProjectionDirection_cached,
 					new LNX_NavmeshHit(this, tri.V_PathingNormal),
 					new LNX_NavmeshHit(
-						secondSiblingPos, tri.V_PathingNormal, MyCoordinate.SurfaceIndex,
+						secondSiblingPos, tri.V_PathingNormal, tri.V_SurfaceOrientation_cached, MyCoordinate.SurfaceIndex,
 						MyCoordinate.TriangleIndex, Coordinate_SecondSibling.ComponentIndex, -1
 					)
 				)

@@ -109,7 +109,7 @@ namespace LogansNavigationExtension
 			MyCoordinate = new LNX_ComponentCoordinate( ownerTri.SurfaceIndex, ownerTri.Index_inCollection, cmptIndx );
 
 			v_triCenter_cached = ownerTri.V_Center;
-			v_surfaceProjectionDirection_cached = ownerTri.V_NavmeshProjectionDirection_cached;
+			v_surfaceProjectionDirection_cached = ownerTri.V_SurfaceOrientation_cached;
 
 			SharedEdgeCoordinate = LNX_ComponentCoordinate.None;
 		}
@@ -179,7 +179,7 @@ namespace LogansNavigationExtension
 			above v_Cross value. If I simply flattened that value, edge projecting didn't work at very acute angles for triangles
 			with slanted surfaces, so now I'm doing this, which works better...
 			*/
-			v_Cross_flat = Vector3.Cross(V_StartToEnd_flattened, tri.V_NavmeshProjectionDirection_cached);
+			v_Cross_flat = Vector3.Cross(V_StartToEnd_flattened, tri.V_SurfaceOrientation_cached);
 			if (Vector3.Dot(v_Cross_flat, v_toCenter_flattened) < 0)
 			{
 				v_Cross_flat = -v_Cross_flat;
@@ -267,7 +267,8 @@ namespace LogansNavigationExtension
 				{
 					return new LNX_NavmeshHit(
 						EndPosition, 
-						v_surfaceProjectionDirection_cached, 
+						v_surfaceProjectionDirection_cached,
+						v_surfaceProjectionDirection_cached,
 						MyCoordinate.SurfaceIndex,
 						MyCoordinate.TriangleIndex, 
 						EndVertIndex, 
@@ -279,6 +280,7 @@ namespace LogansNavigationExtension
 			{
 				return new LNX_NavmeshHit(
 					StartPosition,
+					v_surfaceProjectionDirection_cached,
 					v_surfaceProjectionDirection_cached,
 					MyCoordinate.SurfaceIndex,
 					MyCoordinate.TriangleIndex,
@@ -304,14 +306,16 @@ namespace LogansNavigationExtension
 			if( LNX_Utils.FlatEquals(v_result, StartPosition, v_surfaceProjectionDirection_cached) )
 			{
 				return new LNX_NavmeshHit(
-					v_result, v_surfaceProjectionDirection_cached, MyCoordinate.SurfaceIndex,
+					v_result, v_surfaceProjectionDirection_cached, v_surfaceProjectionDirection_cached,
+					MyCoordinate.SurfaceIndex,
 					MyCoordinate.TriangleIndex, StartVertIndex, MyCoordinate.ComponentIndex
 				);
 			}
 			else if (LNX_Utils.FlatEquals(v_result, EndPosition, v_surfaceProjectionDirection_cached))
 			{
 				return new LNX_NavmeshHit(
-					v_result, v_surfaceProjectionDirection_cached, MyCoordinate.SurfaceIndex,
+					v_result, v_surfaceProjectionDirection_cached, v_surfaceProjectionDirection_cached,
+					MyCoordinate.SurfaceIndex,
 					MyCoordinate.TriangleIndex, EndVertIndex, MyCoordinate.ComponentIndex
 				);
 			}
@@ -346,7 +350,7 @@ namespace LogansNavigationExtension
 
 					return new LNX_NavmeshHit(
 						EndPosition,
-						v_surfaceProjectionDirection_cached,
+						v_surfaceProjectionDirection_cached, v_surfaceProjectionDirection_cached,
 						MyCoordinate.SurfaceIndex,
 						MyCoordinate.TriangleIndex,
 						EndVertIndex,
@@ -360,8 +364,8 @@ namespace LogansNavigationExtension
 
 					return new LNX_NavmeshHit(
 						StartPosition,
-						v_surfaceProjectionDirection_cached,
-						MyCoordinate.SurfaceIndex,
+						v_surfaceProjectionDirection_cached, v_surfaceProjectionDirection_cached,
+						MyCoordinate.SurfaceIndex, 
 						MyCoordinate.TriangleIndex,
 						StartVertIndex,
 						MyCoordinate.ComponentIndex
@@ -387,7 +391,8 @@ namespace LogansNavigationExtension
 				rprt.Log_And_End_Method($"x");
 
 				return new LNX_NavmeshHit(
-					v_result, v_surfaceProjectionDirection_cached, MyCoordinate.SurfaceIndex,
+					v_result, v_surfaceProjectionDirection_cached, v_surfaceProjectionDirection_cached,
+					MyCoordinate.SurfaceIndex,
 					MyCoordinate.TriangleIndex, StartVertIndex, MyCoordinate.ComponentIndex
 				);
 			}
@@ -396,7 +401,8 @@ namespace LogansNavigationExtension
 				rprt.Log_And_End_Method($"y");
 
 				return new LNX_NavmeshHit(
-					v_result, v_surfaceProjectionDirection_cached, MyCoordinate.SurfaceIndex,
+					v_result, v_surfaceProjectionDirection_cached, v_surfaceProjectionDirection_cached,
+					MyCoordinate.SurfaceIndex,
 					MyCoordinate.TriangleIndex, EndVertIndex, MyCoordinate.ComponentIndex
 				);
 			}
@@ -456,7 +462,8 @@ namespace LogansNavigationExtension
 					if( allowVertHitRslt )
 					{
 						rsltHit = new LNX_NavmeshHit(
-							StartPosition, v_surfaceProjectionDirection_cached, MyCoordinate.SurfaceIndex,
+							StartPosition, v_surfaceProjectionDirection_cached, v_surfaceProjectionDirection_cached,
+							MyCoordinate.SurfaceIndex,
 							MyCoordinate.TriangleIndex, StartVertCoordinate.ComponentIndex, -1
 						);
 					}
@@ -471,7 +478,8 @@ namespace LogansNavigationExtension
 					if (allowVertHitRslt)
 					{
 						rsltHit = new LNX_NavmeshHit(
-							EndPosition, v_surfaceProjectionDirection_cached, MyCoordinate.SurfaceIndex,
+							EndPosition, v_surfaceProjectionDirection_cached, v_surfaceProjectionDirection_cached, 
+							MyCoordinate.SurfaceIndex,
 							MyCoordinate.TriangleIndex, EndVertCoordinate.ComponentIndex, -1
 						);
 					}
@@ -559,7 +567,7 @@ namespace LogansNavigationExtension
 					{
 						outHit = new LNX_NavmeshHit(
 							EndPosition,
-							v_surfaceProjectionDirection_cached,
+							v_surfaceProjectionDirection_cached, v_surfaceProjectionDirection_cached,
 							MyCoordinate.SurfaceIndex,
 							MyCoordinate.TriangleIndex,
 							EndVertIndex,
@@ -574,7 +582,7 @@ namespace LogansNavigationExtension
 					if (v_originToEdgeStart_flat == V_EndToStart_flattened) //this means the projection and the edge are definitely in alignment in 3d space...
 					{
 						outHit = new LNX_NavmeshHit(
-							StartPosition, v_surfaceProjectionDirection_cached,
+							StartPosition, v_surfaceProjectionDirection_cached, v_surfaceProjectionDirection_cached,
 							MyCoordinate.SurfaceIndex,
 							MyCoordinate.TriangleIndex,
 							StartVertIndex,
@@ -686,7 +694,7 @@ namespace LogansNavigationExtension
 						rprt.Log("Creating outHit on end point of edge...");
 						outHit = new LNX_NavmeshHit(
 							EndPosition,
-							v_surfaceProjectionDirection_cached,
+							v_surfaceProjectionDirection_cached, v_surfaceProjectionDirection_cached,
 							MyCoordinate.SurfaceIndex,
 							MyCoordinate.TriangleIndex,
 							EndVertIndex,
@@ -706,7 +714,7 @@ namespace LogansNavigationExtension
 						rprt.Log("v_originToStart equals V_EndToStart_flattened. This means projection and edge are in 3d alignment.");
 						rprt.Log("Creating outHit on start point of edge...");
 						outHit = new LNX_NavmeshHit(
-							StartPosition, v_surfaceProjectionDirection_cached,
+							StartPosition, v_surfaceProjectionDirection_cached, v_surfaceProjectionDirection_cached,
 							MyCoordinate.SurfaceIndex,
 							MyCoordinate.TriangleIndex,
 							StartVertIndex,
@@ -872,7 +880,7 @@ namespace LogansNavigationExtension
 					{
 						outHit = new LNX_NavmeshHit(
 							EndPosition,
-							v_surfaceProjectionDirection_cached,
+							v_surfaceProjectionDirection_cached, v_surfaceProjectionDirection_cached,
 							MyCoordinate.SurfaceIndex,
 							MyCoordinate.TriangleIndex,
 							EndVertIndex,
@@ -887,7 +895,7 @@ namespace LogansNavigationExtension
 					if (v_originToEdgeStart_flat == V_EndToStart_flattened) //this means the projection and the edge are definitely in alignment in 3d space...
 					{
 						outHit = new LNX_NavmeshHit(
-							StartPosition, v_surfaceProjectionDirection_cached,
+							StartPosition, v_surfaceProjectionDirection_cached, v_surfaceProjectionDirection_cached,
 							MyCoordinate.SurfaceIndex,
 							MyCoordinate.TriangleIndex,
 							StartVertIndex,
@@ -966,10 +974,10 @@ namespace LogansNavigationExtension
 		}
 
 		public bool DoesProjectionIntersectEdge_dbg(
-	LNX_NavmeshHit startHit, Vector3 projection, out LNX_NavmeshHit outHit, ref LNX_MethodDebugReport rprt,
-	bool includeParallelCheck = true,
-	bool checkIfOriginIsOnEdge = true
-)
+			LNX_NavmeshHit startHit, Vector3 projection, out LNX_NavmeshHit outHit, ref LNX_MethodDebugReport rprt,
+			bool includeParallelCheck = true,
+			bool checkIfOriginIsOnEdge = true
+		)
 		{
 			rprt.StartMethod($"DoesProjectionIntersectEdge_dbg(startHit: '{startHit}', prjction: '{projection}')");
 
@@ -998,7 +1006,7 @@ namespace LogansNavigationExtension
 					{
 						outHit = new LNX_NavmeshHit(
 							EndPosition,
-							v_surfaceProjectionDirection_cached,
+							v_surfaceProjectionDirection_cached, v_surfaceProjectionDirection_cached,
 							MyCoordinate.SurfaceIndex,
 							MyCoordinate.TriangleIndex,
 							EndVertIndex,
@@ -1013,7 +1021,7 @@ namespace LogansNavigationExtension
 					if (v_originToEdgeStart_flat == V_EndToStart_flattened) //this means the projection and the edge are definitely in alignment in 3d space...
 					{
 						outHit = new LNX_NavmeshHit(
-							StartPosition, v_surfaceProjectionDirection_cached,
+							StartPosition, v_surfaceProjectionDirection_cached, v_surfaceProjectionDirection_cached,
 							MyCoordinate.SurfaceIndex,
 							MyCoordinate.TriangleIndex,
 							StartVertIndex,
@@ -1091,399 +1099,254 @@ namespace LogansNavigationExtension
 			return true;
 		}
 
-		public bool DoesProjectionIntersectEdge(Vector3 projection, Vector3 origin, LNX_Direction flattenDir, out LNX_NavmeshHit intersectHit, 
-			int forcedIntersectHitLinkIndex = -1 )
+		public bool ProjectOntoEdge(LNX_NavmeshHit originHit, Vector3 projection, out LNX_NavmeshHit outHit,
+			bool includeParallelCheck = true, bool checkIfOriginIsOnEdge = true) //todo: Try to make this the only projection method
 		{
-			intersectHit = LNX_NavmeshHit.None;
+			Vector3 origin_Flat = LNX_Utils.FlatVector(originHit.Position, originHit.SurfaceOrientation);
+			Vector3 v_prjct_flat = LNX_Utils.FlatVector(projection, originHit.SurfaceOrientation).normalized;
+			Vector3 v_originToEdgeStart_flat = LNX_Utils.FlatVector(StartPosition - origin_Flat, originHit.SurfaceOrientation).normalized; //Note: Now that we have different surfaces with different orientations, we don't want to use StartPosition_flat because if projecting across multiple surfaces, this will produce an incorrect "leg" vector...
+			Vector3 v_originToEdgeEnd_flat = LNX_Utils.FlatVector(EndPosition - origin_Flat, originHit.SurfaceOrientation).normalized; //Note: Now that we have different surfaces with different orientations, we don't want to use EndPosition_flat because if projecting across multiple surfaces, this will produce an incorrect "leg" vector...
+			bool sameOrientations = originHit.GetSurfaceProjectionVector() == v_surfaceProjectionDirection_cached;
+			//todo: for efficiency testing, try caching the values of StartPosition, EndPosition, StartPosition_flat, EndPosition_flat in local
+			//variables (and possibly others that I'm not thinking of) to see if this is better than continually calling these properties, because these
+			//values are all properties with their own overhead every time they're called.
 
-			#region SHORT-CIRCUITING ============================================
-			if ( projection == Vector3.zero )
+			#region SHORT-CIRCUITING ==========================================================
+			if (includeParallelCheck && sameOrientations)
 			{
-				return false;
-			}
-			#endregion
+				if (v_prjct_flat == V_StartToEnd_flattened) //if the projection and edge are pointed in the same direction...
+				{
+					if (v_originToEdgeEnd_flat == V_StartToEnd_flattened) //this means the projection and the edge are definitely in alignment in 3d space...
+					{
+						outHit = new LNX_NavmeshHit(
+							EndPosition,
+							v_surfaceProjectionDirection_cached, v_surfaceProjectionDirection_cached,
+							MyCoordinate.SurfaceIndex,
+							MyCoordinate.TriangleIndex,
+							EndVertIndex,
+							MyCoordinate.ComponentIndex
+						);
 
-			Vector3 flatProjection = LNX_Utils.FlatVector(projection, flattenDir).normalized;
-			Vector3 flatOrigin = LNX_Utils.FlatVector(origin, flattenDir);
-			Vector3 flatStart = LNX_Utils.FlatVector(StartPosition, flattenDir);
-			Vector3 flatEnd = LNX_Utils.FlatVector(EndPosition, flattenDir);
+						return true;
+					}
+				}
+				else if (v_prjct_flat == V_EndToStart_flattened) //if the projection and edge are aligned in exactly opposite directions...
+				{
+					if (v_originToEdgeStart_flat == V_EndToStart_flattened) //this means the projection and the edge are definitely in alignment in 3d space...
+					{
+						outHit = new LNX_NavmeshHit(
+							StartPosition, v_surfaceProjectionDirection_cached, v_surfaceProjectionDirection_cached,
+							MyCoordinate.SurfaceIndex,
+							MyCoordinate.TriangleIndex,
+							StartVertIndex,
+							MyCoordinate.ComponentIndex
+						);
 
-			Vector3 v_originToStart_fltnd = Vector3.Normalize( flatStart - flatOrigin );
-			Vector3 v_originToEnd_fltnd = Vector3.Normalize( flatEnd - flatOrigin );
-			Vector3 v_originToProjection_fltnd = Vector3.Normalize( flatProjection - flatOrigin );
-
-			#region SHORT-CIRCUITING ========================================
-			if (v_originToStart_fltnd == Vector3.zero)
-			{
-				return false;
-			}
-			else if (v_originToStart_fltnd == v_originToEnd_fltnd)
-			{
-				return false;
-			}
-			else if ( v_originToEnd_fltnd == Vector3.zero )
-			{
-				return false;
-			}
-			
-			if ( v_originToProjection_fltnd == v_originToStart_fltnd )
-			{
-				intersectHit = new LNX_NavmeshHit(
-					StartPosition, v_surfaceProjectionDirection_cached, MyCoordinate.SurfaceIndex,
-					MyCoordinate.TriangleIndex, StartVertCoordinate.ComponentIndex, MyCoordinate.ComponentIndex, forcedIntersectHitLinkIndex
-				);
-				return true;
-			}
-			if (v_originToProjection_fltnd == v_originToEnd_fltnd )
-			{
-				intersectHit = new LNX_NavmeshHit(
-					EndPosition, v_surfaceProjectionDirection_cached, MyCoordinate.SurfaceIndex,
-					MyCoordinate.TriangleIndex, EndVertCoordinate.ComponentIndex, MyCoordinate.ComponentIndex, forcedIntersectHitLinkIndex
-				);
-				return true;
-			}
-			#endregion
-
-			Vector3 angleAxis = LNX_UtilityObjects.DirectionToVector(flattenDir);
-			float ang_crnr = Vector3.SignedAngle( v_originToStart_fltnd, v_originToEnd_fltnd, angleAxis );
-
-			float ang_projectionAndLegA = Vector3.SignedAngle( v_originToProjection_fltnd, v_originToStart_fltnd, angleAxis );
-			float ang_projectionAndLegB = Vector3.SignedAngle( v_originToProjection_fltnd, v_originToEnd_fltnd, angleAxis );
-
-			#region ANGULAR SHORT-CIRCUIT TEST-------------------------------------------------------
-			if ( Mathf.Sign(ang_projectionAndLegA) == Mathf.Sign(ang_projectionAndLegB) )
-			{
-				return false;
+						return true;
+					}
+				}
 			}
 
-			if ( Mathf.Abs(ang_projectionAndLegA) > 90f && Mathf.Abs(ang_projectionAndLegB) > 90f)
+			if (checkIfOriginIsOnEdge) //Note: this needs to be checked AFTER the parallel checks, not before
 			{
-				return false; //short-circuit
+				if (DoesPositionLieOnEdge(originHit.Position, out outHit)) //Note: this needs to be checked AFTER the parallel checks, not before
+				{
+					return true;
+				}
 			}
 
-			if (ang_projectionAndLegA + ang_projectionAndLegB > 180f)
-			{
-				return false; //short-circuit
-			}
-
-			float lrgst = Mathf.Max
+			if
 			(
-				ang_projectionAndLegA,
-				ang_projectionAndLegB
-			);
-
-			if (lrgst > ang_crnr)
-			{
-				return false; //short-circuit
-			}
-			#endregion
-
-			Vector3 v_startToEnd_fltnd = LNX_Utils.FlatVector(V_StartToEnd, flattenDir).normalized;
-			float angB = Vector3.Angle(v_startToEnd_fltnd, -v_originToStart_fltnd);
-			float angC = Vector3.Angle(v_originToStart_fltnd, flatProjection);
-			float angA = 180f - (angB + angC);
-			float lenA = Vector3.Distance( flatOrigin, flatStart );
-
-			//sin(angA)/lenA == sin(angB)/lenB...
-			float lenB = LNX_Utils.CalculateTriangleEdgeLength( angB, angA, lenA );
-			Vector3 ptA = origin + (flatProjection * lenB);
-
-			//Now, calculate the other orientation...
-			angA = 90f;
-
-			//float lenA = LNX_Utils.CalculateTriangleEdgeLength(
-				
-			//);
-
-			return false;
-		}
-
-
-		/// <summary>
-		/// Projects a vector onto a version of this edge that's flattened in the supplied direction.
-		/// </summary>
-		/// <param name="origin">origin of the projection</param>
-		/// <param name="dir">direction of the projection</param>
-		/// <param name="flattenDir">Direction to flatten the edge</param>
-		/// <returns></returns>
-		public bool FlatProject(Vector3 origin, Vector3 dir, LNX_Direction flattenDir, out Vector3 intersection )
-		{
-			intersection = Vector3.zero;
-
-			#region SHORT-CIRCUITING ============================================
-			if (dir == Vector3.zero)
-			{
-				return false;
-			}
-			#endregion
-
-			origin = LNX_Utils.FlatVector(origin, flattenDir);
-			dir = LNX_Utils.FlatVector(dir, flattenDir);
-			dir = dir.normalized;
-			Vector3 start_fltnd = LNX_Utils.FlatVector( StartPosition, flattenDir );
-			Vector3 end_fltnd = LNX_Utils.FlatVector( EndPosition, flattenDir );
-			Vector3 v_originToStart_fltnd = start_fltnd - origin;
-			float lenC = v_originToStart_fltnd.magnitude;
-			v_originToStart_fltnd = v_originToStart_fltnd.normalized;
-			Vector3 v_originToEnd_fltnd = Vector3.Normalize(end_fltnd - origin);
-
-			#region SHORT-CIRCUITING ========================================
-			if (v_originToStart_fltnd == Vector3.zero)
-			{
-				return false;
-			}
-			else if (v_originToStart_fltnd == v_originToEnd_fltnd)
-			{
-				return false;
-			}
-			else if (v_originToEnd_fltnd == Vector3.zero)
-			{
-				return false;
-			}
-
-			if (dir == v_originToStart_fltnd)
-			{
-				intersection = start_fltnd;
-				return true;
-			}
-			if (dir == v_originToEnd_fltnd)
-			{
-				intersection = end_fltnd;
-				return true;
-			}
-			#endregion
-
-			Vector3 angleAxis = LNX_UtilityObjects.DirectionToVector(flattenDir);
-
-			float angA = Vector3.SignedAngle(dir, v_originToStart_fltnd, angleAxis);
-			float ang_dir_and_originToEnd = Vector3.SignedAngle(dir, v_originToEnd_fltnd, angleAxis);
-
-			#region ANGULAR SHORT-CIRCUIT TEST-------------------------------------------------------
-			if (Mathf.Sign(angA) == Mathf.Sign(ang_dir_and_originToEnd))
-			{
-				return false;
-			}
-
-			if (Mathf.Abs(angA) > 90f && Mathf.Abs(ang_dir_and_originToEnd) > 90f)
-			{
-				return false; //short-circuit
-			}
-
-			angA = Mathf.Abs(angA);
-			ang_dir_and_originToEnd = Mathf.Abs(ang_dir_and_originToEnd);
-			if (angA + ang_dir_and_originToEnd > 180f)
-			{
-				return false; //short-circuit
-			}
-
-			float lrgst = Mathf.Max
-			(
-				angA,
-				ang_dir_and_originToEnd
-			);
-
-			if 
-			(
-				Mathf.Max(angA, ang_dir_and_originToEnd) >
-				Vector3.Angle(v_originToStart_fltnd, v_originToEnd_fltnd)
+				!LNX_Utils.AmInVectorCone
+				(
+					v_prjct_flat,
+					v_originToEdgeStart_flat,
+					v_originToEdgeEnd_flat,
+					originHit.GetSurfaceProjectionVector(), true
+				)
 			)
 			{
-				return false; //short-circuit
+				outHit = LNX_NavmeshHit.None;
+				return false;
 			}
 			#endregion
 
-			Vector3 v_startToEnd_fltnd = end_fltnd - start_fltnd;
-			float angB = Vector3.Angle( v_startToEnd_fltnd, -v_originToStart_fltnd );
-			float angC = 180f - angA - angB;
+			#region CALCULATE OUT HIT -----------------------------------------------------------
+			//note:
+			// angle at origin will be considered 'angleA', 
+			// Length across from angleA will be consdered 'length A'
+			float lenA = LNX_Utils.CalculateTriangleEdgeLength
+			(
+				Vector3.Angle(v_prjct_flat, v_originToEdgeStart_flat),
+				Vector3.Angle(LNX_Utils.FlatVector(V_EndToStart, originHit.SurfaceOrientation) /*V_EndToStart_flattened*/, -v_prjct_flat),
+				Vector3.Distance(origin_Flat, LNX_Utils.FlatVector(StartPosition, originHit.SurfaceOrientation))
+			);
 
-			float lenB = LNX_Utils.CalculateTriangleEdgeLength( angB, angC, lenC );
-			intersection = origin + (dir * lenB);
+			if (AmFlat && sameOrientations)
+			{
+				outHit = new LNX_NavmeshHit(this, StartPosition + (V_StartToEnd * lenA), v_surfaceProjectionDirection_cached);
+			}
+			else
+			{
+				float lenB = LNX_Utils.CalculateTriangleEdgeLength(
+					90f,
+					Vector3.Angle(V_EndToStart, -V_SurfaceProjectionDirection_cached),
+					lenA
+				);
+				outHit = new LNX_NavmeshHit(this, StartPosition + (V_StartToEnd * lenB), V_SurfaceProjectionDirection_cached);
+			}
+			#endregion
 
 			return true;
 		}
-
-		public bool FlatProject(Vector3 origin, Vector3 dir, out Vector3 intersection, bool includeAngleSweepCheck)
+		public bool ProjectOntoEdge_dbg( LNX_NavmeshHit originHit, Vector3 projection, out LNX_NavmeshHit outHit, 
+			ref LNX_MethodDebugReport rprt, bool includeParallelCheck = true, bool checkIfOriginIsOnEdge = true) //todo: Try to make this the only projection method
 		{
-			intersection = Vector3.zero;
-			origin = LNX_Utils.FlatVector(origin, v_surfaceProjectionDirection_cached);
-			dir = LNX_Utils.FlatVector(dir, v_surfaceProjectionDirection_cached).normalized;
+			rprt.StartMethod($"DoesProjectionIntersectEdge_dbg(startHit: '{originHit}', prjction: '{projection}')");
+			rprt.Log($"StartPosition: '{StartPosition}', EndPosition: '{EndPosition}'...");
+			rprt.Log($"StartPosition_flat: '{StartPosition_flat}', EndPosition_flat: '{EndPosition_flat}'...");
 
-			#region SHORT-CIRCUITING ============================================
-			if (dir == Vector3.zero)
-			{
-				return false;
-			}
-			if (DoesPositionLieOnEdge(origin))
-			{
-				intersection = origin;
-				return false;
-			}
-			#endregion
+			Vector3 origin_Flat = LNX_Utils.FlatVector( originHit.Position, originHit.SurfaceOrientation );
+			Vector3 v_prjct_flat = LNX_Utils.FlatVector( projection, originHit.SurfaceOrientation ).normalized;
+			Vector3 v_originToEdgeStart_flat = LNX_Utils.FlatVector(StartPosition - origin_Flat, originHit.SurfaceOrientation ).normalized; //Note: Now that we have different surfaces with different orientations, we don't want to use StartPosition_flat because if projecting across multiple surfaces, this will produce an incorrect "leg" vector...
+			Vector3 v_originToEdgeEnd_flat = LNX_Utils.FlatVector( EndPosition - origin_Flat, originHit.SurfaceOrientation).normalized; //Note: Now that we have different surfaces with different orientations, we don't want to use EndPosition_flat because if projecting across multiple surfaces, this will produce an incorrect "leg" vector...
+			bool sameOrientations = originHit.GetSurfaceProjectionVector() == v_surfaceProjectionDirection_cached;
+			rprt.Log($"sameOrientations: '{sameOrientations}'...");
+			//todo: for efficiency testing, try caching the values of StartPosition, EndPosition, StartPosition_flat, EndPosition_flat in local
+			//variables (and possibly others that I'm not thinking of) to see if this is better than continually calling these properties, because these
+			//values are all properties with their own overhead every time they're called.
 
-			Vector3 start_fltnd = StartPosition_flat;
-			Vector3 end_fltnd = EndPosition_flat;
-			Vector3 v_originToStart_fltnd = start_fltnd - origin;
-			float lenC = v_originToStart_fltnd.magnitude;
-			v_originToStart_fltnd = v_originToStart_fltnd.normalized;
-			Vector3 v_originToEnd_fltnd = Vector3.Normalize(end_fltnd - origin);
+			rprt.EmptyLine();
+			rprt.Log($"USING",
+				$"origin_Flat: '{origin_Flat}'...",
+				$"v_prjct_flat: '{v_prjct_flat}'",
+				$"v_originToEdgeStart_flat: '{v_originToEdgeStart_flat}'",
+				$"v_originToEdgeEnd_flat: '{v_originToEdgeEnd_flat}'"
+				);
 
-			#region SHORT-CIRCUITING ========================================
-			if (v_originToStart_fltnd == v_originToEnd_fltnd)
+			#region SHORT-CIRCUITING ==========================================================
+			if ( includeParallelCheck && sameOrientations )
 			{
-				return false;
-			}
-			if (dir == v_originToStart_fltnd)
-			{
-				intersection = start_fltnd;
-				return true;
-			}
-			if (dir == v_originToEnd_fltnd)
-			{
-				intersection = end_fltnd;
-				return true;
-			}
-			#endregion
-
-			float angA = Vector3.SignedAngle(dir, v_originToStart_fltnd, v_surfaceProjectionDirection_cached);
-			float ang_dir_and_originToEnd = Vector3.SignedAngle(dir, v_originToEnd_fltnd, v_surfaceProjectionDirection_cached);
-
-			#region ANGULAR SHORT-CIRCUIT TEST-------------------------------------------------------
-			if (includeAngleSweepCheck)
-			{
-				if (Mathf.Sign(angA) == Mathf.Sign(ang_dir_and_originToEnd))
+				rprt.Log($"includeParallelCheck && sameOrientations. Checking for parallels...");
+				if (v_prjct_flat == V_StartToEnd_flattened) //if the projection and edge are pointed in the same direction...
 				{
-					return false;
+					rprt.Log($"v_prjct_flat == V_StartToEnd_flattened...");
+					if (v_originToEdgeEnd_flat == V_StartToEnd_flattened) //this means the projection and the edge are definitely in alignment in 3d space...
+					{
+						rprt.Log($"v_originToEdgeEnd_flat == V_StartToEnd_flattened. Can extrapolate outHit...");
+
+						outHit = new LNX_NavmeshHit(
+							EndPosition,
+							v_surfaceProjectionDirection_cached, v_surfaceProjectionDirection_cached,
+							MyCoordinate.SurfaceIndex,
+							MyCoordinate.TriangleIndex,
+							EndVertIndex,
+							MyCoordinate.ComponentIndex
+						);
+
+						rprt.Log($"calculated outHit: '{outHit}'...");
+						rprt.Log_And_End_Method($"Parallel short-circuit (V_StartToEnd_flattened) succeeded. Returning true...");
+						return true;
+					}
 				}
-				if //note: afaik this never gets triggered
+				else if (v_prjct_flat == V_EndToStart_flattened) //if the projection and edge are aligned in exactly opposite directions...
+				{
+					rprt.Log($"v_prjct_flat == V_EndToStart_flattened...");
+
+					if (v_originToEdgeStart_flat == V_EndToStart_flattened) //this means the projection and the edge are definitely in alignment in 3d space...
+					{
+						rprt.Log($"v_originToEdgeStart_flat == V_EndToStart_flattened. Can extrapolate outHit...");
+
+						outHit = new LNX_NavmeshHit(
+							StartPosition, v_surfaceProjectionDirection_cached, v_surfaceProjectionDirection_cached,
+							MyCoordinate.SurfaceIndex,
+							MyCoordinate.TriangleIndex,
+							StartVertIndex,
+							MyCoordinate.ComponentIndex
+						);
+
+						rprt.Log($"calculated outHit: '{outHit}'...");
+						rprt.Log_And_End_Method($"Parallel short-circuit (V_EndToStart_flattened) succeeded. Returning true...");
+
+						return true;
+					}
+				}
+			}
+			
+			if (checkIfOriginIsOnEdge ) //Note: this needs to be checked AFTER the parallel checks, not before
+			{
+				rprt.Log($"checkIfOriginIsOnEdge true. Checking if position lies on edge...");
+				if (DoesPositionLieOnEdge(originHit.Position, out outHit)) //Note: this needs to be checked AFTER the parallel checks, not before
+				{
+					rprt.Log_And_End_Method($"DoesPositionLieOnEdge() short-circuit returned false. Returning false true...");
+					return true;
+				}
+				else
+				{
+					rprt.Log($"apparently position does NOT lie on edge...");
+				}
+			}
+
+			if
+			(
+							/*
+								!LNX_Utils.AmInVectorCone
+								(
+									v_prjct_flat,
+									v_originToEdgeStart_flat,
+									v_originToEdgeEnd_flat,
+									originHit.GetSurfaceProjectionVector(), true
+								)
+								*/
+				!LNX_Utils.AmInVectorCone_dbg
 				(
-					Mathf.Max(angA, ang_dir_and_originToEnd) >
-					Vector3.Angle(v_originToStart_fltnd, v_originToEnd_fltnd)
+					v_prjct_flat,
+					v_originToEdgeStart_flat,
+					v_originToEdgeEnd_flat,
+					originHit.GetSurfaceProjectionVector(), ref rprt, true
 				)
-				{
-					return false; //short-circuit
-				}
-			}
-
-			if (Mathf.Abs(angA) > 90f && Mathf.Abs(ang_dir_and_originToEnd) > 90f)
+			)
 			{
-				return false; //short-circuit
-			}
-
-			angA = Mathf.Abs(angA);
-			ang_dir_and_originToEnd = Mathf.Abs(ang_dir_and_originToEnd);
-			if (angA + ang_dir_and_originToEnd > 180f)
-			{
-				return false; //short-circuit
-			}
-			#endregion
-
-			Vector3 v_startToEnd_fltnd = end_fltnd - start_fltnd;
-			float angB = Vector3.Angle(v_startToEnd_fltnd, -v_originToStart_fltnd);
-			float angC = 180f - angA - angB;
-
-			float lenB = LNX_Utils.CalculateTriangleEdgeLength(angB, angC, lenC);
-			intersection = origin + (dir * lenB);
-
-			return true;
-		}
-		public bool FlatProject_dbg(Vector3 origin, Vector3 dir, out Vector3 intersection, bool includeAngleSweepCheck,
-			ref LNX_MethodDebugReport rprt )
-		{
-			rprt.StartMethod($"{MyCoordinate}.FlatProject_dbg(origin: '{origin}', dir: '{dir}')");
-
-			rprt.Log($"start flat: '{StartPosition_flat}', end flat: '{EndPosition_flat}'...",
-				$"v_surfaceProjectionDirection_cached: '{v_surfaceProjectionDirection_cached}'...");
-
-			intersection = Vector3.zero;
-			origin = LNX_Utils.FlatVector(origin, v_surfaceProjectionDirection_cached);
-			dir = LNX_Utils.FlatVector(dir, v_surfaceProjectionDirection_cached).normalized;
-
-			#region SHORT-CIRCUITING ============================================
-			if (dir == Vector3.zero)
-			{
-				rprt.Log_And_End_Method($"dir == zero short-circuit. Returning false...");
-				return false;
-			}
-			if ( DoesPositionLieOnEdge(origin) )
-			{
-				intersection = origin;
-				rprt.Log_And_End_Method($"Origin lies on edge short-circuit. Set intersection to: '{intersection}'. Returning true...");
+				rprt.Log_And_End_Method($"AmInVectorCone short-circuit returned false. Returning false now...");
+				outHit = LNX_NavmeshHit.None;
 				return false;
 			}
 			#endregion
 
-			Vector3 start_fltnd = StartPosition_flat;
-			Vector3 end_fltnd = EndPosition_flat;
-			Vector3 v_originToStart_fltnd = start_fltnd - origin;
-			float lenC = v_originToStart_fltnd.magnitude;
-			v_originToStart_fltnd = v_originToStart_fltnd.normalized;
-			Vector3 v_originToEnd_fltnd = Vector3.Normalize(end_fltnd - origin);
+			#region CALCULATE OUT HIT -----------------------------------------------------------
+			rprt.Log($"Now calculating out hit...");
+			//note:
+			// angle at origin will be considered 'angleA', 
+			// Length across from angleA will be consdered 'length A'
+			float lenA = LNX_Utils.CalculateTriangleEdgeLength
+			(
+				Vector3.Angle(v_prjct_flat, v_originToEdgeStart_flat),
+				Vector3.Angle(LNX_Utils.FlatVector(V_EndToStart, originHit.SurfaceOrientation) /*V_EndToStart_flattened*/, -v_prjct_flat),
+				Vector3.Distance(origin_Flat, LNX_Utils.FlatVector(StartPosition, originHit.SurfaceOrientation))
+			);
+			rprt.Log($"lenA: '{lenA}'...");
 
-			#region SHORT-CIRCUITING ========================================
-			if (v_originToStart_fltnd == v_originToEnd_fltnd)
+			if ( AmFlat && sameOrientations )
 			{
-				rprt.Log_And_End_Method($"ss3. Returning false...");
-				return false;
+				rprt.Log($"AmFlat && sameOrientations. Can easily extrapolate outHit...");
+				outHit = new LNX_NavmeshHit(this, StartPosition + (V_StartToEnd * lenA), v_surfaceProjectionDirection_cached);
+				rprt.Log($"calculated outHit: '{outHit}'...");
 			}
-			if (dir == v_originToStart_fltnd)
+			else
 			{
-				intersection = start_fltnd;
-				rprt.Log_And_End_Method($"ss5. Set intersection to: '{intersection}'. Returning true...");
-				return true;
-			}
-			if (dir == v_originToEnd_fltnd)
-			{
-				intersection = end_fltnd;
-				rprt.Log_And_End_Method($"ss6. Set intersection to: '{intersection}'. Returning true...");
-				return true;
-			}
-			#endregion
+				rprt.Log($"if ( AmFlat && sameOrientations ) fail. Fully calculating outHit...");
+				float lenB = LNX_Utils.CalculateTriangleEdgeLength(
+					90f,
+					Vector3.Angle(V_EndToStart, -V_SurfaceProjectionDirection_cached),
+					lenA
+				);
+				outHit = new LNX_NavmeshHit(this, StartPosition + (V_StartToEnd * lenB), V_SurfaceProjectionDirection_cached);
 
-			float angA = Vector3.SignedAngle(dir, v_originToStart_fltnd, v_surfaceProjectionDirection_cached);
-			float ang_dir_and_originToEnd = Vector3.SignedAngle(dir, v_originToEnd_fltnd, v_surfaceProjectionDirection_cached);
-
-			#region ANGULAR SHORT-CIRCUIT TEST-------------------------------------------------------
-			if ( includeAngleSweepCheck )
-			{
-				if (Mathf.Sign(angA) == Mathf.Sign(ang_dir_and_originToEnd))
-				{
-					rprt.Log_And_End_Method($"sweep check short-circuit 1. Returning false...");
-					return false;
-				}
-				if //note: afaik this never gets triggered
-				(
-					Mathf.Max(angA, ang_dir_and_originToEnd) >
-					Vector3.Angle(v_originToStart_fltnd, v_originToEnd_fltnd)
-				)
-				{
-					rprt.Log_And_End_Method($"sweep check short-circuit 2. Returning false...");
-					return false; //short-circuit
-				}
-			}
-
-			if (Mathf.Abs(angA) > 90f && Mathf.Abs(ang_dir_and_originToEnd) > 90f)
-			{
-				rprt.Log_And_End_Method($"ss8. Returning false...");
-				return false; //short-circuit
-			}
-
-			angA = Mathf.Abs(angA);
-			ang_dir_and_originToEnd = Mathf.Abs(ang_dir_and_originToEnd);
-			if (angA + ang_dir_and_originToEnd > 180f)
-			{
-				rprt.Log_And_End_Method($"ss9. Returning false...");
-				return false; //short-circuit
+				rprt.Log($"calculated outHit: '{outHit}'...");
 			}
 			#endregion
 
-			Vector3 v_startToEnd_fltnd = end_fltnd - start_fltnd;
-			float angB = Vector3.Angle(v_startToEnd_fltnd, -v_originToStart_fltnd);
-			float angC = 180f - angA - angB;
-
-			float lenB = LNX_Utils.CalculateTriangleEdgeLength(angB, angC, lenC);
-			intersection = origin + (dir * lenB);
-
-			rprt.Log_And_End_Method($"intersection set to: '{intersection}'. finally returning true...");
+			rprt.Log_And_End_Method($"finally returning true...");
 			return true;
 		}
 
