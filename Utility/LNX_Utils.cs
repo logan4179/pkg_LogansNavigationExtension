@@ -616,7 +616,7 @@ namespace LogansNavigationExtension
 
 			if
 			(
-				Mathf.Sign(ang_crnr) != Mathf.Sign(ang_legAToPos) && //huh? - 10/6/2026 - Note: I think this assumes that vlegA will always point to the left of vToPos and vLegB will always point to the right
+				Mathf.Sign(ang_crnr) != Mathf.Sign(ang_legAToPos) && 
 				Mathf.Sign(ang_crnr) == Mathf.Sign(ang_legBToPos)
 			)
 			{
@@ -687,6 +687,55 @@ namespace LogansNavigationExtension
 			}
 
 			rprt.Log_And_End_Method($"sign check false. Returning false...");
+
+			return false;
+		}
+		public static bool AmInVectorCone(Vector3 vToPos, Vector3 vLegA, Vector3 vLegB, LNX_Direction surfaceOrientation, 
+			bool includeOnPerim = false)
+		{
+			vToPos = Vector3.Normalize(vToPos);
+
+			#region SHORT-CIRCUITING ==========================================
+			if (vToPos == vLegA || vToPos == vLegB)
+			{
+				if (includeOnPerim)
+				{
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			}
+
+			if (vLegA == -vLegB)
+			{
+				return true; //because the "sweep cone" in this case would be a full 180 degrees, and it wouldn't matter which side.
+							 //todo: Maybe I should actually log a warning here?
+			}
+
+			if (vLegA == vLegB)
+			{
+				return false;
+			}
+			#endregion
+
+			Vector3 angleAxis = LNX_UtilityObjects.DirectionToVector(surfaceOrientation);
+
+			float ang_crnr = Vector3.SignedAngle(vLegA, vLegB, angleAxis);
+			//float ang_crnr = Vector3.Angle(vLegA, vLegB);
+
+			float ang_legAToPos = Vector3.SignedAngle(vToPos, vLegA, angleAxis);
+			float ang_legBToPos = Vector3.SignedAngle(vToPos, vLegB, angleAxis);
+
+			if
+			(
+				Mathf.Sign(ang_crnr) != Mathf.Sign(ang_legAToPos) &&
+				Mathf.Sign(ang_crnr) == Mathf.Sign(ang_legBToPos)
+			)
+			{
+				return true;
+			}
 
 			return false;
 		}

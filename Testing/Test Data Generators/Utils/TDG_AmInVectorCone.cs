@@ -44,6 +44,68 @@ namespace LogansNavigationExtension
 		}
 		#endregion
 
+		public void RunOperation()
+		{
+			mthdDbg_Report.Clear();
+
+			bool oldRslt = CurrentOperationResult;
+
+			CurrentOperationResult = false;
+
+			DBG_Operation = $"{System.DateTime.Now}...\n";
+
+			DBG_Operation += $"using position: '{Trans_pos.position}'\n" +
+				$"";
+
+			DBG_Operation += $"\ncommencing operation...\n";
+
+			System.Diagnostics.Stopwatch stpWtch;
+
+			if (UseDebugVersion)
+			{
+				DBG_Operation += $"using DEBUG version...\n";
+				mthdDbg_Report.StartReport();
+				stpWtch = System.Diagnostics.Stopwatch.StartNew();
+
+				CurrentOperationResult = LNX_Utils.AmInVectorCone(
+					LNX_Utils.FlatVector(Trans_pos.position - Trans_Crnr.position).normalized,
+					LNX_Utils.FlatVector(Trans_LegA.position - Trans_Crnr.position).normalized,
+					LNX_Utils.FlatVector(Trans_LegB.position - Trans_Crnr.position).normalized,
+					Vector3.up,
+					true
+				);
+
+				stpWtch.Stop();
+				mthdDbg_Report.EndReport();
+			}
+			else
+			{
+				DBG_Operation += $"using REGULAR version...\n";
+				stpWtch = System.Diagnostics.Stopwatch.StartNew();
+
+				CurrentOperationResult = LNX_Utils.AmInVectorCone(
+					LNX_Utils.FlatVector(Trans_pos.position - Trans_Crnr.position).normalized,
+					LNX_Utils.FlatVector(Trans_LegA.position - Trans_Crnr.position).normalized,
+					LNX_Utils.FlatVector(Trans_LegB.position - Trans_Crnr.position).normalized,
+					Vector3.up,
+					true
+				);
+
+				stpWtch.Stop();
+			}
+
+			if ( CurrentOperationResult != oldRslt )
+			{
+				Debug.DrawLine(Trans_pos.position, Trans_pos.position + (Vector3.up * 3f), Color.magenta, 1f );
+			}
+
+			DBG_Operation += $"operation complete. OperationResult: '{CurrentOperationResult}'\n";
+
+
+			DBG_Operation += $"operation took '{stpWtch.ElapsedTicks}' ticks...\n";
+		}
+
+
 		protected override void OnDrawGizmos()
 		{
 			if
@@ -59,7 +121,6 @@ namespace LogansNavigationExtension
 			}
 
 			DBG_Operation = "";
-			CurrentOperationResult = false;
 
 			Gizmos.color = Color_Corners;
 			Gizmos.DrawSphere(Trans_Crnr.position, Radius_ObjectDebugSpheres);
@@ -75,6 +136,8 @@ namespace LogansNavigationExtension
 
 			DBG_Operation += $"Commencing operation...\n";
 
+			RunOperation();
+			/*
 			CurrentOperationResult = LNX_Utils.AmInVectorCone(
 				LNX_Utils.FlatVector(Trans_pos.position - Trans_Crnr.position).normalized,
 				LNX_Utils.FlatVector(Trans_LegA.position - Trans_Crnr.position).normalized,
@@ -82,18 +145,16 @@ namespace LogansNavigationExtension
 				Vector3.up,
 				true
 			);
+			*/
 
-			DBG_Operation += $"Result of AmInVectorCone(): '{CurrentOperationResult}'...\n";
 
 			if (CurrentOperationResult)
 			{
 				Gizmos.color = Color.green;
-				DBG_Operation += $"pos IS in Vector cone...\n";
 			}
 			else
 			{
 				Gizmos.color = Color.red;
-				DBG_Operation += $"pos is NOT in vector cone...\n";
 			}
 
 			Gizmos.DrawSphere(Trans_pos.position, Radius_ObjectDebugSpheres);
